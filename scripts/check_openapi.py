@@ -341,8 +341,7 @@ def check_loans(document: Object) -> None:
                 decimal_field(problem, "outstanding") == balance, "Saldo D en Problem"
             )
             require(
-                problem["status"] in (409, 422)
-                and problem["code"] == "loan_overpayment",
+                problem["status"] == 422 and problem["code"] == "loan_overpayment",
                 "Exceso sin Problem de conflicto",
             )
             require(
@@ -350,6 +349,358 @@ def check_loans(document: Object) -> None:
                 == {"adjustment", "income_expense"},
                 "Faltan salidas RF-22",
             )
+
+
+def check_architecture_v02(document: Object) -> None:
+    """Comprueba contrato, efectos atómicos RF-22 y reglas resueltas en v0.2."""
+    components = mapping(document["components"])
+    schemas = mapping(components["schemas"])
+    examples = mapping(components["examples"])
+    paths = mapping(document["paths"])
+
+    def example(name: Json) -> Object:
+        return mapping(mapping(examples[text(name)])["value"])
+
+    payment = resolve(document, schemas["PaymentRequest"])
+    props = properties(document, payment)
+    require(
+        mapping(props["excess_handling"])["enum"] == ["adjustment", "income_expense"],
+        "Falta excess_handling con ambas opciones",
+    )
+    require(
+        "excess_handling" not in sequence(payment["required"]),
+        "excess_handling debe ser opcional",
+    )
+    require(
+        not {"interest_part", "principal_part"}
+        & set(map(text, sequence(payment["required"]))),
+        "Reparto de pago debe permitir cálculo por servidor",
+    )
+    require(
+        payment.get("dependentRequired")
+        == {"interest_part": ["principal_part"], "principal_part": ["interest_part"]},
+        "Reparto opcional debe enviarse completo",
+    )
+    write_off = resolve(document, schemas["WriteOffRequest"])
+    require(
+        {"interest_part", "principal_part"}
+        <= set(map(text, sequence(write_off["required"]))),
+        "Condonación sin reparto obligatorio",
+    )
+    require(
+        "account_id" not in properties(document, write_off), "Condonación mueve dinero"
+    )
+    require(
+        "account_id" not in properties(document, schemas["AdjustmentRequest"]),
+        "Ajuste mueve dinero",
+    )
+    side = properties(document, schemas["LoanMovement"])["side_effects"]
+    require(mapping(side).get("readOnly") is True, "side_effects debe ser solo lectura")
+    options = properties(document, schemas["OverpaymentOption"])
+    require("applied_amount" in options, "Opciones RF-22 sin applied_amount")
+    require(example("D_overpayment")["status"] == 422, "RF-22 debe devolver 422")
+    for raw_option in sequence(example("D_overpayment")["options"]):
+        option = mapping(raw_option)
+        expected_applied = (
+            Decimal("60.00") if option["action"] == "adjustment" else Decimal("50.00")
+        )
+        require(
+            decimal_field(option, "applied_amount") == expected_applied,
+            "Problem RF-22 informa applied_amount incorrecto",
+        )
+
+    operation = mapping(mapping(paths["/api/v1/loans/{id}/movements"])["post"])
+    error = resolve(document, mapping(operation["responses"])["422"])
+    error_examples = mapping(
+        mapping(mapping(error["content"])["application/problem+json"])["examples"]
+    )
+    require(
+        mapping(error_examples["D"]).get("$ref")
+        == "#/components/examples/D_overpayment",
+        "Ejemplo D debe enlazarse a 422",
+    )
+    require(
+        "NUEVA" in text(operation["description"]), "Reintento RF-22 sin clave NUEVA"
+    )
+    parameters = mapping(components["parameters"])
+    require(
+        mapping(parameters["IdempotencyKey"]).get("x-retention-hours") == 24,
+        "Retención idempotente debe ser 24 h",
+    )
+
+    overpayments = sequence(document["x-overpayment-scenarios"])
+    modes: set[str] = set()
+    foreign = False
+    for raw in overpayments:
+        scenario = mapping(raw)
+        request = example(scenario["request_example"])
+        response = example(scenario["response_example"])
+        balance = example(scenario["balance_example"])
+        validate_example(document, schemas["PaymentRequest"], request)
+        validate_example(document, schemas["LoanMovement"], response)
+        validate_example(document, schemas["LoanBalance"], balance)
+        handling = text(request["excess_handling"])
+        modes.add(handling)
+        total = decimal_field(request, "amount_in_loan_currency")
+        before = decimal_field(scenario, "outstanding_before")
+        applied = total if handling == "adjustment" else before
+        excess = total - before
+        require(
+            total == Decimal("60.00") and before == Decimal("50.00"),
+            "Exceso no reproduce D",
+        )
+        require(
+            decimal_field(response, "amount_in_loan_currency") == applied,
+            "Pago aplicado RF-22",
+        )
+        require(
+            decimal_field(response, "interest_part")
+            + decimal_field(response, "principal_part")
+            == applied,
+            "Reparto de respuesta no suma pago aplicado",
+        )
+        require(
+            decimal_field(response, "interest_part")
+            == min(applied, decimal_field(scenario, "interest_pending_before")),
+            "Respuesta RF-22 no asigna interés primero",
+        )
+        if "interest_part" in request:
+            require(
+                decimal_field(request, "interest_part")
+                + decimal_field(request, "principal_part")
+                == applied,
+                "Reparto de petición no refiere al pago aplicado",
+            )
+        effects = sequence(response["side_effects"])
+        require(len(effects) == 1, "RF-22 requiere un efecto adicional")
+        effect = mapping(effects[0])
+        require(
+            response["account_id"] == request["account_id"]
+            and response["account_currency"] == request["account_currency"],
+            "Pago aplicado debe usar la misma cuenta y moneda físicas",
+        )
+        physical = decimal_field(request, "account_amount")
+        cash_payment = decimal_field(response, "account_amount")
+        rate = Decimal(1)
+        if request["account_currency"] != balance["currency"]:
+            foreign = True
+            rate = Decimal(text(request["fx_rate_applied"]))
+            require(
+                (abs(physical) / rate).quantize(CENT, ROUND_HALF_UP) == total,
+                "Conversión del importe físico RF-22",
+            )
+        if handling == "adjustment":
+            adjustment = excess
+            require(
+                effect["kind"] == "adjustment" and effect["adjustment_id"] is not None,
+                "Falta referencia al ajuste atómico",
+            )
+            require(
+                effect["transaction_id"] is None and effect["account_id"] is None,
+                "Ajuste no debe mover dinero",
+            )
+            require(
+                effect["currency"] == balance["currency"], "Moneda del ajuste RF-22"
+            )
+            require(
+                decimal_field(effect, "amount") == excess, "Importe del ajuste RF-22"
+            )
+            extra_cash = Decimal(0)
+        else:
+            adjustment = Decimal(0)
+            require(
+                effect["kind"] == "income" and effect["transaction_id"] is not None,
+                "Lent debe crear ingreso adicional",
+            )
+            require(
+                effect["adjustment_id"] is None
+                and effect["account_id"] == request["account_id"],
+                "Exceso en otra cuenta",
+            )
+            require(
+                effect["currency"] == request["account_currency"], "Moneda del exceso"
+            )
+            extra_cash = decimal_field(effect, "amount")
+            require(
+                cash_payment == (applied * rate).quantize(CENT, ROUND_HALF_UP),
+                "Pago de préstamo mal convertido",
+            )
+            require(
+                extra_cash == physical - cash_payment,
+                "Exceso debe ser RESTO del importe físico",
+            )
+        require(
+            cash_payment + extra_cash == physical,
+            "Pago más exceso pierde dinero/céntimos",
+        )
+        require(
+            before + adjustment - applied
+            == Decimal(0)
+            == decimal_field(balance, "outstanding"),
+            "Saldo RF-22 no llega a cero",
+        )
+        require(
+            decimal_field(balance, "adjustment_total") == adjustment
+            and decimal_field(balance, "payment_total") == applied
+            and balance["status"] == "settled",
+            "Totales/estado RF-22 incorrectos",
+        )
+    require(
+        modes == {"adjustment", "income_expense"} and foreign,
+        "Faltan ambas salidas RF-22 o variante multimoneda",
+    )
+
+    scenario = mapping(document["x-write-off-scenario"])
+    capital = decimal_field(scenario, "principal")
+    interest = Decimal(0)
+    for name in sequence(scenario["movement_examples"]):
+        movement = example(name)
+        validate_example(document, schemas["MovementCreate"], movement)
+        amount = decimal_field(movement, "amount_in_loan_currency")
+        require("account_id" not in movement, "Condonación/ajuste produce dinero")
+        if movement["kind"] == "interest":
+            interest += amount
+        elif movement["kind"] == "adjustment":
+            require(amount != 0, "Ajuste debe ser distinto de cero")
+            capital += amount
+            require(capital >= 0, "Ajuste deja capital negativo")
+        elif movement["kind"] == "write_off":
+            interest_part = decimal_field(movement, "interest_part")
+            principal_part = decimal_field(movement, "principal_part")
+            require(
+                interest_part == min(amount, interest)
+                and interest_part + principal_part == amount,
+                "Condonación no asigna interés primero",
+            )
+            interest -= interest_part
+            capital -= principal_part
+            require(capital >= 0, "Condonación excede capital")
+    require(
+        capital == decimal_field(scenario, "capital_after")
+        and interest == decimal_field(scenario, "interest_after")
+        and capital + interest == decimal_field(scenario, "outstanding_after"),
+        "Saldo condonación/ajuste incorrecto",
+    )
+    require(
+        decimal_field(scenario, "recognized_interest") == 0
+        and decimal_field(scenario, "account_change") == 0,
+        "Condonación reconoce interés o mueve dinero",
+    )
+
+    factors = {
+        "daily": Decimal("30.4375"),
+        "weekly": Decimal("4.348125"),
+        "monthly": Decimal(1),
+        "yearly": Decimal(1) / 12,
+    }
+    for raw in sequence(document["x-subscription-scenarios"]):
+        scenario = mapping(raw)
+        total_response = mapping(
+            sequence(example(scenario["total_example"])["items"])[0]
+        )
+        validate_example(document, schemas["SubscriptionTotal"], total_response)
+        interval = scenario["interval_count"]
+        require(isinstance(interval, int) and interval > 0, "Intervalo inválido")
+        monthly = (
+            decimal_field(scenario, "amount")
+            * factors[text(scenario["period"])]
+            / cast(int, interval)
+        )
+        yearly = monthly * 12
+        require(
+            monthly.quantize(CENT, ROUND_HALF_UP)
+            == decimal_field(total_response, "monthly_amount")
+            and yearly.quantize(CENT, ROUND_HALF_UP)
+            == decimal_field(total_response, "yearly_amount"),
+            "Equivalente mensual/anual incorrecto; redondear solo al final",
+        )
+    report = resolve(document, schemas["ReportTotal"])
+    require(
+        "unconverted_count" in sequence(report["required"])
+        and mapping(properties(document, report)["unconverted_count"]).get("minimum")
+        == 0,
+        "Total convertido sin unconverted_count obligatorio",
+    )
+    for raw_schema in schemas.values():
+        for _, node in walk(raw_schema):
+            if node.get("$ref") == "#/components/schemas/ReportTotal":
+                require(
+                    "unconverted_count" in properties(document, node),
+                    "Total sin aviso de tasa faltante",
+                )
+    current = properties(document, schemas["CurrentUser"])
+    update = properties(document, schemas["UserUpdate"])
+    require(
+        {"report_currency", "preferences", "base_currency"} <= set(current)
+        and {"report_currency", "preferences", "base_currency"} <= set(update),
+        "Perfil incompleto",
+    )
+    require(
+        mapping(current["base_currency"]).get("readOnly") is True,
+        "Base no es solo lectura en respuesta",
+    )
+    require(
+        "409"
+        in mapping(mapping(mapping(paths["/api/v1/users/me"])["patch"])["responses"]),
+        "Cambio de base sin conflicto",
+    )
+    require(
+        mapping(properties(document, schemas["UserPreferences"])["home_widgets"]).get(
+            "type"
+        )
+        == "array",
+        "Widgets deben conservar orden",
+    )
+    for path, methods in [
+        ("/api/v1/category-rules", {"get", "post"}),
+        ("/api/v1/category-rules/{id}", {"get", "patch", "delete"}),
+        ("/api/v1/transactions/{id}/attachments", {"get", "post"}),
+        ("/api/v1/transactions/{id}/attachments/{attachment_id}", {"delete"}),
+        ("/api/v1/transactions/{id}/attachments/{attachment_id}/download", {"get"}),
+    ]:
+        require(
+            path in paths and methods <= set(mapping(paths[path])),
+            "Falta recurso/operación: " + path,
+        )
+    rule = properties(document, schemas["CategoryRule"])
+    require(
+        mapping(rule["hits"]).get("readOnly") is True
+        and mapping(rule["source"]).get("readOnly") is True,
+        "hits/source deben ser solo lectura",
+    )
+    require(
+        mapping(rule["match_type"])["enum"] == ["exact", "contains"],
+        "Tipos de regla inválidos",
+    )
+    upload = resolve(document, schemas["AttachmentUpload"])
+    file = mapping(properties(document, upload)["file"])
+    require(
+        file.get("x-max-size-bytes") == 10485760
+        and upload.get("x-max-attachments-per-transaction") == 5,
+        "Límites de adjuntos incorrectos",
+    )
+    require(
+        set(map(text, sequence(file["x-allowed-content-types"])))
+        == {"image/jpeg", "image/png", "image/webp", "application/pdf"},
+        "MIME adjuntos incorrectos",
+    )
+    attachment_post = mapping(
+        mapping(paths["/api/v1/transactions/{id}/attachments"])["post"]
+    )
+    for code in ("413", "415"):
+        error = resolve(document, mapping(attachment_post["responses"])[code])
+        error_schema = mapping(
+            mapping(mapping(error["content"])["application/problem+json"])["schema"]
+        )
+        require(
+            error_schema.get("$ref") == "#/components/schemas/Problem",
+            "Adjuntos sin Problem " + code,
+        )
+    require(
+        "schema_version"
+        in sequence(resolve(document, schemas["FullExport"])["required"]),
+        "Exportación sin schema_version obligatorio",
+    )
 
 
 def check(document: Object) -> tuple[int, int, int]:
@@ -524,6 +875,7 @@ def check(document: Object) -> tuple[int, int, int]:
                 "Saldo/estado editable: " + name,
             )
     check_loans(document)
+    check_architecture_v02(document)
     return len(paths), len(operation_ids), len(schemas)
 
 
@@ -535,6 +887,50 @@ class CheckerTests(unittest.TestCase):
 
     def test_valid_contract(self) -> None:
         check(self.document)
+
+    def test_overpayment_cash_remainder(self) -> None:
+        examples = mapping(mapping(self.document["components"])["examples"])
+        response = mapping(
+            mapping(examples["D_income_expense_foreign_response"])["value"]
+        )
+        mapping(sequence(response["side_effects"])[0])["amount"] = "38.00"
+        with self.assertRaises(ValueError):
+            check(self.document)
+
+    def test_overpayment_applied_amount(self) -> None:
+        examples = mapping(mapping(self.document["components"])["examples"])
+        request = mapping(mapping(examples["D_income_expense_request"])["value"])
+        request["principal_part"] = "60.00"
+        with self.assertRaises(ValueError):
+            check(self.document)
+
+    def test_write_off_interest_first(self) -> None:
+        examples = mapping(mapping(self.document["components"])["examples"])
+        request = mapping(mapping(examples["Write_off_split"])["value"])
+        request.update(interest_part="0.00", principal_part="30.00")
+        with self.assertRaises(ValueError):
+            check(self.document)
+
+    def test_monthly_rounding(self) -> None:
+        examples = mapping(mapping(self.document["components"])["examples"])
+        response = mapping(mapping(examples["Weekly_subscription_totals"])["value"])
+        mapping(sequence(response["items"])[0])["yearly_amount"] = "521.76"
+        with self.assertRaises(ValueError):
+            check(self.document)
+
+    def test_missing_unconverted_count(self) -> None:
+        schemas = mapping(mapping(self.document["components"])["schemas"])
+        sequence(mapping(schemas["ReportTotal"])["required"]).remove(
+            "unconverted_count"
+        )
+        with self.assertRaises(ValueError):
+            check(self.document)
+
+    def test_missing_attachment_operation(self) -> None:
+        paths = mapping(self.document["paths"])
+        del paths["/api/v1/transactions/{id}/attachments/{attachment_id}/download"]
+        with self.assertRaises(ValueError):
+            check(self.document)
 
     def test_dangling_ref(self) -> None:
         mapping(self.document["components"])["bad_ref"] = {
@@ -601,7 +997,8 @@ def main() -> int:
     print(
         f"OK: {paths} paths, {operations} operaciones, {schemas} esquemas; "
         "referencias, decimales, Problem, seguridad, CSRF, paginación, aislamiento "
-        "y ejemplos A–E verificados (saldos, reparto, cuentas y FX)."
+        "y ejemplos A–E verificados; v0.2: exceso atómico/multimoneda, condonación, "
+        "equivalentes mensuales/anuales, unconverted_count, category-rules y attachments."
     )
     return 0
 

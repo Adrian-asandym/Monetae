@@ -1,7 +1,7 @@
 # Contrato OpenAPI inicial de Monetae
 
 `openapi.json` es el contrato **contract-first** de V1: OpenAPI 3.1.0, basado en
-`docs/SPEC.md` v0.3, `docs/ARCHITECTURE.md` v0.1 y ADR-002/003/004/006 aceptadas.
+`docs/SPEC.md` v0.3, `docs/ARCHITECTURE.md` v0.2 y ADR-002/003/004/006 aceptadas.
 Permite generar un cliente tipado de Flutter y servir mocks antes del backend.
 No implica que los endpoints ya estén implementados. Presupuestos, metas,
 notificaciones y bloqueo PIN/WebAuthn tienen un contrato inicial para la Fase 6.
@@ -25,7 +25,7 @@ Redocly se ejecuta como herramienta efímera, sin agregar dependencias al repo.
 El comprobador requiere solamente Python 3.9+ y biblioteca estándar; resuelve
 referencias JSON Pointer, valida seguridad, CSRF, errores, paginación e aislamiento
 de cuerpos de petición. Prohíbe `type: number` en todo el contrato para evitar
-que dinero, tasas o porcentajes se serialicen como flotantes. Las nueve pruebas
+que dinero, tasas o porcentajes se serialicen como flotantes. Las quince pruebas
 internas alteran contratos para comprobar que detecta errores reales. El script
 no sustituye a un validador general de OpenAPI/JSON Schema ni demuestra aislamiento
 real de BD: ese requiere los tests de dos usuarios en la Fase 2.
@@ -74,20 +74,33 @@ no se reenvían luego a movements si el desembolso ya existe.
   `authorization_url`; así no se introduce otro endpoint público. Callback valida
   state/nonce/PKCE y no vincula cuentas existentes sin confirmación explícita.
 - `Idempotency-Key` opcional en creación de transacción, préstamo (incluye
-  desembolso atómico) y movimiento; mismo usuario/operación/cuerpo devuelve el
-  resultado previo, clave repetida con otro cuerpo da 409.
+  desembolso atómico) y movimiento; retención **24 h**, única por usuario y clave
+  (no por endpoint). Misma clave/cuerpo devuelve status y respuesta guardados;
+  clave repetida con otro cuerpo da 409 (ARCHITECTURE §5.8).
 - Préstamos: `principal` ya incluye el desembolso; este no vuelve a sumar al saldo.
   `status` y `outstanding` son `readOnly`. Cada desembolso/pago indica su propia
   cuenta, importe original y tasa histórica. Interés/ajuste/condonación no mueven
   dinero. Las propuestas de reparto e interés no persisten nada. Al guardar un
   pago se envían `interest_part` y `principal_part` editables; se valida suma y
-  límites. Capital no cuenta en gasto/ingreso; interés pagado sí, en categoría de
-  sistema y fecha de pago (ADR-003). No existe operación de liquidación.
-- RF-22: un pago excesivo propuesto devuelve 409 `loan_overpayment`, saldo, exceso,
-  moneda y opciones `adjustment` / `income_expense`. No se persiste saldo negativo.
-  El cliente presenta opciones y permite resolver y reintentar; 409 no es una
-  prohibición definitiva del cobro. Automatizar esa resolución requiere ratificar
-  su reparto y atomicidad (observaciones siguientes).
+  límites. El reparto puede omitirse en el pago para que el servidor lo calcule;
+  si se envía, ambos campos deben estar presentes. Condonaciones también incluyen
+  reparto, primero interés, sin mover dinero ni reconocer gasto/ingreso. Ajustes
+  afectan solo capital, con signo, nunca dejándolo bajo cero (ARCHITECTURE §5.5).
+  Capital no cuenta en gasto/ingreso; interés pagado sí, en categoría de sistema
+  y fecha de pago (ADR-003). No existe operación de liquidación.
+- RF-22: pago excesivo sin `excess_handling` devuelve **422** `loan_overpayment`,
+  sin guardar nada, con saldo, exceso, moneda y opciones que informan `applied_amount`.
+  Reintento con **Idempotency-Key nueva** y elección `adjustment` o `income_expense`.
+  `adjustment` crea ajuste positivo de capital inmediatamente antes del pago completo;
+  `income_expense` aplica saldo exacto y crea ingreso (lent) o gasto (borrowed) por
+  exceso, en misma cuenta. Todo ocurre en una sola transacción de BD, sin estado
+  intermedio ni reintento parcial. La petición describe el importe físico total
+  convertido en `amount_in_loan_currency`; el reparto opcional (ambos campos o
+  ninguno) refiere solo al pago aplicado, calculado por servidor si se omite.
+  La respuesta devuelve el `LoanMovement` aplicado y `side_effects` con
+  `adjustment_id` o transacción extra. En otra moneda, pago de cuenta = ROUND_HALF_UP
+  del aplicado × tasa; exceso de cuenta = resto hasta el importe físico, conservando
+  todos los céntimos (precisión confirmada por el coordinador para T-102b).
 - Borrado siempre lógico; restore deshace y recalcula. Transferencias se modifican
   y restauran por grupo. Movimientos modifican su transacción asociada en la misma
   operación. Edición de desembolso actualiza principal; no se puede borrar solo
@@ -102,7 +115,28 @@ no se reenvían luego a movements si el desembolso ya existe.
 - Importación: upload de **copia** en dry-run (SQLite solo lectura, CSV rescate),
   reporte con conteos/saldos/advertencias y apply ligado a `dry_run_id` y hash.
   No se adivinan casos ambiguos; ids externos o hash determinista aseguran
-  idempotencia por usuario. Exportación es descarga de JSON completo o CSV por tabla.
+  idempotencia por usuario. Exportación es descarga de JSON completo con
+  `schema_version` o CSV por tabla; restaurar ese JSON **no es de V1** (§7).
+- Perfil: `report_currency` cambia libremente; `preferences` guarda tema, acento
+  y `home_widgets` en orden de array. `base_currency` es de solo lectura con
+  historial: intentar cambiarla tras la primera transacción devuelve 409
+  `base_currency_locked`; no hay migración de base en V1 (ARCHITECTURE §5.2).
+- Conversión de reportes: usa la tasa propia de cada transacción hacia base, y
+  base→reporte del día de la transacción o el más cercano anterior. Si no existe,
+  excluye del total convertido e informa `unconverted_count`; el desglose por
+  moneda conserva esos importes. Nunca usa tasas futuras ni de hoy para el pasado
+  (ARCHITECTURE §5.8). Los totales convertidos reutilizan `ReportTotal`.
+- Suscripciones: mensual = amount × factor / interval_count; factores daily
+  `30.4375`, weekly `4.348125`, monthly `1`, yearly `1/12`. Anual = mensual
+  **sin redondear** × 12; ROUND_HALF_UP a dos decimales solo al final (§5.6).
+- `category-rules`: CRUD RF-06 de patrones exact/contains, categoría propia;
+  servidor asigna `source` y acumula `hits`, ambos solo lectura. V1 no ejecuta ML.
+- `attachments`: subida multipart, listado paginado, descarga y borrado lógico
+  por transacción propia. **10 MiB por archivo**, **5 activos por transacción**;
+  MIME `image/jpeg`, `image/png`, `image/webp`, `application/pdf`. Exceso de tamaño
+  devuelve 413 Problem, MIME no permitido 415 Problem y límite de cantidad 422.
+  Estos límites fueron confirmados por el coordinador en T-102b; almacenamiento
+  local en V1 y `storage_key` interno, sin exponer rutas del servidor.
 - Los mapas abiertos de WebAuthn y notificaciones son bordes iniciales explícitos,
   no permisos para aceptar cualquier campo en entidades financieras. Requests
   financieros usan `additionalProperties=false`.
@@ -117,12 +151,26 @@ los repartos en base caja y el efecto por cuenta, sin volver a sumar desembolsos
 | A | PEN 200 → 210 → 110 → 0 | Efectivo +90, BCP −100; solo PEN 10 de interés en primer pago |
 | B | PEN 500 → 200 → 0 | Yape −500, Efectivo +300, BCP +200 |
 | C | USD 100 → 0 | Cuenta PEN +380; 380 / 3.800000 = USD 100 aplicado |
-| D | USD 50 sin cambios al rechazar 60 | Problem 409 con exceso USD 10 y ambas salidas RF-22 |
+| D | USD 50 sin cambios al rechazar 60; luego 0 con cada opción | Problem 422; adjustment +10 y payment 60, o payment 50 e income 10 |
 | E | PEN 1000 → 950 → 830 → 800 → 0 | Pagos variables 50, 120, 30 y 800 en fechas distintas |
 
 A, B, C y E terminan `settled`; D sigue `open` mientras no se resuelva el exceso.
 El ejemplo A contiene cuatro movimientos de libro mayor y tres transacciones
 monetarias: el interés registrado no crea una transacción (ADR-003).
+
+Además, el comprobador verifica los ejemplos de D con cada `excess_handling`:
+`D_adjustment_request/response/balance` y `D_income_expense_request/response/balance`.
+La variante `D_income_expense_foreign_*` recibe PEN 228.01 para un préstamo USD,
+con tasa 3.800000: el total convertido es USD 60.00, el pago aplicado USD 50.00
+crea PEN 190.00 y el ingreso por exceso es el **resto PEN 38.01**, de modo que
+190.00 + 38.01 = 228.01; no se pierden céntimos por redondear el exceso separado.
+Los repartos de esa variante se omiten y los calcula el servidor.
+
+La condonación sintética parte de capital 100 e interés 10, ajusta capital −25
+y condona 30 repartidos en interés 10 y capital 20: saldo final 55, sin movimientos
+de cuenta ni reconocimiento de interés. Una suscripción semanal de PEN 10 produce
+mensual **43.48** y anual **521.78**; calcular el anual desde el mensual ya
+redondeado daría 521.76 y la regresión lo detecta.
 
 ## Regeneración en Fase 2
 
@@ -155,58 +203,50 @@ ni convenciones por la salida automática predeterminada de FastAPI.
 
 ## Observaciones para el coordinador
 
-Estas observaciones no modifican SPEC, ARCHITECTURE ni decisiones aceptadas:
+**RESUELTAS por ARCHITECTURE v0.2** (se conservan números de T-102):
 
-1. **Orientación de `fx_rate_applied`**: ARCHITECTURE §10.3 pide confirmarla en T-105.
-   Este contrato explicita la convención ilustrada por C (moneda de cuenta por
-   unidad de préstamo, PEN/USD 3.800000), con `account_amount / fx_rate_applied`.
-   Debe ratificarse antes del backend; un cociente inverso requiere cambiar contrato
-   y fixtures juntos. No se eligió proveedor automático (ADR-004).
-2. **Ajustes y condonaciones**: el reparto entre interés y capital no está definido
-   (ARCHITECTURE §10.2). Se exponen movimientos y fórmulas existentes, sin inventar
-   nuevos campos de asignación. RF-22 ofrece opciones y el ejemplo D valida el
-   rechazo, pero falta precisar reparto, registro conjunto y política de reintento
-   de la resolución del exceso para que RF-22 no genere flujos inconsistentes.
-3. **Preferencias de presentación**: RF-38/39 exige widgets, tema y acento;
-   ARCHITECTURE `users` no incluye almacenamiento para estos campos. El contrato
-   los declara bajo preferences; el coordinador debe ampliar el esquema antes
-   de migraciones. Cambio de moneda base tampoco define cómo preservar tasas
-   `fx_rate_to_base` cuyo destino anterior no está persistido explícitamente.
-4. **Conversión a moneda de reporte seleccionada**: SPEC §9.5 la requiere, pero
-   el esquema guarda solo tasa hacia la base. Falta la política para cruces
-   históricos sin tasa, especialmente si cambia la base; nunca usar la tasa de hoy.
-5. **Normalización mensual/anual**: daily/weekly e intervalos tienen contrato,
-   pero faltan convenciones exactas de días/semanas para totales comparables.
-   No se fija una fórmula contable nueva ni ejemplos que la presupongan.
-6. **OIDC y reautenticación**: el estado/PKCE pre-login y su almacenamiento,
-   confirmación de vinculación de cuenta, y la prueba de reautenticación para PIN
-   (sobre todo usuario solo Google) requieren detalle en implementación.
-   `current_password` es opcional en forma, pero la operación exige reautenticación
-   por contraseña u OIDC. No se puede configurar PIN solo enviando el PIN.
-7. **Bloqueo Fase 6**: estado por sesión, desafío WebAuthn, nombres exactos de los
-   objetos estándar y payload de cada aviso se precisan antes de implementar.
-   Las rutas iniciales siguen exigiendo sesión; PIN no sustituye login y cinco
-   fallos obligan a volver a autenticar. PIN obligatorio es el respaldo si se
-   habilita bloqueo/WebAuthn; no se ofrece eliminarlo ni dejar solo WebAuthn.
-8. **Importación**: conservación temporal de la copia para apply, expiración de
-   dry-run y resolución manual de elementos ambiguos no están especificadas.
-   El contrato liga hash y dry-run y conserva reporte; no supone que reconocer
-   una advertencia resuelva automáticamente un préstamo ambiguo.
-9. **Idempotencia**: retención y almacenamiento de claves quedan para Fase 2;
-   ARCHITECTURE no describe tabla de claves. Cuenta y moneda del movimiento
-   pertenecen a su transacción, sin añadir columnas al libro mayor desde aquí.
-10. **RF-06 y adjuntos RF-08**: existen category_rules/attachments en arquitectura,
-    pero no están en los recursos asignados a T-102. No se han añadido operaciones
-    fuera de alcance; asignar contratos de administración/almacenamiento si la UI
-    los necesita. Export completo necesita esquema de archivo versionado antes
-    de ofrecer restauración JSON (solo importación Cashew está contratada aquí).
+1. **FX aplicada — RESUELTA (§5.5)**: moneda de cuenta por unidad de préstamo;
+   aplicado = importe físico / tasa, ROUND_HALF_UP. C verificado; T-105 debe
+   confirmar la misma convención en fixture y pruebas de dominio, sin cambiarla.
+2. **Ajustes, condonaciones y RF-22 — RESUELTA (§5.5)**: ajustes solo capital,
+   condonaciones con reparto interés primero y sin caja, exceso con elección
+   atómica y 422 sin persistencia si falta. Coordinador precisó reparto opcional
+   sobre pago aplicado, `applied_amount`, `side_effects` y resto en moneda de cuenta;
+   ambas salidas de D y variante multimoneda están verificadas.
+3. **Preferencias y cambio de base — RESUELTA (§5.2)**: preferences jsonb,
+   report_currency libre y base inmutable tras primera transacción; conflicto 409.
+4. **Conversión histórica — RESUELTA (§5.8)**: tasa del día o anterior más cercano,
+   ausencia excluida del convertido e informada por `unconverted_count`.
+5. **Equivalentes mensual/anual — RESUELTA (§5.6)**: factores exactos e intervalo,
+   sin redondeos intermedios; ejemplo semanal verificado.
+9. **Idempotencia — RESUELTA (§5.8)**: tabla idempotency_keys, unicidad usuario/clave,
+   retención 24 h, misma clave/cuerpo devuelve respuesta guardada y cuerpo distinto 409.
+10. **RF-06, RF-08 y exportación — RESUELTA (§7)**: category-rules y attachments
+    incluidos en V1; JSON exportado con schema_version, restauración fuera de V1.
+    Campos de reglas/adjuntos en §5.8/§5.4; límites MIME/tamaño/cantidad confirmados
+    explícitamente por el coordinador durante T-102b.
+
+### Pendientes de implementación
+
+6. **OIDC y reautenticación**: estado/almacenamiento de PKCE y state, confirmación
+   de vinculación y prueba de reautenticación para PIN, especialmente usuarios
+   solo Google. Configurar PIN requiere contraseña u OIDC; enviar solo PIN
+   no constituye reautenticación (ARCHITECTURE §10.5).
+7. **Bloqueo Fase 6**: estado por sesión, desafíos WebAuthn, detalle de objetos
+   estándar y payloads de avisos. PIN sigue siendo respaldo obligatorio del bloqueo,
+   no sustituye login, y cinco fallos exigen volver a autenticar (§10.5, ADR-006).
+8. **Importación**: conservación y expiración de copia entre dry-run/apply y
+   resolución manual de ambiguos. El hash liga la misma copia; reconocer una
+   advertencia no resuelve por sí solo un préstamo ambiguo (§10.5).
 
 ## Resultado de validación
 
 - Redocly: contrato válido, **0 errores**, aviso local justificado arriba.
-- `python3 -I scripts/check_openapi.py`: **81 paths, 118 operaciones, 121 esquemas**;
-  todas las comprobaciones pasan con Python 3.9.
-- `python3 -I scripts/check_openapi.py --self-test`: **9 pruebas** pasan.
-- Se validan también ruff, formato, mypy estricto y pytest del script, usando
-  herramientas en un entorno temporal fuera del repo; sin dependencias nuevas
-  en el proyecto. Los checks backend completos no aplican: no se ha creado backend.
+- `python3 -I scripts/check_openapi.py`: **86 paths, 127 operaciones, 131 esquemas**;
+  comprobaciones originales y nuevas de v0.2 pasan con Python 3.9.
+- `python3 -I scripts/check_openapi.py --self-test`: **15 pruebas** pasan, incluyendo
+  regresiones de pago aplicado, céntimos de exceso multimoneda, condonación,
+  redondeo anual, ausencia de unconverted_count y operación de adjuntos.
+- Ruff, formato, mypy estricto y pytest del script se ejecutan con herramientas
+  temporales fuera del repo, sin agregar dependencias al proyecto. Los checks
+  backend completos no aplican: no se ha creado backend en esta tarea.
