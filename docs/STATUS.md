@@ -18,7 +18,7 @@
 | 2 | **`reference/Cashew` no se actualiza.** Ninguna versión pública (ni 5.2.9+366 ni 5.3.4+396, ambas esquema 46) tiene esquema 47/48 ni tablas de etiquetas; la app de Adrian va por delante del código público. El esquema real es el DDL de T-003. | `docs/cashew-analysis.md` |
 | 3 | **Importador: SQLite primero, CSV solo de rescate, siempre sobre una copia.** | SPEC §11 (RF-40a, g, h, i), `AGENTS.md` §4 y §9 |
 | 4 | **Etiquetas:** se importan y guardan (`tags`, `transaction_tags`), con asignación y filtro básicos en V1. | SPEC RF-43 a RF-45, RF-40j, §6, §14 |
-| 5 | **Merge a `main`** tras actualizar lo anterior, con decision gate. | Pendiente de aprobación |
+| 5 | **Merge a `main`** tras actualizar lo anterior, con decision gate. | **Hecho** (fast-forward a `382425f`, gate aprobado) |
 
 ## Plan ya definido
 
