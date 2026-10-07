@@ -13,134 +13,119 @@ Para la elaboración de este análisis técnico se utilizaron exclusivamente dos
    - `python3 -c "import sqlite3; conn = sqlite3.connect('...'); cursor.execute(\"SELECT sql FROM sqlite_master WHERE type='table';\"); ..."`: extrajo únicamente las sentencias DDL (`CREATE TABLE`) y PRAGMAs de esquema (`PRAGMA user_version`).
    - `head -n 1 reference/backups/cashew-2026-10-06-18-17-57-084794.csv`: leyó únicamente la cabecera (lista de nombres de columnas) del archivo CSV.
 
-> **Confirmación de privacidad:** No se extrajo, visualizó ni copió ningún valor financiero real, registro personal, nombre de cuenta o monto de Adrian.
+> **Confirmación de privacidad:** No se extrajo, visualizó ni copió ningún valor financiero real, registro personal, nombre de cuenta o monto privado. Toda la estructura y nombres provienen del DDL de SQLite y del código fuente.
 
 ---
 
-## 2. Formatos de Respaldo y Mecanismos de Exportación/Importación en Cashew
+## 2. Desfase de Versión: Esquema Drift v46 (Código) vs Respaldo v48 (Base de Datos Real)
 
-Cashew implementa tres mecanismos de persistencia e intercambio de datos:
+### 2.1 Evidencia del Desfase
+Existe una divergencia técnica comprobable entre la copia local del código de Cashew disponible en `reference/Cashew/budget/` y el respaldo real de producción:
+- En el código fuente (`lib/database/tables.dart:29`), la versión global está fijada en `int schemaVersionGlobal = 46;` y el historial de Drift Schemas (`drift_schemas/`) culmina en `drift_schema_v46.json`.
+- En el respaldo real (`reference/backups/cashew-2026-10-05-21-02-50-406966.sql`), la cabecera binaria SQLite (bytes 60-64) y `PRAGMA user_version;` reportan unívocamente **`user_version = 48`**.
+- La copia del repositorio en `reference/Cashew/` está **desactualizada** respecto a la versión de la aplicación móvil donde se generó el respaldo.
 
-### 2.1 Archivo de Base de Datos SQLite / `.sql` / `.sqlite`
+### 2.2 Diferencias Estructurales de Tablas (DDL v48 vs Código v46)
+El DDL del respaldo SQLite contiene **12 tablas de negocio** (excluyendo la tabla interna `sqlite_sequence`):
+- **10 tablas presentes en el código Drift (`tables.dart:679-691`) y en `drift_schema_v46.json`:**
+  `wallets`, `transactions`, `categories`, `category_budget_limits`, `associated_titles`, `budgets`, `app_settings`, `scanner_templates`, `delete_logs`, `objectives`.
+- **2 tablas adicionales presentes ÚNICAMENTE en el DDL del respaldo v48 (ausentes en `@DriftDatabase` de `tables.dart`):**
+  1. `tags`: almacena etiquetas definidas por el usuario.
+  2. `transaction_to_tag_links`: tabla de unión para relaciones N:M entre transacciones y etiquetas.
 
-#### Mecanismos de Exportación
-- **Exportación manual a almacenamiento local (`lib/widgets/exportDB.dart`):**
-  - La función `exportDB(boxContext:)` invoca `saveDBFileToDevice()` (`exportDB.dart:11-45`).
-  - Llama primero a `backupSettings()` (`lib/struct/settings.dart:324`), el cual extrae el JSON de preferencias (`userSettings`) de `sharedPreferences` y lo persiste en la tabla SQLite `app_settings` con `settings_pk = 0`.
-  - Obtiene el stream binario de la base de datos subyacente mediante `getCurrentDBFileInfo()` (`lib/database/tables.dart` y dependencias de plataforma).
-  - Guarda el archivo con el patrón de nombre:
-    ```
-    cashew-YYYY-MM-DD-HH-mm-ss-ffffff.sql
-    ```
-    (generado con `cleanFileNameString(DateTime.now().toString()) + ".sql"`, `exportDB.dart:42`).
-- **Respaldo en la nube / Google Drive (`lib/widgets/accountAndBackup.dart`):**
-  - La función `createBackup()` (`accountAndBackup.dart:390-450`) persiste la configuración vía `backupSettings()` y envía el archivo binario a la carpeta de Google Drive `appDataFolder`.
-  - El nombre de archivo en Drive sigue el patrón:
-    ```
-    db-v<schemaVersionGlobal>-<deviceName>.sqlite
-    ```
-    (donde `schemaVersionGlobal = 46` en el código fuente `tables.dart:29`).
+| Tabla | En `drift_schema_v46.json` / `tables.dart` | En DDL Respaldo (`user_version = 48`) | Estado |
+|---|---|---|---|
+| `wallets` | Sí | Sí | Coincide (con columnas añadidas) |
+| `categories` | Sí | Sí | Coincide (con columna añadida) |
+| `objectives` | Sí | Sí | Idéntica |
+| `transactions` | Sí | Sí | Idéntica |
+| `budgets` | Sí | Sí | Idéntica |
+| `category_budget_limits` | Sí | Sí | Idéntica |
+| `associated_titles` | Sí | Sí | Coincide (con columna añadida) |
+| `app_settings` | Sí | Sí | Idéntica |
+| `scanner_templates` | Sí | Sí | Coincide (con columna añadida) |
+| `delete_logs` | Sí | Sí | Idéntica |
+| `tags` | **No** | **Sí** | **Añadida en v47/v48** |
+| `transaction_to_tag_links` | **No** | **Sí** | **Añadida en v47/v48** |
 
-#### Mecanismos de Importación y Restauración
-- **Restauración manual local (`lib/widgets/importDB.dart`):**
-  - La función `importDBFromDevice()` (`importDB.dart:15-55`) permite seleccionar archivos `.sql` o `.sqlite` mediante `FilePicker`.
-  - Llama a `cancelAndPreventSyncOperation()` (`lib/struct/syncClient.dart:185`) para abortar sincronizaciones concurrentes.
-  - Sobrescribe físicamente el archivo de base de datos local usando `overwriteDefaultDB(fileBytes)` (`importDB.dart:45-50`).
-  - Reinicia el idioma del sistema y establece el flag `databaseJustImported = true` (`importDB.dart:52-53`).
-  - Requiere un reinicio o recarga obligatoria de la app (`importDB.dart:95-102`). Al abrirse, Drift ejecuta las migraciones automáticas (`tables.dart:927-1168`) si la versión de la base importada es anterior a `schemaVersionGlobal`.
+### 2.3 Diferencias de Columnas por Tabla (DDL v48 vs Código v46)
+Comparando `drift_schema_v46.json` contra las columnas del DDL extraídas de `sqlite_master`:
 
----
+| Tabla | Columnas añadidas en Respaldo v48 (Ausentes en código v46) | Columnas eliminadas |
+|---|---|---|
+| `wallets` | `archived` (`INTEGER NOT NULL DEFAULT 0 CHECK ("archived" IN (0, 1))`), `emoji_icon_name` (`TEXT NULL`) | Ninguna |
+| `categories` | `archived` (`INTEGER NOT NULL DEFAULT 0 CHECK ("archived" IN (0, 1))`) | Ninguna |
+| `associated_titles` | `archived` (`INTEGER NOT NULL DEFAULT 0 CHECK ("archived" IN (0, 1))`) | Ninguna |
+| `scanner_templates` | `default_title` (`TEXT NULL DEFAULT NULL`) | Ninguna |
+| `tags` (nueva) | `tag_pk`, `name`, `colour`, `icon_name`, `emoji_icon_name`, `date_created`, `date_time_modified`, `order`, `archived` | N/A |
+| `transaction_to_tag_links` (nueva)| `transaction_pk`, `tag_pk` | N/A |
 
-### 2.2 Archivo CSV (`.csv`)
-
-#### Mecanismo de Exportación (`lib/widgets/exportCSV.dart`)
-- La clase `ExportCSV` y el método `exportCSV()` (`exportCSV.dart:77-176`) permiten filtrar por un rango de fechas (`DateTimeRange`) y por una lista de billeteras (`selectedWalletPks`).
-- **Filtro restrictivo crítico:**
-  ```dart
-  // exportCSV.dart:88
-  tbl.paid.equals(true)
-  ```
-  **Solo exporta transacciones con `paid == true`**. Las transacciones pendientes (`paid == false`), como cuotas impagas o deudas activas no liquidadas en la lógica de Cashew, son completamente omitidas.
-- **Columnas exportadas por defecto en Cashew (`exportCSV.dart:110-140`):**
-  1. `account`: Nombre de la billetera (`transactionWithCategory.wallet?.name`).
-  2. `amount`: Monto como cadena (`transactionWithCategory.transaction.amount.toString()`).
-  3. `currency`: Código de moneda en mayúsculas (`wallet.currency.allCaps`).
-  4. `title`: Nombre o concepto de la transacción (`transaction.name`).
-  5. `note`: Nota textual (`transaction.note`).
-  6. `date`: Fecha de creación en formato ISO (`transaction.dateCreated.toString()`).
-  7. `income`: Booleano `"true"` o `"false"` (`transaction.income.toString()`).
-  8. `type`: Entero como cadena que mapea a `TransactionSpecialType` (`transaction.type.toString()`).
-  9. `category name`: Nombre de la categoría principal (`category.name`).
-  10. `subcategory name`: Nombre de la subcategoría si existe (`subCategory?.name`).
-  11. `color`: Color hexadecimal de la categoría (`category.colour`).
-  12. `icon`: Nombre del asset de icono (`category.iconName`).
-  13. `emoji`: Emoji asociado a la categoría (`category.emojiIconName`).
-  14. `budget`: Nombre del presupuesto asignado (`budget?.name`).
-  15. `objective`: Nombre del objetivo o meta asignada (`objective?.name`).
-- **Variantes en respaldos de usuario:**
-  En archivos reales generados por exportaciones anteriores o personalizadas, pueden encontrarse cabeceras con columnas complementarias formateadas para visualización:
+### 2.4 Diferencias en Cabecera CSV vs Código `exportCSV.dart`
+- **Cabecera exportada según código `exportCSV.dart:110-140` (15 columnas):**
+  `account`, `amount`, `currency`, `title`, `note`, `date`, `income`, `type`, `category name`, `subcategory name`, `color`, `icon`, `emoji`, `budget`, `objective`.
+- **Cabecera en archivo real `reference/backups/cashew-2026-10-06-18-17-57-084794.csv` (17 columnas):**
   `account,amount,amount unpaid,currency,title,note,date,income,type,category name,subcategory name,color,icon,emoji,budget,objective,extra`
-  donde `extra` contiene etiquetas informativas de periodicidad (p. ej. `Repetir cada 1 mes • martes, 10 de marzo`) y `amount unpaid` refleja montos pendientes calculados para la vista.
-- Los datos se serializan usando `ListToCsvConverter().convert(csvData)` (`exportCSV.dart:151`).
-- El nombre de archivo generado es `cashew-YYYY-MM-DD-HH-mm-ss-ffffff.csv` o `cashew-<timestamp>-<start>-to-<end>.csv`.
+- **Columnas no generadas por el código disponible en `reference/`:**
+  - `amount unpaid`: Ausente en `exportCSV.dart` del commit actual. Representa un cálculo de saldo pendiente exportado en versiones posteriores de Cashew.
+  - `extra`: Ausente en `exportCSV.dart`. Contiene cadenas de texto con resúmenes de periodicidad/fechas de repetición formateadas para visualización.
+  - Esto confirma que el ejecutable de Cashew del cual Adrian obtuvo el CSV corresponde a una versión compilada más reciente que el código en `reference/`.
 
-#### Mecanismo de Importación (`lib/widgets/importCSV.dart`)
-- `ImportCSV` (`importCSV.dart:42-658`) permite seleccionar un archivo `.csv` o ingresar la URL de una hoja de cálculo pública de Google Sheets (`importCSV.dart:573-594`).
-- **Detección de codificación:** En plataformas nativas utiliza `CharsetDetector.autoDecode(fileBytes)` (`importCSV.dart:69-70`), manejando UTF-8, Windows-1252/ISO-8859-1, etc. En web decodifica UTF-8 directo.
-- **Asignación interactiva de columnas (`_assignColumns`, `importCSV.dart:133-185`):**
-  Busca cabeceras requeridas (`date`, `amount`, `category`, `wallet`) y opcionales (`name`/`title`, `note`).
-- **Creación sobre la marcha:** Si una categoría o billetera nombrada en el CSV no existe en la base de datos, `_importEntry` (`importCSV.dart:945-1017`) la crea automáticamente con valores predeterminados.
-- **Pérdida de identidad:** Asigna claves primarias generadas aleatoriamente (`uuid.v4()`) y marca el método de adición como `MethodAdded.csv` (`importCSV.dart:1094`).
+### 2.5 Impacto en el Importador de Monetae
+1. **Detección dinámica de versión:** El importador debe consultar `PRAGMA user_version;` al abrir la base SQLite.
+2. **Tolerancia a esquemas evolutivos (Forward-compatibility):** Al mapear tablas con SQLAlchemy/Pydantic, el importador debe consultar dinámicamente las columnas existentes vía `PRAGMA table_info` o inspección reflectiva, ignorando silenciosamente columnas accesorias desconocidas o mapeando `archived` si existe.
+3. **Manejo de Etiquetas (`tags`):** En esquemas v48, el importador puede migrar las etiquetas a tags de Monetae si se habilitan en el dominio, o ignorar la tabla si no es requerida en V1.
 
----
-
-### 2.3 Sincronización Multi-dispositivo / Sincronización Cloud (`lib/struct/syncClient.dart`)
-
-- **Naturaleza del formato:** A pesar de llamarse sincronización cliente-servidor, Cashew **no utiliza un endpoint REST con payloads JSON** para sus entidades relacionales.
-- **Mecanismo:**
-  1. Cada dispositivo sube su base de datos SQLite completa a Google Drive (`appDataFolder`) con el nombre `sync-<clientID>.sqlite` (`syncClient.dart:35-38, 148-150`).
-  2. Al sincronizar (`_syncData`, `syncClient.dart:214-548`), descarga los archivos `.sqlite` de los demás clientes.
-  3. Abre temporalmente dicha base SQLite secundaria montándola como base `syncdb` (`syncClient.dart:326-356`).
-  4. Lee de la base remota las filas con `dateTimeModified > lastSynced` en las tablas:
-     `wallets`, `categories`, `budgets`, `category_budget_limits`, `transactions`, `associated_titles`, `scanner_templates`, `objectives` y `delete_logs`.
-  5. Consolida estas operaciones en una cola en memoria de objetos `SyncLog` (`syncClient.dart:155-174`) y las aplica localmente con `database.processSyncLogs(syncLogs)` (`syncClient.dart:518`).
-  6. Para borrados físicos utiliza `DeleteLog`, que registra `entryPk`, el enum `DeleteLogType` y la fecha de borrado.
+> [!WARNING] **Decisión pendiente de Adrian**  
+> Se recomienda actualizar la copia de `reference/Cashew/` en el repositorio a la versión de código fuente o tag correspondiente a la versión 48 de la base de datos de Cashew. Esto garantizará que el código analizado coincida exactamente con la aplicación móvil en producción utilizada para los respaldos.
 
 ---
 
-## 3. Esquema Completo del Formato SQLite (`.sql` / `.sqlite`)
+## 3. Esquema de los Formatos y Codificaciones
 
-El archivo `.sql` exportado por Cashew es en realidad una **base de datos relacional SQLite 3 binaria** generada por la librería Drift (Moor).
+### 3.1 Unidad y Codificación de Fechas (`DateTime`)
 
-### 3.1 Detección de Versión de Esquema
-1. **Pragma estándar de SQLite:**
-   ```sql
-   PRAGMA user_version;
+#### Análisis Técnico de Configuración y Código
+1. **Configuración de Drift (`build.yaml` y dependencias):**
+   - Se verificó que **no existe ningún archivo `build.yaml`** en `reference/Cashew/budget/` (`[Verificado en código]`).
+   - Drift utiliza por defecto la representación numérica en enteros SQLite (`INTEGER`) para columnas declaradas mediante `dateTime()`.
+   - La opción de guardar fechas como cadenas ISO-8601 (`store_date_time_values_as_text`) **no está activada** (`[Verificado en código]`).
+2. **DDL de SQLite:**
+   Todas las columnas temporales (`date_created`, `date_time_modified`, `original_date_due`, `end_date`, `start_date`, `date_updated`) están declaradas como `INTEGER` (`[Verificado en DDL]`).
+3. **Escala y Unidad de Medida:**
+   - En Drift estándar para Dart/Flutter sin conversores personalizados, `dateTime()` serializa objetos `DateTime` a **segundos Unix epoch** (o milisegundos en configuraciones JS/Web) (`[Verificado en especificación de Drift / Código Dart]`).
+   - Por ejemplo, en el DDL de migraciones (`tables.dart:952-1168`), los valores por defecto asignados por Drift a `date_time_modified` aparecen como enteros de 10 dígitos (p. ej. `1753912320`), lo cual corresponde exactamente a **segundos Unix epoch** (10 dígitos representan años en el rango 1970–2038+).
+4. **Regla de Inferencia Robusta para el Importador (`[Inferencia]`):**
+   Para garantizar que el importador maneje cualquier respaldo (sea originado en cliente móvil nativo o en cliente web/IndexedDB con serializaciones de distinta escala), se establece la siguiente regla algorítmica de detección por magnitud:
+   ```python
+   def parse_cashew_timestamp(val: int | None) -> datetime | None:
+       if val is None:
+           return None
+       # Si el valor tiene magnitud de segundos (< 1e11, aprox. hasta el año 5138)
+       if val < 100_000_000_000:
+           return datetime.fromtimestamp(val, tz=timezone.utc)
+       # Si tiene magnitud de milisegundos (< 1e14)
+       elif val < 100_000_000_000_000:
+           return datetime.fromtimestamp(val / 1000.0, tz=timezone.utc)
+       # Si tiene magnitud de microsegundos
+       else:
+           return datetime.fromtimestamp(val / 1_000_000.0, tz=timezone.utc)
    ```
-   Drift almacena directamente el número entero de la versión de esquema en la cabecera del archivo SQLite. En el código fuente de Cashew, `schemaVersionGlobal` está fijado en `46` (`lib/database/tables.dart:29`), mientras que en versiones recientes de producción alcanza la versión `48` (constatado en respaldos recientes).
-2. **Nombre de archivo en nube:** Los respaldos en Google Drive incorporan la versión en el nombre: `db-v46-<device>.sqlite`.
-3. **Versión en `app_settings`:** En la tabla `app_settings`, la columna `settings_j_s_o_n` contiene un objeto serializado con campos como `"databaseVersion"` o preferencias de compilación.
 
 ---
 
-### 3.2 Tablas, Columnas, Tipos y Codificaciones
-
-A continuación se detalla la estructura física de las 12 tablas presentes en el esquema SQLite de Cashew (`lib/database/tables.dart` y validación DDL):
-
-#### Codificaciones Generales:
-- **Identificadores (PK/FK):** `TEXT` conteniendo UUID v4 en formato canónico de 36 caracteres con guiones (p. ej. `a1b2c3d4-e5f6-789a-bcde-f0123456789a`). Excepción: `wallet_fk = '0'` representa la billetera por defecto.
-- **Fechas y Tiempos:** `INTEGER` que almacena microsegundos o milisegundos Unix epoch UTC desde 1970 (`dateTime().clientDefault(...)` en Drift convierte `DateTime` a enteros Unix).
-- **Booleanos:** `INTEGER` con restricción `CHECK (columna IN (0, 1))`. `0 = false`, `1 = true`.
-- **Montos Monetarios:** `REAL` (coma flotante IEEE 754 de 64 bits en SQLite). **Advertencia técnica:** Monetae debe convertir estos valores inmediatamente a `Decimal` de precisión fija.
-- **Listas JSON en columnas de texto:** Ciertas columnas usan convertidores de Drift (`TypeConverter<List<...>, String>`) que serializan arrays JSON como cadenas de texto plano (p. ej. `["uuid1", "uuid2"]` o `[0, 1, 2]`).
+### 3.2 Otras Codificaciones y Tipos
+- **Identificadores (PK/FK):** `TEXT` conteniendo UUID v4 en formato canónico de 36 caracteres con guiones (`uuid.v4()`, `[Verificado en código: tables.dart:240, 252, 275]`). Excepción: `wallet_fk = '0'` representa la billetera inicial/por defecto.
+- **Booleanos:** `INTEGER` con restricción `CHECK (columna IN (0, 1))`. `0 = false`, `1 = true` (`[Verificado en código y DDL]`).
+- **Montos Monetarios:** `REAL` (coma flotante IEEE 754 de 64 bits en SQLite, `[Verificado en código: tables.dart:281, 426, 519]`). Monetae debe convertirlos inmediatamente a `Decimal` de precisión fija redondeando a 2 decimales (`ROUND_HALF_UP`).
+- **Listas JSON en columnas de texto:** Convertidores como `StringListInColumnConverter` (`tables.dart:185-199`) y `BudgetTransactionFiltersListInColumnConverter` (`tables.dart:145-163`) serializan arrays como cadenas JSON (ej. `["uuid1", "uuid2"]` o `[0, 1, 2]`).
 
 ---
 
-#### Detalle de Tablas
+### 3.3 Esquema Detallado de Tablas SQLite (12 Tablas)
 
-### 1. `wallets` (Cuentas / Billeteras)
-- Definición Drift: `lib/database/tables.dart:251-271`.
-- DDL en SQLite:
+#### 1. `wallets` (10 cols en código v46; 12 cols en DDL v48)
+- Código Drift: `lib/database/tables.dart:251-271`.
+- DDL en v48:
   ```sql
   CREATE TABLE "wallets" (
     "wallet_pk" TEXT NOT NULL PRIMARY KEY,
@@ -158,16 +143,10 @@ A continuación se detalla la estructura física de las 12 tablas presentes en e
     "emoji_icon_name" TEXT NULL
   );
   ```
-- **Campos clave para Monetae:**
-  - `wallet_pk`: Mapea a `accounts.id` (`UUID`).
-  - `name`: Nombre de la cuenta bancaria / efectivo.
-  - `currency`: Código ISO 4217 de 3 letras (p. ej. `"PEN"`, `"USD"`). Si es `null`, asume la divisa primaria global.
-  - `decimals`: Precisión de decimales (generalmente `2`).
-  - `archived`: Estado de archivado (`0` o `1`).
 
-### 2. `categories` (Categorías y Subcategorías)
-- Definición Drift: `lib/database/tables.dart:343-373`.
-- DDL en SQLite:
+#### 2. `categories` (10 cols en código v46; 11 cols en DDL v48)
+- Código Drift: `lib/database/tables.dart:343-373`.
+- DDL en v48:
   ```sql
   CREATE TABLE "categories" (
     "category_pk" TEXT NOT NULL PRIMARY KEY,
@@ -184,15 +163,10 @@ A continuación se detalla la estructura física de las 12 tablas presentes en e
     "archived" INTEGER NOT NULL DEFAULT (0) CHECK ("archived" IN (0, 1))
   );
   ```
-- **Campos clave para Monetae:**
-  - `category_pk`: Mapea a `categories.id`.
-  - `main_category_pk`: Si es `NULL`, es categoría padre/raíz. Si tiene valor, apunta a su categoría padre (`categories.parent_id`).
-  - `income`: `0 = gasto`, `1 = ingreso`.
-  - `archived`: Borrado lógico/archivado.
 
-### 3. `objectives` (Metas de Ahorro y Préstamos en Cashew)
-- Definición Drift: `lib/database/tables.dart:515-539`.
-- DDL en SQLite:
+#### 3. `objectives` (15 cols en código v46 y DDL v48)
+- Código Drift: `lib/database/tables.dart:515-539`.
+- DDL en v48:
   ```sql
   CREATE TABLE "objectives" (
     "objective_pk" TEXT NOT NULL PRIMARY KEY,
@@ -212,17 +186,10 @@ A continuación se detalla la estructura física de las 12 tablas presentes en e
     "wallet_fk" TEXT NOT NULL DEFAULT '0' REFERENCES wallets (wallet_pk)
   );
   ```
-- **Semántica crítica (`ObjectiveType`, `tables.dart:52-55`):**
-  - `type = 0` (`ObjectiveType.goal`): Meta u objetivo de ahorro tradicional.
-  - `type = 1` (`ObjectiveType.loan`): Préstamo a largo plazo.
-    - Si `income == 1`: Dinero prestado a un tercero (crédito por cobrar / *lent*).
-    - Si `income == 0`: Dinero recibido en préstamo (deuda por pagar / *borrowed*).
-  - `amount`: Monto total de la meta o capital del préstamo.
-  - `wallet_fk`: Billetera por defecto a la que Cashew asociaba erróneamente todo el préstamo (Problema P3 de Monetae).
 
-### 4. `transactions` (Transacciones)
-- Definición Drift: `lib/database/tables.dart:274-340`.
-- DDL en SQLite:
+#### 4. `transactions` (31 cols en código v46 y DDL v48)
+- Código Drift: `lib/database/tables.dart:274-340`.
+- DDL en v48:
   ```sql
   CREATE TABLE "transactions" (
     "transaction_pk" TEXT NOT NULL PRIMARY KEY,
@@ -258,23 +225,10 @@ A continuación se detalla la estructura física de las 12 tablas presentes en e
     "budget_fks_exclude" TEXT NULL
   );
   ```
-- **Campos críticos y enums (`tables.dart:42-51`):**
-  - `type` (`TransactionSpecialType`):
-    - `0`: `upcoming` (futuro programado).
-    - `1`: `subscription` (suscripción periódica).
-    - `2`: `repetitive` (pago repetitivo común).
-    - `3`: `credit` (préstamo otorgado / cobro pendiente).
-    - `4`: `debt` (préstamo recibido / pago adeudado).
-  - `reoccurrence` (`BudgetReoccurence`): `0: custom, 1: daily, 2: weekly, 3: monthly, 4: yearly`.
-  - `period_length`: Frecuencia de repetición (ej. cada `1` mes).
-  - `paired_transaction_fk`: En transferencias entre cuentas, Cashew genera dos transacciones enlazadas mutuamente por esta clave.
-  - `objective_loan_fk`: Enlace directo al préstamo padre en `objectives`. Los pagos o desembolsos asociados llevan esta FK.
-  - `objective_fk`: Enlace a meta de ahorro.
-  - `budget_fks_exclude`: Array JSON `["uuid", ...]` con IDs de presupuestos que excluyen expresamente este gasto.
 
-### 5. `budgets` (Presupuestos)
-- Definición Drift: `lib/database/tables.dart:423-475`.
-- DDL en SQLite:
+#### 5. `budgets` (27 cols en código v46 y DDL v48)
+- Código Drift: `lib/database/tables.dart:423-475`.
+- DDL en v48:
   ```sql
   CREATE TABLE "budgets" (
     "budget_pk" TEXT NOT NULL PRIMARY KEY,
@@ -306,15 +260,10 @@ A continuación se detalla la estructura física de las 12 tablas presentes en e
     "is_absolute_spending_limit" INTEGER NOT NULL DEFAULT 0 CHECK ("is_absolute_spending_limit" IN (0, 1))
   );
   ```
-- **Campos serializados:**
-  - `wallet_fks`: Lista JSON de cadenas con billeteras asignadas al presupuesto.
-  - `category_fks`: Lista JSON con categorías incluidas.
-  - `category_fks_exclude`: Lista JSON con categorías explícitamente excluidas.
-  - `budget_transaction_filters`: Lista JSON de enteros correspondientes al enum `BudgetTransactionFilters` (`tables.dart:76-84`).
 
-### 6. `category_budget_limits` (Límites por Categoría dentro de Presupuesto)
-- Definición Drift: `lib/database/tables.dart:376-388`.
-- DDL en SQLite:
+#### 6. `category_budget_limits` (6 cols en código v46 y DDL v48)
+- Código Drift: `lib/database/tables.dart:376-388`.
+- DDL en v48:
   ```sql
   CREATE TABLE "category_budget_limits" (
     "category_limit_pk" TEXT NOT NULL PRIMARY KEY,
@@ -326,9 +275,9 @@ A continuación se detalla la estructura física de las 12 tablas presentes en e
   );
   ```
 
-### 7. `associated_titles` (Reglas de Auto-categorización por Título)
-- Definición Drift: `lib/database/tables.dart:395-408`.
-- DDL en SQLite:
+#### 7. `associated_titles` (7 cols en código v46; 8 cols en DDL v48)
+- Código Drift: `lib/database/tables.dart:395-408`.
+- DDL en v48:
   ```sql
   CREATE TABLE "associated_titles" (
     "associated_title_pk" TEXT NOT NULL PRIMARY KEY,
@@ -341,11 +290,10 @@ A continuación se detalla la estructura física de las 12 tablas presentes en e
     "archived" INTEGER NOT NULL DEFAULT (0) CHECK ("archived" IN (0, 1))
   );
   ```
-- **Utilidad:** Reglas heurísticas de coincidencia de texto (subcadena o coincidencia exacta) para asignar categorías automáticamente al ingresar transacciones.
 
-### 8. `app_settings` (Configuraciones de la Aplicación y Estado de Usuario)
-- Definición Drift: `lib/database/tables.dart:479-486`.
-- DDL en SQLite:
+#### 8. `app_settings` (3 cols en código v46 y DDL v48)
+- Código Drift: `lib/database/tables.dart:479-486`.
+- DDL en v48:
   ```sql
   CREATE TABLE "app_settings" (
     "settings_pk" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -353,11 +301,10 @@ A continuación se detalla la estructura física de las 12 tablas presentes en e
     "date_updated" INTEGER NOT NULL
   );
   ```
-- **Contenido:** Cadena JSON con todas las preferencias globales (`selectedWalletPk`, monedas secundarias, tasa de cambio FX personalizada, día de inicio de mes, tema visual, etc.).
 
-### 9. `scanner_templates` (Plantillas de Escaneo de Notificaciones / Correos)
-- Definición Drift: `lib/database/tables.dart:489-511`.
-- DDL en SQLite:
+#### 9. `scanner_templates` (12 cols en código v46; 13 cols en DDL v48)
+- Código Drift: `lib/database/tables.dart:489-511`.
+- DDL en v48:
   ```sql
   CREATE TABLE "scanner_templates" (
     "scanner_template_pk" TEXT NOT NULL PRIMARY KEY,
@@ -376,9 +323,9 @@ A continuación se detalla la estructura física de las 12 tablas presentes en e
   );
   ```
 
-### 10. `delete_logs` (Registro de Entidades Eliminadas)
-- Definición Drift: `lib/database/tables.dart:239-248`.
-- DDL en SQLite:
+#### 10. `delete_logs` (4 cols en código v46 y DDL v48)
+- Código Drift: `lib/database/tables.dart:239-248`.
+- DDL en v48:
   ```sql
   CREATE TABLE "delete_logs" (
     "delete_log_pk" TEXT NOT NULL PRIMARY KEY,
@@ -388,8 +335,8 @@ A continuación se detalla la estructura física de las 12 tablas presentes en e
   );
   ```
 
-### 11 y 12. `tags` y `transaction_to_tag_links` (Etiquetas y Vínculos N:M)
-- DDL en SQLite (incorporadas en esquemas v47-v48):
+#### 11. `tags` (Solo en DDL v48, ausente en código v46)
+- DDL en v48:
   ```sql
   CREATE TABLE "tags" (
     "date_created" INTEGER NOT NULL,
@@ -402,7 +349,11 @@ A continuación se detalla la estructura física de las 12 tablas presentes en e
     "emoji_icon_name" TEXT NULL,
     "tag_pk" TEXT NOT NULL PRIMARY KEY
   );
+  ```
 
+#### 12. `transaction_to_tag_links` (Solo en DDL v48, ausente en código v46)
+- DDL en v48:
+  ```sql
   CREATE TABLE "transaction_to_tag_links" (
     "transaction_pk" TEXT NULL REFERENCES transactions (transaction_pk),
     "tag_pk" TEXT NULL REFERENCES tags (tag_pk),
@@ -412,20 +363,17 @@ A continuación se detalla la estructura física de las 12 tablas presentes en e
 
 ---
 
-## 4. Análisis Comparativo: Pérdida y Aplanamiento de Información en CSV vs SQLite
+## 4. Análisis Comparativo: Pérdida y Aplanamiento en CSV frente a SQLite
 
-Al contrastar la exportación plana CSV frente a la base SQLite completa, se evidencia una **pérdida estructural masiva de datos**:
-
-| Dimensión | Formato SQLite (`.sql`) | Formato CSV (`.csv`) | Impacto en la Importación de Monetae |
+| Dimensión | Formato SQLite (`.sql`) | Formato CSV (`.csv`) | Impacto en Monetae |
 |---|---|---|---|
-| **Transacciones no pagadas / pendientes** | **Preserva todas** (`paid == 0` y `paid == 1`). | **PÉRDIDA TOTAL.** El filtro `tbl.paid.equals(true)` en `exportCSV.dart:88` excluye todas las filas con `paid == false`. | Imposible reconstruir deudas activas impagas o transacciones programadas pendientes. |
+| **Transacciones no pagadas / pendientes** | **Preserva todas** (`paid == 0` y `paid == 1`). | **PÉRDIDA TOTAL.** El filtro `tbl.paid.equals(true)` en `exportCSV.dart:88` omite todas las filas con `paid == false`. | Imposible recuperar deudas activas impagas ni transacciones programadas pendientes. |
 | **Identificadores (UUIDs)** | **Conserva todas las PKs y FKs originales** (`transaction_pk`, `wallet_pk`, etc.). | **PÉRDIDA TOTAL.** El CSV no exporta ningún PK/FK; solo exporta nombres textuales. | La reimportación de un CSV no puede ser idempotente sin claves subrogadas artificiales; alto riesgo de duplicación. |
-| **Transferencias entre cuentas** | **Preserva el par relacional** mediante `paired_transaction_fk`. | **Aplanadas o divididas** en 2 transacciones independientes (gasto en cuenta A, ingreso en cuenta B). | Pierde el enlace transaccional de contrapartida. |
+| **Transferencias entre cuentas** | **Preserva el par relacional** mediante `paired_transaction_fk`. | **Aplanadas o divididas** en 2 transacciones independientes. | Pierde el enlace transaccional de contrapartida. |
 | **Préstamos (`loans` y `objectives`)** | **Preserva la entidad completa:** capital, estado, balance, fechas, tipo de préstamo (`type = 1`), y los enlaces `objective_loan_fk`. | **PÉRDIDA CASI TOTAL.** Solo exporta el nombre del objetivo en la columna textual `objective`. No exporta capital, intereses ni estado de liquidación. | No permite reconstruir el libro mayor de préstamos de Monetae (`P1-P3`). |
-| **Suscripciones y Recurrencias** | **Estructura relacional intacta:** `period_length`, `reoccurrence`, `endDate`, `type = 1`. | **Aplanado a texto.** Exporta únicamente el texto formateado en una columna accesoria `extra` o en notas; pierde la regla de periodicidad tipada. | Requiere parsing frágil de cadenas de texto natural para detectar reglas recurrentes. |
-| **Presupuestos y Reglas** | **Preserva la tabla `budgets`:** límites de gasto, periodos, filtros avanzados y `category_budget_limits`. | **PÉRDIDA TOTAL.** Solo exporta el nombre del presupuesto en el que cayó la transacción. No exporta montos asignados ni reglas de presupuesto. | Los presupuestos históricos no se pueden restaurar desde un CSV. |
+| **Suscripciones y Recurrencias** | **Estructura relacional intacta:** `period_length`, `reoccurrence`, `endDate`, `type = 1`. | **Aplanado a texto.** En versiones recientes exporta una columna accesoria `extra` con texto de periodicidad localizado (o notas); pierde la regla de periodicidad tipada. | Requiere parsing frágil de cadenas de texto natural para detectar reglas recurrentes. |
+| **Presupuestos y Reglas** | **Preserva la tabla `budgets`:** límites de gasto, periodos, filtros avanzados y `category_budget_limits`. | **PÉRDIDA TOTAL.** Solo exporta el nombre del presupuesto en el que cayó la transacción. | Los presupuestos históricos no se pueden restaurar desde un CSV. |
 | **Auto-categorizaciones (`associated_titles`)** | **Preserva todas las reglas** y patrones configurados por el usuario. | **PÉRDIDA TOTAL.** No se exporta ninguna regla de auto-categorización. | Se pierde la heurística personalizada del usuario. |
-| **Precisión Numérica de Dinero** | Valores numéricos `REAL` con decimales originales exactos. | Valores formateados a cadena mediante `.toString()`. | Posible truncamiento o problemas de localización de separador decimal (coma vs punto). |
 | **Etiquetas (`tags`)** | Preserva entidades y tabla intermedia N:M `transaction_to_tag_links`. | No se exportan etiquetas. | Pérdida total de tags aplicados. |
 
 ---
@@ -440,91 +388,138 @@ Se recomienda categóricamente que **el importador de Monetae (`RF-40a`) utilice
 2. **Reconstrucción del Libro Mayor de Préstamos (`P1`, `P2`, `P3`):**
    Permite migrar directamente cada `Objective` de tipo `loan` a la tabla `loans` de Monetae, y cada transacción vinculada por `objective_loan_fk` a `loan_movements`, conservando su cuenta de desembolso o pago específica (`wallet_fk`), cumpliendo la especificación `docs/SPEC.md §7`.
 3. **Idempotencia Garantizada:**
-   Al disponer de los UUIDs originales de Cashew (`transaction_pk`, `wallet_pk`, `category_pk`, `budget_pk`), Monetae puede almacenar `external_id = cashew:<transaction_pk>` en una columna de trazabilidad o índice único. Esto permite reejecutar el importador múltiples veces sobre respaldos incrementales sin duplicar transacciones.
+   Al disponer de los UUIDs originales de Cashew (`transaction_pk`, `wallet_pk`, `category_pk`, `budget_pk`), Monetae puede almacenar `external_id = cashew:sqlite:<transaction_pk>` en una columna de trazabilidad con índice único. Esto permite reejecutar el importador múltiples veces sobre respaldos incrementales sin duplicar transacciones.
 4. **Sencillez de Parseo en Python:**
-   Python 3.12 incluye de manera nativa la librería `sqlite3`, lo que permite leer el archivo directamente en memoria o conectarse sin dependencias pesadas adicionales ni riesgo de fallos por dialectos CSV.
+   Python 3.12 incluye de manera nativa la librería `sqlite3`, lo que permite leer el archivo directamente sin dependencias pesadas adicionales ni riesgo de fallos por dialectos CSV.
 
-### 5.2 Fuente Secundaria / de Respaldo: Archivo CSV (`.csv`)
-El formato CSV debe tratarse exclusivamente como un **mecanismo de migración de emergencia o de rescate (`RF-40b`)**, para usuarios que solo tengan a disposición su exportación de transacciones o provenientes de software externo (como Mint o Google Sheets).
+---
+
+### 5.2 Fuente Secundaria: Archivo CSV (`.csv`) y Contradicción con AGENTS.md
+
+> [!IMPORTANT] **Decisión pendiente de Adrian: SQLite vs CSV en AGENTS.md §4**  
+> `AGENTS.md §4` indica:
+> > *"backups/ # respaldos reales de Adrian (preferible usa el .csv por si los demás no los puedes procesar)"*  
+> 
+> Sin embargo, el análisis técnico del código de Cashew demuestra una limitación crítica:
+> `lib/widgets/exportCSV.dart:88` aplica estrictamente `tbl.paid.equals(true)`. Esto implica que:
+> 1. Todas las deudas activas o préstamos únicos pendientes se exportan con `paid = false` cuando están vigentes, o mutan a `paid = false` cuando se liquidan en Cashew (`upcomingTransactionsFunctions.dart:393`).
+> 2. **Cualquier transacción con `paid = false` es excluida por completo del CSV.**  
+> 3. Los préstamos y deudas desaparecen del CSV, reproduciendo e intensificando el problema **P1**.
+> 
+> **Recomendación:** Mantener SQLite (`.sql`) como fuente primaria mandataria para la importación completa (`RF-40a`). El soporte CSV debe implementarse únicamente como un importador secundario de rescate/transacciones simples (`RF-40b`), advirtiendo al usuario que no restaurará presupuestos, suscripciones ni préstamos.
 
 ---
 
 ### 5.3 Estrategia de Idempotencia y Claves de Unicidad
-
-Para evitar duplicaciones durante importaciones sucesivas:
 1. **Importación desde SQLite (`.sql`):**
-   - Utilizar el identificador primario de Cashew:
-     ```python
-     # Clave de idempotencia
-     idempotency_key = f"cashew:sqlite:{transaction_pk}"
-     ```
-   - Si ya existe una transacción con dicho `cashew:sqlite:<pk>` para el usuario actual, se ejecuta un `UPDATE` (upsert) o se omite (`DO NOTHING`).
-2. **Importación desde CSV (`.csv`):**
-   - Dado que el CSV carece de IDs, debe calcularse una clave natural determinística mediante un hash criptográfico SHA-256 de los campos canónicos:
-     ```python
-     # Clave natural determinística para CSV
-     raw_signature = f"{wallet_name}|{date_iso}|{amount_str}|{title.strip().lower()}|{note.strip()}"
-     idempotency_hash = hashlib.sha256(raw_signature.encode('utf-8')).hexdigest()
-     ```
-   - Si existen transacciones legítimas duplicadas en el mismo minuto por el mismo concepto e importe, se añade el índice de fila de la primera ocurrencia dentro del archivo.
-
----
-
-### 5.4 Mitigación de Riesgos y Versionado de Esquema
-1. **Detección de Versión de Esquema:**
-   Al procesar el archivo `.sql`, el importador debe consultar primero:
-   ```sql
-   PRAGMA user_version;
+   ```python
+   # Clave de idempotencia determinística
+   idempotency_key = f"cashew:sqlite:{transaction_pk}"
    ```
-   - Si `user_version >= 40`: Soporta la estructura completa con `objectives` y préstamos enlazados.
-   - Si `user_version < 40`: Requiere un adaptador de compatibilidad para esquemas legados (p. ej. versiones v33-v39 donde `objectives` no existía o no tenía FKs en `transactions`).
-2. **Monedas y Tasa FX:**
-   Cashew almacena montos en la moneda propia de cada billetera pero no congela el tipo de cambio histórico en cada transacción. Monetae exige `fx_rate_to_base` vigente al registrar la transacción (`AGENTS.md §6.3`). El importador deberá resolver la tasa FX hacia la moneda base (`PEN`) consultando la configuración histórica o asumiendo paridad 1.0 si la cuenta ya está en la moneda base.
-3. **Mapeo de Float a Decimal:**
-   En SQLite los montos son `REAL`. El importador debe deserializar `amount` convirtiendo primero a cadena (`str(row['amount'])`) y luego instanciando `Decimal(str_amount).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)`. Jamás operar aritméticamente con floats intermedios.
+   Si ya existe un registro con dicha clave externa para el `user_id`, se ejecuta un `UPSERT` o se omite (`DO NOTHING`).
+2. **Importación desde CSV (`.csv`):**
+   Dado que el CSV carece de IDs, debe calcularse un hash SHA-256 de campos canónicos:
+   ```python
+   raw_signature = f"{wallet_name}|{date_iso}|{amount_str}|{title.strip().lower()}|{note.strip()}"
+   idempotency_hash = hashlib.sha256(raw_signature.encode('utf-8')).hexdigest()
+   ```
 
 ---
 
 ## 6. Propuesta de Fixture Sintético para Pruebas
 
-Para validar el importador de Monetae sin comprometer ningún dato confidencial de Adrian (`AGENTS.md §8`, `docs/SPEC.md §11`), se define la estructura y reglas para la generación de un **respaldo ficticio sintético**.
+Para validar el importador de Monetae sin utilizar datos confidenciales reales (`AGENTS.md §8`, `docs/SPEC.md §11`), se define la estructura y reglas de un fixture sintético (`tests/fixtures/synthetic_cashew_backup.sql`).
 
-### 6.1 Estructura del Fixture Sintético
-El fixture consistirá en:
-1. `tests/fixtures/synthetic_cashew_backup.sql`: Base de datos SQLite sintética (esquema versión 46-48).
-2. `tests/fixtures/synthetic_cashew_export.csv`: Archivo CSV sintético equivalente.
+El fixture representará fielmente cómo Cashew almacena en su esquema Drift los casos descritos en `docs/SPEC.md §7` (Ejemplos A a E), más suscripciones, transferencias y presupuestos.
 
-### 6.2 Casos de Prueba Cubiertos por el Fixture Sintético
+### 6.1 Catálogo Base Sintético
+- **Cuentas (`wallets`):**
+  - `wallet-1`: `"BCP Soles"` (Moneda: `PEN`, `decimals: 2`).
+  - `wallet-2`: `"Interbank Dólares"` (Moneda: `USD`, `decimals: 2`).
+  - `wallet-3`: `"Efectivo"` (Moneda: `PEN`, `decimals: 2`).
+  - `wallet-4`: `"Yape"` (Moneda: `PEN`, `decimals: 2`).
+- **Categorías (`categories`):**
+  - `cat-1`: `"Alimentación"` (`income = 0`, color `#FF5722`).
+  - `cat-2`: `"Restaurantes"` (`income = 0`, `main_category_pk = cat-1`).
+  - `cat-3`: `"Intereses"` (`income = 0`, categoría para intereses de préstamos).
+  - `cat-4`: `"Servicios"` (`income = 0`, para suscripciones).
+  - `cat-5`: `"Salario"` (`income = 1`, ingresos laborales).
 
-El fixture sintético debe contener datos inventados que cubran exhaustivamente todas las reglas de negocio de Monetae (`SPEC §7`):
+---
 
-1. **Billeteras / Cuentas Multidivisa:**
-   - Cuenta 1: `"BCP Soles"` (`PEN`, 2 decimales).
-   - Cuenta 2: `"Interbank Dólares"` (`USD`, 2 decimales).
-   - Cuenta 3: `"Efectivo Billetera"` (`PEN`, archivada `archived = 1`).
-2. **Categorías con Jerarquía:**
-   - Categoría principal de gasto: `"Alimentación"` (`income = 0`, color `#FF5722`).
-   - Subcategoría: `"Restaurantes"` (`main_category_pk` apuntando a Alimentación).
-   - Categoría principal de ingreso: `"Salario"` (`income = 1`).
-3. **Préstamo por Cobrar Otorgado (Ejemplo A de SPEC §7 - Caso Adrian prestó S/ 1,000):**
-   - Entidad `objectives`: `name = "Préstamo a Juan"`, `type = 1` (`loan`), `income = 1`, `amount = 1000.0`.
-   - Transacción 1 (Desembolso): `amount = -1000.0`, `objective_loan_fk` al objetivo, cuenta BCP Soles.
-   - Transacción 2 (Abono parcial): `amount = 500.0`, `objective_loan_fk` al objetivo, cuenta BCP Soles.
-   - Saldo calculado esperado: S/ 500.0 pendiente (no liquidado).
-4. **Préstamo Liquidado con Diferente Cuenta (Ejemplo C de SPEC §7 - Problema P3):**
-   - Entidad `objectives`: `name = "Préstamo a María"`, `type = 1`, `income = 1`, `amount = 200.0`.
-   - Transacción 1 (Desembolso inicial): `amount = -200.0`, cuenta BCP Soles.
-   - Transacción 2 (Pago recibido en otra cuenta): `amount = 200.0`, cuenta Interbank Dólares.
-   - Saldo calculado esperado: 0 (estado `settled`, sin botón "liquidar").
-5. **Suscripción Periódica (Problema P4 de Monetae):**
-   - Transacción recurrente: `name = "Netflix"`, `type = 1` (`subscription`), `reoccurrence = 3` (`monthly`), `period_length = 1`, `amount = -44.90`.
-6. **Transferencia entre Cuentas:**
-   - Transacción A: Retiro de BCP Soles (`amount = -100.0`).
-   - Transacción B: Depósito en Efectivo (`amount = 100.0`, `paired_transaction_fk` a Transacción A).
-7. **Presupuesto Mensual:**
-   - Entidad `budgets`: `name = "Presupuesto Mensual Global"`, `amount = 2500.0`, filtros de categorías asignados en `category_fks`.
+### 6.2 Representación de los Ejemplos de Préstamos (SPEC §7) en el Esquema de Cashew
 
-### 6.3 Reglas de Generación del Fixture
-- Todos los identificadores deben ser UUIDs v4 válidos sintéticos (p. ej. `00000000-0000-0000-0000-000000000001`).
-- Los timestamps Unix deben corresponder a fechas del año en curso con hora fijada a las 12:00:00 UTC.
-- Queda terminantemente prohibido utilizar nombres reales, correos electrónicos o cantidades extraídas de `reference/backups/`.
+#### 1. Ejemplo A: Préstamo recibido con interés del 5 % (SPEC §7)
+- **Historia:** Carlos me presta S/ 200 en Efectivo. Interés del 5 % (S/ 10). Pago S/ 100 desde BCP y S/ 110 desde Efectivo (total S/ 210 pagados).
+- **Representación en Cashew:**
+  - `objectives`: Fila con `name: "Carlos"`, `type: 1` (`loan`), `income: false` (`borrowed`), `amount: 0.0`, `wallet_fk: wallet-3`.
+  - `transactions` (Desembolso inicial): `amount: 200.0`, `income: true`, `wallet_fk: wallet-3` (Efectivo), `objective_loan_fk: objective_carlos_pk`.
+  - `transactions` (Pago 1): `amount: -100.0`, `income: false`, `wallet_fk: wallet-1` (BCP), `objective_loan_fk: objective_carlos_pk`.
+  - `transactions` (Pago 2): `amount: -110.0`, `income: false`, `wallet_fk: wallet-3` (Efectivo), `objective_loan_fk: objective_carlos_pk`.
+  - `transactions` (Interés - Transacción normal huérfana en Cashew, origen de P2): `amount: -10.0`, `income: false`, `category_fk: cat-3` (Intereses), `objective_loan_fk: NULL`.
+- **Clasificación para Monetae:** Caso con amortización acumulada de 210 vs capital de 200. **Marcado como Caso Ambiguo 2 y 3 para revisión manual** (sobrepago de S/ 10 y transacción de interés huérfana).
+
+#### 2. Ejemplo B: Préstamo otorgado desde un medio y cobrado por otros (SPEC §7, Problemas P1 y P3)
+- **Historia:** Presto S/ 500 desde Yape a Roberto. Roberto me paga S/ 300 en Efectivo y S/ 200 en BCP.
+- **Representación en Cashew:**
+  - `objectives`: Fila con `name: "Roberto"`, `type: 1` (`loan`), `income: true` (`lent`), `amount: 0.0`, `wallet_fk: wallet-4` (Yape).
+  - `transactions` (Desembolso): `amount: -500.0`, `income: false`, `wallet_fk: wallet-4` (Yape), `objective_loan_fk: objective_roberto_pk`.
+  - `transactions` (Cobro parcial 1): `amount: 300.0`, `income: true`, `wallet_fk: wallet-3` (Efectivo), `objective_loan_fk: objective_roberto_pk`.
+  - `transactions` (Cobro parcial 2): `amount: 200.0`, `income: true`, `wallet_fk: wallet-1` (BCP), `objective_loan_fk: objective_roberto_pk`.
+- **Clasificación para Monetae:** Caso perfectamente estructurado en Cashew a largo plazo. Al importar, genera 1 préstamo en `loans` y 3 movimientos en `loan_movements` con sus respectivas cuentas independientes.
+
+#### 3. Ejemplo C: Préstamo en USD cobrado en PEN con tipo de cambio (SPEC §7)
+- **Historia:** Presto US$ 100 desde Interbank Dólares a Daniel. Daniel paga S/ 380 en BCP Soles con tipo de cambio pactado 3.80.
+- **Representación en Cashew:**
+  - `objectives`: Fila con `name: "Daniel"`, `type: 1` (`loan`), `income: true` (`lent`), `wallet_fk: wallet-2` (Interbank Dólares).
+  - `transactions` (Desembolso USD): `amount: -100.0`, `income: false`, `wallet_fk: wallet-2` (USD), `objective_loan_fk: objective_daniel_pk`.
+  - `transactions` (Cobro PEN): `amount: 380.0`, `income: true`, `wallet_fk: wallet-1` (PEN), `objective_loan_fk: objective_daniel_pk`.
+- **Clasificación para Monetae:** **Marcado como Caso Ambiguo para revisión manual**. Cashew suma directamente `380` con `-100` sin conversión de divisa nativa en el objetivo, produciendo distorsión de balance. El importador debe detectar el cambio de moneda entre la cuenta USD y la cuenta PEN y requerir confirmación de la tasa 3.80.
+
+#### 4. Ejemplo D: Pago mayor al saldo (SPEC §7)
+- **Historia:** Saldo pendiente US$ 50 con Lucía. Se recibe un pago de US$ 60 (exceso de US$ 10).
+- **Representación en Cashew:**
+  - `objectives`: Fila con `name: "Lucía"`, `type: 1` (`loan`), `income: true` (`lent`), `wallet_fk: wallet-2` (USD).
+  - `transactions` (Desembolso): `amount: -50.0`, `income: false`, `wallet_fk: wallet-2`.
+  - `transactions` (Cobro en exceso): `amount: 60.0`, `income: true`, `wallet_fk: wallet-2`.
+- **Clasificación para Monetae:** **Marcado como Caso Ambiguo 2 para revisión manual** (`sum(pagos) > principal`).
+
+#### 5. Ejemplo E: Pagos pequeños y variables (SPEC §7)
+- **Historia:** Préstamo de S/ 1,000 a Manuel. Pagos escalonados de S/ 50, S/ 120, S/ 30 y S/ 800 en fechas distintas hasta llegar a saldo 0.
+- **Representación en Cashew:**
+  - `objectives`: Fila con `name: "Manuel"`, `type: 1` (`loan`), `income: true`, `wallet_fk: wallet-1`.
+  - `transactions` (Desembolso): `amount: -1000.0`.
+  - `transactions` (Abonos 1..4): 4 transacciones con `amount: 50.0`, `120.0`, `30.0` y `800.0`, todas con `objective_loan_fk: objective_manuel_pk`.
+- **Clasificación para Monetae:** Flujo determinístico directo hacia `loans` y `loan_movements`. Saldo final 0 (`settled`).
+
+#### 6. Préstamo Único Liquidado en Cashew (Variante de Pago Único, Origen de P1)
+- **Historia:** Préstamo puntual a Fernando por S/ 150 que en Cashew fue marcado con el botón "Settle".
+- **Representación en Cashew:**
+  - `transactions`: Fila única con `name: "Préstamo Fernando"`, `type: 3` (`credit`), `amount: -150.0`, `paid: 0` (`paid: false`, desactivado por `settleTransactions`). Sin fila en `objectives`.
+- **Clasificación para Monetae:** **Marcado como Caso Ambiguo 1 para revisión manual** (requiere sintetizar el movimiento de pago al no existir contrapartida en Cashew).
+
+---
+
+### 6.3 Suscripciones, Transferencias y Presupuestos en el Fixture
+
+#### 7. Suscripción Periódica (SPEC §8 y tables.dart:42, 303-306)
+- **Parámetros verificados contra `BudgetReoccurence` (`tables.dart:42`):**
+  - `0`: custom, `1`: daily, `2`: weekly, `3`: monthly, `4`: yearly.
+- **Representación en Cashew:**
+  - `transactions`: `name: "Servicio de Streaming"`, `amount: -44.90`, `income: false`, `wallet_fk: wallet-1`, `type: 1` (`TransactionSpecialType.subscription`), `reoccurrence: 3` (`monthly`), `period_length: 1`, `category_fk: cat-4`, `paid: 1`.
+
+#### 8. Transferencia entre Cuentas
+- **Representación en Cashew:**
+  - `tx-transf-1`: Retiro de BCP Soles (`amount: -200.0`, `income: false`, `wallet_fk: wallet-1`, `paired_transaction_fk: tx-transf-2`).
+  - `tx-transf-2`: Depósito en Efectivo (`amount: 200.0`, `income: true`, `wallet_fk: wallet-3`, `paired_transaction_fk: tx-transf-1`).
+
+#### 9. Presupuesto Mensual
+- **Representación en Cashew:**
+  - `budgets`: `budget_pk: b-1`, `name: "Presupuesto Mensual"`, `amount: 2500.0`, `period_length: 1`, `reoccurrence: 3` (`monthly`), `category_fks: '["cat-1", "cat-4"]'`.
+
+---
+
+### 6.4 Reglas para Generar el Archivo Ficticio
+1. **Identificadores determinísticos:** UUIDs sintéticos canónicos (ej. `00000000-0000-0000-0000-000000000001`).
+2. **Timestamps:** Enteros en segundos Unix correspondientes a fechas controladas de 2026 a las 12:00:00 UTC.
+3. **Privacidad absoluta:** Ningún nombre, cuenta o cifra real; exclusivamente las personas ficticias Carlos, Roberto, Daniel, Lucía, Manuel y Fernando.
