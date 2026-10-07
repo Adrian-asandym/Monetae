@@ -1,6 +1,6 @@
 # SPEC.md — Monetae
 
-> Versión 0.1 · 2026-10-05 · Autor: Adrian
+> Versión 0.2 · 2026-10-07 · Autor: Adrian (revisión: Claude). Historial de cambios en §18.
 > Documento fuente de verdad del producto. Los agentes lo leen junto con `AGENTS.md`.
 > Los cambios de alcance se registran como ADR en `docs/decisions/`, no se improvisan en código.
 
@@ -84,6 +84,11 @@ V2 y V3 **no se implementan en V1**, pero V1 deja listos los datos y endpoints l
 - **RF-11** Selección múltiple para editar o borrar en lote.
 - **RF-12** Borrado lógico (`deleted_at`) y deshacer. Las transacciones **nunca** desaparecen por un cambio de estado de otra entidad (P1).
 
+#### Etiquetas (v0.2)
+- **RF-43** CRUD de **etiquetas** (`tags`): nombre, color, ícono/emoji, orden y archivada (reversible, igual que las cuentas). El nombre es único por usuario entre las no archivadas.
+- **RF-44** **Asignación** de una o varias etiquetas a una transacción (relación N:M `transaction_tags`), desde el formulario de la transacción y en lote mediante la selección múltiple (RF-11). Quitar una etiqueta es borrado lógico del vínculo; archivar una etiqueta no la quita de las transacciones.
+- **RF-45** **Filtro básico** por etiquetas dentro de RF-10: una o varias etiquetas, con criterio *cualquiera de ellas* (OR). Sin reglas avanzadas (AND, exclusión) en V1. Las etiquetas **no** afectan a saldos, presupuestos ni a la lógica de préstamos.
+
 ### 5.4 Préstamos y deudas (núcleo del proyecto)
 Un **préstamo** conecta a una **persona** con una secuencia de movimientos. Ver reglas detalladas y ejemplos en la sección 7.
 
@@ -147,6 +152,8 @@ Comunes a todas las tablas: `id` (UUID), `user_id`, `created_at`, `updated_at`, 
 | `accounts` | name, type, currency, initial_balance, color, icon, sort_order, archived_at |
 | `categories` | parent_id, kind (income/expense), name, icon, color, is_system |
 | `people` | name, aliases (lista), note |
+| `tags` | name, color, icon, emoji, sort_order, archived_at |
+| `transaction_tags` | transaction_id, tag_id (vínculo N:M; únicos mientras no estén borrados lógicamente) |
 | `transactions` | account_id, category_id (nullable), kind, amount, currency, occurred_at, title, note, fx_rate_to_base, fx_rate_source, transfer_group_id (nullable), source (`web`/`import`/`telegram`/`api`), raw_input (nullable), categorization_source (`manual`/`rule`/`model`/`llm`) |
 | `loans` | person_id, direction (`lent`/`borrowed`), currency, principal, opened_on, due_on (nullable), note |
 | `loan_movements` | loan_id, transaction_id (nullable, p. ej. interés devengado sin dinero), kind, amount_in_loan_currency, fx_rate_applied, occurred_at |
@@ -242,12 +249,16 @@ La API es REST bajo `/api/v1`, con OpenAPI generado y versionado en `docs/api/op
 
 ## 11. Importador de backup de Cashew
 
-- **RF-40a** Lee el backup exportado por Cashew (formato exacto a confirmar en la Fase 0 con el archivo real) y carga cuentas, categorías, transacciones, presupuestos, metas, suscripciones y préstamos.
+- **RF-40a** Lee el backup de Cashew y carga cuentas, categorías, transacciones, presupuestos, metas, suscripciones, préstamos y etiquetas. **Fuente primaria: el archivo SQLite (`.sql`/`.sqlite`)**, que es la base completa de Cashew; el formato está documentado en `docs/cashew-analysis/03-backup-format.md`. El **CSV es solo un modo de rescate** (ver RF-40h).
 - **RF-40b** Idempotente: reimportar el mismo archivo no duplica datos.
 - **RF-40c** Modo `--dry-run` y reporte final: conteos por entidad, saldo de cada cuenta antes y después, y lista de elementos que no se pudieron mapear. Los saldos deben coincidir con los de Cashew.
 - **RF-40d** Los préstamos modelados en Cashew como metas con transacciones de polaridad contraria se convierten a `loans` + `loan_movements` con una heurística documentada en un ADR. Los casos ambiguos se listan para revisión manual, no se adivinan.
 - **RF-40e** Se conservan monedas, fechas y el historial completo. Los primeros meses (agosto a octubre de 2025) se marcan como "datos iniciales" para poder excluirlos de futuros entrenamientos del clasificador (V2) sin borrarlos.
 - **RF-40f** El backup real **nunca** se commitea: vive en `reference/backups/` (ignorado por git). Los tests usan fixtures sintéticos.
+- **RF-40g** **Siempre sobre una copia.** El importador (y cualquier agente o script) trabaja sobre una **copia** del respaldo y nunca sobre el original: abre el SQLite en modo solo lectura (`mode=ro`) y no escribe en él. El original queda intacto.
+- **RF-40h** **CSV solo como rescate.** El CSV de Cashew excluye las transacciones con `paid = false` (entre ellas los préstamos de pago único ya saldados), no incluye identificadores, presupuestos, reglas ni etiquetas. Si se importa un CSV, el reporte lo advierte, la idempotencia se basa en un hash determinista de los campos (no en ids) y los préstamos se listan para revisión manual.
+- **RF-40i** **Tolerancia al esquema real.** El respaldo de Adrian es esquema Drift **v48** (versión posterior al código público de Cashew, que está en v46). El importador lee `PRAGMA user_version`, descubre tablas y columnas con `PRAGMA table_info`, ignora las desconocidas y avisa en el reporte; no asume una versión fija.
+- **RF-40j** **Etiquetas.** Se importan las tablas `tags` y `transaction_to_tag_links` de Cashew a `tags` y `transaction_tags`, conservando nombre, color, ícono y estado de archivada; las etiquetas con transacciones asociadas nunca se descartan.
 
 ---
 
@@ -283,7 +294,8 @@ La API es REST bajo `/api/v1`, con OpenAPI generado y versionado en `docs/api/op
 - [ ] No existe botón "liquidar"; el interés se refleja en el saldo (P2).
 - [ ] Un cobro en otra cuenta o moneda actualiza la cuenta correcta (P3).
 - [ ] Archivar y reactivar una suscripción cumple la sección 8 (P4).
-- [ ] El importador procesa el backup real de Adrian en modo `--dry-run` con saldos idénticos a Cashew.
+- [ ] El importador procesa una **copia** del backup real de Adrian (SQLite) en modo `--dry-run` con saldos idénticos a Cashew, e importa sus etiquetas.
+- [ ] Etiquetas: se crean, se asignan a transacciones (también en lote) y se filtran por una o varias.
 - [ ] Presupuestos, metas, notificaciones web, login con Google, bloqueo con PIN/WebAuthn y exportación funcionan.
 - [ ] `mypy --strict`, `ruff` y todos los tests pasan; test de aislamiento entre usuarios incluido.
 - [ ] La interfaz es reconocible respecto a Cashew en inicio, transacciones, presupuestos y suscripciones.
@@ -295,7 +307,7 @@ La API es REST bajo `/api/v1`, con OpenAPI generado y versionado en `docs/api/op
 
 | ADR | Tema | Valor por defecto propuesto |
 |-----|------|-----------------------------|
-| 001 | Estrategia de interfaz: fork de Cashew (Flutter) con capa de datos sobre la API, o reescritura | Fork Flutter, decidir con el análisis de la Fase 0 |
+| 001 | Estrategia de interfaz: fork de Cashew (Flutter) con capa de datos sobre la API, o reescritura | **ACEPTADO (2026-10-07): opción A**, UI propia en Flutter Web reutilizando y desacoplando widgets de Cashew. Ver `docs/decisions/001-ui-strategy.md` |
 | 002 | Autenticación y sesiones | Google OIDC + correo/contraseña; sesiones con cookie `HttpOnly` o JWT corto con refresh |
 | 003 | Reconocimiento contable del interés | Base caja, pagos asignados primero a interés |
 | 004 | Fuente del tipo de cambio automático | Manual por defecto; fuente automática a elegir |
@@ -320,3 +332,12 @@ Bot de Telegram, clasificador de categorías, asistente Hermes, RAG, app Android
 - **Saldo pendiente**: lo que falta por pagar o cobrar de un préstamo, calculado.
 - **Archivar**: ocultar de forma reversible sin borrar historial.
 - **Moneda base / de reporte**: moneda en la que se suman totales de varias monedas.
+
+---
+
+## 18. Historial de cambios
+
+| Versión | Fecha | Cambios |
+|---------|-------|---------|
+| 0.1 | 2026-10-05 | Versión inicial. |
+| 0.2 | 2026-10-07 | **Etiquetas** (RF-43 a RF-45, tablas `tags` y `transaction_tags`, criterio de aceptación). **Importador** (§11): SQLite como fuente primaria y CSV solo de rescate (RF-40a, RF-40h), trabajo siempre sobre una copia (RF-40g), tolerancia al esquema v48 (RF-40i) e importación de etiquetas (RF-40j). ADR-001 marcado como aceptado (§15). Aprobado por Adrian. |

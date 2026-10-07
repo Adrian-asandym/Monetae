@@ -102,7 +102,7 @@ Después: hito de despliegue en VPS Contabo → V2 → V3 → V4 (ver SPEC §3 y
 
 | ADR | Tema | Cuándo |
 |-----|------|--------|
-| 001 | Estrategia de UI (fork de Cashew vs. UI propia) | Tras Fase 0 |
+| 001 | Estrategia de UI (fork de Cashew vs. UI propia) | **Aceptado 2026-10-07: opción A** (UI propia reutilizando widgets) |
 | 002 | Autenticación y sesiones | Fase 1 |
 | 003 | Reconocimiento del interés (caja vs. devengado) | Fase 1 |
 | 004 | Fuente de tipo de cambio | Fase 1 |

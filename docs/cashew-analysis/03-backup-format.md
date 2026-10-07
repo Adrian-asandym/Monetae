@@ -75,7 +75,7 @@ Comparando `drift_schema_v46.json` contra las columnas del DDL extraídas de `sq
 2. **Tolerancia a esquemas evolutivos (Forward-compatibility):** Al mapear tablas con SQLAlchemy/Pydantic, el importador debe consultar dinámicamente las columnas existentes vía `PRAGMA table_info` o inspección reflectiva, ignorando silenciosamente columnas accesorias desconocidas o mapeando `archived` si existe.
 3. **Manejo de Etiquetas (`tags`):** En esquemas v48, el importador puede migrar las etiquetas a tags de Monetae si se habilitan en el dominio, o ignorar la tabla si no es requerida en V1.
 
-> [!WARNING] **Decisión pendiente de Adrian**  
+> [!NOTE] **Resuelto el 2026-10-07 (no se actualiza `reference/Cashew`; ver `docs/cashew-analysis.md`)**  
 > Se recomienda actualizar la copia de `reference/Cashew/` en el repositorio a la versión de código fuente o tag correspondiente a la versión 48 de la base de datos de Cashew. Esto garantizará que el código analizado coincida exactamente con la aplicación móvil en producción utilizada para los respaldos.
 
 ---
@@ -396,7 +396,7 @@ Se recomienda categóricamente que **el importador de Monetae (`RF-40a`) utilice
 
 ### 5.2 Fuente Secundaria: Archivo CSV (`.csv`) y Contradicción con AGENTS.md
 
-> [!IMPORTANT] **Decisión pendiente de Adrian: SQLite vs CSV en AGENTS.md §4**  
+> [!NOTE] **Resuelto el 2026-10-07: SQLite primero, CSV solo de rescate (SPEC v0.2 §11, AGENTS.md)**  
 > `AGENTS.md §4` indica:
 > > *"backups/ # respaldos reales de Adrian (preferible usa el .csv por si los demás no los puedes procesar)"*  
 > 

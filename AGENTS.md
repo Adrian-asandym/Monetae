@@ -41,7 +41,7 @@ Versiones: **V1** local (web, sin bot) → hito de despliegue en VPS Contabo →
 | BD | PostgreSQL |
 | Calidad | `ruff` (lint+format), `mypy --strict`, `pytest` |
 | Dinero | `decimal.Decimal` y value object `Money` (nunca `float`) |
-| UI | Flutter web (fork/derivado de Cashew) — **ADR-001 confirma la estrategia tras la Fase 0** |
+| UI | Flutter web, **UI propia** que reutiliza y desacopla widgets de Cashew (**ADR-001 aceptado, opción A**; no es un fork de la app completa) |
 | Infra local | Docker Compose |
 | ML (V2, reservado) | scikit-learn (TF-IDF + regresión logística) en `services/ml` |
 
@@ -65,9 +65,9 @@ monetae/
 │   └── api/openapi.json   # contrato exportado
 ├── reference/             # GIT-IGNORED
 │   ├── cashew/            # SOLO LECTURA — copia de Cashew para estudio
-│   └── backups/           # respaldos reales de Adrian (preferible usa el .csv por si los demás no los puedes procesar)
+│   └── backups/           # respaldos reales de Adrian. Fuente del importador: el SQLite (.sql); el .csv solo es rescate. SIEMPRE trabajar sobre una copia
 ├── apps/
-│   └── web/               # UI Flutter (la app original de Cashew vive en `budget/`)
+│   └── web/               # UI Flutter propia (ADR-001-A); los widgets de Cashew (`reference/Cashew/budget/`) se copian desacoplados, con aviso GPL
 ├── services/
 │   ├── api/               # FastAPI
 │   │   └── src/monetae/
@@ -169,6 +169,7 @@ flutter test
 ## 9. Seguridad y privacidad
 
 - Datos financieros reales de Adrian: **jamás** en git, logs, issues ni mensajes de commit. `reference/backups/` está en `.gitignore`.
+- **Respaldos reales: siempre sobre una copia** (en una carpeta temporal fuera del repo), nunca sobre el original; SQLite abierto en solo lectura. Solo se inspeccionan nombres de tablas y columnas, jamás filas ni valores, salvo que Adrian lo pida expresamente.
 - Secretos solo por variables de entorno / `.env` ignorado; mantener `.env.example` sin valores reales.
 - Contraseñas con hash moderno (argon2/bcrypt); sesiones/tokens según ADR-002.
 - No registrar en logs montos asociados a usuarios identificables más allá de lo estrictamente necesario.
@@ -234,5 +235,5 @@ El coordinador puede reasignar según disponibilidad y cuota.
 - No añadas un botón o flujo de "liquidar" préstamos.
 - No borres préstamos ni transacciones físicamente (borrado lógico).
 - No implementes funciones de V2/V3/V4 (bot, ML, Hermes, Android) en V1; solo deja los puntos de extensión que indica `docs/SPEC.md` §13.
-- No tomes decisiones abiertas (ADR-001…007) por tu cuenta: pregunta.
+- No tomes decisiones abiertas (ADR-002…007; el ADR-001 ya está aceptado) por tu cuenta: pregunta.
 - No hagas merge a `main` ni push forzado.

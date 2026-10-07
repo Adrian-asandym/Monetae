@@ -4,13 +4,27 @@
 
 ## Fase actual
 
-**Fase 0 (análisis de Cashew): completada e integrada en `master-dev`.** Siguiente: Fase 1 (diseño), bloqueada por la decisión ADR-001.
+**Fase 0 (análisis de Cashew): completada.** Decisiones de cierre tomadas por Adrian el 2026-10-07. Siguiente: **Fase 1 (diseño)**, pendiente del OK de Adrian al Run propuesto abajo.
 
-- **Run:** `run_bef8ecfc67a7` (abierto, sin trabajo pendiente; el CLI no tiene comando para cerrarlo).
-- **Entregables:** `docs/cashew-analysis.md` (consolidado) + `docs/cashew-analysis/01..04-*.md`, y borrador `docs/decisions/001-ui-strategy.md`.
-- **`main`:** sin cambios de la Fase 0. No se hace merge sin decision gate aprobado por Adrian.
+- **Run Fase 0:** `run_bef8ecfc67a7` (sin trabajo pendiente; el CLI no permite cerrarlo).
+- **SPEC:** v0.2 (2026-10-07), con etiquetas e importador SQLite-first. Historial en `docs/SPEC.md` §18.
+- **Merge a `main`:** en decision gate (ver más abajo).
 
-## Tareas del Run
+## Decisiones tomadas (2026-10-07)
+
+| # | Decisión | Dónde quedó |
+|---|----------|-------------|
+| 1 | **ADR-001: opción A** (UI propia en Flutter Web reutilizando y desacoplando widgets de Cashew). ACEPTADO. | `docs/decisions/001-ui-strategy.md` |
+| 2 | **`reference/Cashew` no se actualiza.** Ninguna versión pública (ni 5.2.9+366 ni 5.3.4+396, ambas esquema 46) tiene esquema 47/48 ni tablas de etiquetas; la app de Adrian va por delante del código público. El esquema real es el DDL de T-003. | `docs/cashew-analysis.md` |
+| 3 | **Importador: SQLite primero, CSV solo de rescate, siempre sobre una copia.** | SPEC §11 (RF-40a, g, h, i), `AGENTS.md` §4 y §9 |
+| 4 | **Etiquetas:** se importan y guardan (`tags`, `transaction_tags`), con asignación y filtro básicos en V1. | SPEC RF-43 a RF-45, RF-40j, §6, §14 |
+| 5 | **Merge a `main`** tras actualizar lo anterior, con decision gate. | Pendiente de aprobación |
+
+## Plan ya definido
+
+- **T-501 — Spike de desacople (primera tarea de la Fase 5):** 3–4 componentes de Cashew (tema, tarjeta de transacción, un gráfico) desacoplados de Drift contra datos mock. **No se lanza hasta iniciar la Fase 5.** Si proyecta >1,5× el esfuerzo previsto, se consulta a Adrian. Spec: `docs/tasks/T-501-ui-decoupling-spike.md`.
+
+## Tareas del Run de Fase 0 (cerradas)
 
 | Tarea | ID | Agente | Estado |
 |-------|----|--------|--------|
@@ -21,30 +35,24 @@
 
 Los worktrees `../Monetae-agy-T-00X-*` y sus ramas `agy/T-00X-*` siguen en disco (ya integradas; limpieza pendiente de OK de Adrian).
 
-## Decisiones pendientes de Adrian
+## Run de Fase 1 propuesto (pendiente del OK de Adrian)
 
-1. **ADR-001 — estrategia de UI** (detalle en `docs/decisions/001-ui-strategy.md`):
-   - **A (recomendada):** UI propia en Flutter Web reutilizando y desacoplando los componentes visuales de Cashew. ~24–32 tareas de 1–2 h. Riesgo: fidelidad visual.
-   - **B:** fork de Cashew con fachada REST sobre `FinanceDatabase`. ~28–38 tareas; arrastra el modelo de préstamos como objetivos.
-   - **C:** fork de Cashew con Drift como caché y sincronización bidireccional. ~36–48 tareas; riesgo crítico.
-2. **Versión de `reference/Cashew`:** el respaldo real es schema v48 y la copia es v46. ¿Actualizar al tag/commit correspondiente? (Adrian debe localizarlo.)
-3. **Importador:** leer SQLite primero y CSV solo como rescate (el CSV excluye `paid = false`, `exportCSV.dart:88`). Contradice la sugerencia de `AGENTS.md` §4.
-4. **Etiquetas (`tags`):** existen en la app real y no están en SPEC. ¿V1, importar como notas, o descartar?
-5. **Merge `master-dev` → `main`:** solo documentos; requiere decision gate.
+Las tareas de UI no empiezan hasta la Fase 5. Ninguna tarea de la Fase 1 toca UI.
 
-## Borrador del Run de Fase 1 (tras decidir ADR-001)
+| Tarea | Contenido | Agente | Depende de |
+|-------|-----------|--------|------------|
+| T-103 | ADR-003 (interés: caja vs devengado) y ADR-004 (fuente de tipo de cambio): contexto, opciones y recomendación | Claude → decide Adrian | — |
+| T-104 | ADR-002 (auth/sesiones), ADR-006 (PIN/WebAuthn) y ADR-007 (SQLAlchemy síncrono/asíncrono) | Claude → decide Adrian | — |
+| T-105 | Fixture sintético de Cashew v48 (DDL de T-003) con ejemplos A–E de SPEC §7, etiquetas, suscripción, transferencia y presupuesto; script generador | Antigravity | — |
+| T-101 | Esquema de BD (incluye `tags`/`transaction_tags`) y `docs/ARCHITECTURE.md` | Claude | T-103, T-104 |
+| T-102 | Contrato OpenAPI inicial (cuentas, categorías, transacciones, etiquetas, préstamos, personas) | Codex, con spec de Claude | T-101 |
 
-| Tarea | Contenido | Agente |
-|-------|-----------|--------|
-| T-101 | Esquema de BD + `docs/ARCHITECTURE.md` | Claude |
-| T-102 | Contrato OpenAPI inicial (cuentas, categorías, transacciones, préstamos) | Codex (spec de Claude) |
-| T-103 | ADR-003 (interés: caja vs devengado) y ADR-004 (tipo de cambio) | Claude → decide Adrian |
-| T-104 | ADR-002, 006 y 007 con opciones y recomendación | Claude → decide Adrian |
-| T-105 | Fixture sintético de Cashew v48 con ejemplos A–E de SPEC §7 | Antigravity |
+Orden: T-103, T-104 y T-105 en paralelo; luego T-101; luego T-102. Archivos permitidos disjuntos (ADRs / `tests/fixtures` y `scripts` / `docs/ARCHITECTURE.md` / `docs/api`).
 
 ## Notas operativas
 
 - Las tareas de UI van a Codex (ChatGPT) y, si se agota la cuota, a Antigravity; Command Code queda de reserva.
 - Antigravity pide "trust workspace" en cada worktree nuevo; el CLI no permite fijar su modelo (se cambia en su panel).
 - `outcome_unknown` tras lanzar un worker suele significar que sí está trabajando.
-- Laguna conocida: P3 en préstamos de largo plazo no está confirmado explícitamente (verificar en Fase 1 con el ejemplo B).
+- Laguna conocida: P3 en préstamos de largo plazo no está confirmado explícitamente (verificar en Fase 1 con el ejemplo B del fixture T-105).
+- Pendiente menor: `docs/SPEC.md` §2 aún dice "a confirmar en la Fase 0" y "Hipótesis"; la Fase 0 la confirmó (se actualiza con el próximo cambio de SPEC aprobado por Adrian).

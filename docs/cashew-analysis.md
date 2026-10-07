@@ -20,12 +20,12 @@
 4. **Desfase de versión:** el respaldo real es **schema v48**; la copia en `reference/Cashew` es **v46** (faltan `tags` y `transaction_to_tag_links`, y columnas `archived`, `emoji_icon_name`, `default_title`). El CSV real también trae columnas que el código de referencia no genera.
 5. **Acoplamiento de UI** (04-ui-coupling): 84 archivos de UI importan `tables.dart`, 338 llamadas `database.*`, 135 `StreamBuilder`, 1.346 accesos a `appStateSettings`. De 17 componentes visuales candidatos a reutilizar, **solo 3 son copiables tal cual**, 12 requieren desacoplar y 2 reescribir. El fork integral resulta **demasiado invasivo** según CLAUDE.md §6.
 
-## Puntos que requieren decisión de Adrian
+## Decisiones de Adrian (2026-10-07)
 
-- **ADR-001** (estrategia de UI): ver `docs/decisions/001-ui-strategy.md`.
-- **Actualizar `reference/Cashew` a la versión que corresponda a schema v48** (tags y columnas nuevas). Afecta al fixture del importador y a qué UI se toma como referencia visual.
-- **Fuente del importador:** `AGENTS.md` §4 sugiere preferir el `.csv`; el análisis recomienda SQLite (el CSV pierde préstamos únicos saldados, ids, presupuestos y reglas).
-- **Etiquetas (`tags`) existen en la app real de Adrian y no están en SPEC:** ¿entran en V1, se importan como notas/etiquetas de transacción, o se descartan?
+- **ADR-001:** opción A (UI propia reutilizando widgets). Ver `docs/decisions/001-ui-strategy.md` (ACEPTADO).
+- **`reference/Cashew`:** no se actualiza. Se comprobó en el historial de git (928 commits, 49 tags) que ninguna versión pública, ni las `5.2.9+366` y `5.3.4+396` (ambas esquema 46), tiene esquema 47/48 ni tablas de etiquetas; la app de Adrian es una compilación por delante del código público. El esquema real es el DDL documentado en `03-backup-format.md`.
+- **Importador:** SQLite primero, CSV solo de rescate, siempre sobre una copia (SPEC v0.2 §11, AGENTS.md).
+- **Etiquetas:** se importan y se guardan (`tags`, `transaction_tags`), con asignación y filtro básicos en V1 (SPEC v0.2, RF-43 a RF-45). Nota: SPEC v0.1 ya mencionaba "etiquetas" en RF-08 y RF-10, pero sin modelo de datos.
 
 ## Limitaciones conocidas
 

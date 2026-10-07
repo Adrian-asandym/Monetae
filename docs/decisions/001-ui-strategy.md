@@ -1,6 +1,6 @@
 # ADR-001 — Estrategia de interfaz de usuario
 
-- **Estado:** PROPUESTO (pendiente de decisión de Adrian)
+- **Estado:** ACEPTADO — opción A (decidido por Adrian el 2026-10-07)
 - **Fecha:** 2026-10-07
 - **Autor:** Claude (coordinador)
 - **Insumo:** `docs/cashew-analysis.md` y `docs/cashew-analysis/04-ui-coupling.md`
@@ -51,4 +51,9 @@ Conserva las 54 pantallas y su navegación.
 
 ## Decisión de Adrian
 
-_Pendiente._
+**Opción A** — UI propia en Flutter Web reutilizando y desacoplando widgets de Cashew (2026-10-07).
+
+### Plan derivado
+
+- La **primera tarea de la Fase 5** es el *spike* de desacople de 3–4 componentes (tema, `transactionEntry`, un gráfico) contra datos mock: ver `docs/tasks/T-501-ui-decoupling-spike.md`. **No se lanza hasta iniciar la Fase 5.**
+- Si el spike muestra que el desacople cuesta bastante más de lo estimado (>1,5× las 6–8 tareas previstas), se vuelve a consultar a Adrian antes de continuar.
