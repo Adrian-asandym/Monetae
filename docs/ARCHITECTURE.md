@@ -1,6 +1,6 @@
 # ARCHITECTURE.md — Monetae
 
-> Versión 0.1 · 2026-10-07 · Autor: Claude (T-101) · Estado: borrador para revisión de Adrian
+> Versión 0.2 · 2026-10-07 · Autor: Claude (T-101) · Estado: revisado por Adrian; v0.2 resuelve las observaciones del contrato OpenAPI (T-102)
 > Fuente funcional: `docs/SPEC.md` v0.3. Reglas de código: `AGENTS.md`. Decisiones: `docs/decisions/`.
 > El esquema de este documento es el **contrato de datos** de la Fase 2; las migraciones Alembic lo implementan. Si el código necesita desviarse, se cambia primero este documento.
 
@@ -109,6 +109,10 @@ erDiagram
 | pin_hash | `text NULL` | argon2id (ADR-006) |
 | pin_failed_attempts | `int NOT NULL DEFAULT 0` | a los 5 se exige login completo |
 | lock_after_minutes | `int NULL` | inactividad para bloquear; NULL = sin bloqueo |
+| report_currency | `char(3) NOT NULL` | moneda de reporte seleccionada (por defecto igual a `base_currency`) |
+| preferences | `jsonb NOT NULL DEFAULT '{}'` | presentación (RF-38/39): `theme` (`light`/`dark`/`system`), `accent_color`, widgets de inicio y su orden. Se valida con un modelo Pydantic estricto en el borde; no se consulta por SQL |
+
+`base_currency` es **inmutable en cuanto el usuario tiene su primera transacción** (así `fx_rate_to_base` siempre se refiere a la misma moneda). Cambiar de base sería una migración de datos, fuera de V1. La moneda de reporte sí se puede cambiar libremente.
 
 **`sessions`**
 | Columna | Tipo | Notas |
@@ -178,8 +182,8 @@ Restricciones: `CHECK (amount <> 0)`. `category_id` es **nullable** en todos los
 | kind | `text` | `disbursement`, `interest`, `payment`, `adjustment`, `write_off` |
 | amount_in_loan_currency | `NUMERIC(18,2)` | `> 0` salvo `adjustment`, que es con signo y `<> 0` |
 | transaction_id | `uuid NULL` | transacción real (`kind='loan'`); NULL si no hay dinero (interés registrado, ajuste, condonación) o si es un préstamo importado sin desembolso. **Único** cuando no es NULL |
-| interest_part, principal_part | `NUMERIC(18,2) NULL` | solo en `payment`; `interest_part + principal_part = amount_in_loan_currency`, ambos `>= 0` (ADR-003) |
-| fx_rate_applied | `NUMERIC(18,6) NULL` | si la cuenta usada tiene otra moneda que el préstamo (Ejemplo C) |
+| interest_part, principal_part | `NUMERIC(18,2) NULL` | solo en `payment` y `write_off`; `interest_part + principal_part = amount_in_loan_currency`, ambos `>= 0` (ADR-003) |
+| fx_rate_applied | `NUMERIC(18,6) NULL` | si la cuenta usada tiene otra moneda que el préstamo (Ejemplo C). **Convención: unidades de la moneda de la cuenta por 1 unidad de la moneda del préstamo** (Ej. C: `3.800000` = PEN por USD). `amount_in_loan_currency = |transacción.amount| / fx_rate_applied`, redondeado ROUND_HALF_UP a 2 decimales |
 | occurred_at | `timestamptz` | |
 | note | `text` | |
 
@@ -196,9 +200,12 @@ saldo = principal
       - SUM(amount) FILTER (kind IN ('payment','write_off'))
 estado = CASE WHEN saldo = 0 THEN 'settled' ELSE 'open' END   -- no existe botón "liquidar" (P2)
 ```
-Un saldo negativo no se permite: el dominio rechaza (RF-22) el pago que excede el saldo y ofrece registrar el exceso como ajuste o como ingreso/gasto.
+Un saldo negativo no se permite. **Exceso (RF-22, Ejemplo D):** si el importe de un pago supera el saldo, la API responde `422` con un `Problem` que lista las opciones y no guarda nada. El cliente repite la petición (con una `Idempotency-Key` nueva) añadiendo `excess_handling`:
+- `adjustment`: en **una sola transacción de base de datos** se crea un `adjustment` por el exceso, fechado inmediatamente antes del pago, y luego el pago completo (el préstamo estaba realmente más alto).
+- `income_expense`: se crea el pago por el saldo exacto y, en la misma transacción de BD, una transacción normal de ingreso (si `lent`) o gasto (si `borrowed`) por el exceso en la misma cuenta.
+No existe estado intermedio ni reintento parcial.
 
-**Reparto de un pago (dominio, `domain/loans.py`):** al registrar un pago de importe `p`, el interés pendiente es `SUM(interest) − SUM(interest_part de pagos previos)` (más ajustes positivos asignados a interés si se definen); `interest_part = min(p, interés_pendiente)`; `principal_part = p − interest_part`. El usuario puede editar el reparto antes de guardar; el dominio valida que no supere lo pendiente de cada concepto.
+**Reparto de un pago o condonación (dominio, `domain/loans.py`):** el interés pendiente es `SUM(interest) − SUM(interest_part de pagos y condonaciones)`; el capital pendiente es `principal + SUM(adjustment) − SUM(principal_part de pagos y condonaciones)`. Al registrar un pago de importe `p`: `interest_part = min(p, interés_pendiente)` y `principal_part = p − interest_part`. El usuario puede editar el reparto antes de guardar; el dominio valida que no supere lo pendiente de cada concepto. Una **condonación** (`write_off`) se reparte igual (primero interés), **no mueve dinero ni genera gasto/ingreso**: el interés condonado nunca se reconoce. Un **ajuste** afecta **solo al capital** (positivo lo aumenta, negativo lo reduce) y no puede dejarlo por debajo de 0.
 
 *Ejemplo A (me prestaron S/ 200):* interés 5 % → movimiento `interest` 10, saldo 210. Pago 100 (BCP): `interest_part 10`, `principal_part 90`, saldo 110. Pago 110 (Efectivo): `interest_part 0`, `principal_part 110`, saldo 0 → `settled`. En estadísticas aparece **un solo gasto de S/ 10** ("Intereses"), con fecha del primer pago; Efectivo +200 −110, BCP −100.
 
@@ -207,6 +214,8 @@ Un saldo negativo no se permite: el dominio rechaza (RF-22) el pago que excede e
 **`recurring_rules`**: plantilla (`account_id`, `kind`, `amount`, `category_id`, `title`, `note`), `period` ∈ {`daily`,`weekly`,`monthly`,`yearly`}, `interval_count int DEFAULT 1`, `next_run_on date`, `end_on date NULL`, `active bool`, `subscription_id uuid NULL`.
 
 **`subscriptions`**: `title`, `amount NUMERIC(18,2)`, `currency`, `account_id` (FK compuesta con la moneda), `category_id`, `period`, `interval_count`, `next_due_on date`, `status` ∈ {`active`,`archived`}, `archived_at`, `archive_reason`, `reminder_days_before int NULL`, `recurring_rule_id`.
+
+**Equivalente mensual/anual** (para totales comparables; se calcula, no se guarda): mensual = `amount × f / interval_count`, con `f` = `30.4375` (diaria), `4.348125` (semanal), `1` (mensual), `1/12` (anual); anual = mensual × 12; ROUND_HALF_UP a 2 decimales solo al final. Los totales por moneda no se mezclan; el total en moneda de reporte usa §5.8.
 
 Reglas (SPEC §8): **archivar** = `status='archived'` + `archived_at` + desactivar la regla + borrado lógico de las transacciones futuras `scheduled` de esa suscripción; **no toca** transacciones pasadas. Los totales mensual/anual y el gráfico consideran solo `status='active'`. Reactivar recrea la regla y las próximas. La sugerencia de reactivar compara el título de una transacción nueva con suscripciones archivadas (el usuario confirma).
 
@@ -222,7 +231,9 @@ Reglas (SPEC §8): **archivar** = `status='archived'` + `archived_at` + desactiv
 
 - **`category_rules`** (base V2): `pattern`, `match_type` ∈ {`exact`,`contains`}, `category_id`, `source` ∈ {`manual`,`import`,`model`}, `hits int`.
 - **`notifications`**: `kind` (`upcoming_payment`, `subscription_renewal`, `loan_due`, `budget_threshold`), `payload jsonb`, `read_at`, `created_at`. **`notification_prefs`**: `kind`, `enabled`, `lead_days int`, `channel` ∈ {`in_app`,`push`}. **`push_subscriptions`** *(Fase 6)*: endpoint y claves de la suscripción PWA.
-- **`exchange_rates`**: `from_currency`, `to_currency`, `rate NUMERIC(18,6)`, `as_of date`, `source` (`manual`, `auto:<proveedor>`). **Excepción documentada:** es una tabla **global** (datos de mercado), **sin `user_id`**; la leen todos los usuarios y la escribe solo el sistema. Único en `(from_currency, to_currency, as_of, source)`. Cada transacción copia su tasa (`fx_rate_to_base`), por lo que esta tabla solo alimenta sugerencias.
+- **`exchange_rates`**: `from_currency`, `to_currency`, `rate NUMERIC(18,6)`, `as_of date`, `source` (`manual`, `auto:<proveedor>`). **Excepción documentada:** es una tabla **global** (datos de mercado), **sin `user_id`**; la leen todos los usuarios y la escribe solo el sistema. Único en `(from_currency, to_currency, as_of, source)`. Cada transacción copia su tasa (`fx_rate_to_base`), por lo que esta tabla solo alimenta sugerencias y conversiones a moneda de reporte.
+- **Conversión a la moneda de reporte** (SPEC §9.5): para cada transacción se usa su `fx_rate_to_base` y, si la moneda de reporte difiere de la base, la tasa base→reporte de `exchange_rates` con `as_of` **el día de la transacción o el más cercano anterior**. Si no existe ninguna, esa transacción se excluye del total convertido y se informa como «sin tasa» (`unconverted_count`); **nunca se usa la tasa de hoy para el pasado**.
+- **`idempotency_keys`**: `user_id`, `key text`, `request_hash bytea`, `response_status int`, `response_body jsonb`, `created_at`, `expires_at` (retención 24 h). Único `(user_id, key)`. Misma clave y mismo cuerpo → se devuelve la respuesta guardada; misma clave con cuerpo distinto → `409`.
 
 ### 5.9 Importaciones
 
@@ -245,7 +256,7 @@ Reglas (SPEC §8): **archivar** = `status='archived'` + `archived_at` + desactiv
 - **Paginación única** para listados: parámetros `limit` (1–200, por defecto 50) y `cursor` (opaco); respuesta `{ "items": [...], "next_cursor": "..." | null }`. Orden estable `occurred_at DESC, id DESC` en transacciones.
 - **Autenticación:** cookie de sesión (ADR-002); todo endpoint exige sesión salvo `POST /auth/login`, `GET /auth/google/callback` y `GET /health`. Peticiones que modifican datos: comprobación de `Origin` y token CSRF.
 - **Idempotencia de creación:** `POST` de transacciones y movimientos acepta cabecera `Idempotency-Key` (útil para el bot de V2 y reintentos).
-- **Recursos de V1:** `auth`, `users/me`, `accounts`, `categories`, `people`, `tags`, `transactions` (+ `transactions/{id}/tags`, lote), `transfers`, `loans` (+ `loans/{id}/movements`, `loans/{id}/balance`, `loans/summary`), `subscriptions` (+ `archive`, `reactivate`), `recurring-rules`, `budgets`, `goals`, `exchange-rates` (sugerencia), `notifications`, `reports/*` (SPEC §10), `imports`, `exports`.
+- **Recursos de V1:** `auth`, `users/me`, `accounts`, `categories`, `people`, `tags`, `transactions` (+ `transactions/{id}/tags`, lote), `transfers`, `loans` (+ `loans/{id}/movements`, `loans/{id}/balance`, `loans/summary`), `subscriptions` (+ `archive`, `reactivate`), `recurring-rules`, `budgets`, `goals`, `exchange-rates` (sugerencia), `notifications`, `category-rules` (RF-06), `attachments` (RF-08, subida/descarga/borrado por transacción), `reports/*` (SPEC §10), `imports`, `exports`. **Exportación (RF-41):** JSON completo con un campo `schema_version` y CSV por tabla; la **restauración desde ese JSON no es de V1** (solo se importa Cashew).
 - `docs/api/openapi.json` se genera desde FastAPI y se versiona; todo cambio de contrato avisa a quien hace la UI (T-102 lo define antes del código).
 
 ## 8. Seguridad (resumen operativo)
@@ -262,8 +273,15 @@ Reglas (SPEC §8): **archivar** = `status='archived'` + `archived_at` + desactiv
 ## 10. Puntos abiertos para las fases siguientes
 
 1. Obligatoriedad de `category_id` por tipo de transacción: se refinará con la UI; el esquema lo permite nulo.
-2. Reparto de **ajustes** entre interés y capital: por ahora el interés pendiente se calcula solo con movimientos `interest`.
-3. Tasa de un pago en moneda distinta al préstamo (`fx_rate_applied`): confirmar en el fixture T-105 con el Ejemplo C.
-4. ADR-005 (sincronización Android) y `If-Match`/versionado optimista: antes de V4.
-5. Row Level Security como defensa adicional: evaluar en la Fase 7.
-6. Proveedor de tipo de cambio (ADR-004): verificar antes de implementar.
+2. ADR-005 (sincronización Android) y `If-Match`/versionado optimista: antes de V4.
+3. Row Level Security como defensa adicional: evaluar en la Fase 7.
+4. Proveedor de tipo de cambio (ADR-004): verificar antes de implementar.
+5. Detalle de implementación a cerrar en la Fase 2/6 (anotado por T-102 en `docs/api/README.md`): estado y almacenamiento de PKCE/`state` en el login con Google, reautenticación para configurar PIN, desafíos WebAuthn, conservación y expiración de la copia del respaldo entre `dry-run` y `apply`, y resolución manual de elementos ambiguos de importación.
+6. `fx_rate_applied` (convención de §5.5) se confirma con el fixture T-105 (Ejemplo C) y con las pruebas de dominio.
+
+## 11. Historial de cambios
+
+| Versión | Fecha | Cambios |
+|---------|-------|---------|
+| 0.1 | 2026-10-07 | Primera versión (T-101). |
+| 0.2 | 2026-10-07 | Revisada por Adrian. `users.report_currency` y `preferences`; moneda base inmutable tras la primera transacción; condonaciones con reparto interés/capital; ajustes solo sobre capital; manejo atómico del exceso (RF-22); convención de `fx_rate_applied`; conversión a moneda de reporte sin usar tasas futuras; equivalente mensual/anual de suscripciones; tabla `idempotency_keys`; `category-rules` y `attachments`; alcance de la exportación. |
