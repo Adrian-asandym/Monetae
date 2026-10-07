@@ -67,7 +67,7 @@ Comparando `drift_schema_v46.json` contra las columnas del DDL extraídas de `sq
   `account,amount,amount unpaid,currency,title,note,date,income,type,category name,subcategory name,color,icon,emoji,budget,objective,extra`
 - **Columnas no generadas por el código disponible en `reference/`:**
   - `amount unpaid`: Ausente en `exportCSV.dart` del commit actual. Representa un cálculo de saldo pendiente exportado en versiones posteriores de Cashew.
-  - `extra`: Ausente en `exportCSV.dart`. Contiene cadenas de texto con resúmenes de periodicidad/fechas de repetición formateadas para visualización.
+  - `extra`: Ausente en `exportCSV.dart`. `[Inferencia a partir del nombre de la columna; no se leyeron filas]` Probablemente contiene texto de periodicidad localizado.
   - Esto confirma que el ejecutable de Cashew del cual Adrian obtuvo el CSV corresponde a una versión compilada más reciente que el código en `reference/`.
 
 ### 2.5 Impacto en el Importador de Monetae
@@ -93,7 +93,7 @@ Comparando `drift_schema_v46.json` contra las columnas del DDL extraídas de `sq
    Todas las columnas temporales (`date_created`, `date_time_modified`, `original_date_due`, `end_date`, `start_date`, `date_updated`) están declaradas como `INTEGER` (`[Verificado en DDL]`).
 3. **Escala y Unidad de Medida:**
    - En Drift estándar para Dart/Flutter sin conversores personalizados, `dateTime()` serializa objetos `DateTime` a **segundos Unix epoch** (o milisegundos en configuraciones JS/Web) (`[Verificado en especificación de Drift / Código Dart]`).
-   - Por ejemplo, en el DDL de migraciones (`tables.dart:952-1168`), los valores por defecto asignados por Drift a `date_time_modified` aparecen como enteros de 10 dígitos (p. ej. `1753912320`), lo cual corresponde exactamente a **segundos Unix epoch** (10 dígitos representan años en el rango 1970–2038+).
+   - Por ejemplo, en el DDL del respaldo (`sqlite_master`; el valor no aparece en el código de `reference/Cashew`), los valores por defecto de Drift a `date_time_modified` aparecen como enteros de 10 dígitos (p. ej. `1753912320`), lo cual corresponde exactamente a **segundos Unix epoch** (10 dígitos representan años en el rango 1970–2038+).
 4. **Regla de Inferencia Robusta para el Importador (`[Inferencia]`):**
    Para garantizar que el importador maneje cualquier respaldo (sea originado en cliente móvil nativo o en cliente web/IndexedDB con serializaciones de distinta escala), se establece la siguiente regla algorítmica de detección por magnitud:
    ```python
