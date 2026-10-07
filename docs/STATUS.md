@@ -35,19 +35,21 @@
 
 Los worktrees `../Monetae-agy-T-00X-*` y sus ramas `agy/T-00X-*` siguen en disco (ya integradas; limpieza pendiente de OK de Adrian).
 
-## Run de Fase 1 propuesto (pendiente del OK de Adrian)
+## Run de Fase 1 (APROBADO por Adrian el 2026-10-07) — `run_2cddcd14320c`
 
 Las tareas de UI no empiezan hasta la Fase 5. Ninguna tarea de la Fase 1 toca UI.
 
-| Tarea | Contenido | Agente | Depende de |
-|-------|-----------|--------|------------|
-| T-103 | ADR-003 (interés: caja vs devengado) y ADR-004 (fuente de tipo de cambio): contexto, opciones y recomendación | Claude → decide Adrian | — |
-| T-104 | ADR-002 (auth/sesiones), ADR-006 (PIN/WebAuthn) y ADR-007 (SQLAlchemy síncrono/asíncrono) | Claude → decide Adrian | — |
-| T-105 | Fixture sintético de Cashew v48 (DDL de T-003) con ejemplos A–E de SPEC §7, etiquetas, suscripción, transferencia y presupuesto; script generador | Antigravity | — |
-| T-101 | Esquema de BD (incluye `tags`/`transaction_tags`) y `docs/ARCHITECTURE.md` | Claude | T-103, T-104 |
-| T-102 | Contrato OpenAPI inicial (cuentas, categorías, transacciones, etiquetas, préstamos, personas) | Codex, con spec de Claude | T-101 |
+| Tarea | Contenido | Agente | Depende de | Estado |
+|-------|-----------|--------|------------|--------|
+| T-103 | ADR-003 (interés) y ADR-004 (tipo de cambio) | Claude → decide Adrian | — | Borradores escritos, esperan decisión |
+| T-104 | ADR-002 (auth), ADR-006 (bloqueo), ADR-007 (SQLAlchemy) | Claude → decide Adrian | — | Borradores escritos, esperan decisión |
+| T-105 | Fixture sintético Cashew v48 (`task_8f0a3298376d`, dispatch `ctx_e7cb5a99872c`) | Antigravity | — | Lanzada; **bloqueada por "trust workspace"** en `../Monetae-agy-T-105-cashew-fixture` |
+| T-101 | Esquema de BD (con `tags`/`transaction_tags`) y `docs/ARCHITECTURE.md` | Claude | T-103, T-104 | Pendiente de las decisiones |
+| T-102 | Contrato OpenAPI inicial | Codex, con spec de Claude | T-101 | Pendiente |
 
-Orden: T-103, T-104 y T-105 en paralelo; luego T-101; luego T-102. Archivos permitidos disjuntos (ADRs / `tests/fixtures` y `scripts` / `docs/ARCHITECTURE.md` / `docs/api`).
+Orden: T-103, T-104 y T-105 en paralelo; luego T-101; luego T-102.
+
+**Merge a `main`:** el decision gate `gate_fcbcb29461e9` (Run `run_bef8ecfc67a7`, `task_515d71383160`) cita el commit `382425f`. Al aprobarse se fusiona **ese hash** (no la punta de `master-dev`), para incluir solo lo aprobado.
 
 ## Notas operativas
 
