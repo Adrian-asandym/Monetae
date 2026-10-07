@@ -43,9 +43,9 @@ Las tareas de UI no empiezan hasta la Fase 5. Ninguna tarea de la Fase 1 toca UI
 |-------|-----------|--------|------------|--------|
 | T-103 | ADR-003 (interés) y ADR-004 (tipo de cambio) | Claude → decide Adrian | — | **Aceptado (opción A, 2026-10-07)** |
 | T-104 | ADR-002 (auth), ADR-006 (bloqueo), ADR-007 (SQLAlchemy) | Claude → decide Adrian | — | **Aceptados (opción A, 2026-10-07)** |
-| T-105 | Fixture sintético Cashew v48 (`task_8f0a3298376d`, dispatch `ctx_e7cb5a99872c`) | Antigravity | — | Lanzada; **bloqueada por "trust workspace"** en `../Monetae-agy-T-105-cashew-fixture` |
-| T-101 | Esquema de BD (con `tags`/`transaction_tags`) y `docs/ARCHITECTURE.md` | Claude | T-103, T-104 | **Hecho (borrador v0.1; pendiente de revisión de Adrian)** |
-| T-102 | Contrato OpenAPI inicial (`task_3b5d1a6f2fb7`, dispatch `ctx_9af6923e7e37`; spec en `docs/tasks/T-102-openapi-initial.md`) | Codex | T-101 | **En curso** en `../Monetae-codex-T-102-openapi` (`codex/T-102-openapi-initial`) |
+| T-105 | Fixture sintético Cashew v48 (`task_8f0a3298376d`, dispatch `ctx_b30eb2754ca3`) | Antigravity | — | **En curso** en `../Monetae-agy-T-105-cashew-fixture` (confianza aceptada) |
+| T-101 | Esquema de BD (con `tags`/`transaction_tags`) y `docs/ARCHITECTURE.md` | Claude | T-103, T-104 | **Hecho (v0.2, revisado por Adrian)** |
+| T-102 | Contrato OpenAPI inicial (`docs/api/openapi.json`: 81 paths, 118 operaciones) | Codex | T-101 | **Aceptada e integrada** (`4748ad3`). **T-102b** (`task_ba3ee55a97ee`) en curso: alinea el contrato con ARCHITECTURE v0.2 |
 
 Orden: T-103, T-104 y T-105 en paralelo; luego T-101; luego T-102.
 
@@ -53,7 +53,7 @@ Orden: T-103, T-104 y T-105 en paralelo; luego T-101; luego T-102.
 
 ## Notas operativas
 
-- **Entorno (AlmaLinux 9 en WSL):** Python del sistema 3.9.25; faltan `uv`, Python 3.12+, `pip`, `docker` (dentro de WSL) y `flutter`/`dart`. Hay `node`/`npm`, `psql` y `pg_dump`. Los scripts de la Fase 1 deben ser compatibles con 3.9; la Fase 2 necesita `uv` + Python 3.12 + Docker, y la Fase 5 necesita Flutter. Pendiente de Adrian.
+- **Entorno (AlmaLinux 9 en WSL), 2026-10-07:** instalados a nivel de usuario `uv` 0.12.23 y Python 3.12.15 (probados `ruff`, `mypy`, `pytest` con `uv`); `python3` del sistema sigue siendo 3.9 (los scripts de la Fase 1 son compatibles con 3.9). Hay `node`/`npm`, `psql` y `pg_dump`. **Falta Docker** dentro de WSL (sin `sudo` sin contraseña no se puede instalar desde aquí; hay que activar la integración WSL de Docker Desktop o instalar el motor) y `flutter`/`dart` (Fase 5). Espacio libre ≈ 7 GB: Flutter ocupa ~3 GB.
 
 - Las tareas de UI van a Codex (ChatGPT) y, si se agota la cuota, a Antigravity; Command Code queda de reserva.
 - Antigravity pide "trust workspace" en cada worktree nuevo; el CLI no permite fijar su modelo (se cambia en su panel).
