@@ -45,7 +45,7 @@ Las tareas de UI no empiezan hasta la Fase 5. Ninguna tarea de la Fase 1 toca UI
 | T-104 | ADR-002 (auth), ADR-006 (bloqueo), ADR-007 (SQLAlchemy) | Claude → decide Adrian | — | **Aceptados (opción A, 2026-10-07)** |
 | T-105 | Fixture sintético Cashew v48 (`task_8f0a3298376d`, dispatch `ctx_b30eb2754ca3`) | Antigravity | — | **En curso** en `../Monetae-agy-T-105-cashew-fixture` (confianza aceptada) |
 | T-101 | Esquema de BD (con `tags`/`transaction_tags`) y `docs/ARCHITECTURE.md` | Claude | T-103, T-104 | **Hecho (v0.2, revisado por Adrian)** |
-| T-102 | Contrato OpenAPI inicial (`docs/api/openapi.json`: 81 paths, 118 operaciones) | Codex | T-101 | **Aceptada e integrada** (`4748ad3`). **T-102b** (`task_ba3ee55a97ee`) en curso: alinea el contrato con ARCHITECTURE v0.2 |
+| T-102 | Contrato OpenAPI (`docs/api/openapi.json`: 86 paths, 127 operaciones, 131 esquemas) | Codex | T-101 | **Aceptada e integrada** (T-102 y T-102b alineada con ARCHITECTURE v0.2; `ec6e08a`) |
 
 Orden: T-103, T-104 y T-105 en paralelo; luego T-101; luego T-102.
 
