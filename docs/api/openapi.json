@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Monetae API",
-    "version": "0.1.0",
-    "description": "Contrato inicial V1 basado en SPEC v0.3, ARCHITECTURE v0.1 y ADR aceptadas 002/003/004/006. Dinero como cadenas decimales; aislamiento por sesión y borrado lógico. Documentación y observaciones en README.md.",
+    "version": "0.2.0",
+    "description": "Contrato inicial V1 basado en SPEC v0.3, ARCHITECTURE v0.2 y ADR aceptadas 002/003/004/006. Dinero como cadenas decimales; aislamiento por sesión y borrado lógico. Documentación y observaciones en README.md.",
     "license": {
       "name": "GPL-3.0-only",
       "identifier": "GPL-3.0-only"
@@ -91,6 +91,14 @@
     {
       "name": "users",
       "description": "Operaciones de users."
+    },
+    {
+      "name": "category-rules",
+      "description": "Operaciones de category-rules."
+    },
+    {
+      "name": "attachments",
+      "description": "Operaciones de attachments."
     }
   ],
   "security": [
@@ -4367,7 +4375,7 @@
           "loans"
         ],
         "summary": "Registrar movimiento",
-        "description": "Desembolso único. Pago variable con reparto propuesto, editable; exceso devuelve 409 loan_overpayment con ajuste o ingreso/gasto, nunca saldo negativo silencioso. Valida Origin y X-CSRF-Token; ningún user_id se acepta del cliente. Aislamiento por sesión; referencias ajenas responden 404.",
+        "description": "Desembolso único; pagos variables, intereses, ajustes solo capital y condonaciones con reparto. Pago excesivo sin excess_handling: 422 loan_overpayment con opciones, no persiste nada. Con adjustment crea ajuste inmediatamente antes y pago completo; con income_expense aplica saldo exacto y transacción normal por exceso en misma cuenta. Una sola transacción de BD, sin estado intermedio ni reintento parcial. Tras 422 usar Idempotency-Key NUEVA. Valida Origin y X-CSRF-Token; aislamiento por sesión y referencias ajenas 404.",
         "security": [
           {
             "SessionCookie": []
@@ -4380,6 +4388,17 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/LoanMovement"
+                },
+                "examples": {
+                  "adjustment": {
+                    "$ref": "#/components/examples/D_adjustment_response"
+                  },
+                  "income_expense": {
+                    "$ref": "#/components/examples/D_income_expense_response"
+                  },
+                  "income_expense_foreign": {
+                    "$ref": "#/components/examples/D_income_expense_foreign_response"
+                  }
                 }
               }
             }
@@ -4397,7 +4416,10 @@
             "$ref": "#/components/responses/Problem404"
           },
           "409": {
-            "description": "Conflicto o exceso de pago; ofrece salidas RF-22, no guarda saldo negativo.",
+            "$ref": "#/components/responses/Problem409"
+          },
+          "422": {
+            "description": "Validación estricta o pago excesivo sin elección: ofrece opciones RF-22 y no guarda nada.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4410,9 +4432,6 @@
                 }
               }
             }
-          },
-          "422": {
-            "$ref": "#/components/responses/Problem422"
           }
         },
         "parameters": [
@@ -4487,6 +4506,24 @@
                 },
                 "D_rejected_payment": {
                   "$ref": "#/components/examples/D_rejected_payment"
+                },
+                "adjustment": {
+                  "$ref": "#/components/examples/D_adjustment_request"
+                },
+                "income_expense": {
+                  "$ref": "#/components/examples/D_income_expense_request"
+                },
+                "income_expense_foreign": {
+                  "$ref": "#/components/examples/D_income_expense_foreign_request"
+                },
+                "Write_off_interest": {
+                  "$ref": "#/components/examples/Write_off_interest"
+                },
+                "Capital_adjustment": {
+                  "$ref": "#/components/examples/Capital_adjustment"
+                },
+                "Write_off_split": {
+                  "$ref": "#/components/examples/Write_off_split"
                 }
               }
             }
@@ -4742,6 +4779,15 @@
                   },
                   "E_balance": {
                     "$ref": "#/components/examples/E_balance"
+                  },
+                  "adjustment": {
+                    "$ref": "#/components/examples/D_adjustment_balance"
+                  },
+                  "income_expense": {
+                    "$ref": "#/components/examples/D_income_expense_balance"
+                  },
+                  "income_expense_foreign": {
+                    "$ref": "#/components/examples/D_income_expense_foreign_balance"
                   }
                 }
               }
@@ -4795,7 +4841,7 @@
           "loans"
         ],
         "summary": "Proponer reparto de pago",
-        "description": "No persiste. Primero interés pendiente y luego capital (ADR-003); usuario edita antes de crear payment. Exceso devuelve Problem 409. Valida Origin y X-CSRF-Token; ningún user_id se acepta del cliente. Aislamiento por sesión; referencias ajenas responden 404.",
+        "description": "No persiste. Primero interés pendiente y luego capital (ADR-003); usuario edita antes de crear payment. Exceso devuelve Problem 422 sin guardar nada; ofrece opciones RF-22. Valida Origin y X-CSRF-Token; ningún user_id se acepta del cliente. Aislamiento por sesión; referencias ajenas responden 404.",
         "security": [
           {
             "SessionCookie": []
@@ -5164,6 +5210,11 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SubscriptionTotalPage"
+                },
+                "examples": {
+                  "weekly": {
+                    "$ref": "#/components/examples/Weekly_subscription_totals"
+                  }
                 }
               }
             }
@@ -5193,6 +5244,14 @@
           },
           {
             "$ref": "#/components/parameters/Cursor"
+          },
+          {
+            "name": "report_currency",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Currency"
+            },
+            "description": "Moneda de reporte seleccionada del usuario por defecto; política histórica ARCHITECTURE §5.8."
           }
         ],
         "x-paginated": true
@@ -5218,6 +5277,32 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CategoryReportRowPage"
+                },
+                "examples": {
+                  "no_historical_rate": {
+                    "value": {
+                      "items": [
+                        {
+                          "category_id": null,
+                          "kind": "expense",
+                          "start_on": "2026-01-01",
+                          "end_on": "2026-01-31",
+                          "total": {
+                            "by_currency": [
+                              {
+                                "currency": "PEN",
+                                "amount": "10.00"
+                              }
+                            ],
+                            "report_currency": "USD",
+                            "report_amount": "0.00",
+                            "unconverted_count": 1
+                          }
+                        }
+                      ],
+                      "next_cursor": null
+                    }
+                  }
                 }
               }
             }
@@ -5270,7 +5355,7 @@
             "schema": {
               "$ref": "#/components/schemas/Currency"
             },
-            "description": "Moneda de reporte, base del usuario por defecto; conversiones históricas explícitas."
+            "description": "Moneda de reporte seleccionada del usuario por defecto; tasa base→reporte del día de transacción o más cercano anterior. Sin tasa: excluida del convertido y unconverted_count; nunca tasa futura."
           },
           {
             "name": "account_id",
@@ -5378,7 +5463,7 @@
             "schema": {
               "$ref": "#/components/schemas/Currency"
             },
-            "description": "Moneda de reporte, base del usuario por defecto; conversiones históricas explícitas."
+            "description": "Moneda de reporte seleccionada del usuario por defecto; tasa base→reporte del día de transacción o más cercano anterior. Sin tasa: excluida del convertido y unconverted_count; nunca tasa futura."
           },
           {
             "name": "account_id",
@@ -5486,7 +5571,7 @@
             "schema": {
               "$ref": "#/components/schemas/Currency"
             },
-            "description": "Moneda de reporte, base del usuario por defecto; conversiones históricas explícitas."
+            "description": "Moneda de reporte seleccionada del usuario por defecto; tasa base→reporte del día de transacción o más cercano anterior. Sin tasa: excluida del convertido y unconverted_count; nunca tasa futura."
           },
           {
             "name": "account_id",
@@ -5580,7 +5665,7 @@
             "schema": {
               "$ref": "#/components/schemas/Currency"
             },
-            "description": "Moneda de reporte, base del usuario por defecto; conversiones históricas explícitas."
+            "description": "Moneda de reporte seleccionada del usuario por defecto; tasa base→reporte del día de transacción o más cercano anterior. Sin tasa: excluida del convertido y unconverted_count; nunca tasa futura."
           },
           {
             "name": "account_id",
@@ -5622,6 +5707,11 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SubscriptionTotalPage"
+                },
+                "examples": {
+                  "weekly": {
+                    "$ref": "#/components/examples/Weekly_subscription_totals"
+                  }
                 }
               }
             }
@@ -5674,7 +5764,7 @@
             "schema": {
               "$ref": "#/components/schemas/Currency"
             },
-            "description": "Moneda de reporte, base del usuario por defecto; conversiones históricas explícitas."
+            "description": "Moneda de reporte seleccionada del usuario por defecto; tasa base→reporte del día de transacción o más cercano anterior. Sin tasa: excluida del convertido y unconverted_count; nunca tasa futura."
           },
           {
             "name": "account_id",
@@ -5768,7 +5858,7 @@
             "schema": {
               "$ref": "#/components/schemas/Currency"
             },
-            "description": "Moneda de reporte, base del usuario por defecto; conversiones históricas explícitas."
+            "description": "Moneda de reporte seleccionada del usuario por defecto; tasa base→reporte del día de transacción o más cercano anterior. Sin tasa: excluida del convertido y unconverted_count; nunca tasa futura."
           },
           {
             "name": "account_id",
@@ -5862,7 +5952,7 @@
             "schema": {
               "$ref": "#/components/schemas/Currency"
             },
-            "description": "Moneda de reporte, base del usuario por defecto; conversiones históricas explícitas."
+            "description": "Moneda de reporte seleccionada del usuario por defecto; tasa base→reporte del día de transacción o más cercano anterior. Sin tasa: excluida del convertido y unconverted_count; nunca tasa futura."
           },
           {
             "name": "account_id",
@@ -5956,7 +6046,7 @@
             "schema": {
               "$ref": "#/components/schemas/Currency"
             },
-            "description": "Moneda de reporte, base del usuario por defecto; conversiones históricas explícitas."
+            "description": "Moneda de reporte seleccionada del usuario por defecto; tasa base→reporte del día de transacción o más cercano anterior. Sin tasa: excluida del convertido y unconverted_count; nunca tasa futura."
           },
           {
             "name": "account_id",
@@ -6426,7 +6516,7 @@
           "users"
         ],
         "summary": "Editar preferencias",
-        "description": "Idioma, moneda base, zona, apariencia e inactividad. Tasas históricas no se reescriben al cambiar base. Campos de presentación requieren extensión del almacenamiento (README). Valida Origin y X-CSRF-Token; ningún user_id se acepta del cliente. Aislamiento por sesión; referencias ajenas responden 404.",
+        "description": "Actualiza perfil, report_currency y preferences (tema/acento/widgets ordenados). Base inmutable tras primera transacción: 409 Problem base_currency_locked; no migra historial. Valida Origin y X-CSRF-Token, aislamiento por sesión.",
         "security": [
           {
             "SessionCookie": []
@@ -6456,7 +6546,19 @@
             "$ref": "#/components/responses/Problem404"
           },
           "409": {
-            "$ref": "#/components/responses/Problem409"
+            "description": "Moneda base inmutable después de la primera transacción.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                },
+                "examples": {
+                  "base_locked": {
+                    "$ref": "#/components/examples/Base_currency_locked"
+                  }
+                }
+              }
+            }
           },
           "422": {
             "$ref": "#/components/responses/Problem422"
@@ -6472,7 +6574,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UserPreferences"
+                "$ref": "#/components/schemas/UserUpdate"
               }
             }
           }
@@ -7639,7 +7741,7 @@
           "exports"
         ],
         "summary": "Exportar datos propios",
-        "description": "JSON completo o CSV por tabla; solo usuario actual, sin secretos ni sesiones. Conserva historial y borrado lógico. No depende de Google Drive. Aislamiento por sesión; referencias ajenas responden 404.",
+        "description": "Descarga JSON completo propio con schema_version o CSV por tabla; sin secretos ni sesiones. Conserva historial y borrado lógico. Restauración desde este JSON NO es de V1; importación solo Cashew. Aislamiento por sesión y UUID ajenos 404.",
         "security": [
           {
             "SessionCookie": []
@@ -7656,8 +7758,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "string",
-                  "format": "binary"
+                  "$ref": "#/components/schemas/FullExport"
+                },
+                "examples": {
+                  "empty": {
+                    "$ref": "#/components/examples/Full_export_empty"
+                  }
                 }
               },
               "text/csv": {
@@ -7717,7 +7823,9 @@
                 "subscriptions",
                 "recurring_rules",
                 "budgets",
-                "goals"
+                "goals",
+                "category_rules",
+                "attachments"
               ]
             },
             "description": "Obligatorio si format=csv."
@@ -7764,6 +7872,591 @@
             "$ref": "#/components/responses/Problem422"
           }
         }
+      }
+    },
+    "/api/v1/category-rules": {
+      "get": {
+        "operationId": "list_category_rules",
+        "tags": [
+          "category-rules"
+        ],
+        "summary": "Listar reglas de categorización",
+        "description": "RF-06: reglas exact/contains del usuario, source e hits solo lectura. Aislamiento por sesión; UUID ajenos responden 404.",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Problem400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem422"
+          },
+          "200": {
+            "description": "Operación correcta.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryRulePage"
+                }
+              }
+            }
+          }
+        },
+        "x-paginated": true,
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/Cursor"
+          }
+        ]
+      },
+      "post": {
+        "operationId": "create_category_rule",
+        "tags": [
+          "category-rules"
+        ],
+        "summary": "Crear regla de categorización",
+        "description": "RF-06: source=manual, hits administrado por servidor; categoría debe ser propia. Aislamiento por sesión; UUID ajenos responden 404. Valida Origin y X-CSRF-Token; no admite user_id del cliente.",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Problem400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem422"
+          },
+          "201": {
+            "description": "Operación correcta.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryRule"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CsrfToken"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryRuleCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/category-rules/{id}": {
+      "get": {
+        "operationId": "get_category_rule",
+        "tags": [
+          "category-rules"
+        ],
+        "summary": "Consultar regla de categorización",
+        "description": "Regla propia, sin datos de terceros. Aislamiento por sesión; UUID ajenos responden 404.",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Problem400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem422"
+          },
+          "200": {
+            "description": "Operación correcta.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryRule"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Uuid"
+            },
+            "description": "UUID propio del usuario de la sesión."
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "update_category_rule",
+        "tags": [
+          "category-rules"
+        ],
+        "summary": "Editar regla de categorización",
+        "description": "Actualización parcial de pattern/match_type/category_id; no puede escribir source/hits. Aislamiento por sesión; UUID ajenos responden 404. Valida Origin y X-CSRF-Token; no admite user_id del cliente.",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Problem400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem422"
+          },
+          "200": {
+            "description": "Operación correcta.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryRule"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Uuid"
+            },
+            "description": "UUID propio del usuario de la sesión."
+          },
+          {
+            "$ref": "#/components/parameters/CsrfToken"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryRuleUpdate"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "delete_category_rule",
+        "tags": [
+          "category-rules"
+        ],
+        "summary": "Borrar regla lógicamente",
+        "description": "Marca deleted_at; no altera categorías ni transacciones históricas. Aislamiento por sesión; UUID ajenos responden 404. Valida Origin y X-CSRF-Token; no admite user_id del cliente.",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Problem400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem422"
+          },
+          "200": {
+            "description": "Operación correcta.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Uuid"
+            },
+            "description": "UUID propio del usuario de la sesión."
+          },
+          {
+            "$ref": "#/components/parameters/CsrfToken"
+          }
+        ]
+      }
+    },
+    "/api/v1/transactions/{id}/attachments": {
+      "get": {
+        "operationId": "list_transaction_attachments",
+        "tags": [
+          "attachments"
+        ],
+        "summary": "Listar adjuntos de transacción",
+        "description": "RF-08: metadatos de adjuntos activos, máximo cinco por transacción. Sesión obligatoria; aislamiento por usuario, transacción y adjunto ajenos devuelven 404.",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Problem400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem422"
+          },
+          "200": {
+            "description": "Operación correcta.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttachmentPage"
+                }
+              }
+            }
+          }
+        },
+        "x-paginated": true,
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/Cursor"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Uuid"
+            },
+            "description": "UUID propio del usuario de la sesión."
+          }
+        ]
+      },
+      "post": {
+        "operationId": "upload_transaction_attachment",
+        "tags": [
+          "attachments"
+        ],
+        "summary": "Subir adjunto",
+        "description": "RF-08: 10 MiB por archivo, hasta 5 por transacción; image/jpeg, image/png, image/webp, application/pdf. MIME no permitido 415; tamaño excedido 413; límite de cantidad 422. Almacenamiento local V1. Sesión obligatoria; aislamiento por usuario, transacción y adjunto ajenos devuelven 404. Valida Origin y X-CSRF-Token; no admite user_id del cliente.",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Problem400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem422"
+          },
+          "201": {
+            "description": "Operación correcta.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Attachment"
+                }
+              }
+            }
+          },
+          "413": {
+            "$ref": "#/components/responses/Problem413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Problem415"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Uuid"
+            },
+            "description": "UUID propio del usuario de la sesión."
+          },
+          {
+            "$ref": "#/components/parameters/CsrfToken"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/AttachmentUpload"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/transactions/{id}/attachments/{attachment_id}": {
+      "delete": {
+        "operationId": "delete_transaction_attachment",
+        "tags": [
+          "attachments"
+        ],
+        "summary": "Borrar adjunto lógicamente",
+        "description": "RF-08: marca deleted_at; no borra transacción ni afecta saldos. Sesión obligatoria; aislamiento por usuario, transacción y adjunto ajenos devuelven 404. Valida Origin y X-CSRF-Token; no admite user_id del cliente.",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Problem400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem422"
+          },
+          "200": {
+            "description": "Operación correcta.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Uuid"
+            },
+            "description": "UUID propio del usuario de la sesión."
+          },
+          {
+            "name": "attachment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Uuid"
+            },
+            "description": "UUID propio del usuario de la sesión."
+          },
+          {
+            "$ref": "#/components/parameters/CsrfToken"
+          }
+        ]
+      }
+    },
+    "/api/v1/transactions/{id}/attachments/{attachment_id}/download": {
+      "get": {
+        "operationId": "download_transaction_attachment",
+        "tags": [
+          "attachments"
+        ],
+        "summary": "Descargar adjunto",
+        "description": "RF-08: descarga archivo propio activo, sin revelar storage_key ni aceptar rutas arbitrarias. Sesión obligatoria; aislamiento por usuario, transacción y adjunto ajenos devuelven 404.",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Problem400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem422"
+          },
+          "200": {
+            "description": "Archivo adjunto binario; metadata/content type conservados.",
+            "headers": {
+              "Content-Disposition": {
+                "$ref": "#/components/headers/ContentDisposition"
+              }
+            },
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Uuid"
+            },
+            "description": "UUID propio del usuario de la sesión."
+          },
+          {
+            "name": "attachment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Uuid"
+            },
+            "description": "UUID propio del usuario de la sesión."
+          }
+        ]
       }
     }
   },
@@ -7858,12 +8551,17 @@
           },
           "description": {
             "type": "string"
+          },
+          "applied_amount": {
+            "$ref": "#/components/schemas/PositiveAmount"
           }
         },
         "required": [
           "action",
-          "description"
-        ]
+          "description",
+          "applied_amount"
+        ],
+        "description": "Opción RF-22 con applied_amount en moneda del préstamo: reparto opcional del reintento se refiere a este importe aplicado."
       },
       "Problem": {
         "type": "object",
@@ -7889,7 +8587,8 @@
             "format": "uri-reference"
           },
           "code": {
-            "type": "string"
+            "type": "string",
+            "description": "Código estable: loan_overpayment (422), base_currency_locked (409), idempotency_conflict (409), attachment_too_large (413), unsupported_attachment_type (415), entre otros."
           },
           "errors": {
             "type": "array",
@@ -7919,7 +8618,7 @@
           "status",
           "detail"
         ],
-        "description": "Error RFC 9457. No revela recursos de otro usuario; 404 en referencias ajenas. Campos outstanding/excess_amount/currency/options presentes cuando code=loan_overpayment."
+        "description": "Error RFC 9457. No revela recursos de otro usuario; 404 en referencias ajenas. Campos outstanding/excess_amount/currency/options presentes cuando code=loan_overpayment (422 sin guardar nada; reintento con Idempotency-Key nueva)."
       },
       "ActionResult": {
         "type": "object",
@@ -9035,7 +9734,8 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "Unidades de la moneda de cuenta por 1 unidad de la moneda del préstamo; loan_amount = |account_amount| / fx_rate_applied, ROUND_HALF_UP a 2 decimales. C: 380 PEN / 3.800000 PEN por USD = 100.00 USD. Nula si ambas monedas coinciden (ARCHITECTURE §5.5)."
           }
         },
         "required": [
@@ -9100,13 +9800,24 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "Unidades de la moneda de cuenta por 1 unidad de la moneda del préstamo; loan_amount = |account_amount| / fx_rate_applied, ROUND_HALF_UP a 2 decimales. C: 380 PEN / 3.800000 PEN por USD = 100.00 USD. Nula si ambas monedas coinciden (ARCHITECTURE §5.5)."
           },
           "interest_part": {
-            "$ref": "#/components/schemas/NonNegativeAmount"
+            "$ref": "#/components/schemas/NonNegativeAmount",
+            "description": "Opcional; junto con el otro campo describe solo el pago aplicado al préstamo, no el exceso como ingreso/gasto. Si ambos se omiten, servidor propone primero interés y después capital. Deben enviarse ambos o ninguno."
           },
           "principal_part": {
-            "$ref": "#/components/schemas/NonNegativeAmount"
+            "$ref": "#/components/schemas/NonNegativeAmount",
+            "description": "Opcional; junto con el otro campo describe solo el pago aplicado al préstamo, no el exceso como ingreso/gasto. Si ambos se omiten, servidor propone primero interés y después capital. Deben enviarse ambos o ninguno."
+          },
+          "excess_handling": {
+            "type": "string",
+            "enum": [
+              "adjustment",
+              "income_expense"
+            ],
+            "description": "Opcional. Solo si existe exceso. adjustment crea ajuste de capital por exceso inmediatamente antes del pago completo; income_expense aplica pago por saldo exacto y transacción normal por exceso en la misma cuenta. Todo en una sola transacción de BD; no existe estado intermedio ni reintento parcial. Reintentar tras 422 con clave idempotente NUEVA."
           }
         },
         "required": [
@@ -9117,10 +9828,17 @@
           "account_amount",
           "account_currency",
           "fx_rate_to_base",
-          "fx_rate_source",
-          "interest_part",
-          "principal_part"
-        ]
+          "fx_rate_source"
+        ],
+        "description": "La petición describe el importe físico TOTAL recibido/pagado, convertido a moneda del préstamo en amount_in_loan_currency. Reparto opcional: ambos campos o ninguno; si se omiten, servidor calcula primero interés. Con income_expense el reparto suma el saldo exacto aplicado; con adjustment suma el total tras ajuste positivo de capital. Problem 422 informa applied_amount de cada opción. Sin elección frente a exceso, no guarda nada; reintento con Idempotency-Key NUEVA.",
+        "dependentRequired": {
+          "interest_part": [
+            "principal_part"
+          ],
+          "principal_part": [
+            "interest_part"
+          ]
+        }
       },
       "InterestRequest": {
         "type": "object",
@@ -9182,7 +9900,8 @@
           "kind",
           "amount_in_loan_currency",
           "occurred_at"
-        ]
+        ],
+        "description": "Ajuste con signo y distinto de cero, solo sobre capital: positivo aumenta capital, negativo lo reduce; nunca deja capital pendiente por debajo de cero. No mueve dinero ni altera interés ni gasto/ingreso (ARCHITECTURE §5.5)."
       },
       "WriteOffRequest": {
         "type": "object",
@@ -9207,13 +9926,22 @@
                 "type": "null"
               }
             ]
+          },
+          "interest_part": {
+            "$ref": "#/components/schemas/NonNegativeAmount"
+          },
+          "principal_part": {
+            "$ref": "#/components/schemas/NonNegativeAmount"
           }
         },
         "required": [
           "kind",
           "amount_in_loan_currency",
-          "occurred_at"
-        ]
+          "occurred_at",
+          "interest_part",
+          "principal_part"
+        ],
+        "description": "Condonación repartida primero a interés pendiente y después a capital: interest_part + principal_part = amount_in_loan_currency; no supera lo pendiente de cada concepto. No mueve dinero ni genera gasto/ingreso; el interés condonado nunca se reconoce (ARCHITECTURE §5.5)."
       },
       "MovementCreate": {
         "oneOf": [
@@ -9243,7 +9971,7 @@
             "write_off": "#/components/schemas/WriteOffRequest"
           }
         },
-        "description": "Importes en moneda del préstamo. Interés/ajuste/condonación no mueven dinero. Adjustment debe ser distinto de cero. Pago: interest_part + principal_part = amount_in_loan_currency; no exceder ningún concepto pendiente. FX aplicada expresa unidades de moneda de cuenta por unidad de préstamo (Ejemplo C: PEN/USD 3.800000); account_amount / fx_rate_applied se redondea a 2 decimales. Para misma moneda importes iguales y fx_rate_applied nula. La orientación está pendiente de ratificación en T-105."
+        "description": "Importes en moneda del préstamo. Interés/ajuste/condonación no mueven dinero. Ajuste solo capital; condonación reparte interés/capital, sin gasto/ingreso. FX: unidades de moneda de cuenta por 1 unidad de préstamo (C: PEN/USD 3.800000); loan_amount = |account_amount| / fx_rate_applied, ROUND_HALF_UP a 2 decimales. Misma moneda: importes iguales, fx_rate_applied nula. Repartos no superan pendientes de cada concepto; RF-22 se resuelve atómicamente con excess_handling."
       },
       "LoanCreate": {
         "type": "object",
@@ -9530,7 +10258,8 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "Unidades de la moneda de cuenta por 1 unidad de la moneda del préstamo; loan_amount = |account_amount| / fx_rate_applied, ROUND_HALF_UP a 2 decimales. C: 380 PEN / 3.800000 PEN por USD = 100.00 USD. Nula si ambas monedas coinciden (ARCHITECTURE §5.5)."
           },
           "interest_part": {
             "anyOf": [
@@ -9593,6 +10322,14 @@
           "running_balance": {
             "$ref": "#/components/schemas/NonNegativeAmount",
             "readOnly": true
+          },
+          "side_effects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LoanSideEffect"
+            },
+            "readOnly": true,
+            "description": "Referencias a adjustment_id o transacción extra creados atómicamente; vacío sin exceso. La suma de las transacciones de pago y exceso debe igualar el importe físico de petición."
           }
         },
         "required": [
@@ -9614,8 +10351,10 @@
           "deleted_at",
           "loan_id",
           "transaction_id",
-          "running_balance"
-        ]
+          "running_balance",
+          "side_effects"
+        ],
+        "description": "Movimiento persistido del libro mayor; en income_expense representa solo pago aplicado al saldo. Interés y principal corresponden a pagos/condonaciones; campos de cuenta son nulos si no hay dinero. Ajustes afectan solo capital."
       },
       "LoanBalance": {
         "type": "object",
@@ -10360,6 +11099,10 @@
           "remaining_amount": {
             "$ref": "#/components/schemas/MoneyAmount",
             "readOnly": true
+          },
+          "report_total": {
+            "$ref": "#/components/schemas/ReportTotal",
+            "readOnly": true
           }
         },
         "required": [
@@ -10376,7 +11119,8 @@
           "updated_at",
           "deleted_at",
           "spent_amount",
-          "remaining_amount"
+          "remaining_amount",
+          "report_total"
         ]
       },
       "GoalCreate": {
@@ -10476,6 +11220,10 @@
           "progress_amount": {
             "$ref": "#/components/schemas/MoneyAmount",
             "readOnly": true
+          },
+          "report_total": {
+            "$ref": "#/components/schemas/ReportTotal",
+            "readOnly": true
           }
         },
         "required": [
@@ -10488,7 +11236,8 @@
           "created_at",
           "updated_at",
           "deleted_at",
-          "progress_amount"
+          "progress_amount",
+          "report_total"
         ]
       },
       "TransactionAssignment": {
@@ -10548,20 +11297,6 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "timezone": {
-            "type": "string",
-            "default": "America/Lima"
-          },
-          "base_currency": {
-            "$ref": "#/components/schemas/Currency"
-          },
-          "locale": {
-            "type": "string",
-            "enum": [
-              "es",
-              "en"
-            ]
-          },
           "theme": {
             "type": "string",
             "enum": [
@@ -10584,21 +11319,13 @@
             "type": "array",
             "items": {
               "type": "string"
-            }
-          },
-          "lock_after_minutes": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 1
-              },
-              {
-                "type": "null"
-              }
-            ]
+            },
+            "uniqueItems": true,
+            "description": "Lista ordenada de identificadores de widgets; el orden del array determina su orden de presentación (RF-38)."
           }
         },
-        "required": []
+        "required": [],
+        "description": "Preferencias estrictas de presentación, persistidas en users.preferences jsonb: tema, acento y widgets ordenados."
       },
       "CurrentUser": {
         "type": "object",
@@ -10622,6 +11349,36 @@
           },
           "webauthn_enabled": {
             "type": "boolean"
+          },
+          "timezone": {
+            "type": "string",
+            "default": "America/Lima"
+          },
+          "base_currency": {
+            "$ref": "#/components/schemas/Currency",
+            "readOnly": true,
+            "description": "Inmutable desde la primera transacción; intentar cambiar entonces devuelve 409 base_currency_locked. Cambio de base con historial fuera de V1."
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "es",
+              "en"
+            ]
+          },
+          "lock_after_minutes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "report_currency": {
+            "$ref": "#/components/schemas/Currency"
           }
         },
         "required": [
@@ -10630,7 +11387,12 @@
           "preferences",
           "pin_configured",
           "locked",
-          "webauthn_enabled"
+          "webauthn_enabled",
+          "timezone",
+          "base_currency",
+          "locale",
+          "lock_after_minutes",
+          "report_currency"
         ]
       },
       "PasswordLogin": {
@@ -11090,14 +11852,20 @@
           },
           "report_amount": {
             "$ref": "#/components/schemas/MoneyAmount"
+          },
+          "unconverted_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Número de transacciones sin tasa histórica base→reporte; excluidas del total convertido, conservadas en by_currency."
           }
         },
         "required": [
           "by_currency",
           "report_currency",
-          "report_amount"
+          "report_amount",
+          "unconverted_count"
         ],
-        "description": "Conversión por tasas históricas guardadas. Reporte en moneda no base requiere tasa histórica explícita; no se usa la tasa de hoy. Política para cruces sin tasa pendiente de implementación."
+        "description": "Desglose por moneda y total convertido. Usa fx_rate_to_base de cada transacción; si reporte != base usa tasa base→reporte del día de la transacción o el más cercano anterior (ARCHITECTURE §5.8). Si falta, excluye del total convertido e incrementa unconverted_count; nunca usa tasas futuras ni la de hoy para el pasado. Moneda de reporte seleccionada del usuario por defecto."
       },
       "CategoryReportRow": {
         "type": "object",
@@ -11182,13 +11950,18 @@
           },
           "balance": {
             "$ref": "#/components/schemas/MoneyAmount"
+          },
+          "report_total": {
+            "$ref": "#/components/schemas/ReportTotal",
+            "readOnly": true
           }
         },
         "required": [
           "account_id",
           "on",
           "currency",
-          "balance"
+          "balance",
+          "report_total"
         ],
         "description": "Saldo financiero: incluye capital de préstamos y transferencias posted, excluye scheduled/borradas."
       },
@@ -11208,15 +11981,23 @@
           "active_count": {
             "type": "integer",
             "minimum": 0
+          },
+          "monthly_total": {
+            "$ref": "#/components/schemas/ReportTotal"
+          },
+          "yearly_total": {
+            "$ref": "#/components/schemas/ReportTotal"
           }
         },
         "required": [
           "currency",
           "monthly_amount",
           "yearly_amount",
-          "active_count"
+          "active_count",
+          "monthly_total",
+          "yearly_total"
         ],
-        "description": "Solo compromisos active; normalización por periodicidad e intervalo, sin cambiar historial. Convención daily/weekly pendiente de ratificar."
+        "description": "Solo active, monedas separadas. Equivalente mensual = amount × f / interval_count, f: daily 30.4375, weekly 4.348125, monthly 1, yearly 1/12. Anual = mensual sin redondear × 12. ROUND_HALF_UP a 2 decimales solo al final, nunca anual desde mensual ya redondeado (ARCHITECTURE §5.6). Totales de reporte usan política histórica §5.8 e informan unconverted_count."
       },
       "ArchivedSubscriptionTotal": {
         "type": "object",
@@ -11243,6 +12024,11 @@
           },
           "archived_at": {
             "$ref": "#/components/schemas/Timestamp"
+          },
+          "report_total": {
+            "$ref": "#/components/schemas/ReportTotal",
+            "readOnly": true,
+            "description": "Conversión del total histórico pagado; unconverted_count informa pagos excluidos por falta de tasa histórica."
           }
         },
         "required": [
@@ -11250,7 +12036,8 @@
           "currency",
           "historical_paid",
           "last_paid_on",
-          "archived_at"
+          "archived_at",
+          "report_total"
         ]
       },
       "EntityImportCount": {
@@ -12590,6 +13377,386 @@
           "items",
           "next_cursor"
         ]
+      },
+      "UserUpdate": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "timezone": {
+            "type": "string",
+            "default": "America/Lima"
+          },
+          "base_currency": {
+            "$ref": "#/components/schemas/Currency",
+            "readOnly": true,
+            "description": "Solo puede cambiar antes de la primera transacción; después es de solo lectura y cambiarla devuelve 409 base_currency_locked (ARCHITECTURE §5.2)."
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "es",
+              "en"
+            ]
+          },
+          "lock_after_minutes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "report_currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "preferences": {
+            "$ref": "#/components/schemas/UserPreferences"
+          }
+        },
+        "required": [],
+        "minProperties": 1,
+        "description": "Actualización parcial de usuario propio. report_currency cambia libremente. preferences solo presentación; base_currency bloqueada con historial y tasas históricas inmutables."
+      },
+      "CategoryRuleCreate": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "pattern": {
+            "type": "string",
+            "minLength": 1
+          },
+          "match_type": {
+            "type": "string",
+            "enum": [
+              "exact",
+              "contains"
+            ]
+          },
+          "category_id": {
+            "$ref": "#/components/schemas/Uuid"
+          }
+        },
+        "required": [
+          "pattern",
+          "match_type",
+          "category_id"
+        ],
+        "description": "RF-06: regla manual del usuario para sugerir categoría según título frecuente. No entrena ni ejecuta ML en V1. source es asignado por servidor."
+      },
+      "CategoryRuleUpdate": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "pattern": {
+            "type": "string",
+            "minLength": 1
+          },
+          "match_type": {
+            "type": "string",
+            "enum": [
+              "exact",
+              "contains"
+            ]
+          },
+          "category_id": {
+            "$ref": "#/components/schemas/Uuid"
+          }
+        },
+        "required": [],
+        "description": "RF-06: regla manual del usuario para sugerir categoría según título frecuente. No entrena ni ejecuta ML en V1. source es asignado por servidor.",
+        "minProperties": 1
+      },
+      "CategoryRule": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "pattern": {
+            "type": "string",
+            "minLength": 1
+          },
+          "match_type": {
+            "type": "string",
+            "enum": [
+              "exact",
+              "contains"
+            ]
+          },
+          "category_id": {
+            "$ref": "#/components/schemas/Uuid"
+          },
+          "id": {
+            "$ref": "#/components/schemas/Uuid",
+            "readOnly": true
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "import",
+              "model"
+            ],
+            "readOnly": true
+          },
+          "hits": {
+            "type": "integer",
+            "minimum": 0,
+            "readOnly": true
+          },
+          "created_at": {
+            "$ref": "#/components/schemas/Timestamp",
+            "readOnly": true
+          },
+          "updated_at": {
+            "$ref": "#/components/schemas/Timestamp",
+            "readOnly": true
+          },
+          "deleted_at": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Timestamp"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "pattern",
+          "match_type",
+          "category_id",
+          "id",
+          "source",
+          "hits",
+          "created_at",
+          "updated_at",
+          "deleted_at"
+        ],
+        "description": "RF-06: regla manual del usuario para sugerir categoría según título frecuente. No entrena ni ejecuta ML en V1. source es asignado por servidor."
+      },
+      "CategoryRulePage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoryRule"
+            }
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ]
+      },
+      "FullExport": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "minLength": 1
+          },
+          "exported_at": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        "required": [
+          "schema_version",
+          "exported_at",
+          "data"
+        ],
+        "description": "Archivo completo del usuario con schema_version explícito. data contiene colecciones por entidad, sin secretos/sesiones. Formato versionado; restauración de este JSON fuera de V1 (solo importación Cashew)."
+      },
+      "AttachmentUpload": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "description": "Máximo 10485760 bytes (10 MiB). MIME permitidos: image/jpeg, image/png, image/webp y application/pdf.",
+            "x-max-size-bytes": 10485760,
+            "x-allowed-content-types": [
+              "image/jpeg",
+              "image/png",
+              "image/webp",
+              "application/pdf"
+            ]
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "description": "RF-08: multipart con un archivo, máximo 10 MiB por archivo y 5 adjuntos activos por transacción. Servidor valida tamaño real y content type; 413 Problem para tamaño, 415 Problem para MIME no permitido, 422 Problem para límite de adjuntos. Almacenamiento local V1 (storage_key interno, no expuesto).",
+        "x-max-attachments-per-transaction": 5
+      },
+      "Attachment": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Uuid",
+            "readOnly": true
+          },
+          "transaction_id": {
+            "$ref": "#/components/schemas/Uuid",
+            "readOnly": true
+          },
+          "filename": {
+            "type": "string"
+          },
+          "content_type": {
+            "type": "string",
+            "enum": [
+              "image/jpeg",
+              "image/png",
+              "image/webp",
+              "application/pdf"
+            ]
+          },
+          "size_bytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10485760
+          },
+          "created_at": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "updated_at": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "deleted_at": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Timestamp"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "transaction_id",
+          "filename",
+          "content_type",
+          "size_bytes",
+          "created_at",
+          "updated_at",
+          "deleted_at"
+        ],
+        "description": "Metadatos del adjunto del usuario actual. storage_key es interno y nunca una ruta accesible enviada por cliente. Archivos locales; eliminar marca deleted_at."
+      },
+      "AttachmentPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Attachment"
+            }
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ]
+      },
+      "LoanSideEffect": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "adjustment",
+              "income",
+              "expense"
+            ]
+          },
+          "transaction_id": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "account_id": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "amount": {
+            "$ref": "#/components/schemas/PositiveAmount"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "adjustment_id": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "kind",
+          "transaction_id",
+          "account_id",
+          "amount",
+          "currency",
+          "adjustment_id"
+        ],
+        "description": "Referencia a efecto creado atómicamente con el pago. adjustment: adjustment_id presente, amount en moneda del préstamo, transaction_id/account_id nulos. income/expense: transaction_id/account_id presentes, amount en moneda de cuenta, adjustment_id nulo. Si cuenta difiere, pago = round(applied_amount × fx_rate_applied) y exceso = resto del importe físico, sin perder céntimos."
       }
     },
     "parameters": {
@@ -12631,7 +13798,8 @@
           "minLength": 1,
           "maxLength": 255
         },
-        "description": "Reintentos con misma clave y cuerpo devuelven resultado original, por usuario y operación; cuerpo distinto con misma clave: 409. Retención por definir en Fase 2."
+        "description": "Clave opaca del usuario, retención 24 h (ARCHITECTURE §5.8). Única por (user_id, key), no por endpoint; misma clave y cuerpo devuelve status/cuerpo guardados. Misma clave con cuerpo distinto devuelve 409 idempotency_conflict. Después de 422 loan_overpayment, reintento con excess_handling requiere una clave NUEVA; nunca reintento parcial.",
+        "x-retention-hours": 24
       }
     },
     "responses": {
@@ -12697,6 +13865,26 @@
       },
       "Problem429": {
         "description": "Límite de intentos excedido.",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      },
+      "Problem413": {
+        "description": "Archivo excede 10 MiB.",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      },
+      "Problem415": {
+        "description": "Content type no permitido.",
         "content": {
           "application/problem+json": {
             "schema": {
@@ -13150,12 +14338,12 @@
         }
       },
       "D_overpayment": {
-        "summary": "RF-22: opciones explícitas antes de guardar",
+        "summary": "RF-22: Problem 422 sin persistencia, nueva clave para resolver",
         "value": {
           "type": "urn:monetae:problem:loan-overpayment",
           "title": "Pago mayor al saldo",
-          "status": 409,
-          "detail": "Saldo USD 50.00; pago propuesto USD 60.00. Elegir ajuste o registrar el exceso como ingreso/gasto.",
+          "status": 422,
+          "detail": "Saldo USD 50.00; pago propuesto USD 60.00. Nada guardado. Reintentar con excess_handling y una Idempotency-Key nueva.",
           "code": "loan_overpayment",
           "outstanding": "50.00",
           "excess_amount": "10.00",
@@ -13163,13 +14351,295 @@
           "options": [
             {
               "action": "adjustment",
-              "description": "Registrar ajuste explícito de USD 10.00 antes de reintentar pago completo."
+              "description": "Crear ajuste de capital USD 10.00 inmediatamente antes de pago USD 60.00, atómicamente.",
+              "applied_amount": "60.00"
             },
             {
               "action": "income_expense",
-              "description": "Aplicar USD 50.00 al préstamo y registrar USD 10.00 como ingreso (lent) o gasto (borrowed)."
+              "description": "Pago USD 50.00 y USD 10.00 de ingreso (lent) o gasto (borrowed) en misma cuenta, atómicamente.",
+              "applied_amount": "50.00"
             }
           ]
+        }
+      },
+      "Base_currency_locked": {
+        "summary": "Base inmutable con historial",
+        "value": {
+          "type": "urn:monetae:problem:base-currency-locked",
+          "title": "Moneda base bloqueada",
+          "status": 409,
+          "detail": "Existe historial de transacciones; la moneda base no puede cambiar en V1.",
+          "code": "base_currency_locked"
+        }
+      },
+      "Full_export_empty": {
+        "summary": "Exportación sintética versionada, no restaurable en V1",
+        "value": {
+          "schema_version": "0.2",
+          "exported_at": "2026-01-01T15:00:00Z",
+          "data": {
+            "accounts": [],
+            "transactions": [],
+            "loans": [],
+            "loan_movements": [],
+            "attachments": [],
+            "category_rules": []
+          }
+        }
+      },
+      "D_adjustment_request": {
+        "summary": "Ejemplo D: elección adjustment con nueva Idempotency-Key",
+        "value": {
+          "kind": "payment",
+          "amount_in_loan_currency": "60.00",
+          "occurred_at": "2026-01-02T15:00:00Z",
+          "account_id": "00000000-0000-4000-8000-000000000013",
+          "account_amount": "60.00",
+          "account_currency": "USD",
+          "fx_rate_to_base": "3.800000",
+          "fx_rate_source": "manual",
+          "fx_rate_applied": null,
+          "interest_part": "0.00",
+          "principal_part": "60.00",
+          "excess_handling": "adjustment"
+        }
+      },
+      "D_adjustment_response": {
+        "summary": "Ejemplo D: pago aplicado y side_effects atómicos adjustment",
+        "value": {
+          "kind": "payment",
+          "amount_in_loan_currency": "60.00",
+          "occurred_at": "2026-01-02T15:00:00Z",
+          "note": null,
+          "account_id": "00000000-0000-4000-8000-000000000013",
+          "account_amount": "60.00",
+          "account_currency": "USD",
+          "fx_rate_to_base": "3.800000",
+          "fx_rate_source": "manual",
+          "fx_rate_applied": null,
+          "interest_part": "0.00",
+          "principal_part": "60.00",
+          "id": "00000000-0000-4000-8000-000000000100",
+          "created_at": "2026-01-02T15:00:00Z",
+          "updated_at": "2026-01-02T15:00:00Z",
+          "deleted_at": null,
+          "loan_id": "00000000-0000-4000-8000-000000000001",
+          "transaction_id": "00000000-0000-4000-8000-000000000102",
+          "running_balance": "0.00",
+          "side_effects": [
+            {
+              "kind": "adjustment",
+              "amount": "10.00",
+              "currency": "USD",
+              "adjustment_id": "00000000-0000-4000-8000-000000000101",
+              "transaction_id": null,
+              "account_id": null
+            }
+          ]
+        }
+      },
+      "D_adjustment_balance": {
+        "summary": "Ejemplo D: saldo tras adjustment",
+        "value": {
+          "loan_id": "00000000-0000-4000-8000-000000000001",
+          "currency": "USD",
+          "principal": "50.00",
+          "interest_total": "0.00",
+          "adjustment_total": "10.00",
+          "payment_total": "60.00",
+          "write_off_total": "0.00",
+          "outstanding": "0.00",
+          "status": "settled"
+        }
+      },
+      "D_income_expense_request": {
+        "summary": "Ejemplo D: elección income_expense con nueva Idempotency-Key",
+        "value": {
+          "kind": "payment",
+          "amount_in_loan_currency": "60.00",
+          "occurred_at": "2026-01-02T15:00:00Z",
+          "account_id": "00000000-0000-4000-8000-000000000013",
+          "account_amount": "60.00",
+          "account_currency": "USD",
+          "fx_rate_to_base": "3.800000",
+          "fx_rate_source": "manual",
+          "fx_rate_applied": null,
+          "interest_part": "0.00",
+          "principal_part": "50.00",
+          "excess_handling": "income_expense"
+        }
+      },
+      "D_income_expense_response": {
+        "summary": "Ejemplo D: pago aplicado y side_effects atómicos income_expense",
+        "value": {
+          "kind": "payment",
+          "amount_in_loan_currency": "50.00",
+          "occurred_at": "2026-01-02T15:00:00Z",
+          "note": null,
+          "account_id": "00000000-0000-4000-8000-000000000013",
+          "account_amount": "50.00",
+          "account_currency": "USD",
+          "fx_rate_to_base": "3.800000",
+          "fx_rate_source": "manual",
+          "fx_rate_applied": null,
+          "interest_part": "0.00",
+          "principal_part": "50.00",
+          "id": "00000000-0000-4000-8000-000000000100",
+          "created_at": "2026-01-02T15:00:00Z",
+          "updated_at": "2026-01-02T15:00:00Z",
+          "deleted_at": null,
+          "loan_id": "00000000-0000-4000-8000-000000000001",
+          "transaction_id": "00000000-0000-4000-8000-000000000102",
+          "running_balance": "0.00",
+          "side_effects": [
+            {
+              "kind": "income",
+              "amount": "10.00",
+              "currency": "USD",
+              "adjustment_id": null,
+              "transaction_id": "00000000-0000-4000-8000-000000000103",
+              "account_id": "00000000-0000-4000-8000-000000000013"
+            }
+          ]
+        }
+      },
+      "D_income_expense_balance": {
+        "summary": "Ejemplo D: saldo tras income_expense",
+        "value": {
+          "loan_id": "00000000-0000-4000-8000-000000000001",
+          "currency": "USD",
+          "principal": "50.00",
+          "interest_total": "0.00",
+          "adjustment_total": "0.00",
+          "payment_total": "50.00",
+          "write_off_total": "0.00",
+          "outstanding": "0.00",
+          "status": "settled"
+        }
+      },
+      "D_income_expense_foreign_request": {
+        "summary": "Ejemplo D: elección income_expense_foreign con nueva Idempotency-Key",
+        "value": {
+          "kind": "payment",
+          "amount_in_loan_currency": "60.00",
+          "occurred_at": "2026-01-02T15:00:00Z",
+          "account_id": "00000000-0000-4000-8000-000000000014",
+          "account_amount": "228.01",
+          "account_currency": "PEN",
+          "fx_rate_to_base": "1.000000",
+          "fx_rate_source": "manual",
+          "fx_rate_applied": "3.800000",
+          "excess_handling": "income_expense"
+        }
+      },
+      "D_income_expense_foreign_response": {
+        "summary": "Ejemplo D: pago aplicado y side_effects atómicos income_expense_foreign",
+        "value": {
+          "kind": "payment",
+          "amount_in_loan_currency": "50.00",
+          "occurred_at": "2026-01-02T15:00:00Z",
+          "note": null,
+          "account_id": "00000000-0000-4000-8000-000000000014",
+          "account_amount": "190.00",
+          "account_currency": "PEN",
+          "fx_rate_to_base": "1.000000",
+          "fx_rate_source": "manual",
+          "fx_rate_applied": "3.800000",
+          "interest_part": "0.00",
+          "principal_part": "50.00",
+          "id": "00000000-0000-4000-8000-000000000100",
+          "created_at": "2026-01-02T15:00:00Z",
+          "updated_at": "2026-01-02T15:00:00Z",
+          "deleted_at": null,
+          "loan_id": "00000000-0000-4000-8000-000000000001",
+          "transaction_id": "00000000-0000-4000-8000-000000000102",
+          "running_balance": "0.00",
+          "side_effects": [
+            {
+              "kind": "income",
+              "amount": "38.01",
+              "currency": "PEN",
+              "adjustment_id": null,
+              "transaction_id": "00000000-0000-4000-8000-000000000103",
+              "account_id": "00000000-0000-4000-8000-000000000014"
+            }
+          ]
+        }
+      },
+      "D_income_expense_foreign_balance": {
+        "summary": "Ejemplo D: saldo tras income_expense_foreign",
+        "value": {
+          "loan_id": "00000000-0000-4000-8000-000000000001",
+          "currency": "USD",
+          "principal": "50.00",
+          "interest_total": "0.00",
+          "adjustment_total": "0.00",
+          "payment_total": "50.00",
+          "write_off_total": "0.00",
+          "outstanding": "0.00",
+          "status": "settled"
+        }
+      },
+      "Write_off_interest": {
+        "summary": "Condonación: interés primero, ajuste solo capital, sin dinero ni gasto/ingreso",
+        "value": {
+          "kind": "interest",
+          "amount_in_loan_currency": "10.00",
+          "occurred_at": "2026-02-01T15:00:00Z"
+        }
+      },
+      "Capital_adjustment": {
+        "summary": "Condonación: interés primero, ajuste solo capital, sin dinero ni gasto/ingreso",
+        "value": {
+          "kind": "adjustment",
+          "amount_in_loan_currency": "-25.00",
+          "occurred_at": "2026-02-02T15:00:00Z"
+        }
+      },
+      "Write_off_split": {
+        "summary": "Condonación: interés primero, ajuste solo capital, sin dinero ni gasto/ingreso",
+        "value": {
+          "kind": "write_off",
+          "amount_in_loan_currency": "30.00",
+          "interest_part": "10.00",
+          "principal_part": "20.00",
+          "occurred_at": "2026-02-03T15:00:00Z"
+        }
+      },
+      "Weekly_subscription_totals": {
+        "summary": "Suscripción PEN 10.00 semanal: mensual 43.48, anual 521.78; redondeo solo al final",
+        "value": {
+          "items": [
+            {
+              "currency": "PEN",
+              "monthly_amount": "43.48",
+              "yearly_amount": "521.78",
+              "active_count": 1,
+              "monthly_total": {
+                "by_currency": [
+                  {
+                    "currency": "PEN",
+                    "amount": "43.48"
+                  }
+                ],
+                "report_currency": "PEN",
+                "report_amount": "43.48",
+                "unconverted_count": 0
+              },
+              "yearly_total": {
+                "by_currency": [
+                  {
+                    "currency": "PEN",
+                    "amount": "521.78"
+                  }
+                ],
+                "report_currency": "PEN",
+                "report_amount": "521.78",
+                "unconverted_count": 0
+              }
+            }
+          ],
+          "next_cursor": null
         }
       }
     }
@@ -13257,5 +14727,50 @@
       ],
       "balance_example": "E_balance"
     }
+  },
+  "x-subscription-scenarios": [
+    {
+      "amount": "10.00",
+      "currency": "PEN",
+      "period": "weekly",
+      "interval_count": 1,
+      "total_example": "Weekly_subscription_totals"
+    }
+  ],
+  "x-overpayment-scenarios": [
+    {
+      "request_example": "D_adjustment_request",
+      "response_example": "D_adjustment_response",
+      "balance_example": "D_adjustment_balance",
+      "outstanding_before": "50.00",
+      "interest_pending_before": "0.00"
+    },
+    {
+      "request_example": "D_income_expense_request",
+      "response_example": "D_income_expense_response",
+      "balance_example": "D_income_expense_balance",
+      "outstanding_before": "50.00",
+      "interest_pending_before": "0.00"
+    },
+    {
+      "request_example": "D_income_expense_foreign_request",
+      "response_example": "D_income_expense_foreign_response",
+      "balance_example": "D_income_expense_foreign_balance",
+      "outstanding_before": "50.00",
+      "interest_pending_before": "0.00"
+    }
+  ],
+  "x-write-off-scenario": {
+    "principal": "100.00",
+    "movement_examples": [
+      "Write_off_interest",
+      "Capital_adjustment",
+      "Write_off_split"
+    ],
+    "outstanding_after": "55.00",
+    "capital_after": "55.00",
+    "interest_after": "0.00",
+    "recognized_interest": "0.00",
+    "account_change": "0.00"
   }
 }
