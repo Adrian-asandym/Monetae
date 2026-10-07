@@ -103,12 +103,12 @@ Después: hito de despliegue en VPS Contabo → V2 → V3 → V4 (ver SPEC §3 y
 | ADR | Tema | Cuándo |
 |-----|------|--------|
 | 001 | Estrategia de UI (fork de Cashew vs. UI propia) | **Aceptado 2026-10-07: opción A** (UI propia reutilizando widgets) |
-| 002 | Autenticación y sesiones | Fase 1 |
-| 003 | Reconocimiento del interés (caja vs. devengado) | Fase 1 |
-| 004 | Fuente de tipo de cambio | Fase 1 |
+| 002 | Autenticación y sesiones | **Aceptado 2026-10-07: opción A** |
+| 003 | Reconocimiento del interés (caja vs. devengado) | **Aceptado 2026-10-07: opción A (caja)** |
+| 004 | Fuente de tipo de cambio | **Aceptado 2026-10-07: opción A** |
 | 005 | Modelo de sincronización (Android, V4) | Antes de V4 |
-| 006 | Bloqueo "biométrico" en web (PIN + WebAuthn) | Fase 1/6 |
-| 007 | SQLAlchemy síncrono vs. asíncrono | Fase 1 |
+| 006 | Bloqueo "biométrico" en web (PIN + WebAuthn) | **Aceptado 2026-10-07: opción A** |
+| 007 | SQLAlchemy síncrono vs. asíncrono | **Aceptado 2026-10-07: opción A (síncrono)** |
 
 Para cada ADR: contexto, opciones (la recomendada primero), consecuencias, decisión de Adrian. Guarda en `docs/decisions/NNN-titulo.md`.
 

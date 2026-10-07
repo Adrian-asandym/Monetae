@@ -1,6 +1,6 @@
 # ADR-006 — Bloqueo de la app (equivalente web al bloqueo biométrico)
 
-- **Estado:** PROPUESTO (pendiente de decisión de Adrian)
+- **Estado:** ACEPTADO — opción A (decidido por Adrian el 2026-10-07)
 - **Fecha:** 2026-10-07 · **Autor:** Claude
 - **Relacionado:** SPEC RF-36; ADR-002; Cashew (`local_auth`, desactivado en web)
 
@@ -37,4 +37,4 @@ Importante: es una **barrera de comodidad** contra quien mire o use tu pantalla 
 
 ## Decisión de Adrian
 
-_Pendiente._
+**Opción A — PIN obligatorio (primero) y WebAuthn opcional (después)** (2026-10-07).

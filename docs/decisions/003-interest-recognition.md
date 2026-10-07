@@ -1,6 +1,6 @@
 # ADR-003 — Reconocimiento contable del interés de los préstamos
 
-- **Estado:** PROPUESTO (pendiente de decisión de Adrian)
+- **Estado:** ACEPTADO — opción A (decidido por Adrian el 2026-10-07)
 - **Fecha:** 2026-10-07 · **Autor:** Claude
 - **Relacionado:** SPEC §7 (reglas 1 y 4), RF-15, RF-18; P2
 
@@ -41,4 +41,4 @@ Con los números del Ejemplo A (me prestan S/ 200, interés 5 % = S/ 10, pago S/
 
 ## Decisión de Adrian
 
-_Pendiente._
+**Opción A — base caja, pagos repartidos primero a interés y luego a capital** (2026-10-07).

@@ -1,6 +1,6 @@
 # ADR-004 — Fuente del tipo de cambio (PEN/USD)
 
-- **Estado:** PROPUESTO (pendiente de decisión de Adrian)
+- **Estado:** ACEPTADO — opción A (decidido por Adrian el 2026-10-07)
 - **Fecha:** 2026-10-07 · **Autor:** Claude
 - **Relacionado:** SPEC §9, AGENTS.md §6.3, tabla `exchange_rates`
 
@@ -37,4 +37,4 @@ SPEC §9 fija que el tipo de cambio es **manual por defecto** (lo que realmente 
 
 ## Decisión de Adrian
 
-_Pendiente._
+**Opción A — tasa manual siempre manda, más sugerencia automática tras una interfaz intercambiable (proveedor por verificar)** (2026-10-07).

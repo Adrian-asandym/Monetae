@@ -1,6 +1,6 @@
 # ADR-007 — SQLAlchemy síncrono o asíncrono
 
-- **Estado:** PROPUESTO (pendiente de decisión de Adrian)
+- **Estado:** ACEPTADO — opción A (decidido por Adrian el 2026-10-07)
 - **Fecha:** 2026-10-07 · **Autor:** Claude
 - **Relacionado:** AGENTS.md §3 (síncrono + psycopg 3 como valor por defecto), SPEC §12 (rendimiento)
 
@@ -32,4 +32,4 @@ El volumen esperado es pequeño: un usuario en V1 y unas pocas cuentas familiare
 
 ## Decisión de Adrian
 
-_Pendiente._
+**Opción A — SQLAlchemy síncrono con psycopg 3** (2026-10-07).

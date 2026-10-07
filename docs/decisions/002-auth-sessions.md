@@ -1,6 +1,6 @@
 # ADR-002 — Autenticación y sesiones
 
-- **Estado:** PROPUESTO (pendiente de decisión de Adrian)
+- **Estado:** ACEPTADO — opción A (decidido por Adrian el 2026-10-07)
 - **Fecha:** 2026-10-07 · **Autor:** Claude
 - **Relacionado:** SPEC RF-35, RF-37, §12; AGENTS.md §9; ADR-006
 
@@ -43,4 +43,4 @@ V1 es web (una sola aplicación servida por nuestro backend) con login por **Goo
 
 ## Decisión de Adrian
 
-_Pendiente._
+**Opción A — sesión en servidor con cookie `HttpOnly`** (2026-10-07).

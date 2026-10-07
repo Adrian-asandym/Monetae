@@ -1,6 +1,6 @@
 # SPEC.md — Monetae
 
-> Versión 0.2 · 2026-10-07 · Autor: Adrian (revisión: Claude). Historial de cambios en §18.
+> Versión 0.3 · 2026-10-07 · Autor: Adrian (revisión: Claude). Historial de cambios en §18.
 > Documento fuente de verdad del producto. Los agentes lo leen junto con `AGENTS.md`.
 > Los cambios de alcance se registran como ADR en `docs/decisions/`, no se improvisan en código.
 
@@ -156,7 +156,7 @@ Comunes a todas las tablas: `id` (UUID), `user_id`, `created_at`, `updated_at`, 
 | `transaction_tags` | transaction_id, tag_id (vínculo N:M; únicos mientras no estén borrados lógicamente) |
 | `transactions` | account_id, category_id (nullable), kind, amount, currency, occurred_at, title, note, fx_rate_to_base, fx_rate_source, transfer_group_id (nullable), source (`web`/`import`/`telegram`/`api`), raw_input (nullable), categorization_source (`manual`/`rule`/`model`/`llm`) |
 | `loans` | person_id, direction (`lent`/`borrowed`), currency, principal, opened_on, due_on (nullable), note |
-| `loan_movements` | loan_id, transaction_id (nullable, p. ej. interés devengado sin dinero), kind, amount_in_loan_currency, fx_rate_applied, occurred_at |
+| `loan_movements` | loan_id, transaction_id (nullable, p. ej. interés registrado sin dinero), kind, amount_in_loan_currency, interest_part y principal_part (solo en pagos; reparto editable, ADR-003), fx_rate_applied, occurred_at |
 | `subscriptions` | title, amount, currency, account_id, category_id, period, next_due_on, status, archived_at, archive_reason |
 | `recurring_rules` | plantilla de transacción, periodicidad, próxima fecha |
 | `budgets`, `budget_categories`, `budget_transactions` | periodo, monto, límites por categoría, transacciones incluidas |
@@ -308,12 +308,12 @@ La API es REST bajo `/api/v1`, con OpenAPI generado y versionado en `docs/api/op
 | ADR | Tema | Valor por defecto propuesto |
 |-----|------|-----------------------------|
 | 001 | Estrategia de interfaz: fork de Cashew (Flutter) con capa de datos sobre la API, o reescritura | **ACEPTADO (2026-10-07): opción A**, UI propia en Flutter Web reutilizando y desacoplando widgets de Cashew. Ver `docs/decisions/001-ui-strategy.md` |
-| 002 | Autenticación y sesiones | Google OIDC + correo/contraseña; sesiones con cookie `HttpOnly` o JWT corto con refresh |
-| 003 | Reconocimiento contable del interés | Base caja, pagos asignados primero a interés |
-| 004 | Fuente del tipo de cambio automático | Manual por defecto; fuente automática a elegir |
+| 002 | Autenticación y sesiones | **ACEPTADO (opción A, 2026-10-07):** Google OIDC + correo/contraseña; sesión en servidor con cookie `HttpOnly` (tokens de dispositivo en V2–V4) |
+| 003 | Reconocimiento contable del interés | **ACEPTADO (opción A, 2026-10-07):** base caja, pagos asignados primero a interés |
+| 004 | Fuente del tipo de cambio automático | **ACEPTADO (opción A, 2026-10-07):** manual manda; sugerencia automática tras interfaz intercambiable, proveedor por verificar |
 | 005 | Modelo de sincronización para Android | UUID + `updated_at` + borrado lógico |
-| 006 | Bloqueo biométrico en web | PIN y WebAuthn |
-| 007 | SQLAlchemy síncrono o asíncrono | Síncrono con psycopg 3 |
+| 006 | Bloqueo biométrico en web | **ACEPTADO (opción A, 2026-10-07):** PIN primero, WebAuthn opcional después |
+| 007 | SQLAlchemy síncrono o asíncrono | **ACEPTADO (opción A, 2026-10-07):** síncrono con psycopg 3 |
 
 Si la Fase 0 muestra que el fork de Flutter es demasiado invasivo, Claude **pregunta a Adrian antes** de cambiar la estrategia.
 
@@ -341,3 +341,4 @@ Bot de Telegram, clasificador de categorías, asistente Hermes, RAG, app Android
 |---------|-------|---------|
 | 0.1 | 2026-10-05 | Versión inicial. |
 | 0.2 | 2026-10-07 | **Etiquetas** (RF-43 a RF-45, tablas `tags` y `transaction_tags`, criterio de aceptación). **Importador** (§11): SQLite como fuente primaria y CSV solo de rescate (RF-40a, RF-40h), trabajo siempre sobre una copia (RF-40g), tolerancia al esquema v48 (RF-40i) e importación de etiquetas (RF-40j). ADR-001 marcado como aceptado (§15). Aprobado por Adrian. |
+| 0.3 | 2026-10-07 | ADR-002, 003, 004, 006 y 007 aceptados (opción A, §15). `loan_movements` incorpora `interest_part` y `principal_part` en los pagos (ADR-003, §6). Aprobado por Adrian. |
