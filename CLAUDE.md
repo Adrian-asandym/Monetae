@@ -92,7 +92,7 @@ Reasigna si un agente se queda sin cuota o rinde mal en una tarea; avisa a Adria
 | **4** | Importador de Cashew (idempotente, `--dry-run`, cuadre de saldos, revisión manual de préstamos ambiguos) | Import verificado con respaldo sintético y, localmente, el real |
 | **5** | UI (en paralelo, contra mock de OpenAPI) | Flujos P1–P5 visibles en la UI |
 | **6** | Presupuestos, metas, notificaciones, login (Google OIDC + email), bloqueo PIN/WebAuthn | Funciones V1 completas |
-| **7** | Endurecimiento + checklist de aceptación V1 (`SPEC.md` §14) | V1 aceptada por Adrian |
+| **7** | Endurecimiento + checklist de aceptación V1 (`docs/SPEC.md` §14) | V1 aceptada por Adrian |
 
 Después: hito de despliegue en VPS Contabo → V2 → V3 → V4 (ver SPEC §3 y §13).
 
