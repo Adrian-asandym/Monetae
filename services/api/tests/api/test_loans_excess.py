@@ -20,12 +20,27 @@ def test_excess_rejected_then_handled_atomically(
     client: TestClient, handling: str, direction: str
 ) -> None:
     login(client)
-    account = create_account(client, initial_balance="0.00")
+    account = create_account(client, currency="USD", initial_balance="0.00")
     loan = create_loan(
-        client, create_person(client), account, principal="50.00", direction=direction
+        client,
+        create_person(client),
+        account,
+        principal="50.00",
+        direction=direction,
+        currency="USD",
+        disbursement={
+            **payment_payload(
+                account,
+                "50.00",
+                account_currency="USD",
+                fx_rate_to_base="3.800000",
+                occurred_at="2026-10-01T00:00:00Z",
+            ),
+            "kind": "disbursement",
+        },
     )
     path = f"/api/v1/loans/{loan}/movements"
-    payload = payment_payload(account, "60.00")
+    payload = payment_payload(account, "60.00", account_currency="USD", fx_rate_to_base="3.800000")
     headers = {**csrf_headers(client), "Idempotency-Key": "rejected"}
     rejected = client.post(path, json=payload, headers=headers)
     assert rejected.status_code == 422 and rejected.headers["content-type"].startswith(
@@ -33,7 +48,7 @@ def test_excess_rejected_then_handled_atomically(
     )
     assert rejected.json()["code"] == "loan_overpayment"
     assert rejected.json()["excess_amount"] == "10.00"
-    assert rejected.json()["currency"] == "PEN"
+    assert rejected.json()["currency"] == "USD"
     assert [item["action"] for item in rejected.json()["options"]] == [
         "adjustment",
         "income_expense",
