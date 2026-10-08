@@ -302,7 +302,21 @@ class AuthService:
 
     def update_user(self, user: User, changes: dict[str, object]) -> User:
         if "base_currency" in changes:
-            raise AuthError(409, "base_currency_locked", "Base currency changes are unavailable.")
+            from monetae.db.models import Transaction
+
+            self.db.execute(
+                text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"),
+                {"key": f"transaction-history:{user.id}"},
+            )
+            self.db.refresh(user, attribute_names=["base_currency"])
+            if changes["base_currency"] != user.base_currency and self.db.scalar(
+                select(Transaction.id).where(Transaction.user_id == user.id).limit(1)
+            ):
+                raise AuthError(
+                    409,
+                    "base_currency_locked",
+                    "Base currency cannot change after the first transaction.",
+                )
         for key, value in changes.items():
             setattr(user, key, value)
         self.db.flush()

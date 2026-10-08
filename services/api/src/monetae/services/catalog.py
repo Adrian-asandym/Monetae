@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import ColumnElement
 
 from monetae.api.pagination import decode_cursor, encode_cursor, keyset_predicate
-from monetae.db.models import Account, Category, Person, Tag
+from monetae.db.models import Account, Category, Person, Tag, Transaction
 from monetae.db.repository import UserScopedRepository
 from monetae.services.auth import AuthError
 
@@ -244,10 +244,24 @@ class CatalogService:
         return self._flush(lambda: self._repository(self.db, Account, user_id).add(row))
 
     def update_account(self, user_id: UUID, entity_id: UUID, values: dict[str, object]) -> Account:
-        row = self.get(Account, user_id, entity_id)
-        if "currency" in values and values["currency"] != row.currency:
+        row = self.db.scalar(
+            select(Account)
+            .where(
+                Account.user_id == user_id, Account.id == entity_id, Account.deleted_at.is_(None)
+            )
+            .with_for_update()
+        )
+        if row is None:
+            raise AuthError(404, "not_found", "Account not found.")
+        if (
+            "currency" in values
+            and values["currency"] != row.currency
+            and self.has_transactions(user_id, account_id=entity_id, include_deleted=True)
+        ):
             raise AuthError(
-                409, "account_currency_locked", "Account currency cannot be changed yet."
+                409,
+                "account_currency_locked",
+                "Account currency cannot change after its first transaction.",
             )
         if "name" in values:
             name = str(values["name"])
@@ -321,6 +335,8 @@ class CatalogService:
             raise AuthError(
                 409, "category_has_children", "A category with children cannot be deleted."
             )
+        if self.has_transactions(user_id, category_id=entity_id):
+            raise AuthError(409, "category_in_use", "The category has active transactions.")
         repo = self._repository(self.db, Category, user_id)
         return self._flush(lambda: repo.soft_delete(entity_id) or row)
 
@@ -354,7 +370,22 @@ class CatalogService:
         return self._flush(lambda: repo.update(entity_id, values) or row)
 
     def delete(self, model: type[EntityT], user_id: UUID, entity_id: UUID) -> EntityT:
-        row = self.get(model, user_id, entity_id)
+        if model is Account:
+            row = self.db.scalar(
+                select(model)
+                .where(model.user_id == user_id, model.id == entity_id, model.deleted_at.is_(None))
+                .with_for_update()
+            )
+            if row is None:
+                raise AuthError(404, "not_found", "Account not found.")
+            if self.has_transactions(user_id, account_id=entity_id):
+                raise AuthError(
+                    409,
+                    "account_in_use",
+                    "The account has active transactions; archive it instead.",
+                )
+        else:
+            row = self.get(model, user_id, entity_id)
         if isinstance(row, Category) and row.is_system:
             raise AuthError(
                 409, "system_category_immutable", "System categories cannot be deleted."
@@ -391,3 +422,38 @@ class CatalogService:
             return row
 
         return self._flush(set_reactivated)
+
+    def has_transactions(
+        self,
+        user_id: UUID,
+        *,
+        account_id: UUID | None = None,
+        category_id: UUID | None = None,
+        include_deleted: bool = False,
+    ) -> bool:
+        query = select(Transaction.id).where(Transaction.user_id == user_id)
+        if account_id is not None:
+            query = query.where(Transaction.account_id == account_id)
+        if category_id is not None:
+            query = query.where(Transaction.category_id == category_id)
+        if not include_deleted:
+            query = query.where(Transaction.deleted_at.is_(None))
+        return self.db.scalar(query.limit(1)) is not None
+
+    def balances(self, user_id: UUID, rows: Sequence[Account]) -> dict[UUID, Decimal]:
+        if not rows:
+            return {}
+        # Una sola suma agrupada para todas las cuentas de la página.
+        totals: dict[UUID, Decimal] = dict(
+            self.db.execute(
+                select(Transaction.account_id, func.sum(Transaction.amount))
+                .where(
+                    Transaction.user_id == user_id,
+                    Transaction.account_id.in_([row.id for row in rows]),
+                    Transaction.status == "posted",
+                    Transaction.deleted_at.is_(None),
+                )
+                .group_by(Transaction.account_id)
+            ).all()
+        )
+        return {row.id: row.initial_balance + totals.get(row.id, Decimal(0)) for row in rows}
