@@ -520,3 +520,59 @@ Decisiones precisadas por el coordinador al implementar T-302:
   respuesta contiene las referencias `side_effects` al ingreso/gasto normal;
   su importe físico conserva los céntimos residuales de conversión.
   Las referencias a efectos se conservan en la respuesta idempotente.
+
+## Suscripciones (T-304)
+
+Se implementan las ocho operaciones `/subscriptions*`: CRUD, archivo reversible,
+reactivación sin cuerpo y totales paginados. El listado acepta únicamente `active`
+(predeterminado) o `archived`; el título puede repetirse. Todas requieren sesión;
+las escrituras exigen Origin y CSRF. Borrar es lógico, sin endpoint restore.
+La migración reversible `0006` crea `subscriptions` y `recurring_rules`, y añade
+la FK compuesta pendiente en `transactions`. Las referencias preservan usuario
+y moneda, incluido el vínculo bidireccional entre suscripción y regla. El CRUD
+genérico `/recurring-rules` queda para Fase 6.
+
+Crear materializa una sola transacción `scheduled` negativa, sin afectar saldos.
+Publicarla avanza el calendario anclado y materializa la siguiente atómicamente.
+Fin de mes y 29 de febrero conservan el ancla. Editar sincroniza la regla y
+reemplaza mediante borrado lógico sus cobros no publicados; una nueva fecha
+explícita establece una nueva ancla. Cambiar moneda o elegir una cuenta de otra
+moneda devuelve `422 currency_mismatch`: se archiva y se crea otra suscripción.
+Archivar o borrar desactiva la regla y borra lógicamente solo cobros programados
+con timestamp igual o posterior al reloj de la aplicación; conserva los pasados
+y todos los publicados. Reactivar selecciona la primera fecha del calendario
+igual o posterior a hoy en America/Lima usando el reloj inyectado, y conserva
+el historial. Si ya existe un cobro de esa fecha, lo reutiliza; publicar un
+cobro vencido conservado no retrocede el calendario vigente. Repetir archive o
+reactivate en el estado de destino devuelve `409`.
+
+**Ampliación aditiva autorizada por el coordinador en T-304:**
+`SubscriptionCreate` y `SubscriptionUpdate` aceptan `fx_rate_to_base` opcional,
+cadena positiva con seis decimales, sin modificar el contrato JSON congelado
+ni la respuesta `Subscription`. En moneda base se usa `1.000000`; otra tasa
+produce `422 invalid_fx_rate`. Crear en moneda extranjera requiere tasa manual
+(`422 fx_rate_required` si falta). La regla conserva esta tasa **provisional** y
+la reutiliza al programar. El usuario confirma o corrige la tasa histórica de
+cada pago mediante `/transactions/{id}/post`; esto no sobrescribe la plantilla.
+PATCH permite actualizar la tasa provisional conservando la moneda.
+
+`historical_paid` y `last_paid_on` se agregan en SQL desde pagos publicados y no
+borrados; la última fecha se presenta en America/Lima. Los listados agregan
+el historial de toda la página en una consulta. `reactivation_suggestions` se
+calcula para gastos comparando títulos normalizados con suscripciones archivadas
+propias y no borradas; nunca reactiva automáticamente.
+
+Los totales consideran solo activas, agregan por moneda y usan el dominio de
+T-303 para redondear mensual y anual una sola vez. Cada fila por moneda incluye
+el desglose completo del total de reporte. Sin proveedor de tasas, solo la moneda
+que coincide con `report_currency` contribuye a `report_amount`; las demás
+suscripciones aumentan `unconverted_count`. La moneda de reporte predeterminada
+es la preferencia del usuario. Las escrituras se serializan por suscripción,
+seguida de regla, transacción y referencias de cuenta; las lecturas usan MVCC
+sin bloqueos de fila.
+
+El downgrade de `0006` elimina suscripciones y reglas por diseño, y pone
+`transactions.recurring_rule_id` en NULL conservando íntegramente las demás
+columnas y todas las transacciones. Los cobros programados quedan como scheduled
+normales; el siguiente upgrade puede validar la FK sin referencias huérfanas.
+Esta pérdida intencional de configuración se verifica con un roundtrip con datos.

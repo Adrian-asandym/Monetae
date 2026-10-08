@@ -45,6 +45,16 @@ from monetae.api.schemas.loans import (
     WriteOffRequest,
 )
 from monetae.api.schemas.people import Person, PersonCreate, PersonPage, PersonUpdate
+from monetae.api.schemas.subscriptions import (
+    CurrencyTotal,
+    ReportTotal,
+    Subscription,
+    SubscriptionCreate,
+    SubscriptionPage,
+    SubscriptionTotal,
+    SubscriptionTotalPage,
+    SubscriptionUpdate,
+)
 from monetae.api.schemas.tags import Tag, TagCreate, TagPage, TagUpdate
 from monetae.api.schemas.transactions import (
     TagAssignment,
@@ -85,12 +95,20 @@ def test_mounted_operations_security_responses_and_csrf() -> None:
                     for p in operation["parameters"]
                 )
             count += 1
-    assert count == 63
+    assert count == 71
 
 
 def test_schema_properties_mirror_contract() -> None:
     schemas = json.loads(CONTRACT.read_text())["components"]["schemas"]
     models: list[type[BaseModel]] = [
+        Subscription,
+        SubscriptionCreate,
+        SubscriptionUpdate,
+        SubscriptionPage,
+        SubscriptionTotal,
+        SubscriptionTotalPage,
+        ReportTotal,
+        CurrencyTotal,
         Loan,
         LoanCreate,
         LoanUpdate,
@@ -151,7 +169,13 @@ def test_schema_properties_mirror_contract() -> None:
     for model in models:
         actual = model.model_json_schema()
         expected = schemas[model.__name__]
-        assert set(actual["properties"]) == set(expected["properties"])
+        # Ampliación de entrada autorizada en T-304; respuesta permanece igual.
+        extra = (
+            {"fx_rate_to_base"}
+            if model.__name__ in {"SubscriptionCreate", "SubscriptionUpdate"}
+            else set()
+        )
+        assert set(actual["properties"]) == set(expected["properties"]) | extra
         assert actual["additionalProperties"] is False
         assert set(actual.get("required", [])) == set(expected["required"])
 
