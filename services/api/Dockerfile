@@ -5,8 +5,10 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 COPY src ./src
+COPY alembic.ini ./
+COPY alembic ./alembic
 RUN uv sync --frozen --no-dev && useradd --create-home --uid 10001 monetae
 ENV PATH="/app/.venv/bin:$PATH"
 USER monetae
 EXPOSE 8000
-CMD ["uvicorn", "monetae.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "alembic upgrade head && exec uvicorn monetae.api.main:app --host 0.0.0.0 --port 8000"]
