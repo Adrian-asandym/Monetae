@@ -56,7 +56,14 @@ PARTIAL_INDEXES = {
 
 def assert_schema(engine: Engine) -> None:
     inspector = inspect(engine)
-    assert set(inspector.get_table_names()) == {*TABLE_COLUMNS, "login_attempts", "alembic_version"}
+    assert set(inspector.get_table_names()) == {
+        *TABLE_COLUMNS,
+        "login_attempts",
+        "transactions",
+        "transaction_tags",
+        "idempotency_keys",
+        "alembic_version",
+    }
     attempts = {c["name"]: c for c in inspector.get_columns("login_attempts")}
     assert set(attempts) == {"id", "email_lower", "ip", "succeeded", "attempted_at"}
     assert all(not c["nullable"] for c in attempts.values())
