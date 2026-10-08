@@ -123,7 +123,7 @@ Comparando `drift_schema_v46.json` contra las columnas del DDL extraídas de `sq
 
 ### 3.3 Esquema Detallado de Tablas SQLite (12 Tablas)
 
-#### 1. `wallets` (10 cols en código v46; 12 cols en DDL v48)
+#### 1. `wallets` (11 cols en código v46; 13 cols en DDL v48)
 - Código Drift: `lib/database/tables.dart:251-271`.
 - DDL en v48:
   ```sql
@@ -144,7 +144,7 @@ Comparando `drift_schema_v46.json` contra las columnas del DDL extraídas de `sq
   );
   ```
 
-#### 2. `categories` (10 cols en código v46; 11 cols en DDL v48)
+#### 2. `categories` (11 cols en código v46; 12 cols en DDL v48)
 - Código Drift: `lib/database/tables.dart:343-373`.
 - DDL en v48:
   ```sql
