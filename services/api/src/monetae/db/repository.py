@@ -1,7 +1,9 @@
 """Persistencia genérica acotada al usuario autenticado."""
 
+from builtins import list as builtin_list
 from collections.abc import Mapping
 from datetime import UTC, datetime
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy import Select, func, select
@@ -39,6 +41,20 @@ class UserScopedRepository[T: UserScopedModel]:
             raise ValueError("limit must be between 1 and 200; offset must be nonnegative")
         query = self._select(include_deleted=include_deleted).order_by(self.model.id)
         return list(self.session.scalars(query.limit(limit).offset(offset)))
+
+    def list_matching(
+        self,
+        *criteria: Any,
+        order_by: tuple[Any, ...],
+        limit: int,
+        include_deleted: bool = False,
+    ) -> builtin_list[T]:
+        """Run a filtered keyset query while retaining the mandatory owner scope."""
+        if not 1 <= limit <= 201:
+            raise ValueError("query limit must be between 1 and 201")
+        # SQLAlchemy's overloaded expression API is typed as Any at this query boundary.
+        query = self._select(include_deleted=include_deleted).where(*criteria).order_by(*order_by)
+        return list(self.session.scalars(query.limit(limit)))
 
     def count(self, *, include_deleted: bool = False) -> int:
         query = select(func.count()).select_from(
