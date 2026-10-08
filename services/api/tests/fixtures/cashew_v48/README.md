@@ -112,6 +112,11 @@ Casos ambiguos que deben aparecer en la revisión manual del futuro importador:
   SPEC §7 si se evalúa ese bruto es `open`, nunca un estado inventado `overpaid`.
   RF-22 exige confirmación atómica: aplicar 50 al préstamo y 10 como ingreso,
   o ajuste de capital +10 y pago aplicado 60, ambos producen 0/settled.
+  En ARCHITECTURE §5.5 esas opciones se llaman `excess_handling=income_expense`
+  y `excess_handling=adjustment`, respectivamente; el usuario las elige durante
+  la revisión. Todas las transacciones de dinero se importan, incluida la fila
+  completa de +60 USD, para conservar los saldos Cashew (RF-40c). Solo queda
+  pendiente cómo se representa el exceso en el libro del préstamo (RF-40d).
   Estas son expectativas condicionadas; el fixture no elige una opción ni
   autoriza persistir un saldo negativo silencioso.
 - **F_settled:** `paid=0` conserva el desembolso pero no fecha/cuenta de cobro;
@@ -135,6 +140,8 @@ Los tipos usan `TransactionSpecialType.<nombre>` o `null` como en
 no está verificada en el código disponible. No se inventó un cálculo ni una
 periodicidad localizada para esas columnas. Es una limitación explícita de
 este equivalente de rescate, no una reproducción verificada de esos valores.
+`expected.json.csv.import_note` exige ignorar ambas columnas y nunca usarlas
+para calcular saldos; la representación fue confirmada por el coordinador.
 El esquema Cashew tampoco tiene archivo reversible de suscripción; G aporta
 las recurrencias de origen y no inventa campos ausentes para SPEC §8.
 

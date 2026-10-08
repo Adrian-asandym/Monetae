@@ -232,9 +232,16 @@ class FixtureTests(unittest.TestCase):
                     self.assertEqual(len({r["wallet_fk"] for r in payments}), 2)
                 if case == "D":
                     self.assertTrue(mono["warning_required"])
+                    self.assertTrue(mono["import_all_cash_transactions"])
+                    self.assertEqual(
+                        mono["excess_resolution_selected_by"],
+                        "user_during_manual_review",
+                    )
                     self.assertEqual(-balance, money(mono["overpayment"]))
                     income = mono["after_confirmed_excess_as_income"]
                     adjustment = mono["after_confirmed_capital_adjustment"]
+                    self.assertEqual(income["excess_handling"], "income_expense")
+                    self.assertEqual(adjustment["excess_handling"], "adjustment")
                     self.assertEqual(
                         principal - money(income["applied_payment"]),
                         money(income["outstanding_balance"]),

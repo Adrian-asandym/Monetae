@@ -645,16 +645,21 @@ def expected_manifest(data: dict[str, list[Row]]) -> Manifest:
         {
             "overpayment": "10.00",
             "warning_required": True,
+            "import_all_cash_transactions": True,
+            "excess_resolution_selected_by": "user_during_manual_review",
+            "import_note": "Importar la transacción completa +60 USD y conservar saldos Cashew; solo la representación del exceso en el libro del préstamo queda pendiente (RF-40c/d).",
             "outstanding_balance": "-10.00",
             "status": "open",
             "interpretation": "Saldo bruto diagnóstico: no persistir exceso sin confirmación atómica RF-22.",
             "after_confirmed_excess_as_income": {
+                "excess_handling": "income_expense",
                 "applied_payment": "50.00",
                 "excess_income": "10.00",
                 "outstanding_balance": "0.00",
                 "status": "settled",
             },
             "after_confirmed_capital_adjustment": {
+                "excess_handling": "adjustment",
                 "adjustment": "10.00",
                 "applied_payment": "60.00",
                 "outstanding_balance": "0.00",
@@ -750,6 +755,7 @@ def expected_manifest(data: dict[str, list[Row]]) -> Manifest:
             "excluded_rows": 2,
             "excluded_transaction_pks": [uid("F_settled"), uid("K_future")],
             "unknown_columns_left_empty": ["amount unpaid", "extra"],
+            "import_note": "Semántica v48 desconocida (03 §2.4): el importador debe ignorar amount unpaid y extra; nunca usarlas para calcular saldos.",
         },
     }
 
