@@ -51,15 +51,15 @@ Orden: T-103, T-104 y T-105 en paralelo; luego T-101; luego T-102.
 
 **Merge a `main` (hecho):** ver arriba; se fusionó el hash exacto `382425f`, no la punta de `master-dev`.
 
-## Run de Fase 2 — backend base (plan; se crea al lanzar T-201)
+## Run de Fase 2 — backend base — `run_70f5f187fe16`
 
 Agente: Codex en todas. Migraciones Alembic y `pyproject.toml`/`uv.lock`: un solo dueño a la vez (AGENTS.md §10). Los ejemplos A–E y los préstamos son de la Fase 3, no de esta.
 
-| Tarea | Contenido | Depende de |
-|-------|-----------|------------|
-| T-201 | Esqueleto de `services/api`, calidad (ruff, mypy estricto, pytest), `/health`, errores `problem+json`, Docker Compose (`docs/tasks/T-201-api-skeleton.md`) | — |
-| T-202 | `domain/`: `Money`, monedas, redondeo y tipos de cambio, con pruebas exhaustivas | T-201 |
-| T-203 | BD: SQLAlchemy base, sesión, Alembic y migración 0001 (users, sessions, accounts, categories, people, tags), repositorio base con `user_id` obligatorio y fixture de aislamiento entre dos usuarios | T-201 |
+| Tarea | Contenido | Estado / depende de |
+|-------|-----------|---------------------|
+| T-201 | Esqueleto de `services/api`, calidad (ruff, mypy estricto, pytest), `/health`, errores `problem+json`, Docker Compose (`docs/tasks/T-201-api-skeleton.md`) | **Aceptada e integrada** (`ddd4861`) |
+| T-202 | `domain/`: `Money`, monedas, redondeo y tipos de cambio, con pruebas exhaustivas (`docs/tasks/T-202-domain-money-fx.md`) | **En curso** (Codex `gpt-6.1-sol` medium) |
+| T-203 | BD: SQLAlchemy base, sesión, Alembic y migración 0001 (users, sessions, accounts, categories, people, tags), repositorio base con `user_id` obligatorio y fixture de aislamiento entre dos usuarios (`docs/tasks/T-203-db-alembic-core.md`) | **En curso** (Codex `gpt-6.1-sol` high) |
 | T-204 | Autenticación por correo y contraseña (argon2id), sesiones con cookie, CSRF, cerrar sesión en todos los dispositivos, límite de intentos | T-203 |
 | T-205 | CRUD de cuentas y categorías (con las categorías de sistema de interés) + pruebas de aislamiento | T-204, T-202 |
 | T-206 | Transacciones, transferencias, etiquetas y multimoneda (migración 0002) | T-205 |
