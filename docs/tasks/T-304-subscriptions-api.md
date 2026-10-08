@@ -1,6 +1,6 @@
 # T-304 — Suscripciones: migración 0006, reglas recurrentes y API
 
-> **ESTADO: LANZADA el 2026-10-08** (Run `run_63b520544a30`; T-302 y T-303 aceptadas e integradas en `master-dev`). Plan escrito el 2026-10-08, corregido al lanzar contra el contrato (ver «Correcciones al lanzar»).
+> **ESTADO: ACEPTADA e integrada en `master-dev` el 2026-10-08** (merge `7dd01dd`; Run `run_63b520544a30`). Plan escrito el 2026-10-08, corregido al lanzar contra el contrato (ver «Correcciones al lanzar»).
 > Agente: **Codex**, modelo `gpt-6.1-sol` esfuerzo `high`.
 > Depende de: **T-303** (dominio) y **T-302** (orden de migraciones y `main.py`). Eres el **único dueño de las migraciones**: creas la `0006`. No corre en paralelo con T-302.
 

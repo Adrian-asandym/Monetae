@@ -1,6 +1,6 @@
 # T-302 — Préstamos: migración 0005, servicios y API
 
-> **ESTADO: LANZADA el 2026-10-08** (Run `run_63b520544a30`; T-301 aceptada e integrada en `master-dev` `246a6d5`). Plan escrito el 2026-10-08, corregido al lanzar (ver «Correcciones al lanzar»).
+> **ESTADO: ACEPTADA e integrada en `master-dev` el 2026-10-08** (merge `79fc715`; Run `run_63b520544a30`). Plan escrito el 2026-10-08, corregido al lanzar (ver «Correcciones al lanzar»).
 > Agente: **Codex**, modelo `gpt-6.1-sol` esfuerzo `high` (la tarea más delicada del proyecto: P1, P2 y P3 se prueban aquí de extremo a extremo; considerar `gpt-6-astra` si T-301 requirió devoluciones).
 > Depende de: **T-301** (dominio). Eres el **único dueño de las migraciones** durante esta tarea: creas la `0005`. No corre en paralelo con T-304.
 

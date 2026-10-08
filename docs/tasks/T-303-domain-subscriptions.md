@@ -1,6 +1,6 @@
 # T-303 — Dominio puro de suscripciones (archivado, equivalentes, fechas)
 
-> **ESTADO: LANZADA el 2026-10-08** (Run `run_63b520544a30`, aprobada por Adrian). Fase 3. Plan escrito el 2026-10-08.
+> **ESTADO: ACEPTADA e integrada en `master-dev` el 2026-10-08** (merge `9b1e347`; Run `run_63b520544a30`). Plan escrito el 2026-10-08.
 > Agente: **Codex**, modelo `gpt-6.1-sol` esfuerzo `medium` (reglas acotadas; el cuidado está en las fechas y el redondeo).
 > Depende de: nada nuevo (usa `domain/money.py`). Corre **en paralelo con T-301** (archivos disjuntos).
 

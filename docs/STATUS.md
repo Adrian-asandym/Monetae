@@ -1,120 +1,145 @@
 # STATUS — Monetae (documento de traspaso)
 
-> **Lo primero que debe leer cualquier agente.** Actualizado: **2026-10-08 (Fase 3 completa, esperando decision gate)** · Coordinador: Claude (Sonnet 5.5) · Dueño del producto: Adrian.
-> Después de este archivo: `AGENTS.md` (contrato común), `CLAUDE.md` (rol del coordinador) y `docs/SPEC.md` (qué se construye).
+> **Lo primero que debe leer cualquier agente.** Coordinador: Claude (Sonnet 5.5) · Dueño del producto: Adrian.
+> Después de este archivo: `AGENTS.md` (contrato común), `CLAUDE.md` (rol del coordinador y **§10 Protocolo de sesión**) y `docs/SPEC.md` (qué se construye).
+> Para reanudar: Adrian dice «Continuemos con el trabajo» y se aplica el Comando 2 de `CLAUDE.md` §10.
 
-## 1. Dónde estamos
+## 1. Fecha, hora y hashes
 
 | | |
 |---|---|
-| **Fase actual** | **Fase 2 (backend base): COMPLETA.** **Fase 3 (préstamos y suscripciones): COMPLETA en `master-dev`** (T-301 a T-304 aceptadas e integradas el 2026-10-08); **pendiente el decision gate de Adrian** para pasarla a `main` y subirla a GitHub. La siguiente es la **Fase 4** (importador de Cashew). |
-| **Fases cerradas** | Fase 0 (análisis de Cashew), Fase 1 (diseño: ADR, esquema, OpenAPI, fixture), Fase 2 (backend base). |
-| **Ramas** | `main` = `origin/main` = **`05ff1d9`** (cierre de la Fase 2 + traspaso). `master-dev` va **por delante** con toda la Fase 3 (ver `git log --oneline 05ff1d9..master-dev`); 713 pruebas verificadas con PostgreSQL. **No se ha hecho merge a `main` ni push** (requiere decision gate). `origin/master-dev` sigue en `05ff1d9`. |
-| **GitHub (`origin`)** | Ver §8. Si `git status -sb` muestra `ahead N`, el push está pendiente. |
-| **Versión de la SPEC** | v0.3 (2026-10-07). Historial en `docs/SPEC.md` §18. |
-| **Arquitectura** | `docs/ARCHITECTURE.md` v0.3. Puntos abiertos en su §10 (1–13). |
+| **Cierre de sesión** | **2026-10-08, ~12:55 (America/Lima)** · gate de cierre **pendiente**: `gate_e3b1a2193ba2` (merge de docs a `main` + push; ver D1) |
+| **`main`** | **`b3797b1`** — Fase 3 completa (merge fast-forward aprobado por Adrian el 2026-10-08). **Local: 25 commits por delante de `origin/main`.** |
+| **`master-dev`** | `01b20f9` (protocolo de sesión en `CLAUDE.md`) **+ el commit de cierre que contiene este archivo** (`git log -1`). Sobre `main` solo hay documentación (`CLAUDE.md`, `STATUS.md`, cabeceras de `docs/tasks/`); **el código es idéntico**. |
+| **`origin`** | `origin/main` = `origin/master-dev` = **`05ff1d9`** (cierre de la Fase 2). **El push de la Fase 3 NO se ha hecho** (Adrian aprobó el merge; el push queda pendiente, §5 D1). |
+| **SPEC / ARCHITECTURE** | SPEC v0.3 (2026-10-07; historial en `docs/SPEC.md` §18) · `docs/ARCHITECTURE.md` v0.3 (puntos abiertos en su §10, 1–13). |
 
-## 2. Qué incluye la Fase 2 (verificado sobre el commit integrado)
+## 2. Fase actual
 
-Backend FastAPI síncrono (ADR-007) en `services/api`, **44 de las 86 rutas (paths) del contrato = 71 de 127 operaciones** (Fase 2: 29 rutas / 48 operaciones; Fase 3: +15 rutas / +23 operaciones):
+| Estado | Contenido |
+|---|---|
+| ✅ **Completo** | Fase 0 (análisis de Cashew) · Fase 1 (diseño: ADR, esquema, OpenAPI, fixture) · Fase 2 (backend base) · **Fase 3 (préstamos y suscripciones)**: T-301, T-302, T-303 y T-304 aceptadas e integradas. |
+| 🔄 **En curso** | Nada. **No hay ningún worker ejecutándose.** |
+| ⏳ **Pendiente** | **Fase 4** (importador de Cashew) — sin lanzar, sin tareas escritas · Fase 5 (UI Flutter; empieza con `T-501`, ya escrita) · Fase 6 (presupuestos, metas, notificaciones, Google OIDC, bloqueo PIN/WebAuthn) · Fase 7 (endurecimiento y aceptación V1). Después: despliegue en VPS → V2 → V3 → V4. |
 
-- **Acceso:** login por correo y contraseña (argon2id), sesiones opacas con cookie `HttpOnly`, CSRF firmado con HMAC + comprobación de `Origin`, límite de intentos persistente, `users/me`, cierre de sesión (una / todas). **Los usuarios se crean solo por CLI** (no hay registro público): `python -m monetae.cli create-user`.
-- **Catálogos:** cuentas, categorías (con las 2 de sistema de interés), personas con alias, etiquetas.
-- **Libro mayor:** transacciones (CRUD, filtros, etiquetas, saldos calculados, idempotencia, borrado/restauración lógica), transferencias de dos patas (también entre monedas), lotes atómicos, publicar programadas.
-- **Préstamos (Fase 3, T-301/T-302):** libro mayor `loans` + `loan_movements` (desembolso, interés, pago, ajuste, condonación) con saldo y estado **calculados** (sin columna de saldo, sin «liquidar»); reparto de pagos primero a interés; exceso con `adjustment` o `income_expense`; cada movimiento afecta a **su** cuenta (también otra moneda); edición/borrado con revalidación de todo el libro (`409 ledger_inconsistent`); borrado lógico atómico de préstamo y transacciones; resumen por persona y moneda; 15 operaciones.
-- **Suscripciones (Fase 3, T-303/T-304):** `subscriptions` + `recurring_rules`; archivado reversible (conserva el historial, cancela los cobros futuros, fuera de listado y totales); reactivación; próxima transacción `scheduled` materializada y avanzada al publicar; totales por moneda; sugerencia de reactivación por título normalizado; 8 operaciones.
-- **Base de datos:** 6 migraciones Alembic reversibles (`0001` identidad y catálogos, `0002` intentos de login, `0003` transacciones, `0004` integridad de transferencias, `0005` préstamos, `0006` suscripciones y reglas). Claves foráneas **compuestas con `user_id`**: la BD rechaza referenciar datos de otro usuario.
-- **Dominio puro:** `Money`, `ExchangeRate`, reglas de transacciones y transferencias.
-- **Calidad:** **713 pruebas** con PostgreSQL real (404 de la Fase 2 + dominio + API de préstamos y suscripciones + prueba de orden commit/respuesta), `ruff`, `mypy --strict`, `alembic check` limpios, cero `type: ignore`; migraciones 0005↔0006 probadas con datos; contrato validado con Redocly + `scripts/check_openapi.py`.
+Backend actual: **44 de las 86 rutas del contrato = 71 de 127 operaciones**, 6 migraciones (cabeza `0006`), **713 pruebas** con PostgreSQL real. Detalle en el Anexo A.
 
-**No implementado todavía (por grupo, operaciones del contrato):** usuarios 9 (PIN/bloqueo/WebAuthn), reportes 8, notificaciones 6, metas 6, presupuestos 6, reglas de categoría 5, reglas recurrentes 5, importaciones 4, adjuntos 4, Google OIDC 1, exportaciones 1, sugerencia de tipo de cambio 1.
+## 3. Trabajo hecho en esta sesión (2026-10-08)
 
-## 3. Decisiones ya tomadas (no reabrir sin Adrian)
+- **Fase 3 completa.** Dominio de préstamos (T-301) y de suscripciones (T-303) en paralelo; API de préstamos con migración `0005` (T-302); API de suscripciones con migración `0006` (T-304). Cada una verificada por el coordinador: `ruff`, `mypy --strict`, pruebas con PostgreSQL, `alembic`, y **sondas con `uvicorn` real + `httpx`** (ejemplos A–E de préstamos y escenario Netflix de SPEC §8).
+- **Hallazgo grave de la Fase 2, corregido (`4b62d7c`):** el `commit` de la sesión se hacía *después* de enviar la respuesta (FastAPI ≥ 0.118 con dependencias `yield`). Con servidor real, `login` + petición inmediata daba 401 en 34/40 intentos; `TestClient` lo ocultaba. Ahora `Database` usa `scope="function"` y hay una prueba de orden ASGI. Sondas reales tras el arreglo: 0/40 y 0/150 fallos.
+- **Dos especificaciones propias corregidas al lanzar** (T-302: columna interna `sequence`; T-304: `status` solo `active|archived`, `reactivate` sin cuerpo, sin tasas en `SubscriptionCreate`).
+- **Gate de la Fase 3 resuelto** (`gate_621dc454eeee`): merge fast-forward `master-dev` → `main` hecho en local. Auditoría de seguridad de los 25 commits nuevos: limpia.
+- **Protocolo de sesión** añadido a `CLAUDE.md` §10 (commit `01b20f9`).
+- Este archivo se reorganizó en las secciones fijas del protocolo; cabeceras de `docs/tasks/T-301…T-304` actualizadas a «aceptada e integrada».
 
-| Tema | Decisión |
-|------|----------|
-| UI | **ADR-001 opción A:** UI propia en Flutter Web reutilizando y desacoplando widgets de Cashew. Spike previo: `docs/tasks/T-501-ui-decoupling-spike.md` (primera tarea de la Fase 5, no lanzado). |
-| Auth | ADR-002 A: sesión en servidor + cookie; Google OIDC y correo/contraseña (Google en Fase 6). |
-| Interés | ADR-003 A: base **caja**; cada pago se reparte **primero a interés**, luego a capital; el reparto se guarda en el movimiento. |
-| Tipo de cambio | ADR-004 A: manual manda; sugerencia automática detrás de una interfaz (proveedor por verificar, Fase 6). |
-| Bloqueo de app | ADR-006 A: PIN primero, WebAuthn después (barrera de comodidad). |
-| ORM | ADR-007 A: SQLAlchemy síncrono + psycopg 3, endpoints `def`. |
-| Importador | **SQLite primero**, CSV solo como rescate, **siempre sobre una copia** del respaldo. El esquema real del respaldo es Cashew **v48** (el código en `reference/Cashew` es v46: no se actualiza). |
-| Etiquetas | En V1 (`tags`, `transaction_tags`), con asignación y filtro básicos. |
-| Nombres | Duplicados **permitidos** en categorías y personas; únicos solo en cuentas y etiquetas. |
-| Registro de usuarios | Solo por CLI en V1. |
-| Contrato | `PATCH /transactions/{id}` admite `account_id` (misma moneda) y `kind`; registrado en `docs/api/README.md`. |
-| Ampliaciones de contrato de la Fase 3 (**por aprobar en el gate**; aún NO están en `docs/api/openapi.json`) | (1) `409 loan_already_settled`: `income_expense` sobre un préstamo ya saldado; (2) `422 movement_kind_immutable`: el `PUT` de un movimiento no cambia su `kind`; (3) `fx_rate_to_base` **opcional, solo de entrada**, en `SubscriptionCreate`/`SubscriptionUpdate` (obligatoria con `422 fx_rate_required` en moneda ≠ base; provisional, se confirma al publicar). Detalle en `docs/api/README.md`. |
-| Suscripciones | Títulos duplicados permitidos; sin unicidad de título entre activas. |
-| Agentes | Codex (modelos `gpt-6.1-sol` / `gpt-6-luna` / `gpt-6-astra`) para backend y, después, UI; Antigravity solo como relevo; Command Code de reserva. |
+## 4. Decisiones tomadas por Adrian
 
-## 4. Decisiones y acciones pendientes de Adrian
+| Fecha | Decisión |
+|---|---|
+| 2026-10-08 | **Continuar con la Fase 3** (lanzar T-301 a T-304). |
+| 2026-10-08 | **Aprobar el merge a `main`** de la Fase 3 (gate `gate_621dc454eeee`). **No** aprobó explícitamente el push. |
+| 2026-10-08 | **Protocolo de sesión** (dos comandos de cierre y reanudación) en `CLAUDE.md` §10. |
+| 2026-10-07 | ADR-001 **A** (UI propia en Flutter Web reutilizando widgets de Cashew), ADR-002 **A** (sesión en servidor + cookie), ADR-003 **A** (interés en base caja; pago primero a interés), ADR-004 **A** (tipo de cambio manual manda), ADR-006 **A** (PIN, luego WebAuthn), ADR-007 **A** (SQLAlchemy síncrono). |
+| Fases 0–2 (oct 2026) | Importador **SQLite primero**, CSV solo como rescate, siempre sobre una copia; el respaldo real es Cashew **v48**. Etiquetas en V1. Nombres duplicados permitidos en categorías y personas (únicos solo en cuentas y etiquetas). Usuarios solo por CLI en V1. `PATCH /transactions/{id}` admite `account_id` (misma moneda) y `kind`. |
+| Fases 0–2 (oct 2026) | Agentes: **Codex** (`gpt-6.1-sol` general / `gpt-6-astra` el más potente / `gpt-6-luna` ligero) para backend y, después, UI; **Antigravity** solo como relevo; **Command Code** de reserva. |
 
-1. ~~Aprobar el plan de la Fase 3~~ — aprobada el 2026-10-08. **Decision gate de la Fase 3** (merge `master-dev` → `main` + push): pendiente de Adrian; incluye aprobar las 3 ampliaciones de contrato (§3), tras lo cual el coordinador debe **actualizar `docs/api/openapi.json`** (CLAUDE.md §8) y avisar a quien haga la UI.
-1b. **Pregunta de producto (cobros vencidos al archivar):** hoy `archive`/`delete` cancelan solo las programadas con fecha ≥ ahora (literal de SPEC §8.1 «cobros futuros»). Si archivas justo después de que *venza* el cobro y antes de marcarlo pagado, queda una `scheduled` vencida y, al reactivar, aparecen dos. **Recomendación del coordinador:** cancelar (borrado lógico) **todas** las programadas sin publicar de la regla al archivar/borrar; las publicadas no se tocan. Es un cambio de 2 líneas + 1 prueba (`services/subscriptions.py`, `_cancel_scheduled(future_only=...)`). Esperando respuesta de Adrian.
-2. **ADR-005** (modelo de sincronización para Android, V4): antes de V4.
-3. **Orden de categorías** (Cashew permite reordenarlas; la SPEC no lo pide): decidir en la Fase 5.
-4. **Google Cloud** (Fase 6): crear las credenciales OAuth (acción de Adrian) y decidir el proveedor de tipo de cambio.
-5. **Despliegue en el VPS:** configurar el proxy para que el límite de intentos por IP vea la IP real (`ARCHITECTURE.md` §10.10).
-6. **Limpieza de worktrees y terminales** (§7): opcional, la hace Adrian o lo pide al coordinador.
-7. **Texto obsoleto en `docs/SPEC.md` §2** («a confirmar en la Fase 0», «Hipótesis»): la Fase 0 ya lo confirmó; actualizar con el próximo cambio de SPEC aprobado.
+**Aceptadas por el merge, pero aún no reflejadas en `docs/api/openapi.json`** (Adrian las vio en el resumen del gate; ver D3): `409 loan_already_settled`, `422 movement_kind_immutable` y `fx_rate_to_base` opcional solo de entrada en `SubscriptionCreate`/`SubscriptionUpdate`. Detalle en `docs/api/README.md`.
 
-## 5. Limitaciones conocidas de la Fase 2
+## 5. Decisiones pendientes
 
-- La BD admite un `income` con monto negativo si se escribe SQL directo; solo la API garantiza el signo (decidir con el importador, Fase 4; `ARCHITECTURE.md` §10.12).
-- El límite de intentos de login usa `request.client.host`: detrás de un proxy hace falta configuración (§10.10).
-- `501 google_login_not_available` no figura en el contrato congelado (§10.11).
-- `updated_at` se refresca vía ORM/Core, no con SQL crudo (§10.8).
-- `reactivation_suggestions` solo se rellena en la respuesta de **crear** o **publicar** una transacción de gasto (SPEC §8.4); `GET /transactions` no las calcula.
-- Totales de suscripciones: sin proveedor de tipos de cambio (Fase 6) solo se suma la moneda igual a la de reporte; las demás cuentan como `unconverted_count`.
-- `end_on` de `recurring_rules` existe pero no se expone aún; el CRUD genérico `/recurring-rules` es de la Fase 6.
-- La tasa de cambio de una suscripción en moneda extranjera es **provisional**: se guarda en la regla y el usuario la confirma al publicar cada cobro.- No ha habido auditoría de seguridad externa; hay una pasada de endurecimiento prevista en la Fase 7.
-- **Corregido en `4b62d7c` (2026-10-08):** la Fase 2 hacía el `commit` de la sesión *después* de enviar la respuesta (FastAPI ≥ 0.118 con dependencias `yield`): con un servidor real, `login` + petición inmediata daba 401 en 34/40 intentos. `TestClient` lo ocultaba. Ahora `Database` usa `scope="function"` y hay una prueba que registra el orden real ASGI.
-- La clave secreta por defecto es de ejemplo y solo sirve en local; en `prod` la app se niega a arrancar con ella o con cookies sin `Secure`.
+Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
-## 6. Fase 3 — **COMPLETA** (T-301 a T-304 integradas en `master-dev`)
+**D1 · Push a GitHub de `main` y `master-dev` (gate propuesto `gate_e3b1a2193ba2`, sin resolver; incluye el merge fast-forward de los commits de documentación posteriores a `b3797b1`).** Repo **público**. Auditoría de seguridad de la Fase 3 ya hecha (sin `.env`, claves ni `reference/`; solo los 3 fixtures sintéticos); falta repetirla sobre los commits de documentación nuevos.
+- **A (recomendada): subir ahora**, sin `--force`, tras repetir la auditoría rápida. *Razón:* hay 25 commits solo en tu máquina; subirlos es el respaldo.
+- B: esperar a decidir D2 y D3 y subir todo junto. *Razón:* historial más limpio, pero más tiempo sin respaldo.
+- *Impacto:* lo publicado en un repo público queda indexable aunque se borre después.
 
-Objetivo: resolver P1–P4 (préstamos como libro mayor; suscripciones archivables). Ejemplos A–E de SPEC §7 como pruebas literales.
+**D2 · Cobros vencidos al archivar una suscripción.** Hoy `archive` y `delete` cancelan solo las `scheduled` con fecha ≥ ahora (literal de SPEC §8.1, «cobros futuros»). Si archivas justo después de que *venza* un cobro y antes de marcarlo pagado, queda una programada vencida y, al reactivar, aparecen dos (verificado con `uvicorn` real).
+- **A (recomendada): cancelar (borrado lógico) todas las `scheduled` sin publicar de la regla** al archivar/borrar. *Razón:* mantiene el invariante de una sola programada por regla y la reactivación queda limpia; es reversible (borrado lógico) y no toca lo publicado.
+- B: dejar el comportamiento literal y documentarlo.
+- *Impacto de A:* 2 líneas en `services/subscriptions.py` (`_cancel_scheduled(future_only=...)`) + ajustar la prueba `test_archive_preserves_past_scheduled_and_ignores_deleted_payments` + 1 prueba nueva.
 
-| Tarea | Contenido | Agente / modelo sugerido | Depende de | Spec |
-|-------|-----------|--------------------------|-----------|------|
-| T-301 ✅ | Dominio puro de préstamos (saldo calculado, reparto interés/capital, exceso, reabrir) — **aceptada e integrada** (`246a6d5`; 114 pruebas, 100 % de líneas) | Codex `gpt-6.1-sol` high | — | `docs/tasks/T-301-domain-loans.md` |
-| T-303 ✅ | Dominio puro de suscripciones (archivar/reactivar, equivalentes, fechas, sugerencias) — **aceptada e integrada** (`9b1e347`; 73 pruebas, 100 % de líneas) | Codex `gpt-6.1-sol` medium | — | `docs/tasks/T-303-domain-subscriptions.md` |
-| T-302 ✅ | Migración `0005`, servicios y API de préstamos (15 operaciones) — **aceptada e integrada** (`79fc715`; 646 pruebas; spec corregida al lanzar: columna interna `sequence`). Ampliaciones de contrato a registrar: `409 loan_already_settled`, `422 movement_kind_immutable` (ver `docs/api/README.md`) | Codex `gpt-6.1-sol` high | T-301 ✅ | `docs/tasks/T-302-loans-api.md` |
-| T-304 ✅ | Migración `0006`, reglas recurrentes y API de suscripciones (8 operaciones) — **aceptada e integrada** (`7dd01dd`; 713 pruebas; spec corregida al lanzar contra el contrato; sonda real `uvicorn`+`httpx` del escenario Netflix de SPEC §8 verificada) | Codex `gpt-6.1-sol` high | T-302 ✅, T-303 ✅ | `docs/tasks/T-304-subscriptions-api.md` |
+**D3 · Ampliaciones de contrato de la Fase 3 en `openapi.json`.**
+- **A (recomendada): incorporar las 3 ampliaciones** a `docs/api/openapi.json`, correr `scripts/check_openapi.py` (+ Redocly) y avisar a la UI. *Razón:* `CLAUDE.md` §8 exige que el contrato sea la verdad para generar el cliente.
+- B: revertirlas en el código. *Razón:* ninguna; rompería la función de suscripciones en moneda extranjera.
+- *Impacto:* tarea corta del coordinador; sin riesgo para el código.
 
-Orden seguido: T-301 ∥ T-303 → T-302 → T-304. Pendiente: gate a `main`. Después: Fase 4 (importador; usa `services/api/tests/fixtures/cashew_v48/`), Fase 5 (UI, empieza con T-501), Fase 6, Fase 7.
+**D4 · Alcance de la Fase 4 respecto a presupuestos, metas y reglas.** SPEC RF-40a pide importar también presupuestos, metas y reglas, pero esas tablas no existen hasta la Fase 6.
+- **A (recomendada): importar ahora lo que ya tiene destino** (cuentas, categorías, etiquetas, transacciones, préstamos, suscripciones) y **listar en el reporte lo demás como «pendiente de Fase 6»**; ampliar el importador en la Fase 6. *Razón:* evita crear tablas a medias y mantiene la fase acotada.
+- B: crear ahora las tablas de presupuestos/metas/reglas. *Razón:* import completo de una vez; *costo:* adelanta la Fase 6 y alarga la 4.
+- *Impacto:* define el tamaño de T-401…T-403.
 
-## 7. Estado de Runs, workers, terminales y worktrees
+**D5 · ADR-008: heurística para convertir los préstamos de Cashew** (SPEC RF-40d exige un ADR; **aún no existe**) y permiso para la prueba real.
+- **A (recomendada):** el coordinador redacta el ADR a partir de `docs/cashew-analysis/02-loans.md` y del fixture sintético; **Adrian lo aprueba antes de lanzar la tarea de préstamos (T-402)**. *Razón:* es una regla de negocio que "adivina" estructura de datos reales; los casos ambiguos van a revisión manual, no se adivinan.
+- Sobre el respaldo real: **¿autorizas un `--dry-run` sobre una copia, que solo devuelva conteos y saldos (nunca filas)?** Recomendado *sí*, al final de la fase, porque es la única forma de validar «los saldos coinciden con Cashew» (RF-40c). Sin tu OK solo se usan los fixtures.
 
-**Runs de Orca** (el CLI **no tiene comando para cerrarlos**; no usar `orchestration reset`): `run_bef8ecfc67a7` (Fase 0), `run_2cddcd14320c` (Fase 1), `run_70f5f187fe16` (Fase 2) — todas con tareas aceptadas o descartadas. **Run de la Fase 3: `run_63b520544a30`** (Fase 3; sus 4 tareas están aceptadas y **no queda ningún worker en ejecución**). El coordinador solo puede consumir un Run a la vez: `orca orchestration run-use --id run_63b520544a30` al retomar.
+**D6 · Limpieza de worktrees y ramas.** 18 worktrees de tareas ya fusionadas (≈ 0,7 GB con sus `.venv`; disco libre 3,3 GB).
+- **A (recomendada): borrarlos tras D1** (`git worktree remove` + `git branch -d`; el historial queda en `main`). *Razón:* libera disco antes de Docker/Flutter.
+- B: conservarlos. *Impacto:* riesgo de quedarte sin disco en la Fase 5. Dos tienen archivos sin versionar de workers (`agy-T-001`: 4 `scratch*`; `agy-T-105`: `scripts/` y `services/`), que se pierden al borrar (son basura, ya sustituida).
 
-**Dispatches fallidos o retenidos** (solo historial; sus terminales son de Adrian): intentos que chocaron con avisos de «trust workspace» o actualización, y el intento de Antigravity de T-105 (`ctx_b30eb2754ca3`, sustituido por Codex como T-105b).
+**D7 · Para más adelante** (no bloquean la Fase 4): **ADR-005** modelo de sincronización Android (antes de V4) · orden de categorías (Fase 5) · credenciales OAuth de Google Cloud y proveedor de tipo de cambio (Fase 6, acción de Adrian) · proxy del VPS para ver la IP real en el límite de login (`ARCHITECTURE.md` §10.10) · texto obsoleto en `docs/SPEC.md` §2 («a confirmar en la Fase 0», «Hipótesis»), a corregir con el próximo cambio de SPEC aprobado.
 
-**Worktrees** (cada uno en `/home/artur/propio2/`): `Monetae` (**main**), `Monetae-master-dev` (**master-dev**, integración), y 14 de tareas ya integradas — `Monetae-agy-T-001/002/003/004/105-*` y `Monetae-codex-T-102/105/201/202/203/204/205/206a/206b-*`. Todas sus ramas están **fusionadas en `master-dev`**; se pueden borrar con `git worktree remove` + `git branch -d` cuando Adrian lo apruebe (nunca se borran solas).
+## 6. Siguiente paso concreto
 
-**Terminales/paneles que Adrian puede cerrar** (ninguno tiene trabajo pendiente): todos los paneles `artur@…:~/propio2/Monetae-agy-T-*` y `Monetae-codex-T-*` de Orca (incluido el de `Monetae-codex-T-201-a…`, que aún tiene un Codex inactivo del primer intento), y las sesiones `Monetae Cashew analysis phase 0` que no sean la del coordinador actual. El panel `lupuna` no pertenece a este proyecto.
+**Antes de lanzar nada**, tras el OK de Adrian a D1–D6: (1) push si se aprueba D1; (2) D3, actualizar `openapi.json`; (3) D2 si se aprueba, como tarea trivial del coordinador; (4) el coordinador **redacta ADR-008 y las tareas T-401…T-403 contrastándolas con el contrato y con el código integrado** (lección de T-302/T-304) y las presenta en un gate.
 
-## 8. GitHub
+**Fase 4 propuesta** (Run nuevo; todas con Codex; ramas `codex/T-40x-…` desde `master-dev`; el coordinador renombra la rama tras `worker-start`):
 
-`origin` = `https://github.com/Adrian-asandym/Monetae.git`. Antes de cada push se verifica el historial completo (sin `.env`, claves, `reference/`, respaldos; únicos `.sqlite`/`.csv` versionados: los 3 fixtures sintéticos de `services/api/tests/fixtures/cashew_v48/`). Los resultados del último push están en el mensaje de cierre de la sesión del 2026-10-08 y en `git log origin/main`.
+| Tarea | Contenido | Agente / modelo / esfuerzo | Depende de |
+|---|---|---|---|
+| T-401 | Migración `0007` (`import_runs`, `import_review_items`), lector SQLite de solo lectura con descubrimiento de esquema (RF-40i), mapeo de cuentas, categorías, etiquetas y transacciones, idempotencia por `import_external_id`, `is_initial_data`, CLI `--dry-run` con reporte de saldos antes/después | Codex `gpt-6.1-sol` · high | — |
+| T-402 | Conversión de préstamos según ADR-008 (usa `domain/loans.py`), casos ambiguos a `import_review_items` | Codex `gpt-6.1-sol` · high (`gpt-6-astra` si T-401 pidió devoluciones) | T-401, ADR-008 aprobado |
+| T-403 | Suscripciones/recurrentes importadas, cuadre de saldos y rutas `/imports` (4 operaciones) | Codex `gpt-6.1-sol` · medium | T-401 |
+
+T-402 y T-403 pueden ir **en paralelo** después de T-401 solo si sus archivos permitidos son disjuntos (el registro de pasos del importador es el punto de choque: se define en T-401).
+
+**Cómo las verificaré:** `ruff`, `mypy --strict`, `pytest` con PostgreSQL y `alembic` (0006↔0007) corridos por mí; importación del fixture `services/api/tests/fixtures/cashew_v48/` contra `expected.json`; **idempotencia** (importar dos veces ⇒ cero cambios); `--dry-run` ⇒ BD intacta; saldos que cuadran; **sonda con `uvicorn` real + `httpx`** para `/imports`; privacidad (nada del respaldo real en git, logs ni reportes). Decision gate antes de `main`.
+
+**Opcional en paralelo:** `T-501` (spike de desacoplo de widgets, Fase 5) no toca el backend, pero **Flutter pide disco**: solo después de D6.
+
+## 7. Estado del Run, de los worktrees y de los agentes abiertos
+
+**Run de la Fase 3: `run_63b520544a30`.** Tareas: T-301 `task_d8d91292787f`, T-303 `task_39bd586cd28f`, T-302 `task_112bd988b505`, T-304 `task_3e72e1ff8b03` — las cuatro `completed`; `task_2af7f21c0086` y `task_923219f8ed0e` son intentos antiguos `failed/superseded` (solo historial). **Workers: ninguno vivo** (4 `exited`, todos liberados); sin mensajes ni gates pendientes. Runs anteriores: `run_bef8ecfc67a7` (Fase 0), `run_2cddcd14320c` (Fase 1), `run_70f5f187fe16` (Fase 2). El CLI **no cierra Runs**; no usar `orchestration reset`. Al retomar: `orca orchestration run-use --id <run>`; la Fase 4 abrirá un Run nuevo.
+
+**Worktrees** (en `/home/artur/propio2/`): `Monetae` → `main` (limpio) · `Monetae-master-dev` → `master-dev` (limpio) · 18 de tareas, **todas fusionadas** en `master-dev`: `agy-T-001/002/003/004/105`, `codex-T-102/105/201/202/203/204/205/206a/206b/301/302/303/304`. Con archivos sin versionar (basura de workers): `Monetae-agy-T-001-data-model` y `Monetae-agy-T-105-cashew-fixture`. Sin contenedores Docker, sin servidores en el puerto 8765, sin `.env` sueltos.
+
+**Paneles de Orca abiertos (11):** el del coordinador («Fase 3 de Monetae») y `lupuna` (otro proyecto) **no se tocan**. **Adrian puede cerrar los otros 9**, ninguno tiene trabajo pendiente: `…Monetae-agy-T-001`, `-T-002`, `-T-003`, `-T-004`, `-T-105` (dos: el panel y `worker-task_8f0a3298376d`), `…Monetae-codex-T-102`, `-T-201` (aún tiene un Codex inactivo) y `-T-206b`. Los terminales de los workers T-301 a T-304 ya no existen.
+
+## 8. Limitaciones y riesgos conocidos
+
+- **Contrato desfasado** respecto al código en 3 puntos (D3) hasta actualizar `openapi.json`.
+- **Cobros vencidos al archivar** (D2).
+- **Sin auditoría de seguridad externa**; endurecimiento previsto en la Fase 7.
+- La BD admite un `income` con monto negativo si se escribe SQL directo; solo la API garantiza el signo (decidir con el importador; `ARCHITECTURE.md` §10.12).
+- El límite de intentos de login usa `request.client.host`: detrás de un proxy hace falta configuración (§10.10). `501 google_login_not_available` no figura en el contrato congelado (§10.11). `updated_at` se refresca vía ORM/Core, no con SQL crudo (§10.8).
+- `reactivation_suggestions` solo se rellena al **crear** o **publicar** una transacción de gasto; `GET /transactions` no las calcula.
+- Totales de suscripciones: sin proveedor de tipos de cambio (Fase 6) solo se suma la moneda igual a la de reporte; las demás cuentan en `unconverted_count`. La tasa de una suscripción en moneda extranjera es **provisional** (se confirma al publicar cada cobro).
+- `end_on` de `recurring_rules` existe pero no se expone; el CRUD de `/recurring-rules` es de la Fase 6.
+- La clave secreta por defecto es de ejemplo; en `prod` la app se niega a arrancar con ella o con cookies sin `Secure`.
+- **Disco:** 3,3 GB libres en `/` (20 GB). Vigilar antes de Docker/Flutter (D6).
+- **Repositorio público:** todo push se audita antes. Los datos reales de Adrian solo viven en `reference/backups/` (ignorado por git).
+- La cuota de Claude Pro es limitada: delegar lectura masiva y generación de código.
 
 ## 9. Cómo retomar (comandos exactos)
 
 ```bash
-# 0) Leer: este archivo, AGENTS.md, CLAUDE.md, docs/SPEC.md. Luego:
+# 0) Leer: este archivo, AGENTS.md, CLAUDE.md (§10), docs/SPEC.md, ADRs y tareas abiertas. Luego:
 cd /home/artur/propio2/Monetae-master-dev            # worktree de master-dev (main está en ../Monetae)
 git status -sb && git log --oneline -5 && git worktree list
+git -C ../Monetae log --oneline -1 && git rev-parse --short origin/main   # main = b3797b1 · origin/main = 05ff1d9 hasta que se haga el push
 
-# 1) Herramientas (instaladas a nivel de usuario; Python del sistema = 3.9, NO usarlo para el proyecto)
+# 1) Herramientas (a nivel de usuario; el Python del sistema es 3.9, NO usarlo para el proyecto)
 export PATH="$HOME/.local/bin:$HOME/flutter/bin:$PATH"
 uv --version && docker compose version && flutter --version | head -1
 orca status --json | head -5                           # ok: true
+orca orchestration run-use --id run_63b520544a30       # solo para consultar la Fase 3
 
-# 2) Verificar el backend (≈ 3 min; necesita PostgreSQL en Docker)
+# 2) Verificar el backend (≈ 5 min; necesita PostgreSQL en Docker)
 cp .env.example .env && docker compose -f infra/docker-compose.yml up -d db
 cd services/api
 export MONETAE_TEST_DATABASE_URL=postgresql+psycopg://monetae:change-me@127.0.0.1:5433/postgres MONETAE_REQUIRE_DB=1
+export MONETAE_DATABASE_URL=$MONETAE_TEST_DATABASE_URL
 uv sync --frozen && uv lock --check
 uv run ruff check . && uv run ruff format --check . && uv run mypy
 uv run pytest -q                                        # esperado: 713 passed
@@ -122,24 +147,38 @@ uv run alembic upgrade head && uv run alembic check     # cabeza: 0006
 cd ../.. && python3 -I scripts/check_openapi.py         # contrato: 86 paths, 127 operaciones
 docker compose -f infra/docker-compose.yml down -v && rm -f .env
 
-# 3) Probar el stack a mano (opcional)
-cp .env.example .env && echo 'MONETAE_COOKIE_SECURE=false' >> .env
-docker compose -f infra/docker-compose.yml up -d --build
-echo 'una-contraseña-larga-123' | docker compose -f infra/docker-compose.yml exec -T api python -m monetae.cli create-user --email yo@example.test --password-stdin
-#   curl: GET /api/v1/health (da la cookie CSRF) y luego cabeceras Origin + X-CSRF-Token en POST/PATCH/DELETE
+# 3) Sonda con servidor real (obligatoria para cambios de sesión/transacción; TestClient no basta)
+#    con la BD de (2) levantada: variables MONETAE_DATABASE_URL, MONETAE_SECRET_KEY, MONETAE_COOKIE_SECURE=false;
+#    crear usuario: echo '<clave>' | uv run python -m monetae.cli create-user --email yo@example.test --password-stdin
+#    uv run uvicorn monetae.api.main:app --port 8765   y   httpx: login -> petición inmediata (debe dar 200).
+#    Parar el servidor por PUERTO (ss -ltnp | grep :8765), NUNCA con pkill -f / pgrep -f.
 docker compose -f infra/docker-compose.yml down -v && rm -f .env     # SIEMPRE limpiar
 ```
 
-**Siguiente paso concreto:** (1) Adrian responde el gate de la Fase 3 y la pregunta 1b (§4); (2) si aprueba: `orca orchestration gate-resolve …`, `git -C ../Monetae merge --ff-only master-dev` (en el worktree de `main`), verificar el historial (sin `.env`, claves, `reference/`, solo los 3 fixtures sintéticos) y `git -c credential.helper= -c credential.helper='!gh auth git-credential' push origin main master-dev` con `GIT_TERMINAL_PROMPT=0`; (3) actualizar `docs/api/openapi.json` con las ampliaciones aprobadas y correr `python3 -I scripts/check_openapi.py` (+ Redocly); (4) abrir el Run de la **Fase 4** (importador SQLite de Cashew v48: idempotente, `--dry-run`, cuadre de saldos, revisión manual de préstamos ambiguos) escribiendo antes las tareas T-4xx **contrastadas con el contrato y con el código ya integrado** (lección de T-302/T-304).
+## Anexo A · Qué incluye el backend (verificado sobre `b3797b1`)
 
-## 10. Lecciones operativas (no repetir errores)
+FastAPI síncrono (ADR-007) en `services/api`: **44 de 86 rutas = 71 de 127 operaciones** (Fase 2: 29 rutas / 48 operaciones; Fase 3: +15 / +23).
 
-- **Verificar, no confiar en el resumen del worker:** correr yo `ruff`, `mypy`, `pytest`, leer el servicio entero y hacer pruebas manuales (curl, SQL directo, latencia). Así aparecieron: un bloqueo `FOR UPDATE` por petición que serializaba al usuario (5,6 s → 0,03 s), duplicados de nombre mal aplicados, citas inventadas, y errores de conteo en documentos.
-- **Leer el contrato antes de escribir una especificación** (me contradije con él dos veces: fechas del filtro y obligatoriedad de `fx_rate_*`).
+- **Acceso:** login por correo y contraseña (argon2id), sesiones opacas con cookie `HttpOnly`, CSRF firmado con HMAC + comprobación de `Origin`, límite de intentos persistente, `users/me`, cierre de sesión. Usuarios solo por CLI: `python -m monetae.cli create-user`.
+- **Catálogos:** cuentas, categorías (con las 2 de sistema de interés), personas con alias, etiquetas.
+- **Libro mayor:** transacciones (CRUD, filtros, etiquetas, saldos calculados, idempotencia, borrado/restauración lógica), transferencias de dos patas (también entre monedas), lotes atómicos, publicar programadas.
+- **Préstamos (T-301/T-302):** `loans` + `loan_movements` (desembolso, interés, pago, ajuste, condonación); saldo y estado **calculados**, sin «liquidar»; pago primero a interés; exceso con `adjustment` o `income_expense`; cada movimiento afecta a **su** cuenta (también otra moneda); edición/borrado con revalidación de todo el libro (`409 ledger_inconsistent`); borrado lógico atómico; resumen por persona y moneda. 15 operaciones.
+- **Suscripciones (T-303/T-304):** `subscriptions` + `recurring_rules`; archivado reversible (conserva el historial, fuera de listado y totales); reactivación; próxima `scheduled` materializada y avanzada al publicar; totales por moneda; sugerencia de reactivación por título normalizado. 8 operaciones.
+- **Base de datos:** migraciones `0001` identidad y catálogos · `0002` intentos de login · `0003` transacciones · `0004` integridad de transferencias · `0005` préstamos · `0006` suscripciones y reglas. FK **compuestas con `user_id`**: la BD rechaza datos de otro usuario.
+- **Calidad:** 713 pruebas con PostgreSQL real, `ruff`, `mypy --strict`, `alembic check` limpios, cero `type: ignore`.
+- **No implementado (operaciones del contrato):** usuarios 9 (PIN/bloqueo/WebAuthn), reportes 8, notificaciones 6, metas 6, presupuestos 6, reglas de categoría 5, reglas recurrentes 5, importaciones 4, adjuntos 4, Google OIDC 1, exportaciones 1, sugerencia de tipo de cambio 1.
+
+## Anexo B · GitHub
+
+`origin` = `https://github.com/Adrian-asandym/Monetae.git` (público). Antes de cada push se verifica el historial (sin `.env`, claves, `reference/`, respaldos; únicos `.sqlite`/`.csv` versionados: los 3 fixtures sintéticos de `services/api/tests/fixtures/cashew_v48/`; sin correos reales). Comando: `GIT_TERMINAL_PROMPT=0 git -c credential.helper= -c credential.helper='!gh auth git-credential' push origin main master-dev` (sin `--force`; `gh` autenticado como `Adrian-asandym`).
+
+## Anexo C · Lecciones operativas (no repetir errores)
+
+- **Verificar, no confiar en el resumen del worker:** correr yo `ruff`, `mypy`, `pytest`, leer el servicio entero y hacer pruebas manuales. Así aparecieron: un bloqueo `FOR UPDATE` por petición (5,6 s → 0,03 s), duplicados de nombre mal aplicados, citas inventadas, errores de conteo y el `commit` posterior a la respuesta.
+- **`TestClient` no es un servidor:** espera a que la app termine por completo y oculta errores de orden respuesta/commit. Probar además con `uvicorn` real y `httpx`.
+- **Releer la spec contra el contrato y el código antes de lanzar:** en la Fase 3 corregí mi propia spec dos veces al lanzar. Las preguntas del worker (`ask`) fueron todas legítimas: responderlas con el contrato abierto.
 - **Reglas de bloqueo:** las lecturas no toman bloqueos de fila; las escrituras usan bloqueos consultivos con orden fijo.
-- **Orca:** `worker-start` puede devolver `outcome_unknown` aunque el worker trabaje; Antigravity pide «trust workspace» en cada worktree y puede caerse por red; Codex puede mostrar un menú «Update available» que solo Adrian puede saltar; `gate-create` no acepta `--run`; al abrir sesión hay que re-vincular el Run (`run-use --id`); `check --wait` de un Run distinto da `consumer_fenced`.
-- **Modelos Codex** (de `~/.codex/models_cache.json`): `gpt-6.1-sol` (trabajo general), `gpt-6-astra` (el más potente), `gpt-6-luna` (ligero; sirve para CRUD pero exige revisar las reglas).
-- **Releer la spec contra el contrato y el código antes de lanzar:** en la Fase 3 corregí mi propia spec dos veces al lanzar (columna `sequence` por empates de `func.now()`; `status` solo `active|archived`, `reactivate` sin cuerpo, sin campos de tasa en `SubscriptionCreate`). Las preguntas del worker (`ask`) fueron todas legítimas: respóndelas con el contrato abierto.
-- **`TestClient` no es un servidor:** espera a que la app termine por completo (incluido el `commit`), así que oculta errores de orden respuesta/commit. Para cambios de sesión/transacción, prueba además con `uvicorn` real y `httpx` (login → petición inmediata; escritura → lectura inmediata).
-- **Disco:** ≈ 4 GB libres en `/` (20 GB). Vigilar antes de Flutter/Docker.
+- **Orca:** `worker-start` puede devolver `outcome_unknown` aunque el worker trabaje; Antigravity pide «trust workspace» en cada worktree; Codex puede mostrar un menú «Update available» que solo Adrian puede saltar; `gate-create` no acepta `--run` y deja la tarea en `ready` (marcarla `completed` a mano); al abrir sesión hay que re-vincular el Run (`run-use --id`); solo **una** espera `check --wait` por Run (`waiter_exists` si queda una colgada), y menos de 10 min por llamada; no se pueden editar las especificaciones de una tarea ya creada (crear otra y marcar la vieja `failed/superseded`).
+- **Shell:** nunca `pkill -f` ni `pgrep -f` con un texto que aparezca en el propio comando (mata el shell, código 144); parar servidores por puerto con `ss -ltnp`.
+- **Modelos Codex** (`~/.codex/models_cache.json`): `gpt-6.1-sol` (general), `gpt-6-astra` (el más potente), `gpt-6-luna` (ligero; sirve para CRUD pero exige revisar las reglas).
 - **Privacidad:** nunca leer filas de `reference/backups/`; trabajar sobre una copia; los fixtures son sintéticos.
