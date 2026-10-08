@@ -411,3 +411,80 @@ a `0002`, incluyendo la retirada de las unicidades `(id, user_id)` añadidas a l
 catálogos. `recurring_rule_id` queda sin FK hasta crear su tabla. ARCHITECTURE
 §10.9 menciona `0002` para estas claves: la revisión correcta es `0003`, porque
 `0002` ya registra intentos de login; no se modifica el documento de arquitectura.
+
+## Transferencias, lotes y programadas (T-206b)
+
+`POST/GET /transfers`, `GET/PATCH/DELETE /transfers/{id}` y
+`POST /transfers/{id}/restore` requieren sesión; toda escritura exige CSRF y
+Origin confiable. El ID público es `transfer_group_id`. Una transferencia crea
+exactamente dos transacciones `posted`, de origen `web`, sin categoría: salida
+negativa y entrada positiva. Cada pata conserva su propia tasa histórica a base;
+la tasa en moneda base debe ser `1.000000`. Las cuentas deben ser distintas y
+propias, sin borrado lógico. En la misma moneda los importes deben coincidir
+(`422 transfer_amount_mismatch`); las comisiones se registran como gasto aparte.
+Entre monedas, `implicit_rate` es destino/origen, con seis decimales ROUND_HALF_UP;
+una tasa que redondea a cero produce `422 invalid_fx_rate`.
+
+PATCH combina los campos enviados con los valores actuales y revalida el grupo
+completo. Cambiar una cuenta a otra moneda exige enviar la tasa de esa pata.
+Crear, editar, borrar y restaurar modifica ambas patas en una transacción de BD;
+el borrado devuelve `affected_count: 2`. Restore conserva ambos IDs y falla con
+`409 restore_conflict` si alguna cuenta está borrada. Las transferencias borradas
+no se listan ni se obtienen individualmente. Editar, borrar o restaurar una pata
+por el CRUD directo produce `409 transaction_flow_required`.
+
+El listado ordena por `(occurred_at DESC, transfer_group_id DESC)` y usa cursor
+firmado ligado al usuario, con límites de 1 a 200. Carga las dos patas de cada
+página en una única consulta. Las escrituras toman un bloqueo consultivo por
+usuario/grupo, seguido de referencias a cuentas con FOR SHARE en orden UUID.
+Las lecturas usan MVCC y no toman bloqueos de fila. La migración reversible
+`0004` exige grupo si y solo si el tipo es `transfer`, y garantiza mediante
+índices únicos parciales como máximo una pata viva de cada signo por grupo.
+La existencia de exactamente dos patas la garantiza el servicio atómico.
+
+`POST /transactions/batch` acepta de 1 a 200 IDs únicos y aplica todo o nada.
+Cualquier ID ajeno, inexistente o borrado (salvo restore) produce `404`;
+transferencias o préstamos producen `409 transaction_flow_required`. Las acciones
+son `delete`, `restore`, `add_tags`, `remove_tags` y `edit`. Solo edit permite y
+exige `changes`; solo las acciones de etiquetas permiten y exigen `tag_ids`
+no vacío. Edit admite exclusivamente `category_id`, `occurred_at`, `status`,
+`title` y `note`; otros campos producen `422 batch_field_not_allowed`. Restore
+exige cuenta y categoría sin borrar; las etiquetas deben ser propias, sin borrar,
+y solo se permite una archivada si ya estaba vinculada a cada fila afectada.
+Los bloqueos consultivos de las transacciones se toman en orden UUID para evitar
+interbloqueos entre lotes solapados. La respuesta es ActionResult con el número
+de transacciones seleccionadas.
+
+`POST /transactions/{id}/post` confirma únicamente ingresos/gastos directos
+`scheduled`; otro tipo o una fila ya publicada produce `409 not_scheduled`.
+Acepta un TransactionUpdate opcional, valida los cambios con las reglas del CRUD
+y pasa a `posted` en la misma transacción: el saldo cambia solo al publicar.
+Puede confirmar importe, fecha, cuenta y tasa histórica al pagar. V1 no permite
+volver de posted a scheduled (`409 already_posted` en PATCH y batch edit).
+
+Diferencia respecto al contrato congelado: `/post` admite omitir el cuerpo (o
+null), según la decisión explícita de T-206b; `openapi.json` todavía lo marca
+obligatorio. Se conserva el JSON sin regenerarlo. No se añaden dependencias.
+
+Verificación de T-206b: `uv sync --frozen`, `uv lock --check`, Ruff (lint y
+formato), mypy estricto y PostgreSQL real con `MONETAE_REQUIRE_DB=1`. Se comprueba
+`0003→0004→0003→0004` y `alembic check` sin diferencias, incluida inserción SQL
+directa contra las tres restricciones. Compose arranca automáticamente en 0004.
+Con curl autenticado del mismo usuario, durante un `pg_sleep(6)` que mantiene
+el bloqueo consultivo y FOR UPDATE sobre ambas patas, GET /transfers respondió
+HTTP 200 en **33,2 ms** y GET /transactions en **26,6 ms**, viendo el estado
+confirmado anterior. Para HTTP local se usó `MONETAE_COOKIE_SECURE=false` solo en
+el `.env` temporal; después se retiran Compose, volumen sintético y `.env`.
+
+Los tests anteriores conservan su lógica: `test_migration_0003.py` sube a head
+antes de comparar metadata porque la nueva cabeza es 0004; los helpers de API
+permiten crear cuentas en otras monedas y transferencias; el subconjunto del
+contrato aumenta de 40 a 48 operaciones y comprueba los esquemas nuevos.
+`test_account_balance.py` solo añade un caso de transferencias. La prueba HTTP
+de concurrencia prepara el pool antes de medir para separar el coste de conexión
+inicial de una espera por bloqueo, manteniendo el umbral de 300 ms.
+
+Resultado final: **404 tests pasan** (333 anteriores + 71 nuevos), con PostgreSQL
+real obligatorio; solo permanece el aviso previo de Starlette/httpx. Ruff,
+formato y mypy pasan; no hay `type: ignore` en `src`. La rama está actualizada
+con `master-dev` y el diff contiene únicamente los 22 archivos autorizados.

@@ -48,6 +48,21 @@ class Transaction(UserScopedModel):
             ["categories.id", "categories.user_id"],
             name="fk_transactions_category_owner",
         ),
+        CheckConstraint(
+            "(kind = 'transfer') = (transfer_group_id IS NOT NULL)", name="transfer_group"
+        ),
+        Index(
+            "uq_transactions_transfer_outgoing",
+            "transfer_group_id",
+            unique=True,
+            postgresql_where=text("kind = 'transfer' AND amount < 0 AND deleted_at IS NULL"),
+        ),
+        Index(
+            "uq_transactions_transfer_incoming",
+            "transfer_group_id",
+            unique=True,
+            postgresql_where=text("kind = 'transfer' AND amount > 0 AND deleted_at IS NULL"),
+        ),
         CheckConstraint("amount <> 0", name="amount_nonzero"),
         CheckConstraint("fx_rate_to_base > 0", name="fx_rate_positive"),
         CheckConstraint("currency = upper(currency)", name="currency_upper"),

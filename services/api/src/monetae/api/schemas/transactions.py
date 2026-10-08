@@ -120,3 +120,28 @@ class Transaction(StrictModel):
 
 class TransactionPage(Page[Transaction]):
     pass
+
+
+class TransactionBatch(StrictModel):
+    transaction_ids: Annotated[
+        list[JsonUUID], Field(min_length=1, max_length=200, json_schema_extra={"uniqueItems": True})
+    ]
+    action: Literal["edit", "delete", "restore", "add_tags", "remove_tags"]
+    changes: TransactionUpdate | None = None
+    tag_ids: TagIds | None = None
+
+    @model_validator(mode="after")
+    def validate_action(self) -> "TransactionBatch":
+        if len(self.transaction_ids) != len(set(self.transaction_ids)):
+            raise ValueError("transaction_ids must be unique.")
+        if self.action == "edit":
+            if self.changes is None:
+                raise ValueError("edit requires changes.")
+        elif "changes" in self.model_fields_set:
+            raise ValueError("changes is only allowed with edit.")
+        if self.action in {"add_tags", "remove_tags"}:
+            if not self.tag_ids or len(self.tag_ids) != len(set(self.tag_ids)):
+                raise ValueError("Tag actions require unique, nonempty tag_ids.")
+        elif "tag_ids" in self.model_fields_set:
+            raise ValueError("tag_ids is only allowed with tag actions.")
+        return self

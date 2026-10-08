@@ -85,10 +85,16 @@ def login(client: TestClient, email: str = "first@example.test", password: str =
     assert result.status_code == 200, result.text
 
 
-def create_account(client: TestClient, name: str = "Wallet") -> str:
+def create_account(client: TestClient, name: str = "Wallet", **values: object) -> str:
     result = client.post(
         "/api/v1/accounts",
-        json={"name": name, "type": "cash", "currency": "PEN", "initial_balance": "12.50"},
+        json={
+            "name": name,
+            "type": "cash",
+            "currency": "PEN",
+            "initial_balance": "12.50",
+            **values,
+        },
         headers=csrf_headers(client),
     )
     assert result.status_code == 201, result.text
@@ -144,6 +150,35 @@ def create_transaction(client: TestClient, account_id: str, **values: object) ->
     response = client.post(
         "/api/v1/transactions",
         json=transaction_payload(account_id, **values),
+        headers=csrf_headers(client),
+    )
+    assert response.status_code == 201, response.text
+    entity_id = response.json()["id"]
+    assert isinstance(entity_id, str)
+    return entity_id
+
+
+def transfer_payload(from_account: str, to_account: str, **values: object) -> dict[str, object]:
+    return {
+        "from_account_id": from_account,
+        "to_account_id": to_account,
+        "from_amount": "10.00",
+        "to_amount": "10.00",
+        "from_fx_rate_to_base": "1.000000",
+        "to_fx_rate_to_base": "1.000000",
+        "fx_rate_source": "manual",
+        "occurred_at": "2026-10-07T12:00:00Z",
+        "title": "Synthetic transfer",
+        **values,
+    }
+
+
+def create_transfer(
+    client: TestClient, from_account: str, to_account: str, **values: object
+) -> str:
+    response = client.post(
+        "/api/v1/transfers",
+        json=transfer_payload(from_account, to_account, **values),
         headers=csrf_headers(client),
     )
     assert response.status_code == 201, response.text

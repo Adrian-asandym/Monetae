@@ -28,9 +28,16 @@ from monetae.api.schemas.tags import Tag, TagCreate, TagPage, TagUpdate
 from monetae.api.schemas.transactions import (
     TagAssignment,
     Transaction,
+    TransactionBatch,
     TransactionCreate,
     TransactionPage,
     TransactionUpdate,
+)
+from monetae.api.schemas.transfers import (
+    Transfer,
+    TransferCreate,
+    TransferPage,
+    TransferUpdate,
 )
 from monetae.config import Settings
 
@@ -57,7 +64,7 @@ def test_mounted_operations_security_responses_and_csrf() -> None:
                     for p in operation["parameters"]
                 )
             count += 1
-    assert count == 40
+    assert count == 48
 
 
 def test_schema_properties_mirror_contract() -> None:
@@ -91,9 +98,15 @@ def test_schema_properties_mirror_contract() -> None:
         ArchiveRequest,
         Transaction,
         TransactionCreate,
+        TransactionBatch,
         TransactionUpdate,
         TransactionPage,
         TagAssignment,
+        TransactionBatch,
+        Transfer,
+        TransferCreate,
+        TransferUpdate,
+        TransferPage,
     ]
     for model in models:
         actual = model.model_json_schema()
