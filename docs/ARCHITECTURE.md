@@ -282,6 +282,8 @@ Reglas (SPEC §8): **archivar** = `status='archived'` + `archived_at` + desactiv
 7. **Orden de categorías:** Cashew las ordena (`order`) y su UI permite reordenarlas, pero SPEC no lo pide y ni este esquema ni el contrato lo prevén. Decidir en la Fase 5 con la UI; si se acepta, migración posterior con `categories.sort_order` y mapeo del `order` de Cashew en el importador.
 8. **`updated_at`** se refresca vía ORM/Core (`onupdate`), no con SQL crudo. Si el importador masivo o la sincronización de V4 lo exigen, añadir un trigger `set_updated_at` en una migración posterior.
 9. **Aislamiento a nivel de FK:** las claves foráneas de la migración 0001 solo apuntan a `users`. Para las tablas con referencias cruzadas (`transactions`, `loan_movements`, …) la migración 0002 usará **FK compuestas con `user_id`** (`UNIQUE (id, user_id)` en el padre) para que ninguna fila pueda referenciar datos de otro usuario aunque falle el repositorio.
+10. **IP del cliente detrás de un proxy inverso (hito de despliegue en el VPS):** el límite de intentos de login usa `request.client.host`. Detrás de un proxy todas las peticiones parecerían venir de la misma IP y el límite por IP bloquearía a todos. Antes del despliegue hay que configurar Uvicorn con `--proxy-headers` y `--forwarded-allow-ips` restringido a la IP del proxy (o una lista de proxies de confianza en `Settings`), y probarlo.
+11. **`501 google_login_not_available`** (T-204) no figura en el contrato OpenAPI congelado; se documenta en el README de la API. Se incorporará al contrato cuando se implemente Google OIDC (Fase 6).
 
 ## 11. Historial de cambios
 
