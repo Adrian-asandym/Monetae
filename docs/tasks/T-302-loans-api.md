@@ -1,6 +1,6 @@
 # T-302 — Préstamos: migración 0005, servicios y API
 
-> **ESTADO: NO LANZADA.** Fase 3. Plan escrito el 2026-10-08; se lanza cuando Adrian apruebe la Fase 3 y **T-301 esté aceptada e integrada**.
+> **ESTADO: LANZADA el 2026-10-08** (Run `run_63b520544a30`; T-301 aceptada e integrada en `master-dev` `246a6d5`). Plan escrito el 2026-10-08, corregido al lanzar (ver «Correcciones al lanzar»).
 > Agente: **Codex**, modelo `gpt-6.1-sol` esfuerzo `high` (la tarea más delicada del proyecto: P1, P2 y P3 se prueban aquí de extremo a extremo; considerar `gpt-6-astra` si T-301 requirió devoluciones).
 > Depende de: **T-301** (dominio). Eres el **único dueño de las migraciones** durante esta tarea: creas la `0005`. No corre en paralelo con T-304.
 
@@ -16,7 +16,7 @@ Persistir y exponer el libro mayor de préstamos con el contrato `docs/api/opena
 
 1. `UNIQUE (id, user_id)` en `people` (para la FK compuesta).
 2. **`loans`** (ARCHITECTURE §5.5): `person_id`, `direction` (`lent`/`borrowed`), `currency`, `principal NUMERIC(18,2) > 0`, `opened_on date`, `due_on date NULL`, `note`, `import_external_id text NULL`, columnas comunes. **Sin columna de saldo ni de estado.** FK compuesta `(person_id, user_id) → people(id, user_id)`; `UNIQUE (id, user_id)`; único parcial `(user_id, import_external_id)`.
-3. **`loan_movements`**: `loan_id`, `kind`, `amount_in_loan_currency` (`> 0`, salvo `adjustment` ≠ 0), `transaction_id NULL` **único** cuando no es NULL, `interest_part`/`principal_part NULL` (solo en `payment` y `write_off`; `CHECK` de suma y `≥ 0`), `fx_rate_applied NUMERIC(18,6) NULL`, `occurred_at`, `note`, columnas comunes. FK compuestas a `loans(id, user_id)` y a `transactions(id, user_id)`. `CHECK` de coherencia por tipo. Índices `(user_id, loan_id, occurred_at, created_at)`.
+3. **`loan_movements`**: `loan_id`, `kind`, `amount_in_loan_currency` (`> 0`, salvo `adjustment` ≠ 0), `transaction_id NULL` **único** cuando no es NULL, `interest_part`/`principal_part NULL` (solo en `payment` y `write_off`; `CHECK` de suma y `≥ 0`), `fx_rate_applied NUMERIC(18,6) NULL`, `occurred_at`, `note`, columnas comunes. FK compuestas a `loans(id, user_id)` y a `transactions(id, user_id)`. `CHECK` de coherencia por tipo. **`sequence bigint NOT NULL`** (interna, **no** se expone en la API): orden de desempate dentro del préstamo, asignada bajo el bloqueo consultivo del préstamo como `COALESCE(MAX(sequence), 0) + 1`; único `(loan_id, sequence)`. Índices `(user_id, loan_id, occurred_at, sequence)`.
 4. **Vista `loan_balances`** (o consulta agregada equivalente): `principal + Σinterest + Σadjustment − Σpayment − Σwrite_off` sobre movimientos no borrados, y `status`. Prueba de equivalencia **vista/SQL == `domain.loans.replay`** sobre libros aleatorios (semilla fija).
 5. `alembic check` limpio; `0004→0005→0004→0005`.
 
@@ -32,6 +32,14 @@ Persistir y exponer el libro mayor de préstamos con el contrato `docs/api/opena
 8. **Transacciones:** `Transaction.loan_id` (campo de solo lectura del contrato) se rellena vía `loan_movements.transaction_id`; los filtros `loan_id` y `person_id` de `GET /transactions` dejan de devolver vacío (quita el `TODO(phase-3)` de T-206a); `PATCH`/`DELETE`/`batch` sobre transacciones `loan` siguen dando `409 transaction_flow_required`. El capital no cuenta como ingreso/gasto en ningún cálculo; `recognized_interest` queda disponible para los reportes (Fase 6).
 9. **Aislamiento y concurrencia:** FK compuestas con `user_id`; toda escritura sobre un préstamo toma un bloqueo consultivo `(user_id, loan_id)` (dos pagos simultáneos se serializan y el segundo ve el saldo del primero); **las lecturas no toman bloqueos de fila** (lección de T-204); orden de bloqueos fijo (préstamo → cuentas por id).
 10. Dinero como cadenas decimales, `snake_case`, errores `problem+json`, rutas con los mismos `operationId`/seguridad/códigos que el contrato.
+
+## Correcciones al lanzar y hechos del dominio entregado (T-301, ya en `master-dev`)
+
+1. **Orden de reproducción:** `domain.loans.replay` ordena por `(occurred_at, sequence)`. `created_at` **no** sirve de desempate (`func.now()` es la hora de inicio de la transacción: el ajuste y el pago de un mismo exceso comparten valor). Por eso existe la columna interna `sequence`. En un exceso con `adjustment`, el ajuste recibe una `sequence` menor que la del pago y **el mismo `occurred_at`**. Editar `occurred_at` de un movimiento no cambia su `sequence`. `Movement` exige `occurred_at` con zona horaria y `sequence` entero ≥ 0.
+2. **Porcentaje de interés:** el contrato lo transporta como cadena con **6 decimales** (`"5.000000"`); `propose_interest` acepta `Decimal` con precisión numérica ≤ 4 decimales (`5.123400` válido, `5.123456` ⇒ `InvalidInterestError` ⇒ `422`). Convierte en la capa API.
+3. **Exceso sobre préstamo ya `settled`:** `plan_excess(income_expense)` devuelve solo `ExcessCash(total)` (sin pago de 0; sigue `settled`); `plan_excess(adjustment)` devuelve `Adjustment(+total)` y `Payment(total)`, y termina `settled`.
+4. **Tasas:** el dominio recibe `fx_rate_applied` como `ExchangeRate | None` (`None` = misma moneda); `cash_sign` devuelve `0` para los movimientos sin dinero (interés, ajuste, condonación). `OverpaymentError` trae `excess` y `outstanding` para el cuerpo del `422 loan_overpayment`; `LedgerError.index` (base 0, en orden de reproducción) alimenta el `409 ledger_inconsistent`.
+5. `monetae.domain` ya re-exporta la API de préstamos y de suscripciones; impórtala desde `monetae.domain`. **No modifiques `domain/`**: si falta algo, pregúntalo.
 
 ## Archivos permitidos
 
