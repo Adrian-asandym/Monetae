@@ -7,6 +7,24 @@ from .errors import (
 )
 from .fx import ExchangeRate, apply_rate_to_base, convert, convert_back, implied_rate
 from .money import Money
+from .subscriptions import (
+    Period,
+    Subscription,
+    SubscriptionStateError,
+    SubscriptionValidationError,
+    archive,
+    historical_paid,
+    last_paid_on,
+    matching_archived,
+    monthly_equivalent,
+    next_after,
+    normalize_title,
+    occurrence,
+    reactivate,
+    totals,
+    upcoming,
+    yearly_equivalent,
+)
 
 __all__ = [
     "PEN",
@@ -22,4 +40,20 @@ __all__ = [
     "convert",
     "convert_back",
     "implied_rate",
+    "Period",
+    "Subscription",
+    "SubscriptionStateError",
+    "SubscriptionValidationError",
+    "archive",
+    "historical_paid",
+    "last_paid_on",
+    "matching_archived",
+    "monthly_equivalent",
+    "next_after",
+    "normalize_title",
+    "occurrence",
+    "reactivate",
+    "totals",
+    "upcoming",
+    "yearly_equivalent",
 ]
