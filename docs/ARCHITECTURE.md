@@ -1,6 +1,6 @@
 # ARCHITECTURE.md — Monetae
 
-> Versión 0.2 · 2026-10-07 · Autor: Claude (T-101) · Estado: revisado por Adrian; v0.2 resuelve las observaciones del contrato OpenAPI (T-102)
+> Versión 0.3 · 2026-10-07 · Autor: Claude (T-101) · Estado: revisado por Adrian; v0.3 incorpora precisiones de nulabilidad e índices surgidas en T-203
 > Fuente funcional: `docs/SPEC.md` v0.3. Reglas de código: `AGENTS.md`. Decisiones: `docs/decisions/`.
 > El esquema de este documento es el **contrato de datos** de la Fase 2; las migraciones Alembic lo implementan. Si el código necesita desviarse, se cambia primero este documento.
 
@@ -109,7 +109,7 @@ erDiagram
 | pin_hash | `text NULL` | argon2id (ADR-006) |
 | pin_failed_attempts | `int NOT NULL DEFAULT 0` | a los 5 se exige login completo |
 | lock_after_minutes | `int NULL` | inactividad para bloquear; NULL = sin bloqueo |
-| report_currency | `char(3) NOT NULL` | moneda de reporte seleccionada (por defecto igual a `base_currency`) |
+| report_currency | `char(3) NOT NULL` | moneda de reporte seleccionada; **sin default de servidor**: la capa de servicio la fija igual a `base_currency` al crear el usuario |
 | preferences | `jsonb NOT NULL DEFAULT '{}'` | presentación (RF-38/39): `theme` (`light`/`dark`/`system`), `accent_color`, widgets de inicio y su orden. Se valida con un modelo Pydantic estricto en el borde; no se consulta por SQL |
 
 `base_currency` es **inmutable en cuanto el usuario tiene su primera transacción** (así `fx_rate_to_base` siempre se refiere a la misma moneda). Cambiar de base sería una migración de datos, fuera de V1. La moneda de reporte sí se puede cambiar libremente.
@@ -134,10 +134,11 @@ erDiagram
 - **Saldo actual** = `initial_balance + SUM(transactions.amount)` de las transacciones `posted` no borradas (RF-02). No existe columna de saldo.
 
 **`categories`**: `parent_id uuid NULL → categories`, `kind` ∈ {`income`,`expense`}, `name`, `icon`, `color`, `is_system bool`, `system_key text NULL`.
-- Un solo nivel de subcategorías: `parent_id` debe apuntar a una categoría sin padre y del mismo `kind` (validado en dominio y con trigger de respaldo).
+- Un solo nivel de subcategorías: `parent_id` debe apuntar a una categoría sin padre, del mismo `kind` y del **mismo `user_id`** (validado en dominio y con trigger de respaldo). El trigger también revalida a los hijos cuando cambia el `kind` o el `parent_id` de un padre y rechaza el cambio que los invalide.
+- `is_system` ⇔ `system_key IS NOT NULL` (`CHECK`). `sort_order` `DEFAULT 0`, `is_system` `DEFAULT false`.
 - Categorías de sistema de interés: `system_key` ∈ {`interest_income`, `interest_expense`}; únicas por usuario; no editables ni borrables. Se crean al registrar al usuario.
 
-**`people`**: `name`, `aliases text[] NOT NULL DEFAULT '{}'`, `note`. Índice GIN en `aliases` y en `lower(name)` (búsqueda por nombre o alias, RF-23).
+**`people`**: `name`, `aliases text[] NOT NULL DEFAULT '{}'`, `note`. Índice GIN en `aliases` y **B-tree** en `lower(name)` (búsqueda exacta por nombre o alias, RF-23; una búsqueda parcial/difusa exigiría `pg_trgm`, no incluido en V1).
 
 **`tags`**: `name`, `color`, `icon`, `emoji`, `sort_order`, `archived_at`. Único parcial `(user_id, lower(name))` entre no archivadas ni borradas (RF-43).
 
@@ -284,4 +285,5 @@ Reglas (SPEC §8): **archivar** = `status='archived'` + `archived_at` + desactiv
 | Versión | Fecha | Cambios |
 |---------|-------|---------|
 | 0.1 | 2026-10-07 | Primera versión (T-101). |
+| 0.3 | 2026-10-07 | Precisiones de T-203: `lower(people.name)` es B-tree (no GIN); `report_currency` sin default de servidor; `users.locale` limitado a `es`/`en`; coherencia `is_system`/`system_key`; el trigger de categorías exige mismo `user_id` y revalida hijos; nulabilidad y defaults de columnas abreviadas (`name`, `type`, `currency`, `kind`, `initial_balance` y fechas de sesión `NOT NULL`; textos decorativos, `note`, `user_agent`, `ip` `NULL`). |
 | 0.2 | 2026-10-07 | Revisada por Adrian. `users.report_currency` y `preferences`; moneda base inmutable tras la primera transacción; condonaciones con reparto interés/capital; ajustes solo sobre capital; manejo atómico del exceso (RF-22); convención de `fx_rate_applied`; conversión a moneda de reporte sin usar tasas futuras; equivalente mensual/anual de suscripciones; tabla `idempotency_keys`; `category-rules` y `attachments`; alcance de la exportación. |
