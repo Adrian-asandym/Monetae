@@ -161,7 +161,7 @@ class CatalogService:
             )
             criteria = (
                 or_(
-                    func.lower(Person.name).startswith(normalized),
+                    func.lower(Person.name).startswith(normalized, autoescape=True),
                     exists(
                         select(1)
                         .select_from(aliases)
@@ -227,6 +227,12 @@ class CatalogService:
             raise AuthError(404, "not_found", "The requested resource was not found.")
         return row
 
+    @staticmethod
+    def _validated_parent_id(value: object) -> UUID:
+        if not isinstance(value, UUID):
+            raise AuthError(422, "invalid_category_hierarchy", "The category hierarchy is invalid.")
+        return value
+
     def create_account(self, user_id: UUID, values: dict[str, object]) -> Account:
         name = str(values["name"])
         self._name_lock(user_id, "accounts", name)
@@ -257,15 +263,11 @@ class CatalogService:
     def create_category(self, user_id: UUID, values: dict[str, object]) -> Category:
         parent_id = values.get("parent_id")
         if parent_id is not None:
-            parent = self.get(Category, user_id, parent_id)  # type: ignore[arg-type]
+            parent = self.get(Category, user_id, self._validated_parent_id(parent_id))
             if parent.parent_id is not None or parent.kind != values["kind"]:
                 raise AuthError(
                     422, "invalid_category_hierarchy", "The category hierarchy is invalid."
                 )
-        name = str(values["name"])
-        self._name_lock(user_id, "categories", name)
-        if self._duplicate(Category, user_id, name):
-            raise AuthError(409, "duplicate_name", "A resource with this name already exists.")
         row = Category(user_id=user_id, **values)
         return self._flush(lambda: self._repository(self.db, Category, user_id).add(row))
 
@@ -278,7 +280,7 @@ class CatalogService:
                 409, "system_category_immutable", "System categories cannot be changed."
             )
         if "parent_id" in values and values["parent_id"] is not None:
-            parent = self.get(Category, user_id, values["parent_id"])  # type: ignore[arg-type]
+            parent = self.get(Category, user_id, self._validated_parent_id(values["parent_id"]))
             if parent.parent_id is not None or parent.kind != values.get("kind", row.kind):
                 raise AuthError(
                     422, "invalid_category_hierarchy", "The category hierarchy is invalid."
@@ -297,11 +299,6 @@ class CatalogService:
                 raise AuthError(
                     409, "category_has_children", "A category with children cannot change kind."
                 )
-        if "name" in values:
-            name = str(values["name"])
-            self._name_lock(user_id, "categories", name)
-            if name.casefold() != row.name.casefold() and self._duplicate(Category, user_id, name):
-                raise AuthError(409, "duplicate_name", "A resource with this name already exists.")
         repo = self._repository(self.db, Category, user_id)
         return self._flush(lambda: repo.update(entity_id, values) or row)
 
@@ -328,20 +325,11 @@ class CatalogService:
         return self._flush(lambda: repo.soft_delete(entity_id) or row)
 
     def create_person(self, user_id: UUID, values: dict[str, object]) -> Person:
-        name = str(values["name"])
-        self._name_lock(user_id, "people", name)
-        if self._duplicate(Person, user_id, name):
-            raise AuthError(409, "duplicate_name", "A resource with this name already exists.")
         row = Person(user_id=user_id, **values)
         return self._flush(lambda: self._repository(self.db, Person, user_id).add(row))
 
     def update_person(self, user_id: UUID, entity_id: UUID, values: dict[str, object]) -> Person:
         row = self.get(Person, user_id, entity_id)
-        if "name" in values:
-            name = str(values["name"])
-            self._name_lock(user_id, "people", name)
-            if name.casefold() != row.name.casefold() and self._duplicate(Person, user_id, name):
-                raise AuthError(409, "duplicate_name", "A resource with this name already exists.")
         repo = self._repository(self.db, Person, user_id)
         return self._flush(lambda: repo.update(entity_id, values) or row)
 

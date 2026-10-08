@@ -323,8 +323,12 @@ La paginación usa llaves deterministas: cuentas y etiquetas por
 personas por `(lower(name), id)`. Un cursor alterado, de otro recurso o de otro
 filtro devuelve `400 invalid_cursor`.
 
-Los nombres duplicados, comparados sin distinguir mayúsculas dentro del usuario,
-devuelven `409 duplicate_name`; un nombre borrado lógicamente se puede reutilizar.
+Las cuentas y etiquetas activas rechazan nombres duplicados sin distinguir
+mayúsculas con `409 duplicate_name`, conforme a sus índices únicos parciales; el
+nombre puede reutilizarse después del borrado lógico y, en etiquetas, también
+cuando la anterior está archivada. Las categorías y personas sí permiten nombres
+repetidos: una categoría puede llamarse igual bajo distintos padres y dos personas
+pueden compartir nombre y distinguirse por sus alias.
 El saldo de una cuenta equivale temporalmente a `initial_balance`; T-206 lo
 calculará sumando las transacciones. La moneda de cuenta no se puede cambiar aún
 y devuelve `409 account_currency_locked`. Archivar cuentas o etiquetas las oculta
@@ -341,6 +345,4 @@ escribir `is_system` ni `system_key`.
 Las personas aceptan nombres de 1 a 120 caracteres y hasta 20 alias normalizados
 con recorte de espacios, únicos sin distinguir mayúsculas y de 1 a 60 caracteres.
 La búsqueda `q` encuentra nombres por prefijo o alias exacto, sin distinguir
-mayúsculas. El esquema de `0001` no declara índices únicos para nombres de
-categorías y personas; el servicio comprueba duplicados y serializa altas o
-cambios de nombre mediante un bloqueo transaccional por usuario y nombre.
+mayúsculas; los caracteres `%` y `_` se interpretan literalmente.
