@@ -1,0 +1,355 @@
+{
+  "synthetic_only": true,
+  "namespace": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+  "table_counts_v48": {
+    "wallets": 4,
+    "categories": 7,
+    "objectives": 5,
+    "transactions": 25,
+    "budgets": 1,
+    "category_budget_limits": 1,
+    "associated_titles": 1,
+    "app_settings": 1,
+    "scanner_templates": 1,
+    "delete_logs": 1,
+    "tags": 3,
+    "transaction_to_tag_links": 3
+  },
+  "table_counts_v46": {
+    "wallets": 4,
+    "categories": 7,
+    "objectives": 5,
+    "transactions": 25,
+    "budgets": 1,
+    "category_budget_limits": 1,
+    "associated_titles": 1,
+    "app_settings": 1,
+    "scanner_templates": 1,
+    "delete_logs": 1
+  },
+  "wallets": [
+    {
+      "wallet_pk": "d7e7775b-13e8-5650-a73e-20ab615719ba",
+      "name": "Cuenta Soles",
+      "currency": "PEN",
+      "balance": "2209.60",
+      "archived_v48": 0
+    },
+    {
+      "wallet_pk": "676f9994-b289-56af-908d-5acc1f3a62db",
+      "name": "Cuenta Dolares",
+      "currency": "USD",
+      "balance": "-90.00",
+      "archived_v48": 0
+    },
+    {
+      "wallet_pk": "cf7b37b8-dcd6-5093-88ee-01842304a435",
+      "name": "Efectivo",
+      "currency": "PEN",
+      "balance": "660.00",
+      "archived_v48": 0
+    },
+    {
+      "wallet_pk": "c3fd0592-2672-595f-b4d7-9a10b0a6476b",
+      "name": "Cuenta Archivada Ejemplo",
+      "currency": "PEN",
+      "balance": "-12.00",
+      "archived_v48": 1
+    }
+  ],
+  "loan_cases": {
+    "A": {
+      "objective_pk": "cc96b80f-1369-5471-8c17-e63bcfeba5ad",
+      "currency": "PEN",
+      "direction": "borrowed",
+      "monetae": {
+        "principal": "200.00",
+        "interest": "10.00",
+        "payments_in_loan_currency": [
+          "100.00",
+          "110.00"
+        ],
+        "balances_after_payments": [
+          "110.00",
+          "0.00"
+        ],
+        "outstanding_balance": "0.00",
+        "status": "settled",
+        "requires_review": true,
+        "interpretation": "Tras confirmar asociación del interés huérfano como cargo de 10 al préstamo; no crear otro débito en cuenta. El gasto Cashew -10 y pagos -210 suman una salida adicional de 10 respecto al ejemplo Monetae; revisar doble conteo."
+      },
+      "cashew": {
+        "principal_nominal": "200.00",
+        "payments_nominal": "210.00",
+        "nominal_outstanding": "-10.00",
+        "nominal_status": "settled"
+      }
+    },
+    "B": {
+      "objective_pk": "f3036e50-924f-56cf-85cd-c71f3d8ae946",
+      "currency": "PEN",
+      "direction": "lent",
+      "monetae": {
+        "principal": "500.00",
+        "interest": "0.00",
+        "payments_in_loan_currency": [
+          "300.00",
+          "200.00"
+        ],
+        "balances_after_payments": [
+          "200.00",
+          "0.00"
+        ],
+        "outstanding_balance": "0.00",
+        "status": "settled",
+        "requires_review": false
+      },
+      "cashew": {
+        "principal_nominal": "500.00",
+        "payments_nominal": "500.00",
+        "nominal_outstanding": "0.00",
+        "nominal_status": "settled"
+      }
+    },
+    "C": {
+      "objective_pk": "06f0974e-9107-5fb8-90a5-3d51fb6610aa",
+      "currency": "USD",
+      "direction": "lent",
+      "monetae": {
+        "principal": "100.00",
+        "interest": "0.00",
+        "payments_in_loan_currency": [
+          "100.00"
+        ],
+        "balances_after_payments": [
+          "0.00"
+        ],
+        "outstanding_balance": "0.00",
+        "status": "settled",
+        "requires_review": true,
+        "fx_rate_applied": "3.800000",
+        "fx_convention": "PEN por USD; 380 / 3.800000 = 100.00 USD"
+      },
+      "cashew": {
+        "principal_nominal": "100.00",
+        "payments_nominal": "380.00",
+        "nominal_outstanding": "-280.00",
+        "nominal_status": "settled",
+        "interpretation": "Agregación nominal ilustrativa de §6.2, no suma válida de monedas. Las consultas de 02-loans §4.1 filtran por wallet: USD capital 100/pagos 0; PEN capital 0/pagos 380. Sin tasa histórica no se reconstruye estado económico."
+      }
+    },
+    "D": {
+      "objective_pk": "b859450c-daf9-54b2-9e64-7cd1795e301b",
+      "currency": "USD",
+      "direction": "lent",
+      "monetae": {
+        "principal": "50.00",
+        "interest": "0.00",
+        "payments_in_loan_currency": [
+          "60.00"
+        ],
+        "balances_after_payments": [
+          "-10.00"
+        ],
+        "outstanding_balance": "-10.00",
+        "status": "open",
+        "requires_review": true,
+        "overpayment": "10.00",
+        "warning_required": true,
+        "interpretation": "Saldo bruto diagnóstico: no persistir exceso sin confirmación atómica RF-22.",
+        "after_confirmed_excess_as_income": {
+          "applied_payment": "50.00",
+          "excess_income": "10.00",
+          "outstanding_balance": "0.00",
+          "status": "settled"
+        },
+        "after_confirmed_capital_adjustment": {
+          "adjustment": "10.00",
+          "applied_payment": "60.00",
+          "outstanding_balance": "0.00",
+          "status": "settled"
+        }
+      },
+      "cashew": {
+        "principal_nominal": "50.00",
+        "payments_nominal": "60.00",
+        "nominal_outstanding": "-10.00",
+        "nominal_status": "settled"
+      }
+    },
+    "E": {
+      "objective_pk": "7380b3ce-2de1-5e4a-abdb-86a8b7473179",
+      "currency": "PEN",
+      "direction": "lent",
+      "monetae": {
+        "principal": "1000.00",
+        "interest": "0.00",
+        "payments_in_loan_currency": [
+          "50.00",
+          "120.00",
+          "30.00",
+          "800.00"
+        ],
+        "balances_after_payments": [
+          "950.00",
+          "830.00",
+          "800.00",
+          "0.00"
+        ],
+        "outstanding_balance": "0.00",
+        "status": "settled",
+        "requires_review": false
+      },
+      "cashew": {
+        "principal_nominal": "1000.00",
+        "payments_nominal": "1000.00",
+        "nominal_outstanding": "0.00",
+        "nominal_status": "settled"
+      }
+    }
+  },
+  "row_map": {
+    "A_disbursement": "0c351c37-ca58-5588-97cf-9021014a8a0f",
+    "A_interest": "530910b0-750b-545d-915c-3bfdf29b7ea6",
+    "A_payment_1": "282274ea-27db-5ec9-9951-88d1664c8ceb",
+    "A_payment_2": "e1410138-33b2-5823-9b01-940d853cb54e",
+    "B_disbursement": "ee7a20e3-5bf9-5390-8835-339976071785",
+    "B_payment_1": "e871c847-b623-53d6-a22c-7414188bf3a4",
+    "B_payment_2": "87558d67-1db4-5237-800b-e009bb5ffb92",
+    "C_disbursement": "7838e356-65ba-5ea1-80d3-45ff9b3bde72",
+    "C_payment_1": "bd9ecee9-3b3f-531a-a25a-b99eca1c46e6",
+    "D_disbursement": "6194d29d-cce6-5477-b903-532ca020721c",
+    "D_payment_1": "46e1a57d-a6cf-56e7-955a-6cbcb01b6b84",
+    "E_disbursement": "8b65d835-e96f-5d51-b5b3-2c3d2b20dc1f",
+    "E_payment_1": "e7db1032-9d66-513f-a610-7db79c6e8a96",
+    "E_payment_2": "ba2f5eac-17b3-5cc9-bd99-ca05106098bb",
+    "E_payment_3": "8d2fdea3-79ab-56b8-8e51-86324ff6338f",
+    "E_payment_4": "1cdb20bc-7f72-50bf-aef9-672219cc6570",
+    "F_settled": "292af8fa-905a-5743-976c-f7bdf927ab80",
+    "F_open": "d59ff228-6b43-5976-a48e-cd4a3b627471",
+    "G_subscription": "0befe3aa-c03a-5abe-82e8-f587b3fc287f",
+    "G_repetitive": "77c874ad-8980-58e5-9d68-abff371ef0fe",
+    "H_out": "e4d02cb5-ad17-53e0-baaa-a2e039b31ad1",
+    "H_in": "abeef2b7-37c6-561d-9068-bdbb74f0ef41",
+    "I_food": "d1b0b51d-33f2-52f2-9a83-d236bd7412fb",
+    "K_future": "17a19ead-ab13-53d3-8987-0fc4d205758a",
+    "K_archived_wallet": "1888e7a4-b111-535a-9d34-cd283dcf8fa0"
+  },
+  "one_time_loans": [
+    {
+      "transaction_pk": "292af8fa-905a-5743-976c-f7bdf927ab80",
+      "type": 3,
+      "paid": 0,
+      "amount": "-150.00",
+      "cashew_status": "settled",
+      "requires_review": true
+    },
+    {
+      "transaction_pk": "d59ff228-6b43-5976-a48e-cd4a3b627471",
+      "type": 4,
+      "paid": 1,
+      "amount": "80.00",
+      "cashew_status": "open",
+      "requires_review": false
+    }
+  ],
+  "ambiguous_cases": [
+    {
+      "case": "A",
+      "reason": "Interés huérfano sin objective_loan_fk; pagos 210 > capital 200; posible doble conteo de gasto."
+    },
+    {
+      "case": "C",
+      "reason": "Desembolso USD y pago PEN; sin tasa histórica en Cashew; confirmar 3.800000 PEN/USD."
+    },
+    {
+      "case": "D",
+      "reason": "Pago 60 > capital 50 USD: aviso obligatorio y confirmación de ingreso o ajuste por 10."
+    },
+    {
+      "case": "F_settled",
+      "reason": "paid=0 sin contraparte: faltan fecha y cuenta de pago; no sintetizar sin confirmar."
+    }
+  ],
+  "tags": [
+    {
+      "tag_pk": "39ff9450-84f9-5a26-9938-d2ce5513eab7",
+      "name": "Trabajo Ejemplo",
+      "order": 0,
+      "archived": 0,
+      "colour": "#336699",
+      "icon_name": "label",
+      "emoji_icon_name": "🏷",
+      "date_created": 1767268800,
+      "date_time_modified": 1767268800
+    },
+    {
+      "tag_pk": "43d277a5-b3ed-505a-b6db-7b03a43d3cca",
+      "name": "Viaje Ejemplo",
+      "order": 1,
+      "archived": 0,
+      "colour": "#336699",
+      "icon_name": "label",
+      "emoji_icon_name": "🏷",
+      "date_created": 1767268800,
+      "date_time_modified": 1767268800
+    },
+    {
+      "tag_pk": "44cf06cb-0778-519c-9025-a8ab90ab68f5",
+      "name": "Antigua Ejemplo",
+      "order": 2,
+      "archived": 1,
+      "colour": "#336699",
+      "icon_name": "label",
+      "emoji_icon_name": "🏷",
+      "date_created": 1767268800,
+      "date_time_modified": 1767268800
+    }
+  ],
+  "tag_links": [
+    {
+      "transaction_pk": "77c874ad-8980-58e5-9d68-abff371ef0fe",
+      "tag_pk": "39ff9450-84f9-5a26-9938-d2ce5513eab7"
+    },
+    {
+      "transaction_pk": "77c874ad-8980-58e5-9d68-abff371ef0fe",
+      "tag_pk": "43d277a5-b3ed-505a-b6db-7b03a43d3cca"
+    },
+    {
+      "transaction_pk": "0befe3aa-c03a-5abe-82e8-f587b3fc287f",
+      "tag_pk": "44cf06cb-0778-519c-9025-a8ab90ab68f5"
+    }
+  ],
+  "untagged_transaction_pk": "d1b0b51d-33f2-52f2-9a83-d236bd7412fb",
+  "csv": {
+    "header": [
+      "account",
+      "amount",
+      "amount unpaid",
+      "currency",
+      "title",
+      "note",
+      "date",
+      "income",
+      "type",
+      "category name",
+      "subcategory name",
+      "color",
+      "icon",
+      "emoji",
+      "budget",
+      "objective",
+      "extra"
+    ],
+    "paid_rows": 23,
+    "excluded_rows": 2,
+    "excluded_transaction_pks": [
+      "292af8fa-905a-5743-976c-f7bdf927ab80",
+      "17a19ead-ab13-53d3-8987-0fc4d205758a"
+    ],
+    "unknown_columns_left_empty": [
+      "amount unpaid",
+      "extra"
+    ]
+  }
+}
