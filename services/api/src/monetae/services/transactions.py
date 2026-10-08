@@ -10,6 +10,7 @@ from sqlalchemy import exists, func, literal_column, or_, select, text, tuple_
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import ColumnElement
 
+from monetae import domain
 from monetae.api.pagination import decode_cursor, encode_cursor
 from monetae.api.schemas.transactions import TransactionBatch, TransactionCreate, TransactionUpdate
 from monetae.db.models import (
@@ -17,6 +18,8 @@ from monetae.db.models import (
     Category,
     Loan,
     LoanMovement,
+    RecurringRule,
+    Subscription,
     Tag,
     Transaction,
     TransactionTag,
@@ -27,7 +30,7 @@ from monetae.db.repository import UserScopedRepository
 from monetae.domain.currency import Currency
 from monetae.domain.errors import CurrencyMismatchError, InvalidExchangeRateError
 from monetae.domain.transactions import InvalidTransactionError, normalize_transaction
-from monetae.services.auth import AuthError
+from monetae.services.auth import AuthError, SystemClock
 
 
 @dataclass(frozen=True)
@@ -70,6 +73,7 @@ class TransactionService:
     def __init__(self, db: Session, cursor_secret: str) -> None:
         self.db = db
         self.cursor_secret = cursor_secret
+        self._suggestions: dict[UUID, list[UUID]] = {}
 
     def repository(self, user_id: UUID) -> UserScopedRepository[Transaction]:
         return UserScopedRepository(self.db, Transaction, user_id)
@@ -178,6 +182,7 @@ class TransactionService:
         )
         row = self.repository(user_id).add(Transaction(user_id=user_id, **values))
         self._replace_tags(user_id, row, payload.tag_ids)
+        self._suggestions.update(self._reactivation_matches(user_id, [row]))
         return row
 
     def update(self, user_id: UUID, entity_id: UUID, payload: TransactionUpdate) -> Transaction:
@@ -340,6 +345,27 @@ class TransactionService:
     def post(
         self, user_id: UUID, entity_id: UUID, payload: TransactionUpdate | None = None
     ) -> Transaction:
+        # El bloqueo de suscripción precede al de regla y transacción/cuentas.
+        # Importación local: el servicio de suscripciones materializa vía este CRUD.
+        from monetae.services.subscriptions import LIMA, SubscriptionService
+
+        subscription_service = SubscriptionService(self.db, self.cursor_secret, SystemClock())
+        initial = self.get(user_id, entity_id, include_deleted=True)
+        subscription_id = (
+            self.db.scalar(
+                select(RecurringRule.subscription_id).where(
+                    RecurringRule.user_id == user_id,
+                    RecurringRule.id == initial.recurring_rule_id,
+                )
+            )
+            if initial.recurring_rule_id is not None
+            else None
+        )
+        subscription = None
+        rule = None
+        if subscription_id is not None:
+            subscription = subscription_service.lock(user_id, subscription_id)
+            rule = subscription_service.rule(subscription, lock=True)
         self._base_currency(user_id)
         row = self._write_lock(user_id, entity_id)
         if row.deleted_at is not None:
@@ -350,7 +376,38 @@ class TransactionService:
             )
         values = payload.model_dump(exclude_unset=True) if payload is not None else {}
         values["status"] = "posted"
-        return self.update(user_id, entity_id, TransactionUpdate.model_validate(values))
+        scheduled_on = row.occurred_at.astimezone(LIMA).date()
+        posted = self.update(user_id, entity_id, TransactionUpdate.model_validate(values))
+        if subscription is not None and rule is not None:
+            subscription_service.advance(subscription, rule, scheduled_on)
+        self._suggestions.update(self._reactivation_matches(user_id, [posted]))
+        return posted
+
+    def reactivation_suggestions(
+        self, user_id: UUID, rows: list[Transaction]
+    ) -> dict[UUID, list[UUID]]:
+        # Solo crear/publicar ofrece la sugerencia; GET no añade consultas al libro.
+        return {row.id: self._suggestions.get(row.id, []) for row in rows if row.user_id == user_id}
+
+    def _reactivation_matches(
+        self, user_id: UUID, rows: list[Transaction]
+    ) -> dict[UUID, list[UUID]]:
+        expenses = [row for row in rows if row.kind == "expense"]
+        if not expenses:
+            return {}
+        archived = self.db.execute(
+            select(Subscription.id, Subscription.title)
+            .where(
+                Subscription.user_id == user_id,
+                Subscription.status == "archived",
+                Subscription.deleted_at.is_(None),
+            )
+            .order_by(Subscription.id)
+        ).all()
+        matches: dict[str, list[UUID]] = {}
+        for subscription_id, title in archived:
+            matches.setdefault(domain.normalize_title(title), []).append(subscription_id)
+        return {row.id: matches.get(domain.normalize_title(row.title), []) for row in expenses}
 
     def loan_ids(self, user_id: UUID, rows: list[Transaction]) -> dict[UUID, UUID]:
         transaction_ids = [row.id for row in rows if row.kind == "loan"]
