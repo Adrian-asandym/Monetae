@@ -8,7 +8,7 @@
 
 - **Run Fase 0:** `run_bef8ecfc67a7` (sin trabajo pendiente; el CLI no permite cerrarlo).
 - **SPEC:** v0.3 (2026-10-07), con etiquetas, importador SQLite-first y ADR-002/003/004/006/007 aceptados. Historial en `docs/SPEC.md` §18.
-- **Merge a `main`:** hecho el 2026-10-07 en fast-forward hasta `382425f` (gate `gate_fcbcb29461e9` aprobado por Adrian y resuelto). `main` **no se ha subido a `origin`** (16 commits por delante; push pendiente de OK de Adrian). Lo posterior (ADR aceptados, SPEC v0.3, ARCHITECTURE) vive en `master-dev` y requiere un nuevo gate.
+- **Merge a `main`:** hecho dos veces con gate aprobado por Adrian: `382425f` (2026-10-07, cierre de la Fase 0) y `5aa4d10` (2026-10-08, cierre de la Fase 1: ADR, SPEC v0.3, ARCHITECTURE, OpenAPI, esqueleto de API, dominio `Money` y fixture). `main` **no se ha subido a `origin`** (46 commits por delante; el push es una decisión aparte de Adrian). Todo lo posterior (T-203 en adelante) vive en `master-dev` y requiere un nuevo gate.
 
 ## Decisiones tomadas (2026-10-07)
 
@@ -51,7 +51,7 @@ Orden: T-103, T-104 y T-105 en paralelo; luego T-101; luego T-102.
 
 **Merge a `main` (hecho):** ver arriba; se fusionó el hash exacto `382425f`, no la punta de `master-dev`.
 
-**Fase 1 cerrada a falta del merge a `main`:** T-101 a T-105 aceptadas. Decision gate `gate_eea4d8d760d3` (Run `run_2cddcd14320c`, `task_5df0e2ee5407`) pide fusionar el commit exacto `7ba8e06`. Se fusiona ese hash, no la punta de `master-dev` (T-203 sigue en curso). El push a `origin` es una decisión aparte de Adrian.
+**Fase 1 cerrada y fusionada en `main`** (gate `gate_eea4d8d760d3` aprobado el 2026-10-08; se fusionó `5aa4d10` = `7ba8e06` del gate + un commit que solo tocaba este archivo).
 
 ## Run de Fase 2 — backend base — `run_70f5f187fe16`
 
