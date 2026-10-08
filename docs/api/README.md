@@ -483,3 +483,8 @@ contrato aumenta de 40 a 48 operaciones y comprueba los esquemas nuevos.
 `test_account_balance.py` solo añade un caso de transferencias. La prueba HTTP
 de concurrencia prepara el pool antes de medir para separar el coste de conexión
 inicial de una espera por bloqueo, manteniendo el umbral de 300 ms.
+
+Resultado final: **404 tests pasan** (333 anteriores + 71 nuevos), con PostgreSQL
+real obligatorio; solo permanece el aviso previo de Starlette/httpx. Ruff,
+formato y mypy pasan; no hay `type: ignore` en `src`. La rama está actualizada
+con `master-dev` y el diff contiene únicamente los 22 archivos autorizados.
