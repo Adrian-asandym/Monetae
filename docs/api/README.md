@@ -488,3 +488,35 @@ Resultado final: **404 tests pasan** (333 anteriores + 71 nuevos), con PostgreSQ
 real obligatorio; solo permanece el aviso previo de Starlette/httpx. Ruff,
 formato y mypy pasan; no hay `type: ignore` en `src`. La rama está actualizada
 con `master-dev` y el diff contiene únicamente los 22 archivos autorizados.
+
+## Préstamos (T-302)
+
+Se implementan las 15 operaciones `/loans*` del contrato. El saldo y el estado
+se calculan mediante SQL equivalente a `loan_balances`; no hay columnas de saldo
+ni estado. La reproducción del dominio valida todas las escrituras y usa
+`(occurred_at, sequence)`; la secuencia es interna y no forma parte de la API.
+Los pagos, desembolsos y sus transacciones reales se escriben atómicamente y cada
+movimiento usa su cuenta. Las transacciones de capital mantienen `kind=loan`,
+sin categoría; el dominio expone `recognized_interest` para los reportes de Fase 6.
+Los filtros `loan_id` y `person_id` de transacciones resuelven el vínculo mediante
+`loan_movements.transaction_id`, incluso para historial borrado solicitado.
+
+Decisiones precisadas por el coordinador al implementar T-302:
+
+- `PUT` reemplaza el movimiento dentro de su mismo tipo. Cambiar `kind` devuelve
+  `422 movement_kind_immutable`; para cambiar de tipo se borra y se crea otro.
+  Editar el desembolso actualiza también el principal, de forma atómica.
+- Si cualquier edición, borrado o restauración rompe un reparto posterior,
+  devuelve `409 ledger_inconsistent` con `movement_index` desde cero en orden de
+  reproducción, y revierte todos los efectos de la petición.
+- `income_expense` sobre un préstamo ya saldado devuelve
+  `409 loan_already_settled` sin persistir movimiento ni transacción ni éxito
+  idempotente. Se puede usar `adjustment` (ajuste y pago atómicos) o registrar
+  directamente un ingreso/gasto normal. Esta precisión resuelve el caso en que
+  el dominio propone solo dinero excedente y el contrato exige `LoanMovement`.
+- La restauración del préstamo recupera únicamente los movimientos que se
+  borraron con él; conserva los borrados independientes anteriores.
+- En `income_expense`, el movimiento contiene solo el pago aplicado y la
+  respuesta contiene las referencias `side_effects` al ingreso/gasto normal;
+  su importe físico conserva los céntimos residuales de conversión.
+  Las referencias a efectos se conservan en la respuesta idempotente.

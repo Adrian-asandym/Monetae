@@ -1,4 +1,4 @@
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -185,3 +185,63 @@ def create_transfer(
     entity_id = response.json()["id"]
     assert isinstance(entity_id, str)
     return entity_id
+
+
+def loan_payload(person_id: str, account_id: str, **values: object) -> dict[str, object]:
+    principal = values.get("principal", "200.00")
+    currency = values.get("currency", "PEN")
+    return {
+        "person_id": person_id,
+        "direction": "lent",
+        "currency": currency,
+        "principal": principal,
+        "opened_on": "2026-10-01",
+        "disbursement": {
+            "kind": "disbursement",
+            "amount_in_loan_currency": principal,
+            "account_id": account_id,
+            "account_amount": principal,
+            "account_currency": currency,
+            "fx_rate_to_base": "1.000000",
+            "fx_rate_source": "manual",
+            "occurred_at": "2026-10-01T12:00:00Z",
+        },
+        **values,
+    }
+
+
+def create_loan(client: TestClient, person_id: str, account_id: str, **values: object) -> str:
+    response = client.post(
+        "/api/v1/loans",
+        json=loan_payload(person_id, account_id, **values),
+        headers=csrf_headers(client),
+    )
+    assert response.status_code == 201, response.text
+    entity_id = response.json()["id"]
+    assert isinstance(entity_id, str)
+    return entity_id
+
+
+def payment_payload(account_id: str, amount: str, **values: object) -> dict[str, object]:
+    return {
+        "kind": "payment",
+        "amount_in_loan_currency": amount,
+        "account_id": account_id,
+        "account_amount": amount,
+        "account_currency": "PEN",
+        "fx_rate_to_base": "1.000000",
+        "fx_rate_source": "manual",
+        "occurred_at": "2026-10-02T12:00:00Z",
+        **values,
+    }
+
+
+def add_movement(
+    client: TestClient, loan_id: str, payload: Mapping[str, object]
+) -> dict[str, object]:
+    response = client.post(
+        f"/api/v1/loans/{loan_id}/movements", json=payload, headers=csrf_headers(client)
+    )
+    assert response.status_code == 201, response.text
+    result: dict[str, object] = response.json()
+    return result
