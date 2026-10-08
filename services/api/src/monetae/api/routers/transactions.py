@@ -10,6 +10,7 @@ from monetae.api.schemas.transactions import (
     TagAssignment,
     Timestamp,
     Transaction,
+    TransactionBatch,
     TransactionCreate,
     TransactionKind,
     TransactionPage,
@@ -115,6 +116,25 @@ def create_transaction(
     )
     response.status_code = stored.status
     return Transaction.model_validate_json(json.dumps(stored.body))
+
+
+@router.post("/batch", response_model=ActionResult, operation_id="batch_transactions")
+def batch_transactions(
+    payload: TransactionBatch, identity: Authenticated, service: Transactions, csrf: Csrf
+) -> ActionResult:
+    count = service.batch(identity.user.id, payload)
+    return ActionResult(success=True, affected_count=count)
+
+
+@router.post("/{id}/post", response_model=Transaction, operation_id="post_scheduled_transaction")
+def post_transaction(
+    id: UUID,
+    identity: Authenticated,
+    service: Transactions,
+    csrf: Csrf,
+    payload: TransactionUpdate | None = None,
+) -> Transaction:
+    return result(service, identity.user.id, service.post(identity.user.id, id, payload))
 
 
 @router.get("/{id}", response_model=Transaction, operation_id="get_transaction")
