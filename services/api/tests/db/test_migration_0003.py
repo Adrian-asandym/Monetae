@@ -16,10 +16,12 @@ def test_migration_0003_roundtrip_and_no_drift(database_url: str, db_engine: Eng
         ]
     command.upgrade(config, "0003")
     assert_ledger_schema(db_engine)
+    command.upgrade(config, "head")
     command.check(config)
     command.downgrade(config, "0002")
     command.upgrade(config, "0003")
     assert_ledger_schema(db_engine)
+    command.upgrade(config, "head")
     command.check(config)
 
 
