@@ -135,7 +135,7 @@ erDiagram
 
 **`categories`**: `parent_id uuid NULL → categories`, `kind` ∈ {`income`,`expense`}, `name`, `icon`, `color`, `is_system bool`, `system_key text NULL`.
 - Un solo nivel de subcategorías: `parent_id` debe apuntar a una categoría sin padre, del mismo `kind` y del **mismo `user_id`** (validado en dominio y con trigger de respaldo). El trigger también revalida a los hijos cuando cambia el `kind` o el `parent_id` de un padre y rechaza el cambio que los invalide.
-- `is_system` ⇔ `system_key IS NOT NULL` (`CHECK`). `sort_order` `DEFAULT 0`, `is_system` `DEFAULT false`.
+- `is_system` ⇔ `system_key IS NOT NULL` (`CHECK`); `is_system` `DEFAULT false`. (`accounts` y `tags` llevan `sort_order int NOT NULL DEFAULT 0`; `categories` **no** lo tiene todavía, ver §10.)
 - Categorías de sistema de interés: `system_key` ∈ {`interest_income`, `interest_expense`}; únicas por usuario; no editables ni borrables. Se crean al registrar al usuario.
 
 **`people`**: `name`, `aliases text[] NOT NULL DEFAULT '{}'`, `note`. Índice GIN en `aliases` y **B-tree** en `lower(name)` (búsqueda exacta por nombre o alias, RF-23; una búsqueda parcial/difusa exigiría `pg_trgm`, no incluido en V1).
@@ -279,6 +279,9 @@ Reglas (SPEC §8): **archivar** = `status='archived'` + `archived_at` + desactiv
 4. Proveedor de tipo de cambio (ADR-004): verificar antes de implementar.
 5. Detalle de implementación a cerrar en la Fase 2/6 (anotado por T-102 en `docs/api/README.md`): estado y almacenamiento de PKCE/`state` en el login con Google, reautenticación para configurar PIN, desafíos WebAuthn, conservación y expiración de la copia del respaldo entre `dry-run` y `apply`, y resolución manual de elementos ambiguos de importación.
 6. `fx_rate_applied` (convención de §5.5) se confirma con el fixture T-105 (Ejemplo C) y con las pruebas de dominio.
+7. **Orden de categorías:** Cashew las ordena (`order`) y su UI permite reordenarlas, pero SPEC no lo pide y ni este esquema ni el contrato lo prevén. Decidir en la Fase 5 con la UI; si se acepta, migración posterior con `categories.sort_order` y mapeo del `order` de Cashew en el importador.
+8. **`updated_at`** se refresca vía ORM/Core (`onupdate`), no con SQL crudo. Si el importador masivo o la sincronización de V4 lo exigen, añadir un trigger `set_updated_at` en una migración posterior.
+9. **Aislamiento a nivel de FK:** las claves foráneas de la migración 0001 solo apuntan a `users`. Para las tablas con referencias cruzadas (`transactions`, `loan_movements`, …) la migración 0002 usará **FK compuestas con `user_id`** (`UNIQUE (id, user_id)` en el padre) para que ninguna fila pueda referenciar datos de otro usuario aunque falle el repositorio.
 
 ## 11. Historial de cambios
 
