@@ -12473,6 +12473,18 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "account_id": {
+            "$ref": "#/components/schemas/Uuid",
+            "description": "Solo a una cuenta de la misma moneda; otra moneda responde 422 currency_mismatch. Cuenta ajena o borrada: 404."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "income",
+              "expense"
+            ],
+            "description": "Solo income/expense; el signo de amount debe seguir siendo coherente (income > 0, expense < 0), enviando amount si cambia el signo."
+          },
           "category_id": {
             "anyOf": [
               {

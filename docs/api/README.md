@@ -346,3 +346,9 @@ Las personas aceptan nombres de 1 a 120 caracteres y hasta 20 alias normalizados
 con recorte de espacios, únicos sin distinguir mayúsculas y de 1 a 60 caracteres.
 La búsqueda `q` encuentra nombres por prefijo o alias exacto, sin distinguir
 mayúsculas; los caracteres `%` y `_` se interpretan literalmente.
+
+## Cambios del contrato durante la Fase 2
+
+| Fecha | Cambio | Motivo |
+|-------|--------|--------|
+| 2026-10-08 | `TransactionUpdate` admite `account_id` (solo a una cuenta de la misma moneda; otra ⇒ `422 currency_mismatch`) y `kind` (`income`/`expense`, con signo de `amount` coherente). | Corregir la cuenta o el tipo de una transacción mal registrada es habitual (Cashew lo permite); lo detectó T-206a al implementar. Cambio aditivo y compatible. |
