@@ -576,3 +576,15 @@ El downgrade de `0006` elimina suscripciones y reglas por diseño, y pone
 columnas y todas las transacciones. Los cobros programados quedan como scheduled
 normales; el siguiente upgrade puede validar la FK sin referencias huérfanas.
 Esta pérdida intencional de configuración se verifica con un roundtrip con datos.
+
+Verificación final de T-304: **713 pruebas pasan** con PostgreSQL real y
+`MONETAE_REQUIRE_DB=1`; permanece únicamente el aviso previo de Starlette/httpx.
+`uv sync --frozen`, `uv lock --check`, Ruff, formato y mypy estricto pasan,
+sin `type: ignore` en `src`. `alembic check` está limpio y se verifica
+`0005→0006→0005→0006`, incluido un cobro materializado que sobrevive íntegramente.
+Las pruebas de concurrencia confirman archivo/publicación atómicos y lecturas
+HTTP inferiores a 300 ms durante una escritura pendiente. Uvicorn real con
+httpx verifica crear→archivar→listar/totales→reactivar y visibilidad inmediata
+del commit entre peticiones; Compose reconstruido arranca correctamente.
+El diff contiene solo los 22 archivos permitidos; la rama está actualizada con
+`master-dev`. El contrato congelado y las dependencias no se modifican.
