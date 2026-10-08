@@ -64,8 +64,8 @@ Agente: Codex en todas. Migraciones Alembic y `pyproject.toml`/`uv.lock`: un sol
 | T-203 | BD: SQLAlchemy base, sesión, Alembic y migración 0001 (users, sessions, accounts, categories, people, tags), repositorio con `user_id` obligatorio y prueba de aislamiento entre dos usuarios (`docs/tasks/T-203-db-alembic-core.md`) | **Aceptada e integrada** (`db5a3ec`; 156 pruebas con PostgreSQL real, 12 restricciones comprobadas a mano) |
 | T-204 | Autenticación por correo y contraseña (argon2id), sesiones con cookie opaca, CSRF firmado, límite de intentos, `users/me`, CLI para crear usuarios; migración 0002 (`docs/tasks/T-204-auth-sessions.md`) | **Aceptada e integrada** (`d8878fa`; 209 pruebas; tras corregir un bloqueo por petición que serializaba al usuario: 5,6 s → 0,03 s) |
 | T-205 | CRUD de catálogos: cuentas, categorías, personas y etiquetas, con aislamiento entre usuarios y paginación por llaves (`docs/tasks/T-205-catalog-crud.md`) | **Aceptada e integrada** (`8bb57e9`; 229 pruebas; `gpt-6-luna` high; devuelta una vez: duplicados de nombre, `type: ignore`, comodines en `q`, pruebas de jerarquía) |
-| T-206a | Transacciones: migración 0003 (FK compuestas con `user_id`, `transaction_tags`, `idempotency_keys`), CRUD, filtros, etiquetas, saldos, idempotencia y candados relajados (`docs/tasks/T-206a-transactions-core.md`) | **En curso** (Codex `gpt-6.1-sol` high) |
-| T-206b | Transferencias de dos patas, lotes y publicar programadas | T-206a |
+| T-206a | Transacciones: migración 0003 (FK compuestas con `user_id`, `transaction_tags`, `idempotency_keys`), CRUD, filtros, etiquetas, saldos, idempotencia y candados relajados (`docs/tasks/T-206a-transactions-core.md`) | **Aceptada e integrada** (`f120eb4`; 333 pruebas; la BD rechaza referencias entre usuarios; 20 000 filas: página en 22 ms con el índice) |
+| T-206b | Transferencias de dos patas, lotes y publicar programadas; migración 0004 (`docs/tasks/T-206b-transfers-batch-post.md`) | **En curso** (Codex `gpt-6.1-sol` high) |
 
 T-202 y T-203 pueden ir en paralelo (archivos disjuntos). Google OIDC, presupuestos, metas y notificaciones son de la Fase 6.
 
