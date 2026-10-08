@@ -352,3 +352,62 @@ mayúsculas; los caracteres `%` y `_` se interpretan literalmente.
 | Fecha | Cambio | Motivo |
 |-------|--------|--------|
 | 2026-10-08 | `TransactionUpdate` admite `account_id` (solo a una cuenta de la misma moneda; otra ⇒ `422 currency_mismatch`) y `kind` (`income`/`expense`, con signo de `amount` coherente). | Corregir la cuenta o el tipo de una transacción mal registrada es habitual (Cashew lo permite); lo detectó T-206a al implementar. Cambio aditivo y compatible. |
+
+## Transacciones (T-206a)
+
+Se implementan `POST/GET /transactions`, `GET/PATCH/DELETE /transactions/{id}`,
+`POST /transactions/{id}/restore` y `PUT /transactions/{id}/tags`, bajo `/api/v1`.
+Todas requieren sesión y las escrituras requieren `Origin` y `X-CSRF-Token`.
+El CRUD directo crea ingresos positivos y gastos negativos, distintos de cero;
+transferencias y préstamos se gestionarán por sus propios recursos.
+
+Importes y tasas son cadenas de dos y seis decimales. La moneda debe coincidir
+con la cuenta (`422 currency_mismatch`); en moneda base la tasa debe ser exactamente
+`1.000000` (`422 invalid_fx_rate`). En otras monedas se conserva la tasa histórica
+proporcionada. `PATCH` permite cambiar `account_id` a una cuenta de la misma moneda,
+y cambiar `kind` junto con un importe de signo coherente. Campos de procedencia,
+importación, dato inicial y grupo de transferencia son de solo lectura.
+Los timestamps requieren zona horaria y las respuestas se entregan en UTC.
+
+El listado se ordena por `(occurred_at DESC, id DESC)` y pagina mediante cursor
+firmado, ligado al usuario y a todos los filtros. Acepta `date_from` inclusivo,
+`date_to` exclusivo, cuenta, categoría, moneda, tipo, estado, `tag_ids` repetido
+con coincidencia OR, búsqueda `q` y `include_deleted`. `q` combina texto completo
+en español y subcadenas de título/nota sin distinguir mayúsculas; `%`, `_` y `\`
+se tratan literalmente en la búsqueda de subcadenas. Los filtros `loan_id` y
+`person_id` devuelven página vacía hasta la implementación de préstamos en Fase 3.
+Cada página carga las etiquetas en una consulta adicional.
+
+El borrado es lógico. La consulta individual también acepta `include_deleted=true`.
+Restore conserva el identificador y recalcula saldos; referencias a cuenta o
+categoría borrada producen `409 restore_conflict`. Reemplazar etiquetas retira
+vínculos mediante borrado lógico y reutiliza los vínculos previos al añadirlos.
+Etiquetas ajenas o borradas producen `404`; las borradas no aparecen en `tag_ids`.
+Archivar conserva vínculos existentes, pero añadir uno nuevo a una etiqueta
+archivada produce `422 tag_archived`.
+
+`Idempotency-Key` es opcional, de 1 a 128 caracteres, con retención de 24 horas.
+Una clave propia con el mismo cuerpo canónico devuelve el estado y la respuesta
+originales, incluso si la transacción fue editada después. Otra petición produce
+`409 idempotency_conflict`. El cuerpo canónico incluye la operación, normaliza
+zona horaria, valores opcionales y orden de etiquetas. Las claves comparten
+espacio por usuario entre operaciones; las expiradas se purgan oportunamente.
+Un bloqueo consultivo por usuario/clave mantiene creación y respuesta en la misma
+transacción de BD, evitando duplicados simultáneos. El componente reutilizable
+está en `services/idempotency.py`.
+
+El saldo de cuentas se calcula como saldo inicial más suma de transacciones
+`posted` no borradas. El listado usa una sola suma agrupada para toda la página.
+La moneda de cuenta y la moneda base pueden cambiar antes de la primera
+transacción; el historial borrado también bloquea cambios posteriores con
+`409 account_currency_locked` o `409 base_currency_locked`. Cambiar la moneda
+base conserva `report_currency`. Borrar una cuenta o categoría con transacciones
+no borradas produce `409 account_in_use` (se sugiere archivar) o
+`409 category_in_use`.
+
+La migración `0003` añade claves compuestas de dueño y moneda, índices parciales
+y las tablas `transactions`, `transaction_tags` e `idempotency_keys`. Es reversible
+a `0002`, incluyendo la retirada de las unicidades `(id, user_id)` añadidas a los
+catálogos. `recurring_rule_id` queda sin FK hasta crear su tabla. ARCHITECTURE
+§10.9 menciona `0002` para estas claves: la revisión correcta es `0003`, porque
+`0002` ya registra intentos de login; no se modifica el documento de arquitectura.
