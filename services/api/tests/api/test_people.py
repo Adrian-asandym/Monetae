@@ -19,10 +19,12 @@ def test_person_alias_normalization_limits_search_and_crud(client: TestClient) -
     assert client.get("/api/v1/people?q=org").json()["items"] == []
 
     duplicate_name = client.post(
-        "/api/v1/people", json={"name": "morgan lee"}, headers=csrf_headers(client)
+        "/api/v1/people",
+        json={"name": "morgan lee", "aliases": ["ML"]},
+        headers=csrf_headers(client),
     )
-    assert duplicate_name.status_code == 409
-    assert duplicate_name.json()["code"] == "duplicate_name"
+    assert duplicate_name.status_code == 201
+    duplicate_id = duplicate_name.json()["id"]
 
     duplicate_alias = client.post(
         "/api/v1/people",
@@ -44,10 +46,27 @@ def test_person_alias_normalization_limits_search_and_crud(client: TestClient) -
     assert too_long.status_code == 422
 
     changed = client.patch(
-        f"/api/v1/people/{person_id}", json={"name": "Morgan B"}, headers=csrf_headers(client)
+        f"/api/v1/people/{duplicate_id}",
+        json={"name": "Morgan Lee"},
+        headers=csrf_headers(client),
     )
     assert changed.status_code == 200
+    assert changed.json()["name"] == "Morgan Lee"
     assert (
         client.delete(f"/api/v1/people/{person_id}", headers=csrf_headers(client)).status_code
         == 200
     )
+
+
+def test_person_name_prefix_search_escapes_like_wildcards(client: TestClient) -> None:
+    login(client)
+    for name in ("% monthly", "_private", "ordinary"):
+        result = client.post("/api/v1/people", json={"name": name}, headers=csrf_headers(client))
+        assert result.status_code == 201, result.text
+
+    percent = client.get("/api/v1/people?q=%25")
+    underscore = client.get("/api/v1/people?q=_")
+    assert percent.status_code == 200
+    assert [item["name"] for item in percent.json()["items"]] == ["% monthly"]
+    assert underscore.status_code == 200
+    assert [item["name"] for item in underscore.json()["items"]] == ["_private"]
