@@ -4,6 +4,7 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from monetae.api.main import create_app
+from monetae.api.schemas.accounts import Account, AccountCreate, AccountPage, AccountUpdate
 from monetae.api.schemas.auth import (
     ActionResult,
     AuthenticatedSession,
@@ -15,6 +16,15 @@ from monetae.api.schemas.auth import (
     UserPreferences,
     UserUpdate,
 )
+from monetae.api.schemas.categories import (
+    Category,
+    CategoryCreate,
+    CategoryPage,
+    CategoryUpdate,
+)
+from monetae.api.schemas.common import ArchiveRequest
+from monetae.api.schemas.people import Person, PersonCreate, PersonPage, PersonUpdate
+from monetae.api.schemas.tags import Tag, TagCreate, TagPage, TagUpdate
 from monetae.config import Settings
 
 # json.loads and FastAPI OpenAPI expose untyped JSON at this contract boundary.
@@ -40,7 +50,7 @@ def test_mounted_operations_security_responses_and_csrf() -> None:
                     for p in operation["parameters"]
                 )
             count += 1
-    assert count == 9
+    assert count == 33
 
 
 def test_schema_properties_mirror_contract() -> None:
@@ -55,6 +65,23 @@ def test_schema_properties_mirror_contract() -> None:
         Session,
         SessionPage,
         ActionResult,
+        Account,
+        AccountCreate,
+        AccountUpdate,
+        AccountPage,
+        Category,
+        CategoryCreate,
+        CategoryUpdate,
+        CategoryPage,
+        Person,
+        PersonCreate,
+        PersonUpdate,
+        PersonPage,
+        Tag,
+        TagCreate,
+        TagUpdate,
+        TagPage,
+        ArchiveRequest,
     ]
     for model in models:
         actual = model.model_json_schema()

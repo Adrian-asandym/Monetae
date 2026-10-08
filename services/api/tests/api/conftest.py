@@ -83,3 +83,43 @@ def login(client: TestClient, email: str = "first@example.test", password: str =
         headers=csrf_headers(client),
     )
     assert result.status_code == 200, result.text
+
+
+def create_account(client: TestClient, name: str = "Wallet") -> str:
+    result = client.post(
+        "/api/v1/accounts",
+        json={"name": name, "type": "cash", "currency": "PEN", "initial_balance": "12.50"},
+        headers=csrf_headers(client),
+    )
+    assert result.status_code == 201, result.text
+    entity_id = result.json()["id"]
+    assert isinstance(entity_id, str)
+    return entity_id
+
+
+def create_category(client: TestClient, name: str = "Food", **values: object) -> str:
+    result = client.post(
+        "/api/v1/categories",
+        json={"name": name, "kind": "expense", **values},
+        headers=csrf_headers(client),
+    )
+    assert result.status_code == 201, result.text
+    entity_id = result.json()["id"]
+    assert isinstance(entity_id, str)
+    return entity_id
+
+
+def create_person(client: TestClient, name: str = "Morgan") -> str:
+    result = client.post("/api/v1/people", json={"name": name}, headers=csrf_headers(client))
+    assert result.status_code == 201, result.text
+    entity_id = result.json()["id"]
+    assert isinstance(entity_id, str)
+    return entity_id
+
+
+def create_tag(client: TestClient, name: str = "Travel") -> str:
+    result = client.post("/api/v1/tags", json={"name": name}, headers=csrf_headers(client))
+    assert result.status_code == 201, result.text
+    entity_id = result.json()["id"]
+    assert isinstance(entity_id, str)
+    return entity_id
