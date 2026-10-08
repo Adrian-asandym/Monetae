@@ -61,10 +61,10 @@ Agente: Codex en todas. Migraciones Alembic y `pyproject.toml`/`uv.lock`: un sol
 |-------|-----------|---------------------|
 | T-201 | Esqueleto de `services/api`, calidad (ruff, mypy estricto, pytest), `/health`, errores `problem+json`, Docker Compose (`docs/tasks/T-201-api-skeleton.md`) | **Aceptada e integrada** (`ddd4861`) |
 | T-202 | `domain/`: `Money`, monedas, redondeo y tipos de cambio, con pruebas exhaustivas (`docs/tasks/T-202-domain-money-fx.md`) | **Aceptada e integrada** (`28ea759`; 120 pruebas, 100 % de cobertura de sus módulos) |
-| T-203 | BD: SQLAlchemy base, sesión, Alembic y migración 0001 (users, sessions, accounts, categories, people, tags), repositorio base con `user_id` obligatorio y fixture de aislamiento entre dos usuarios (`docs/tasks/T-203-db-alembic-core.md`) | **En curso** (Codex `gpt-6.1-sol` high) |
-| T-204 | Autenticación por correo y contraseña (argon2id), sesiones con cookie, CSRF, cerrar sesión en todos los dispositivos, límite de intentos | T-203 |
+| T-203 | BD: SQLAlchemy base, sesión, Alembic y migración 0001 (users, sessions, accounts, categories, people, tags), repositorio con `user_id` obligatorio y prueba de aislamiento entre dos usuarios (`docs/tasks/T-203-db-alembic-core.md`) | **Aceptada e integrada** (`db5a3ec`; 156 pruebas con PostgreSQL real, 12 restricciones comprobadas a mano) |
+| T-204 | Autenticación por correo y contraseña (argon2id), sesiones con cookie opaca, CSRF firmado, límite de intentos, `users/me`, CLI para crear usuarios; migración 0002 (`docs/tasks/T-204-auth-sessions.md`) | **En curso** (Codex `gpt-6.1-sol` high) |
 | T-205 | CRUD de cuentas y categorías (con las categorías de sistema de interés) + pruebas de aislamiento | T-204, T-202 |
-| T-206 | Transacciones, transferencias, etiquetas y multimoneda (migración 0002) | T-205 |
+| T-206 | Transacciones, transferencias, etiquetas y multimoneda (migración 0003, con FK compuestas con `user_id`) | T-205 |
 
 T-202 y T-203 pueden ir en paralelo (archivos disjuntos). Google OIDC, presupuestos, metas y notificaciones son de la Fase 6.
 
