@@ -1,6 +1,6 @@
 # T-301 — Dominio puro de préstamos (libro mayor, reparto interés/capital, exceso)
 
-> **ESTADO: NO LANZADA.** Fase 3, primera tarea. Plan escrito el 2026-10-08; se lanza cuando Adrian apruebe la Fase 3.
+> **ESTADO: LANZADA el 2026-10-08** (Run `run_63b520544a30`, aprobada por Adrian). Fase 3, primera tarea. Plan escrito el 2026-10-08.
 > Agente: **Codex**, modelo `gpt-6.1-sol` esfuerzo `high` (reglas de negocio centrales; cero margen de error en dinero).
 > Depende de: nada nuevo (usa `domain/money.py` y `domain/fx.py`). Corre **en paralelo con T-303** (archivos disjuntos).
 
