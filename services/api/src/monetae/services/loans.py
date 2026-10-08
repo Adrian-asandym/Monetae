@@ -259,12 +259,15 @@ class LoanService:
                 domain.Currency(payload.account_currency),
                 Decimal(payload.fx_rate_applied),
             )
-        converted = domain.loan_amount_from_account(
-            domain.Money(
-                Decimal(payload.account_amount), domain.Currency(payload.account_currency)
-            ),
-            rate,
-        )
+        try:
+            converted = domain.loan_amount_from_account(
+                domain.Money(
+                    Decimal(payload.account_amount), domain.Currency(payload.account_currency)
+                ),
+                rate,
+            )
+        except domain.DomainError as exc:
+            raise AuthError(422, "invalid_amount", str(exc)) from exc
         if converted != self.money(loan, payload.amount_in_loan_currency):
             raise AuthError(
                 422, "invalid_amount", "Account amount and applied loan amount do not match."

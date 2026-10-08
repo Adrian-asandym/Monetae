@@ -179,3 +179,37 @@ def test_explicit_payment_split_is_validated_without_silent_reallocation(
     assert (
         proposal.json()["interest_part"] == "5.00" and proposal.json()["principal_part"] == "5.00"
     )
+
+
+def test_cross_currency_overflow_is_validation_error_without_partial_effects(
+    client: TestClient,
+) -> None:
+    login(client)
+    usd = create_account(client, name="USD", currency="USD")
+    pen = create_account(client, name="PEN")
+    loan = create_loan(
+        client,
+        create_person(client),
+        usd,
+        currency="USD",
+        disbursement={
+            **payment_payload(
+                usd,
+                "200.00",
+                account_currency="USD",
+                fx_rate_to_base="3.800000",
+                occurred_at="2026-10-01T00:00:00Z",
+            ),
+            "kind": "disbursement",
+        },
+    )
+    response = client.post(
+        f"/api/v1/loans/{loan}/movements",
+        json=payment_payload(
+            pen, "10.00", account_amount="9999999999999999.99", fx_rate_applied="0.000001"
+        ),
+        headers=csrf_headers(client),
+    )
+    assert response.status_code == 422, response.text
+    assert client.get(f"/api/v1/loans/{loan}").json()["outstanding"] == "200.00"
+    assert len(client.get("/api/v1/transactions").json()["items"]) == 1
