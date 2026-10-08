@@ -30,6 +30,7 @@ def test_login_cookies_rotation_hashes_and_logs(
     csrf_cookie = next(c for c in cookies if c.startswith("monetae_csrf="))
     assert all(flag in session_cookie for flag in ["HttpOnly", "Secure", "SameSite=lax", "Path=/"])
     assert all(flag in csrf_cookie for flag in ["Secure", "SameSite=lax", "Path=/"])
+    assert "Max-Age=86400" in session_cookie
     assert "HttpOnly" not in csrf_cookie
     assert response.json()["csrf_token"] == csrf
     stored = db_session.scalar(select(StoredSession))

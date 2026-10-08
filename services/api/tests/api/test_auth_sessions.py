@@ -76,7 +76,17 @@ def test_isolation_revoke_and_logout_all(client: TestClient, application: FastAP
 
 def test_logout_and_revoke_current(client: TestClient) -> None:
     login(client)
-    assert client.post("/api/v1/auth/logout", headers=csrf_headers(client)).status_code == 200
+    result = client.post("/api/v1/auth/logout", headers=csrf_headers(client))
+    assert result.status_code == 200
+    expired_cookie = next(
+        value
+        for value in result.headers.get_list("set-cookie")
+        if value.startswith("monetae_session=")
+    )
+    assert all(
+        flag in expired_cookie
+        for flag in ["Max-Age=0", "expires=", "HttpOnly", "Secure", "SameSite=lax", "Path=/"]
+    )
     assert client.cookies.get("monetae_session") is None
     assert client.get("/api/v1/users/me").status_code == 401
     login(client)
