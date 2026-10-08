@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import ColumnElement
 
 from monetae.api.pagination import decode_cursor, encode_cursor
-from monetae.api.schemas.transactions import TransactionCreate, TransactionUpdate
+from monetae.api.schemas.transactions import TransactionBatch, TransactionCreate, TransactionUpdate
 from monetae.db.models import Account, Category, Tag, Transaction, TransactionTag, User
 from monetae.db.models.ledger import SEARCH_VECTOR
 from monetae.db.repository import UserScopedRepository
@@ -178,6 +178,10 @@ class TransactionService:
             raise AuthError(404, "not_found", "Transaction not found.")
         if row.kind not in {"income", "expense"}:
             raise AuthError(409, "transaction_flow_required", "Use the transfer or loan resource.")
+        if row.status == "posted" and payload.status == "scheduled":
+            raise AuthError(
+                409, "already_posted", "A posted transaction cannot be scheduled again."
+            )
         account_id = payload.account_id if payload.account_id is not None else row.account_id
         category_id = (
             payload.category_id if "category_id" in payload.model_fields_set else row.category_id
@@ -269,6 +273,75 @@ class TransactionService:
                 self.db.add(TransactionTag(user_id=user_id, transaction_id=row.id, tag_id=tag_id))
         row.updated_at = now
         self.db.flush()
+
+    def batch(self, user_id: UUID, payload: TransactionBatch) -> int:
+        if payload.changes is not None and payload.changes.model_fields_set - {
+            "category_id",
+            "occurred_at",
+            "status",
+            "title",
+            "note",
+        }:
+            raise AuthError(
+                422, "batch_field_not_allowed", "This field cannot be edited in a batch."
+            )
+        # El orden UUID es común a todos los lotes, independientemente del orden de entrada.
+        self._base_currency(user_id)
+        rows = [self._write_lock(user_id, id) for id in sorted(payload.transaction_ids)]
+        if any(row.deleted_at is not None for row in rows) and payload.action != "restore":
+            raise AuthError(404, "not_found", "Transaction not found.")
+        if any(row.kind not in {"income", "expense"} for row in rows):
+            raise AuthError(409, "transaction_flow_required", "Use the transfer or loan resource.")
+        requested = set(payload.tag_ids or [])
+        if requested:
+            tags = list(
+                self.db.scalars(
+                    select(Tag)
+                    .where(Tag.user_id == user_id, Tag.id.in_(requested), Tag.deleted_at.is_(None))
+                    .order_by(Tag.id)
+                    .with_for_update(read=True)
+                )
+            )
+            if len(tags) != len(requested):
+                raise AuthError(404, "not_found", "A requested tag was not found.")
+            current_tags = self.tag_ids(user_id, rows)
+            if any(
+                tag.archived_at is not None and tag.id not in current_tags[row.id]
+                for row in rows
+                for tag in tags
+            ):
+                raise AuthError(422, "tag_archived", "An archived tag cannot be added.")
+        else:
+            current_tags = {}
+        for row in rows:
+            if payload.action == "delete":
+                row.deleted_at = datetime.now(UTC)
+            elif payload.action == "restore":
+                self.restore(user_id, row.id)
+            elif payload.action == "edit":
+                assert payload.changes is not None
+                self.update(user_id, row.id, payload.changes)
+            else:
+                active = set(current_tags[row.id])
+                desired = active | requested if payload.action == "add_tags" else active - requested
+                self._replace_tags(user_id, row, sorted(desired))
+        self.db.flush()
+        return len(rows)
+
+    def post(
+        self, user_id: UUID, entity_id: UUID, payload: TransactionUpdate | None = None
+    ) -> Transaction:
+        self._base_currency(user_id)
+        row = self._write_lock(user_id, entity_id)
+        if row.deleted_at is not None:
+            raise AuthError(404, "not_found", "Transaction not found.")
+        if row.kind not in {"income", "expense"} or row.status != "scheduled":
+            raise AuthError(
+                409, "not_scheduled", "Only scheduled direct transactions can be posted."
+            )
+        values = payload.model_dump(exclude_unset=True) if payload is not None else {}
+        values["status"] = "posted"
+        return self.update(user_id, entity_id, TransactionUpdate.model_validate(values))
 
     def tag_ids(self, user_id: UUID, rows: list[Transaction]) -> dict[UUID, list[UUID]]:
         result: dict[UUID, list[UUID]] = {row.id: [] for row in rows}
