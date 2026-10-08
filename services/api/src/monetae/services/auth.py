@@ -203,9 +203,7 @@ class AuthService:
         if session is None or self.expiration(session) <= now:
             raise AuthError(401, "unauthenticated", "Authentication required.")
         user = self.db.scalar(
-            select(User)
-            .where(User.id == session.user_id, User.deleted_at.is_(None))
-            .with_for_update()
+            select(User).where(User.id == session.user_id, User.deleted_at.is_(None))
         )
         if user is None:
             raise AuthError(401, "unauthenticated", "Authentication required.")
@@ -217,13 +215,38 @@ class AuthService:
         ):
             raise AuthError(401, "unauthenticated", "Authentication required.")
         if now - session.last_seen_at >= timedelta(minutes=1):
-            session.last_seen_at = now
-            session.expires_at = min(
-                now + timedelta(minutes=self.settings.session_idle_minutes),
-                session.created_at + timedelta(days=self.settings.session_absolute_days),
-            )
-            self.db.flush()
+            self._touch_session(session, user, now)
         return user, session
+
+    def _touch_session(self, session: Session, user: User, now: datetime) -> None:
+        # Authentication runs before handler writes. Commit this short atomic touch now,
+        # so no session row lock remains held while the handler performs its work.
+        self.db.execute(
+            update(Session)
+            .where(
+                Session.id == session.id,
+                Session.user_id == user.id,
+                Session.last_seen_at <= now - timedelta(minutes=1),
+                Session.last_seen_at > now - timedelta(minutes=self.settings.session_idle_minutes),
+                Session.expires_at > now,
+                Session.created_at > now - timedelta(days=self.settings.session_absolute_days),
+                Session.deleted_at.is_(None),
+                Session.revoked_at.is_(None),
+            )
+            .values(
+                last_seen_at=now,
+                expires_at=min(
+                    now + timedelta(minutes=self.settings.session_idle_minutes),
+                    session.created_at + timedelta(days=self.settings.session_absolute_days),
+                ),
+            )
+            .execution_options(synchronize_session=False)
+        )
+        self.db.commit()
+        # Also support callers whose Session uses expire_on_commit=True. Refresh reads
+        # take no row locks and start only the handler's subsequent unit of work.
+        self.db.refresh(user)
+        self.db.refresh(session)
 
     def expiration(self, session: Session) -> datetime:
         return min(

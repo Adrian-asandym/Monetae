@@ -122,6 +122,7 @@ def session_cookie(response: Response, value: str, settings: Settings) -> None:
     response.set_cookie(
         SESSION_COOKIE,
         value,
+        max_age=settings.session_absolute_days * 86400,
         secure=settings.cookie_secure,
         httponly=True,
         samesite="lax",

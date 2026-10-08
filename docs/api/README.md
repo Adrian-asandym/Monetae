@@ -266,11 +266,19 @@ El alta copia base a moneda de reporte y crea las categorías de sistema de inte
 
 Cada login genera 32 bytes aleatorios; PostgreSQL conserva exclusivamente SHA-256
 del token. La cookie `monetae_session` es `HttpOnly`, `Secure`, `SameSite=Lax`,
-`Path=/`. Inactividad por defecto: 14 días; límite absoluto: 30 días. Los ajustes
+`Path=/`, con `Max-Age=session_absolute_days × 86400` para conservarla al cerrar
+el navegador o PWA; logout la expira con `Max-Age=0` y las mismas banderas.
+El servidor sigue imponiendo ambos límites aunque la cookie siga presente.
+Inactividad por defecto: 14 días; límite absoluto: 30 días. Los ajustes
 `MONETAE_SESSION_IDLE_MINUTES` y `MONETAE_SESSION_ABSOLUTE_DAYS` los controlan;
 `last_seen_at` y la expiración deslizante se actualizan como máximo una vez por
-minuto. Logout revoca filas, logout-all revoca todas las del usuario y la
-revocación individual exige propiedad del recurso. Los listados paginados
+minuto mediante UPDATE condicional atómico y commit inmediato, antes de que el
+handler escriba. La autenticación lee usuario y sesión sin bloqueos de fila;
+la transacción del handler puede permanecer abierta sin serializar las peticiones
+del mismo usuario o sesión. Solo login y revocación toman el bloqueo exclusivo
+del usuario para ordenar altas y logout-all; una petición ya autenticada puede
+continuar si su sesión se revoca después. Logout revoca filas, logout-all revoca
+todas las del usuario y la revocación individual exige propiedad del recurso. Los listados paginados
 solo devuelven sesiones activas, nunca token ni hash.
 
 El middleware emite `monetae_csrf` cuando falta o su firma no es válida; un GET
