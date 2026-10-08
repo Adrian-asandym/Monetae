@@ -40,7 +40,8 @@ def test_profile_isolation_and_updates(client: TestClient, application: FastAPI)
     result = client.patch(
         "/api/v1/users/me", json={"base_currency": "USD"}, headers=csrf_headers(client)
     )
-    assert result.status_code == 409 and result.json()["code"] == "base_currency_locked"
+    assert result.status_code == 200 and result.json()["base_currency"] == "USD"
+    assert result.json()["report_currency"] == "USD"
 
 
 @pytest.mark.parametrize(

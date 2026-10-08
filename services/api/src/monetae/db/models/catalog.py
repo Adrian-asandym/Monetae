@@ -25,6 +25,7 @@ from monetae.db.base import UserScopedModel
 class Account(UserScopedModel):
     __tablename__ = "accounts"
     __table_args__ = (
+        UniqueConstraint("id", "user_id", name="uq_accounts_id_user_id"),
         CheckConstraint("type IN ('cash', 'bank', 'wallet', 'card', 'other')", name="type"),
         CheckConstraint("currency = upper(currency)", name="currency_upper"),
         CheckConstraint("length(currency) = 3", name="currency_length"),
@@ -51,6 +52,7 @@ class Account(UserScopedModel):
 class Category(UserScopedModel):
     __tablename__ = "categories"
     __table_args__ = (
+        UniqueConstraint("id", "user_id", name="uq_categories_id_user_id"),
         CheckConstraint("kind IN ('income', 'expense')", name="kind"),
         CheckConstraint("system_key IN ('interest_income', 'interest_expense')", name="system_key"),
         CheckConstraint("is_system = (system_key IS NOT NULL)", name="is_system"),
@@ -87,6 +89,7 @@ class Person(UserScopedModel):
 class Tag(UserScopedModel):
     __tablename__ = "tags"
     __table_args__ = (
+        UniqueConstraint("id", "user_id", name="uq_tags_id_user_id"),
         Index(
             "uq_tags_user_id_name",
             "user_id",
