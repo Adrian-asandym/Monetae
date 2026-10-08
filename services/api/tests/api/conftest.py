@@ -245,3 +245,37 @@ def add_movement(
     assert response.status_code == 201, response.text
     result: dict[str, object] = response.json()
     return result
+
+
+def subscription_payload(account_id: str, **values: object) -> dict[str, object]:
+    return {
+        "title": "Netflix",
+        "amount": "30.00",
+        "currency": "PEN",
+        "account_id": account_id,
+        "period": "monthly",
+        "next_due_on": "2026-11-01",
+        **values,
+    }
+
+
+def create_subscription(client: TestClient, account_id: str, **values: object) -> str:
+    response = client.post(
+        "/api/v1/subscriptions",
+        json=subscription_payload(account_id, **values),
+        headers=csrf_headers(client),
+    )
+    assert response.status_code == 201, response.text
+    entity_id = response.json()["id"]
+    assert isinstance(entity_id, str)
+    return entity_id
+
+
+def scheduled_for(client: TestClient, subscription_id: str) -> list[dict[str, object]]:
+    subscription = client.get(f"/api/v1/subscriptions/{subscription_id}").json()
+    response = client.get("/api/v1/transactions", params={"status": "scheduled", "limit": 200})
+    assert response.status_code == 200, response.text
+    items: list[dict[str, object]] = response.json()["items"]
+    return [
+        item for item in items if item["recurring_rule_id"] == subscription["recurring_rule_id"]
+    ]

@@ -34,7 +34,10 @@ Transactions = Annotated[TransactionService, Depends(transaction_service)]
 
 
 def transaction(
-    row: TransactionRow, tag_ids: list[UUID], loan_id: UUID | None = None
+    row: TransactionRow,
+    tag_ids: list[UUID],
+    loan_id: UUID | None = None,
+    reactivation_suggestions: list[UUID] | None = None,
 ) -> Transaction:
     values = {
         name: getattr(row, name)
@@ -46,14 +49,17 @@ def transaction(
         fx_rate_to_base=f"{row.fx_rate_to_base:.6f}",
         tag_ids=tag_ids,
         loan_id=loan_id,
-        reactivation_suggestions=[],
+        reactivation_suggestions=reactivation_suggestions or [],
     )
     return Transaction.model_validate(values)
 
 
 def result(service: TransactionService, user_id: UUID, row: TransactionRow) -> Transaction:
     return transaction(
-        row, service.tag_ids(user_id, [row])[row.id], service.loan_ids(user_id, [row]).get(row.id)
+        row,
+        service.tag_ids(user_id, [row])[row.id],
+        service.loan_ids(user_id, [row]).get(row.id),
+        service.reactivation_suggestions(user_id, [row]).get(row.id),
     )
 
 
@@ -93,8 +99,12 @@ def list_transactions(
     rows, cursor = service.list(identity.user.id, filters, limit, cursor)
     tags = service.tag_ids(identity.user.id, rows)
     loans = service.loan_ids(identity.user.id, rows)
+    suggestions = service.reactivation_suggestions(identity.user.id, rows)
     return TransactionPage(
-        items=[transaction(row, tags[row.id], loans.get(row.id)) for row in rows],
+        items=[
+            transaction(row, tags[row.id], loans.get(row.id), suggestions.get(row.id))
+            for row in rows
+        ],
         next_cursor=cursor,
     )
 
