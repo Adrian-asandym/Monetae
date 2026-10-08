@@ -77,6 +77,7 @@ class Category(UserScopedModel):
 class Person(UserScopedModel):
     __tablename__ = "people"
     __table_args__ = (
+        UniqueConstraint("id", "user_id", name="uq_people_id_user_id"),
         Index("ix_people_aliases", "aliases", postgresql_using="gin"),
         Index("ix_people_name", func.lower(text("name"))),
     )
