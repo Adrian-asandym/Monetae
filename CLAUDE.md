@@ -140,3 +140,47 @@ Si algo falla, devuelve la tarea con comentarios concretos (no la rehagas tú sa
 1. Lee `AGENTS.md`, `CLAUDE.md`, `docs/SPEC.md`, y los ADRs y tareas existentes.
 2. Identifica la fase actual y qué tareas siguen abiertas.
 3. Resume a Adrian en pocas líneas dónde estamos y cuál es el siguiente paso, y propón el plan del Run.
+
+Cuando Adrian use las frases de apertura o cierre de §10, **manda §10** sobre esta lista.
+
+## 10. Protocolo de sesión
+
+Dos comandos de Adrian gobiernan el cierre y la reanudación del trabajo. Se activan con su frase, o con una equivalente.
+
+### Comando 1 — cierre: «Continuamos en otro momento» (o «cerramos por hoy»)
+
+1. **No lances ningún worker ni inicies tareas nuevas. No hagas merge a `main` sin la aprobación de Adrian.**
+2. **Verifica el estado real, no tu memoria:** `git status`, `git log -5`, `git worktree list`, y el estado del Run y de las tareas en Orca (`orca orchestration run-use --id <run>`, `task-list`, `worker-list --run <run> --include-remote`). Si hay workers activos, díselo a Adrian y **no cierres nada a ciegas**.
+3. **Actualiza `docs/STATUS.md`** con estas secciones fijas:
+   - Fecha y hora, y hash de `main` y `master-dev`.
+   - Fase actual y qué está completo / en curso / pendiente.
+   - Trabajo hecho en esta sesión (breve).
+   - Decisiones tomadas por Adrian (con fecha).
+   - Decisiones pendientes: para cada una, el contexto, las opciones (la más recomendable primero, con su razón) y su impacto.
+   - Siguiente paso concreto: qué tareas se lanzarán, a qué agente, con qué modelo y esfuerzo sugeridos, en qué ramas y cómo las verificarás.
+   - Estado del Run, de los worktrees y de los agentes abiertos.
+   - Limitaciones y riesgos conocidos.
+   - Cómo retomar: comandos exactos de verificación del entorno.
+4. Si cambió algo en `docs/tasks/`, en los ADRs o en la SPEC, déjalos **coherentes** con `STATUS.md`.
+5. **Haz commit en `master-dev`.** Si hay algo para `main`, déjalo como **propuesta de gate** (`gate-create`) **sin resolverlo**.
+6. **Responde a Adrian en breve:** hash final, si el árbol está limpio, y qué paneles o agentes puede cerrar él manualmente.
+
+### Comando 2 — reanudación: «Continuemos con el trabajo»
+
+1. Lee `AGENTS.md`, `CLAUDE.md`, `docs/STATUS.md` y los ADRs y tareas abiertos.
+2. **Contrasta `STATUS.md` con el estado real** de git y de Orca. Si hay diferencias, díselas a Adrian **antes de continuar**.
+3. Entrega un resumen con estas partes:
+   - Dónde nos quedamos (fase y estado).
+   - Qué falta por hacer.
+   - Qué se hará ahora: tareas propuestas, agente asignado a cada una, modelo y esfuerzo sugeridos, y por qué.
+   - Decisiones pendientes: cada una con sus opciones (la más recomendable primero) y tu recomendación razonada.
+   - Cómo lo harás: orden, paralelismo, ramas, verificación y puntos de decision gate.
+   - Riesgos y costo estimado en cuota (tuya y de los workers).
+4. **Termina pidiendo el OK explícito de Adrian.** No crees el Run, no lances workers ni cambies archivos hasta que responda. Si responde a las decisiones pendientes, **regístralas en `STATUS.md` antes de empezar**.
+
+### Reglas permanentes del protocolo
+
+- Nunca uses `orchestration reset` ni el comando retirado `orchestration run`.
+- Todo agente nuevo debe leer `docs/STATUS.md` antes de trabajar (la línea ya está al inicio de `AGENTS.md` y de este archivo; si falta, añádela).
+- Sé breve en los resúmenes; los detalles van en los archivos.
+- Si `STATUS.md` no existe o está desactualizado, créalo o corrígelo a partir del estado real y avisa a Adrian.
