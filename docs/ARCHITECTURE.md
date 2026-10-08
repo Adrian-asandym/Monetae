@@ -138,7 +138,7 @@ erDiagram
 - `is_system` ⇔ `system_key IS NOT NULL` (`CHECK`); `is_system` `DEFAULT false`. (`accounts` y `tags` llevan `sort_order int NOT NULL DEFAULT 0`; `categories` **no** lo tiene todavía, ver §10.)
 - Categorías de sistema de interés: `system_key` ∈ {`interest_income`, `interest_expense`}; únicas por usuario; no editables ni borrables. Se crean al registrar al usuario.
 
-**`people`**: `name`, `aliases text[] NOT NULL DEFAULT '{}'`, `note`. Índice GIN en `aliases` y **B-tree** en `lower(name)` (búsqueda exacta por nombre o alias, RF-23; una búsqueda parcial/difusa exigiría `pg_trgm`, no incluido en V1).
+**`people`**: `name`, `aliases text[] NOT NULL DEFAULT '{}'`, `note`. **Los nombres de personas y de categorías pueden repetirse** (dos «Juan» se distinguen por alias; «Otros» puede existir bajo varias categorías; el importador debe poder cargar datos reales con repetidos): solo `accounts` y `tags` tienen unicidad de nombre, respaldada por índices únicos parciales. Índice GIN en `aliases` y **B-tree** en `lower(name)` (búsqueda exacta por nombre o alias, RF-23; una búsqueda parcial/difusa exigiría `pg_trgm`, no incluido en V1).
 
 **`tags`**: `name`, `color`, `icon`, `emoji`, `sort_order`, `archived_at`. Único parcial `(user_id, lower(name))` entre no archivadas ni borradas (RF-43).
 
