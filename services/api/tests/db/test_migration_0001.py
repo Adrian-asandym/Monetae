@@ -62,6 +62,8 @@ def assert_schema(engine: Engine) -> None:
         "transactions",
         "transaction_tags",
         "idempotency_keys",
+        "loans",
+        "loan_movements",
         "alembic_version",
     }
     attempts = {c["name"]: c for c in inspector.get_columns("login_attempts")}

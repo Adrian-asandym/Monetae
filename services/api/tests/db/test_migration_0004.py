@@ -18,9 +18,11 @@ def test_migration_0004_roundtrip(database_url: str, db_engine: Engine) -> None:
         c["name"] for c in inspect(db_engine).get_check_constraints("transactions")
     }
     command.upgrade(config, "0004")
+    command.upgrade(config, "head")
     command.check(config)
     command.downgrade(config, "0003")
     command.upgrade(config, "0004")
+    command.upgrade(config, "head")
     command.check(config)
     indexes = {i["name"]: i for i in inspect(db_engine).get_indexes("transactions")}
     for direction in ("incoming", "outgoing"):

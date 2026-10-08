@@ -23,6 +23,27 @@ from monetae.api.schemas.categories import (
     CategoryUpdate,
 )
 from monetae.api.schemas.common import ArchiveRequest
+from monetae.api.schemas.loans import (
+    AdjustmentRequest,
+    DisbursementRequest,
+    InterestProposal,
+    InterestProposalRequest,
+    InterestRequest,
+    Loan,
+    LoanBalance,
+    LoanCreate,
+    LoanMovement,
+    LoanMovementPage,
+    LoanPage,
+    LoanSideEffect,
+    LoanSummary,
+    LoanSummaryPage,
+    LoanUpdate,
+    PaymentProposal,
+    PaymentProposalRequest,
+    PaymentRequest,
+    WriteOffRequest,
+)
 from monetae.api.schemas.people import Person, PersonCreate, PersonPage, PersonUpdate
 from monetae.api.schemas.tags import Tag, TagCreate, TagPage, TagUpdate
 from monetae.api.schemas.transactions import (
@@ -64,12 +85,31 @@ def test_mounted_operations_security_responses_and_csrf() -> None:
                     for p in operation["parameters"]
                 )
             count += 1
-    assert count == 48
+    assert count == 63
 
 
 def test_schema_properties_mirror_contract() -> None:
     schemas = json.loads(CONTRACT.read_text())["components"]["schemas"]
     models: list[type[BaseModel]] = [
+        Loan,
+        LoanCreate,
+        LoanUpdate,
+        LoanMovement,
+        LoanBalance,
+        LoanSummary,
+        LoanSideEffect,
+        LoanPage,
+        LoanMovementPage,
+        LoanSummaryPage,
+        PaymentProposal,
+        PaymentProposalRequest,
+        InterestProposal,
+        InterestProposalRequest,
+        DisbursementRequest,
+        PaymentRequest,
+        InterestRequest,
+        AdjustmentRequest,
+        WriteOffRequest,
         PasswordLogin,
         GoogleLogin,
         AuthenticatedSession,

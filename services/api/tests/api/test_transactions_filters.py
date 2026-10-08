@@ -144,3 +144,20 @@ def test_keyset_pages_equal_timestamps_and_cursor_filter_binding(client: TestCli
 def test_filter_validation(client: TestClient, filters: dict[str, str]) -> None:
     login(client)
     assert client.get("/api/v1/transactions", params=filters).status_code == 422
+
+
+def test_loan_and_person_filters_link_each_cash_transaction(client: TestClient) -> None:
+    from .conftest import add_movement, create_loan, create_person, payment_payload
+
+    login(client)
+    account = create_account(client)
+    person = create_person(client)
+    other = create_person(client, "Other")
+    loan = create_loan(client, person, account)
+    second = create_loan(client, other, account)
+    add_movement(client, loan, payment_payload(account, "200.00"))
+    linked = client.get("/api/v1/transactions", params={"loan_id": loan}).json()["items"]
+    assert len(linked) == 2 and all(row["loan_id"] == loan for row in linked)
+    assert ids(client, person_id=person) == {row["id"] for row in linked}
+    assert not ids(client, loan_id=loan, person_id=other)
+    assert len(ids(client, loan_id=second)) == 1
