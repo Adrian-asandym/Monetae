@@ -123,3 +123,30 @@ def create_tag(client: TestClient, name: str = "Travel") -> str:
     entity_id = result.json()["id"]
     assert isinstance(entity_id, str)
     return entity_id
+
+
+def transaction_payload(account_id: str, **values: object) -> dict[str, object]:
+    return {
+        "account_id": account_id,
+        "kind": "expense",
+        "amount": "-10.00",
+        "currency": "PEN",
+        "occurred_at": "2026-10-07T12:00:00Z",
+        "status": "posted",
+        "title": "Synthetic purchase",
+        "fx_rate_to_base": "1.000000",
+        "fx_rate_source": "manual",
+        **values,
+    }
+
+
+def create_transaction(client: TestClient, account_id: str, **values: object) -> str:
+    response = client.post(
+        "/api/v1/transactions",
+        json=transaction_payload(account_id, **values),
+        headers=csrf_headers(client),
+    )
+    assert response.status_code == 201, response.text
+    entity_id = response.json()["id"]
+    assert isinstance(entity_id, str)
+    return entity_id

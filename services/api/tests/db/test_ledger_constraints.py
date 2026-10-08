@@ -114,3 +114,46 @@ def test_ledger_check_constraints(
     with pytest.raises(IntegrityError), db_session.begin_nested():
         db_session.add(row)
         db_session.flush()
+
+
+def test_import_id_and_active_tag_link_uniqueness_allow_soft_deleted_reuse(
+    db_session: Session, users: tuple[User, User]
+) -> None:
+    from monetae.db.models import TransactionTag
+
+    account, _, _, tag, _ = seed(db_session, users)
+    values = dict(
+        user_id=users[0].id,
+        account_id=account.id,
+        currency="PEN",
+        kind="expense",
+        amount=Decimal(-1),
+        occurred_at=datetime.now(UTC),
+        status="posted",
+        title="Synthetic",
+        fx_rate_to_base=Decimal(1),
+        fx_rate_source="manual",
+        source="import",
+        import_external_id="synthetic:1",
+    )
+    first = Transaction(**values)
+    db_session.add(first)
+    db_session.flush()
+    with pytest.raises(IntegrityError), db_session.begin_nested():
+        db_session.add(Transaction(**values))
+        db_session.flush()
+    first.deleted_at = datetime.now(UTC)
+    db_session.flush()
+    second = Transaction(**values)
+    db_session.add(second)
+    db_session.flush()
+    first_link = TransactionTag(user_id=users[0].id, transaction_id=second.id, tag_id=tag.id)
+    db_session.add(first_link)
+    db_session.flush()
+    with pytest.raises(IntegrityError), db_session.begin_nested():
+        db_session.add(TransactionTag(user_id=users[0].id, transaction_id=second.id, tag_id=tag.id))
+        db_session.flush()
+    first_link.deleted_at = datetime.now(UTC)
+    db_session.flush()
+    db_session.add(TransactionTag(user_id=users[0].id, transaction_id=second.id, tag_id=tag.id))
+    db_session.flush()

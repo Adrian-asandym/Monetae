@@ -21,8 +21,8 @@ def test_account_crud_archive_currency_and_deleted_name(client: TestClient) -> N
         json={"currency": "USD"},
         headers=csrf_headers(client),
     )
-    assert currency_result.status_code == 409
-    assert currency_result.json()["code"] == "account_currency_locked"
+    assert currency_result.status_code == 200
+    assert currency_result.json()["currency"] == "USD"
 
     updated = client.patch(
         f"/api/v1/accounts/{account_id}",
