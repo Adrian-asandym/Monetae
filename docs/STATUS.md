@@ -51,9 +51,24 @@ Orden: T-103, T-104 y T-105 en paralelo; luego T-101; luego T-102.
 
 **Merge a `main` (hecho):** ver arriba; se fusionó el hash exacto `382425f`, no la punta de `master-dev`.
 
+## Run de Fase 2 — backend base (plan; se crea al lanzar T-201)
+
+Agente: Codex en todas. Migraciones Alembic y `pyproject.toml`/`uv.lock`: un solo dueño a la vez (AGENTS.md §10). Los ejemplos A–E y los préstamos son de la Fase 3, no de esta.
+
+| Tarea | Contenido | Depende de |
+|-------|-----------|------------|
+| T-201 | Esqueleto de `services/api`, calidad (ruff, mypy estricto, pytest), `/health`, errores `problem+json`, Docker Compose (`docs/tasks/T-201-api-skeleton.md`) | — |
+| T-202 | `domain/`: `Money`, monedas, redondeo y tipos de cambio, con pruebas exhaustivas | T-201 |
+| T-203 | BD: SQLAlchemy base, sesión, Alembic y migración 0001 (users, sessions, accounts, categories, people, tags), repositorio base con `user_id` obligatorio y fixture de aislamiento entre dos usuarios | T-201 |
+| T-204 | Autenticación por correo y contraseña (argon2id), sesiones con cookie, CSRF, cerrar sesión en todos los dispositivos, límite de intentos | T-203 |
+| T-205 | CRUD de cuentas y categorías (con las categorías de sistema de interés) + pruebas de aislamiento | T-204, T-202 |
+| T-206 | Transacciones, transferencias, etiquetas y multimoneda (migración 0002) | T-205 |
+
+T-202 y T-203 pueden ir en paralelo (archivos disjuntos). Google OIDC, presupuestos, metas y notificaciones son de la Fase 6.
+
 ## Notas operativas
 
-- **Entorno (AlmaLinux 9 en WSL), 2026-10-07:** instalados a nivel de usuario `uv` 0.12.23 y Python 3.12.15 (probados `ruff`, `mypy`, `pytest` con `uv`); `python3` del sistema sigue siendo 3.9 (los scripts de la Fase 1 son compatibles con 3.9). Hay `node`/`npm`, `psql` y `pg_dump`. **Falta Docker** dentro de WSL (sin `sudo` sin contraseña no se puede instalar desde aquí; hay que activar la integración WSL de Docker Desktop o instalar el motor) y `flutter`/`dart` (Fase 5). Espacio libre ≈ 7 GB: Flutter ocupa ~3 GB.
+- **Entorno (AlmaLinux 9 en WSL), verificado el 2026-10-07:** `uv` 0.12.23 y Python 3.12.15 (usuario); Docker 29.5 con Compose v5 (Docker Desktop; PostgreSQL 16 probado); Flutter 3.47.6 / Dart 3.13 (`flutter build web`, `dart analyze` y `flutter test` probados); `node`, `psql`. El `python3` del sistema sigue siendo 3.9: no usarlo en el proyecto. **Sin Chrome** en WSL (solo hace falta para `flutter run -d chrome`; alternativa `-d web-server` y abrir en el navegador de Windows) y sin Android SDK (V4). Espacio libre ≈ 4 GB en `/` (20 GB, 78 % usado): vigilar.
 
 - Las tareas de UI van a Codex (ChatGPT) y, si se agota la cuota, a Antigravity; Command Code queda de reserva.
 - Antigravity pide "trust workspace" en cada worktree nuevo; el CLI no permite fijar su modelo (se cambia en su panel).
