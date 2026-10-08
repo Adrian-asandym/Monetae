@@ -43,13 +43,15 @@ Las tareas de UI no empiezan hasta la Fase 5. Ninguna tarea de la Fase 1 toca UI
 |-------|-----------|--------|------------|--------|
 | T-103 | ADR-003 (interés) y ADR-004 (tipo de cambio) | Claude → decide Adrian | — | **Aceptado (opción A, 2026-10-07)** |
 | T-104 | ADR-002 (auth), ADR-006 (bloqueo), ADR-007 (SQLAlchemy) | Claude → decide Adrian | — | **Aceptados (opción A, 2026-10-07)** |
-| T-105 | Fixture sintético Cashew v48 (`task_8f0a3298376d`, dispatch `ctx_b30eb2754ca3`) | Antigravity | — | **En curso** en `../Monetae-agy-T-105-cashew-fixture` (confianza aceptada) |
+| T-105 | Fixture sintético Cashew v48 (relevo a Codex como T-105b tras la caída de Antigravity) | Codex `gpt-6.1-sol` | — | **Aceptada e integrada**: determinista (mismos hashes), verificador 7/7 en Python 3.9 y 3.12 |
 | T-101 | Esquema de BD (con `tags`/`transaction_tags`) y `docs/ARCHITECTURE.md` | Claude | T-103, T-104 | **Hecho (v0.2, revisado por Adrian)** |
 | T-102 | Contrato OpenAPI (`docs/api/openapi.json`: 86 paths, 127 operaciones, 131 esquemas) | Codex | T-101 | **Aceptada e integrada** (T-102 y T-102b alineada con ARCHITECTURE v0.2; `ec6e08a`) |
 
 Orden: T-103, T-104 y T-105 en paralelo; luego T-101; luego T-102.
 
 **Merge a `main` (hecho):** ver arriba; se fusionó el hash exacto `382425f`, no la punta de `master-dev`.
+
+**Fase 1 cerrada a falta del merge a `main`:** T-101 a T-105 aceptadas. Decision gate `gate_eea4d8d760d3` (Run `run_2cddcd14320c`, `task_5df0e2ee5407`) pide fusionar el commit exacto `7ba8e06`. Se fusiona ese hash, no la punta de `master-dev` (T-203 sigue en curso). El push a `origin` es una decisión aparte de Adrian.
 
 ## Run de Fase 2 — backend base — `run_70f5f187fe16`
 
@@ -58,7 +60,7 @@ Agente: Codex en todas. Migraciones Alembic y `pyproject.toml`/`uv.lock`: un sol
 | Tarea | Contenido | Estado / depende de |
 |-------|-----------|---------------------|
 | T-201 | Esqueleto de `services/api`, calidad (ruff, mypy estricto, pytest), `/health`, errores `problem+json`, Docker Compose (`docs/tasks/T-201-api-skeleton.md`) | **Aceptada e integrada** (`ddd4861`) |
-| T-202 | `domain/`: `Money`, monedas, redondeo y tipos de cambio, con pruebas exhaustivas (`docs/tasks/T-202-domain-money-fx.md`) | **En curso** (Codex `gpt-6.1-sol` medium) |
+| T-202 | `domain/`: `Money`, monedas, redondeo y tipos de cambio, con pruebas exhaustivas (`docs/tasks/T-202-domain-money-fx.md`) | **Aceptada e integrada** (`28ea759`; 120 pruebas, 100 % de cobertura de sus módulos) |
 | T-203 | BD: SQLAlchemy base, sesión, Alembic y migración 0001 (users, sessions, accounts, categories, people, tags), repositorio base con `user_id` obligatorio y fixture de aislamiento entre dos usuarios (`docs/tasks/T-203-db-alembic-core.md`) | **En curso** (Codex `gpt-6.1-sol` high) |
 | T-204 | Autenticación por correo y contraseña (argon2id), sesiones con cookie, CSRF, cerrar sesión en todos los dispositivos, límite de intentos | T-203 |
 | T-205 | CRUD de cuentas y categorías (con las categorías de sistema de interés) + pruebas de aislamiento | T-204, T-202 |
