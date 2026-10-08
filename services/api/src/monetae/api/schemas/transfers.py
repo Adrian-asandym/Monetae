@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from typing import Annotated
 from uuid import UUID
@@ -10,7 +11,7 @@ from monetae.api.schemas.common import Page
 from monetae.api.schemas.transactions import ExchangeRate, RateSource, Timestamp
 
 PositiveAmount = Annotated[
-    str, Field(pattern=r"^(?:0\.(?!00)[0-9]{2}|[1-9][0-9]{0,15}\.[0-9]{2})$")
+    str, Field(pattern=re.compile(r"^(?:0\.(?!00)[0-9]{2}|[1-9][0-9]{0,15}\.[0-9]{2})$"))
 ]
 
 

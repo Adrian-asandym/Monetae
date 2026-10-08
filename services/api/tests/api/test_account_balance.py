@@ -173,3 +173,26 @@ def test_balances_and_currency_locks_ignore_other_users_history(
         assert balance(other, other_account) == "11.50"
         assert len(other.get("/api/v1/accounts").json()["items"]) == 1
     assert balance(client, account) == "112.50"
+
+
+def test_transfer_balances_conserve_same_currency_through_lifecycle(client: TestClient) -> None:
+    from decimal import Decimal
+
+    from api.conftest import create_transfer
+
+    login(client)
+    source, target = create_account(client), create_account(client, "Bank")
+    assert (balance(client, source), balance(client, target)) == ("12.50", "12.50")
+    id = create_transfer(client, source, target)
+    assert (balance(client, source), balance(client, target)) == ("2.50", "22.50")
+    assert Decimal(balance(client, source)) + Decimal(balance(client, target)) == Decimal("25.00")
+    client.patch(
+        f"/api/v1/transfers/{id}",
+        json={"from_amount": "5.00", "to_amount": "5.00"},
+        headers=csrf_headers(client),
+    )
+    assert (balance(client, source), balance(client, target)) == ("7.50", "17.50")
+    client.delete(f"/api/v1/transfers/{id}", headers=csrf_headers(client))
+    assert (balance(client, source), balance(client, target)) == ("12.50", "12.50")
+    client.post(f"/api/v1/transfers/{id}/restore", headers=csrf_headers(client))
+    assert (balance(client, source), balance(client, target)) == ("7.50", "17.50")
