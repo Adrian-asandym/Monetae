@@ -45,7 +45,10 @@ def database(request: Request) -> Generator[DbSession, None, None]:
             raise
 
 
-Database = Annotated[DbSession, Depends(database)]
+# scope="function": el commit corre al terminar el endpoint, ANTES de enviar la
+# respuesta. Con el alcance por defecto (request) FastAPI >= 0.118 lo ejecuta
+# después, y el cliente puede leer antes de que la escritura sea visible.
+Database = Annotated[DbSession, Depends(database, scope="function")]
 
 
 def auth_service(request: Request, db: Database) -> AuthService:
