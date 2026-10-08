@@ -1,6 +1,8 @@
 # CLAUDE.md — Claude como coordinador de Monetae
 
-> Lee primero `AGENTS.md` (contrato común) y `docs/SPEC.md` (qué se construye). Este archivo solo agrega lo específico del rol de Claude.
+> **PRIMERO: lee `docs/STATUS.md`** (estado actual, decisiones, plan y cómo retomar). Es lo primero que debe leer cualquier agente, antes que el resto de este archivo.
+
+> Después de `docs/STATUS.md`, lee `AGENTS.md` (contrato común) y `docs/SPEC.md` (qué se construye). Este archivo solo agrega lo específico del rol de Claude.
 
 ## 1. Rol
 

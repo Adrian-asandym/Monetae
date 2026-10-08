@@ -1,5 +1,7 @@
 # AGENTS.md — Contrato para todos los agentes de Monetae
 
+> **PRIMERO: lee `docs/STATUS.md`** (estado actual, decisiones, plan y cómo retomar). Es lo primero que debe leer cualquier agente, antes que el resto de este archivo.
+
 Este archivo lo leen **todos** los agentes (Claude, Codex, Command Code, Gemini/Antigravity). Si algo aquí contradice una instrucción puntual de una tarea, **gana este archivo**, salvo que Adrian diga lo contrario por escrito. La fuente de verdad funcional es `docs/SPEC.md`.
 
 ---
