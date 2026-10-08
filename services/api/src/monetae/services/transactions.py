@@ -353,10 +353,13 @@ class TransactionService:
         return self.update(user_id, entity_id, TransactionUpdate.model_validate(values))
 
     def loan_ids(self, user_id: UUID, rows: list[Transaction]) -> dict[UUID, UUID]:
+        transaction_ids = [row.id for row in rows if row.kind == "loan"]
+        if not transaction_ids:
+            return {}
         links = self.db.execute(
             select(LoanMovement.transaction_id, LoanMovement.loan_id).where(
                 LoanMovement.user_id == user_id,
-                LoanMovement.transaction_id.in_([row.id for row in rows]),
+                LoanMovement.transaction_id.in_(transaction_ids),
             )
         ).all()
         return {
