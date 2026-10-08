@@ -33,7 +33,9 @@ def transaction_service(request: Request, db: Database) -> TransactionService:
 Transactions = Annotated[TransactionService, Depends(transaction_service)]
 
 
-def transaction(row: TransactionRow, tag_ids: list[UUID]) -> Transaction:
+def transaction(
+    row: TransactionRow, tag_ids: list[UUID], loan_id: UUID | None = None
+) -> Transaction:
     values = {
         name: getattr(row, name)
         for name in Transaction.model_fields
@@ -43,14 +45,16 @@ def transaction(row: TransactionRow, tag_ids: list[UUID]) -> Transaction:
         amount=f"{row.amount:.2f}",
         fx_rate_to_base=f"{row.fx_rate_to_base:.6f}",
         tag_ids=tag_ids,
-        loan_id=None,
+        loan_id=loan_id,
         reactivation_suggestions=[],
     )
     return Transaction.model_validate(values)
 
 
 def result(service: TransactionService, user_id: UUID, row: TransactionRow) -> Transaction:
-    return transaction(row, service.tag_ids(user_id, [row])[row.id])
+    return transaction(
+        row, service.tag_ids(user_id, [row])[row.id], service.loan_ids(user_id, [row]).get(row.id)
+    )
 
 
 @router.get("", response_model=TransactionPage, operation_id="list_transactions")
@@ -88,8 +92,10 @@ def list_transactions(
     )
     rows, cursor = service.list(identity.user.id, filters, limit, cursor)
     tags = service.tag_ids(identity.user.id, rows)
+    loans = service.loan_ids(identity.user.id, rows)
     return TransactionPage(
-        items=[transaction(row, tags[row.id]) for row in rows], next_cursor=cursor
+        items=[transaction(row, tags[row.id], loans.get(row.id)) for row in rows],
+        next_cursor=cursor,
     )
 
 
