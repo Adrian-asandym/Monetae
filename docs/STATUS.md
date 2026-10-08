@@ -7,9 +7,9 @@
 
 | | |
 |---|---|
-| **Fase actual** | **Fase 2 (backend base): COMPLETA.** **Fase 3 (préstamos y suscripciones): EN CURSO** (lanzada el 2026-10-08 con la aprobación de Adrian). T-301 y T-303 **integradas en `master-dev`**; T-302 **en ejecución**; T-304 pendiente de T-302. |
+| **Fase actual** | **Fase 2 (backend base): COMPLETA.** **Fase 3 (préstamos y suscripciones): EN CURSO** (lanzada el 2026-10-08 con la aprobación de Adrian). T-301, T-302 y T-303 **integradas en `master-dev`**; T-304 **en ejecución**. |
 | **Fases cerradas** | Fase 0 (análisis de Cashew), Fase 1 (diseño: ADR, esquema, OpenAPI, fixture), Fase 2 (backend base). |
-| **Ramas** | `main` = `origin/main` = **`05ff1d9`** (cierre de la Fase 2 + traspaso). `master-dev` va **por delante** con la Fase 3 (dominio de préstamos y de suscripciones, 591 pruebas verificadas con PostgreSQL); **no se ha hecho merge a `main`** (requiere decision gate de Adrian). `origin/master-dev` está en `05ff1d9` hasta que se vuelva a subir. |
+| **Ramas** | `main` = `origin/main` = **`05ff1d9`** (cierre de la Fase 2 + traspaso). `master-dev` va **por delante** con la Fase 3 (dominio de préstamos y suscripciones, API de préstamos y un arreglo de `commit`; 647 pruebas verificadas con PostgreSQL); **no se ha hecho merge a `main`** (requiere decision gate de Adrian). `origin/master-dev` está en `05ff1d9` hasta que se vuelva a subir. |
 | **GitHub (`origin`)** | Ver §8. Si `git status -sb` muestra `ahead N`, el push está pendiente. |
 | **Versión de la SPEC** | v0.3 (2026-10-07). Historial en `docs/SPEC.md` §18. |
 | **Arquitectura** | `docs/ARCHITECTURE.md` v0.3. Puntos abiertos en su §10 (1–13). |
@@ -63,6 +63,7 @@ Backend FastAPI síncrono (ADR-007) en `services/api`, **29 de las 86 rutas (pat
 - `loan_id` y `person_id` en `GET /transactions` devuelven página vacía hasta la Fase 3 (`TODO(phase-3)`).
 - `reactivation_suggestions` en `Transaction` está vacío hasta que existan suscripciones (T-304).
 - No ha habido auditoría de seguridad externa; hay una pasada de endurecimiento prevista en la Fase 7.
+- **Corregido en `4b62d7c` (2026-10-08):** la Fase 2 hacía el `commit` de la sesión *después* de enviar la respuesta (FastAPI ≥ 0.118 con dependencias `yield`): con un servidor real, `login` + petición inmediata daba 401 en 34/40 intentos. `TestClient` lo ocultaba. Ahora `Database` usa `scope="function"` y hay una prueba que registra el orden real ASGI.
 - La clave secreta por defecto es de ejemplo y solo sirve en local; en `prod` la app se niega a arrancar con ella o con cookies sin `Secure`.
 
 ## 6. Plan de la Fase 3 — escrito, **NO lanzado**
@@ -73,14 +74,14 @@ Objetivo: resolver P1–P4 (préstamos como libro mayor; suscripciones archivabl
 |-------|-----------|--------------------------|-----------|------|
 | T-301 ✅ | Dominio puro de préstamos (saldo calculado, reparto interés/capital, exceso, reabrir) — **aceptada e integrada** (`246a6d5`; 114 pruebas, 100 % de líneas) | Codex `gpt-6.1-sol` high | — | `docs/tasks/T-301-domain-loans.md` |
 | T-303 ✅ | Dominio puro de suscripciones (archivar/reactivar, equivalentes, fechas, sugerencias) — **aceptada e integrada** (`9b1e347`; 73 pruebas, 100 % de líneas) | Codex `gpt-6.1-sol` medium | — | `docs/tasks/T-303-domain-subscriptions.md` |
-| T-302 🔄 | Migración `0005`, servicios y API de préstamos — **en ejecución** (rama `codex/T-302-loans-api`, worktree `Monetae-codex-T-302-loans-api`, task `task_112bd988b505`). Se corrigió la spec al lanzar: columna interna `sequence` para desempatar el orden del libro | Codex `gpt-6.1-sol` high | T-301 ✅ | `docs/tasks/T-302-loans-api.md` |
-| T-304 | Migración `0006`, reglas recurrentes y API de suscripciones — **no lanzada**; hay que recrear su tarea en Orca (la antigua quedó `failed/superseded`) | Codex `gpt-6.1-sol` high | T-302, T-303 ✅ | `docs/tasks/T-304-subscriptions-api.md` |
+| T-302 ✅ | Migración `0005`, servicios y API de préstamos (15 operaciones) — **aceptada e integrada** (`79fc715`; 646 pruebas; spec corregida al lanzar: columna interna `sequence`). Ampliaciones de contrato a registrar: `409 loan_already_settled`, `422 movement_kind_immutable` (ver `docs/api/README.md`) | Codex `gpt-6.1-sol` high | T-301 ✅ | `docs/tasks/T-302-loans-api.md` |
+| T-304 🔄 | Migración `0006`, reglas recurrentes y API de suscripciones — **en ejecución** (rama `codex/T-304-subscriptions-api`, task `task_3e72e1ff8b03`, dispatch `ctx_c6510b5c94c9`; spec corregida contra el contrato) | Codex `gpt-6.1-sol` high | T-302 ✅, T-303 ✅ | `docs/tasks/T-304-subscriptions-api.md` |
 
-Orden: **T-301 ∥ T-303 (hecho)** → T-302 (en curso) → T-304 → gate a `main`. Archivos permitidos disjuntos entre T-301 y T-303; T-302 y T-304 son secuenciales (migraciones y `main.py`). Después de la Fase 3: Fase 4 (importador, usa `services/api/tests/fixtures/cashew_v48/`), Fase 5 (UI, empieza con T-501), Fase 6, Fase 7.
+Orden: **T-301 ∥ T-303 (hecho)** → **T-302 (hecho)** → T-304 (en curso) → gate a `main`. Archivos permitidos disjuntos entre T-301 y T-303; T-302 y T-304 son secuenciales (migraciones y `main.py`). Después de la Fase 3: Fase 4 (importador, usa `services/api/tests/fixtures/cashew_v48/`), Fase 5 (UI, empieza con T-501), Fase 6, Fase 7.
 
 ## 7. Estado de Runs, workers, terminales y worktrees
 
-**Runs de Orca** (el CLI **no tiene comando para cerrarlos**; no usar `orchestration reset`): `run_bef8ecfc67a7` (Fase 0), `run_2cddcd14320c` (Fase 1), `run_70f5f187fe16` (Fase 2) — todas con tareas aceptadas o descartadas. **Run de la Fase 3: `run_63b520544a30`** (activo; T-302 en ejecución, dispatch `ctx_a0f46f0d63c1`). El coordinador solo puede consumir un Run a la vez: `orca orchestration run-use --id run_63b520544a30` al retomar.
+**Runs de Orca** (el CLI **no tiene comando para cerrarlos**; no usar `orchestration reset`): `run_bef8ecfc67a7` (Fase 0), `run_2cddcd14320c` (Fase 1), `run_70f5f187fe16` (Fase 2) — todas con tareas aceptadas o descartadas. **Run de la Fase 3: `run_63b520544a30`** (activo; T-304 en ejecución, dispatch `ctx_c6510b5c94c9`). El coordinador solo puede consumir un Run a la vez: `orca orchestration run-use --id run_63b520544a30` al retomar.
 
 **Dispatches fallidos o retenidos** (solo historial; sus terminales son de Adrian): intentos que chocaron con avisos de «trust workspace» o actualización, y el intento de Antigravity de T-105 (`ctx_b30eb2754ca3`, sustituido por Codex como T-105b).
 
@@ -123,7 +124,7 @@ echo 'una-contraseña-larga-123' | docker compose -f infra/docker-compose.yml ex
 docker compose -f infra/docker-compose.yml down -v && rm -f .env     # SIEMPRE limpiar
 ```
 
-**Siguiente paso concreto (Fase 3 en curso):** `orca orchestration run-use --id run_63b520544a30`; `orca orchestration check --wait --types worker_done,escalation,question`. Cuando T-302 (`codex/T-302-loans-api`) reporte `worker_done`: revisar el diff y **correr yo** `ruff`, `mypy`, `pytest` con PostgreSQL, `alembic upgrade/check/downgrade 0004/upgrade` y pruebas manuales (curl/SQL/latencia); merge `--no-ff` a `master-dev`; luego crear la tarea T-304 con `worker-start --spec "$(cat docs/tasks/T-304-subscriptions-api.md)" … --base-branch master-dev` (renombrar la rama a `codex/T-304-…`) y repetir. Al final, decision gate a `main`.
+**Siguiente paso concreto (Fase 3 en curso):** `orca orchestration run-use --id run_63b520544a30`; `orca orchestration check --wait --types worker_done,escalation,question` (solo UNA espera a la vez por Run: `waiter_exists` si queda una colgada; no uses `pkill -f`/`pgrep -f` con texto que aparezca en tu propio comando, mata tu shell). Cuando T-304 (`codex/T-304-subscriptions-api`) reporte `worker_done`: revisar el diff, **correr yo** `ruff`, `mypy`, `pytest` con PostgreSQL, `alembic upgrade/check/downgrade 0005/upgrade` y una **sonda con `uvicorn` real + `httpx`** (ciclo crear → archivar → listar → reactivar, Netflix de SPEC §8); merge `--no-ff` a `master-dev`; actualizar este archivo; y pedir a Adrian el **decision gate** para `main` + push (incluye: ampliaciones de contrato de T-302, regenerar/registrar cambios en `docs/api/` si procede, y el arreglo `4b62d7c`).
 
 ## 10. Lecciones operativas (no repetir errores)
 
@@ -132,5 +133,6 @@ docker compose -f infra/docker-compose.yml down -v && rm -f .env     # SIEMPRE l
 - **Reglas de bloqueo:** las lecturas no toman bloqueos de fila; las escrituras usan bloqueos consultivos con orden fijo.
 - **Orca:** `worker-start` puede devolver `outcome_unknown` aunque el worker trabaje; Antigravity pide «trust workspace» en cada worktree y puede caerse por red; Codex puede mostrar un menú «Update available» que solo Adrian puede saltar; `gate-create` no acepta `--run`; al abrir sesión hay que re-vincular el Run (`run-use --id`); `check --wait` de un Run distinto da `consumer_fenced`.
 - **Modelos Codex** (de `~/.codex/models_cache.json`): `gpt-6.1-sol` (trabajo general), `gpt-6-astra` (el más potente), `gpt-6-luna` (ligero; sirve para CRUD pero exige revisar las reglas).
+- **`TestClient` no es un servidor:** espera a que la app termine por completo (incluido el `commit`), así que oculta errores de orden respuesta/commit. Para cambios de sesión/transacción, prueba además con `uvicorn` real y `httpx` (login → petición inmediata; escritura → lectura inmediata).
 - **Disco:** ≈ 4 GB libres en `/` (20 GB). Vigilar antes de Flutter/Docker.
 - **Privacidad:** nunca leer filas de `reference/backups/`; trabajar sobre una copia; los fixtures son sintéticos.
