@@ -1,8 +1,13 @@
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from sqlalchemy import Engine, delete, select, text
+from sqlalchemy.orm import Session as DbSession
 
 from api.conftest import csrf_headers, login
-from monetae.db.models import User
+from monetae.config import Settings
+from monetae.db.models import Account, Category, User
+from monetae.services.auth import AuthService, SystemClock
+from monetae.services.catalog import CatalogService
 
 
 def test_catalog_ids_and_lists_are_scoped_to_authenticated_user(
@@ -96,3 +101,40 @@ def test_catalog_ids_and_lists_are_scoped_to_authenticated_user(
             ).status_code
             == 422
         )
+
+
+def test_catalog_list_does_not_wait_for_same_users_row_lock(db_engine: Engine) -> None:
+    settings = Settings(environment="test")
+    with DbSession(db_engine) as setup:
+        user = AuthService(setup, settings, SystemClock()).create_user(
+            "catalog-lock@example.test", "synthetic-password-123"
+        )
+        account = CatalogService(setup, settings.secret_key).create_account(
+            user.id,
+            {
+                "name": "Concurrent wallet",
+                "type": "cash",
+                "currency": "PEN",
+                "initial_balance": "0.00",
+                "color": None,
+                "icon": None,
+                "sort_order": 0,
+            },
+        )
+        user_id, account_id = user.id, account.id
+        setup.commit()
+
+    try:
+        with DbSession(db_engine) as first, DbSession(db_engine) as second:
+            first.scalar(select(Account).where(Account.id == account_id).with_for_update())
+            second.execute(text("SET LOCAL lock_timeout = '500ms'"))
+            rows, _ = CatalogService(second, settings.secret_key).list_accounts(
+                user_id, 50, None, False
+            )
+            assert [row.id for row in rows] == [account_id]
+    finally:
+        with DbSession(db_engine) as cleanup:
+            cleanup.execute(delete(Account).where(Account.id == account_id))
+            cleanup.execute(delete(Category).where(Category.user_id == user_id))
+            cleanup.execute(delete(User).where(User.id == user_id))
+            cleanup.commit()
