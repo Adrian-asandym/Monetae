@@ -1,6 +1,6 @@
 # T-304 — Suscripciones: migración 0006, reglas recurrentes y API
 
-> **ESTADO: NO LANZADA.** Fase 3, última tarea. Plan escrito el 2026-10-08; se lanza cuando Adrian apruebe la Fase 3 y **T-302 y T-303 estén aceptadas e integradas**.
+> **ESTADO: LANZADA el 2026-10-08** (Run `run_63b520544a30`; T-302 y T-303 aceptadas e integradas en `master-dev`). Plan escrito el 2026-10-08, corregido al lanzar contra el contrato (ver «Correcciones al lanzar»).
 > Agente: **Codex**, modelo `gpt-6.1-sol` esfuerzo `high`.
 > Depende de: **T-303** (dominio) y **T-302** (orden de migraciones y `main.py`). Eres el **único dueño de las migraciones**: creas la `0006`. No corre en paralelo con T-302.
 
@@ -23,13 +23,22 @@ Persistir y exponer las suscripciones con **archivado reversible** (P4): una sus
 
 1. **Crear** (`POST /subscriptions`): en una sola transacción de BD crea la suscripción y su regla (`anchor_on` = `next_due_on` inicial) y **materializa una sola transacción `scheduled`** (la próxima), vinculada por `recurring_rule_id`, `kind='expense'`, con el monto con signo negativo y las tasas de la moneda base (`1.000000`) o la tasa manual indicada para una moneda foránea (si falta ⇒ `422 fx_rate_required`).
 2. **Publicar** una transacción `scheduled` de una regla (`POST /transactions/{id}/post`, T-206b) **avanza la regla** (`next_run_on` y `next_due_on` de la suscripción, usando `domain.subscriptions.next_after`) y **materializa la siguiente** `scheduled`, en la misma transacción de BD (añade un hook mínimo en `services/transactions.py`; sin romper su contrato). Solo reglas `active` de suscripciones `active` generan la siguiente.
-3. **Archivar** (`POST /subscriptions/{id}/archive`, con motivo opcional): `status='archived'`, `archived_at`, desactiva la regla, **borra lógicamente las transacciones `scheduled` futuras de esa regla** y **no toca ninguna transacción pasada ni publicada**. Idempotente en el sentido de dominio: archivar una archivada ⇒ `409`. **Reactivar**: vuelve a `active`, reactiva la regla y materializa la próxima `scheduled` (`next_due_on` ≥ hoy; si el cuerpo/estado trae una fecha pasada, la siguiente ocurrencia futura desde el ancla).
-4. **Visibilidad:** `GET /subscriptions` devuelve por defecto solo `active` (`status=archived` o `status=all` las incluyen según el contrato); los totales (`GET /subscriptions/totals`) cuentan solo `active` y **separan monedas** con los factores de ARCHITECTURE §5.6; `monthly_total`/`yearly_total` (`ReportTotal`) convierten a `report_currency` con el `unconverted_count` del contrato mientras no exista proveedor de tasas (Fase 6): la moneda que coincide con la de reporte se suma; las demás cuentan como no convertidas. Una archivada nunca aparece en ellos.
+3. **Archivar** (`POST /subscriptions/{id}/archive`, con motivo opcional): `status='archived'`, `archived_at`, desactiva la regla, **borra lógicamente las transacciones `scheduled` futuras de esa regla** y **no toca ninguna transacción pasada ni publicada**. Idempotente en el sentido de dominio: archivar una archivada ⇒ `409`. **Reactivar** (`POST /subscriptions/{id}/reactivate`, **sin cuerpo**): vuelve a `active`, reactiva la regla y materializa la próxima `scheduled`; `next_due_on` = primera ocurrencia del calendario anclado (`domain.subscriptions.next_after`) con fecha **≥ hoy**, donde «hoy» es la fecha en `America/Lima` según el reloj inyectado de la app (`clock_for(request)`), no `date.today()`.
+4. **Visibilidad:** `GET /subscriptions` devuelve por defecto solo `active`; el parámetro `status` del contrato admite **únicamente `active` o `archived`** (no existe `all`); los totales (`GET /subscriptions/totals`) cuentan solo `active` y **separan monedas** con los factores de ARCHITECTURE §5.6; `monthly_total`/`yearly_total` (`ReportTotal`) convierten a `report_currency` con el `unconverted_count` del contrato mientras no exista proveedor de tasas (Fase 6): la moneda que coincide con la de reporte se suma; las demás cuentan como no convertidas. Una archivada nunca aparece en ellos.
 5. **Historial:** `historical_paid` y `last_paid_on` de cada suscripción se calculan desde las transacciones **publicadas y no borradas** de su regla (sumas SQL agregadas, sin N+1 en listados); sobreviven al archivado.
 6. **Sugerencias de reactivación** (SPEC §8.4): al **crear** o **publicar** una transacción `expense`, el campo de solo lectura `reactivation_suggestions` lista los ids de suscripciones **archivadas** del usuario cuyo título normalizado (`domain.subscriptions.normalize_title`) coincide con el de la transacción. Solo sugiere; **nunca reactiva sola**.
 7. **Editar** (`PATCH`): título, importe, periodo, `interval_count`, cuenta, categoría, `next_due_on`, aviso; actualiza la regla y **rematerializa** la próxima `scheduled` (borrado lógico de la anterior no publicada y creación de la nueva). Cambiar de moneda o de cuenta con otra moneda ⇒ `422` (se archiva y se crea otra). `DELETE` es lógico y también borra lógicamente las `scheduled` futuras; no toca las publicadas.
 8. **Aislamiento y concurrencia:** toda escritura toma un bloqueo consultivo `(user_id, subscription_id)` (archivar y publicar a la vez se serializan sin interbloqueo; orden fijo suscripción → regla → cuentas); las lecturas no toman bloqueos de fila. Todo atómico.
 9. `/recurring-rules` (CRUD genérico del contrato) **no** forma parte de esta tarea (Fase 6): la tabla existe para las suscripciones y queda lista.
+
+## Correcciones al lanzar (contra el contrato y lo ya integrado)
+
+1. **Rutas:** el contrato tiene 8 operaciones de suscripciones (`list`, `create`, `get`, `update`, `delete`, `archive`, `reactivate`, `totals`); **no hay `restore`** de suscripciones ni `Idempotency-Key` en `create`. Registra `GET /subscriptions/totals` **antes** de `GET /subscriptions/{id}` (si no, `totals` se interpreta como un id y da 422).
+2. **`reactivate` no lleva cuerpo** (ver regla 3). `ArchiveRequest` solo trae `reason` opcional (≤ 500).
+3. **`reactivation_suggestions`:** hoy lo fija `api/routers/transactions.py` (`transaction(...)` pone `reactivation_suggestions=[]`). Se te autoriza cambiar **solo esa serialización** de ese router (añádelo a los archivos permitidos), igual que T-302 hizo con `loan_id`.
+4. **Base de datos y respuesta:** desde `master-dev` `4b62d7c`, `Database` (`api/security.py`) tiene `scope="function"` para que el `commit` ocurra **antes** de enviar la respuesta. **No toques `security.py`.** Escribe tus servicios asumiendo que el commit es de la dependencia, no del servicio.
+5. **Migración:** la cabeza actual es `0005` (`loans`); la tuya es `0006`, con `down_revision = "0005"`. `monetae.domain` ya re-exporta la API de suscripciones; impórtala de ahí. `domain/subscriptions.py` fija `interval_count` 1–366 y `archive_reason` ≤ 500; `occurrence(...)` cuenta desde `anchor_on` con `n=0` en el ancla.
+6. **Verificación recomendada además de las pruebas:** arranca `uvicorn` real contra la BD de pruebas y comprueba con un script `httpx` el ciclo crear → archivar → listar → reactivar (las pruebas con `TestClient` no ven problemas de orden commit/respuesta).
 
 ## Archivos permitidos
 
@@ -41,6 +50,7 @@ services/api/src/monetae/services/subscriptions.py
 services/api/src/monetae/services/transactions.py               # SOLO: hook de publicar y reactivation_suggestions
 services/api/src/monetae/api/schemas/subscriptions.py
 services/api/src/monetae/api/schemas/transactions.py            # SOLO: reactivation_suggestions (ya existe: rellenarlo)
+services/api/src/monetae/api/routers/transactions.py            # SOLO: serializar reactivation_suggestions (hoy fijo a [])
 services/api/src/monetae/api/routers/subscriptions.py
 services/api/src/monetae/api/main.py                            # registrar router
 services/api/tests/db/test_migration_0006.py
