@@ -2,9 +2,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from monetae.api.errors import register_exception_handlers
+from monetae.api.routers.accounts import router as accounts_router
 from monetae.api.routers.auth import ERROR_RESPONSES
 from monetae.api.routers.auth import router as auth_router
+from monetae.api.routers.categories import router as categories_router
 from monetae.api.routers.health import router as health_router
+from monetae.api.routers.people import router as people_router
+from monetae.api.routers.tags import router as tags_router
 from monetae.api.routers.users import router as users_router
 from monetae.api.security import CsrfMiddleware, auth_exception_handler
 from monetae.config import Settings
@@ -29,6 +33,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(health_router, responses=ERROR_RESPONSES)
     application.include_router(auth_router)
     application.include_router(users_router)
+    application.include_router(accounts_router)
+    application.include_router(categories_router)
+    application.include_router(people_router)
+    application.include_router(tags_router)
     return application
 
 

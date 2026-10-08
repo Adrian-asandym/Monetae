@@ -308,3 +308,41 @@ inexistente y contraseña incorrecta verifican argon2 y devuelven la misma
 respuesta `401 invalid_credentials`, sin registrar secretos ni correos completos.
 `PATCH /users/me` rechaza por ahora toda petición con `base_currency` con
 `409 base_currency_locked`, hasta la regla de transacciones de T-206.
+
+## Catálogos (T-205)
+
+`accounts`, `categories`, `people` y `tags` requieren sesión. Toda escritura requiere
+`Origin` confiable y `X-CSRF-Token` válido. Las respuestas de error usan
+`application/problem+json`; un recurso ajeno o inexistente devuelve `404`, y los
+cuerpos que incluyen `user_id` se rechazan con `422`.
+
+Los cuatro listados aceptan `limit` de 1 a 200 (por defecto 50) y un `cursor`
+opaco. La respuesta es `{ "items": [...], "next_cursor": "..." | null }`.
+La paginación usa llaves deterministas: cuentas y etiquetas por
+`(sort_order, lower(name), id)`, categorías por `(kind, lower(name), id)` y
+personas por `(lower(name), id)`. Un cursor alterado, de otro recurso o de otro
+filtro devuelve `400 invalid_cursor`.
+
+Las cuentas y etiquetas activas rechazan nombres duplicados sin distinguir
+mayúsculas con `409 duplicate_name`, conforme a sus índices únicos parciales; el
+nombre puede reutilizarse después del borrado lógico y, en etiquetas, también
+cuando la anterior está archivada. Las categorías y personas sí permiten nombres
+repetidos: una categoría puede llamarse igual bajo distintos padres y dos personas
+pueden compartir nombre y distinguirse por sus alias.
+El saldo de una cuenta equivale temporalmente a `initial_balance`; T-206 lo
+calculará sumando las transacciones. La moneda de cuenta no se puede cambiar aún
+y devuelve `409 account_currency_locked`. Archivar cuentas o etiquetas las oculta
+de manera predeterminada; `include_archived=true` las incluye y reactivate vuelve
+a mostrarlas. Reactivar una etiqueta que choque con otra activa devuelve
+`409 duplicate_name`. El borrado de todos los recursos es lógico.
+
+Las categorías de sistema no se editan ni eliminan (`409 system_category_immutable`).
+Solo se admite un nivel de subcategorías y el padre debe ser propio y del mismo
+tipo; una jerarquía inválida devuelve `422`. Una categoría con hijas activas no se
+puede borrar ni cambiar de tipo (`409 category_has_children`). `PATCH` no permite
+escribir `is_system` ni `system_key`.
+
+Las personas aceptan nombres de 1 a 120 caracteres y hasta 20 alias normalizados
+con recorte de espacios, únicos sin distinguir mayúsculas y de 1 a 60 caracteres.
+La búsqueda `q` encuentra nombres por prefijo o alias exacto, sin distinguir
+mayúsculas; los caracteres `%` y `_` se interpretan literalmente.
