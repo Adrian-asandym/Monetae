@@ -56,7 +56,19 @@ PARTIAL_INDEXES = {
 
 def assert_schema(engine: Engine) -> None:
     inspector = inspect(engine)
-    assert set(inspector.get_table_names()) == {*TABLE_COLUMNS, "alembic_version"}
+    assert set(inspector.get_table_names()) == {*TABLE_COLUMNS, "login_attempts", "alembic_version"}
+    attempts = {c["name"]: c for c in inspector.get_columns("login_attempts")}
+    assert set(attempts) == {"id", "email_lower", "ip", "succeeded", "attempted_at"}
+    assert all(not c["nullable"] for c in attempts.values())
+    assert str(attempts["id"]["type"]) == "UUID"
+    assert attempts["id"]["default"] == "gen_random_uuid()"
+    timestamp_type = attempts["attempted_at"]["type"]
+    assert isinstance(timestamp_type, DateTime) and timestamp_type.timezone
+    assert {tuple(i["column_names"]) for i in inspector.get_indexes("login_attempts")} == {
+        ("email_lower", "attempted_at"),
+        ("ip", "attempted_at"),
+        ("attempted_at",),
+    }
     for table, expected in TABLE_COLUMNS.items():
         common = {"id", "created_at", "updated_at", "deleted_at"}
         if table != "users":
@@ -150,6 +162,15 @@ def test_upgrade_downgrade_upgrade_and_no_drift(database_url: str, db_engine: En
             )
             == 0
         )
+    command.upgrade(config, "head")
+    assert_schema(db_engine)
+    command.check(config)
+
+
+def test_migration_0002_reversible(database_url: str, db_engine: Engine) -> None:
+    config = migration_config(database_url)
+    command.downgrade(config, "0001")
+    assert set(inspect(db_engine).get_table_names()) == {*TABLE_COLUMNS, "alembic_version"}
     command.upgrade(config, "head")
     assert_schema(db_engine)
     command.check(config)

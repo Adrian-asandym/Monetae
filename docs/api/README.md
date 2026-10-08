@@ -250,3 +250,61 @@ ni convenciones por la salida automática predeterminada de FastAPI.
 - Ruff, formato, mypy estricto y pytest del script se ejecutan con herramientas
   temporales fuera del repo, sin agregar dependencias al proyecto. Los checks
   backend completos no aplican: no se ha creado backend en esta tarea.
+
+## Implementación de sesión y CSRF (T-204)
+
+V1 permite contraseña y correo; Google devuelve `501 google_login_not_available`
+(excepción temporal a los códigos del contrato, sin modificar `openapi.json`). No
+hay registro público: `uv run python -m monetae.cli create-user --email ...`
+pide la contraseña dos veces con `getpass`, o lee una línea con `--password-stdin`.
+Dentro del contenedor, usar `docker compose -f infra/docker-compose.yml exec -T api
+python -m monetae.cli create-user --email ... --password-stdin` (o `uv run --no-sync`),
+pues la imagen solo instala dependencias de producción y su venv pertenece a root.
+Nunca acepta contraseñas como argumentos. La política es de 12 a 128 caracteres,
+argon2id con el perfil recomendado y actualización de hash al iniciar sesión.
+El alta copia base a moneda de reporte y crea las categorías de sistema de interés.
+
+Cada login genera 32 bytes aleatorios; PostgreSQL conserva exclusivamente SHA-256
+del token. La cookie `monetae_session` es `HttpOnly`, `Secure`, `SameSite=Lax`,
+`Path=/`, con `Max-Age=session_absolute_days × 86400` para conservarla al cerrar
+el navegador o PWA; logout la expira con `Max-Age=0` y las mismas banderas.
+El servidor sigue imponiendo ambos límites aunque la cookie siga presente.
+Inactividad por defecto: 14 días; límite absoluto: 30 días. Los ajustes
+`MONETAE_SESSION_IDLE_MINUTES` y `MONETAE_SESSION_ABSOLUTE_DAYS` los controlan;
+`last_seen_at` y la expiración deslizante se actualizan como máximo una vez por
+minuto mediante UPDATE condicional atómico y commit inmediato, antes de que el
+handler escriba. La autenticación lee usuario y sesión sin bloqueos de fila;
+la transacción del handler puede permanecer abierta sin serializar las peticiones
+del mismo usuario o sesión. Solo login y revocación toman el bloqueo exclusivo
+del usuario para ordenar altas y logout-all; una petición ya autenticada puede
+continuar si su sesión se revoca después. Logout revoca filas, logout-all revoca
+todas las del usuario y la revocación individual exige propiedad del recurso. Los listados paginados
+solo devuelven sesiones activas, nunca token ni hash.
+
+El middleware emite `monetae_csrf` cuando falta o su firma no es válida; un GET
+de salud permite obtenerla antes del login. Es legible por JavaScript, `Secure`,
+`SameSite=Lax`, `Path=/`; valor `nonce.hmac`, HMAC-SHA256 con
+`MONETAE_SECRET_KEY` sobre nonce concatenado con hash hexadecimal del token
+de sesión, o `pre` antes del login. POST/PUT/PATCH/DELETE, incluido login,
+exigen `X-CSRF-Token` igual a la cookie con firma válida y `Origin` de CORS o del
+propio host; `Referer` sirve solo cuando falta `Origin`. Comparaciones constantes;
+rechazo `403 csrf_failed`. El login rota CSRF y lo liga a la nueva sesión;
+logout lo vuelve a ligar a `pre`. `/auth/csrf` exige sesión y devuelve
+`AuthenticatedSession`, incluido el token vigente. Respuestas de auth/perfil
+usan `Cache-Control: no-store`.
+
+`MONETAE_COOKIE_SECURE=false` sirve únicamente para pruebas locales sobre HTTP;
+en producción se exige un secreto real de al menos 32 caracteres y cookies
+Secure. `.env.example` contiene un secreto explícitamente falso. El servidor
+usa la IP de la conexión, sin confiar en cabeceras de IP del cliente; detrás de
+un proxy, este debe restringir los emisores de cabeceras reenviadas.
+
+La migración 0002 crea `login_attempts`, registro de seguridad sin `user_id` ni
+borrado lógico: cinco fallos por correo normalizado o veinte por IP en quince
+minutos bloquean con `429 too_many_attempts` y `Retry-After`. Los aciertos no
+cuentan; se purgan registros de más de siete días al intentar login. Bloqueos
+transaccionales por ambos criterios evitan carreras entre procesos. Correo
+inexistente y contraseña incorrecta verifican argon2 y devuelven la misma
+respuesta `401 invalid_credentials`, sin registrar secretos ni correos completos.
+`PATCH /users/me` rechaza por ahora toda petición con `base_currency` con
+`409 base_currency_locked`, hasta la regla de transacciones de T-206.
