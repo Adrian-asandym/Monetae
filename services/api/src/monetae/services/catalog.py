@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import ColumnElement
 
 from monetae.api.pagination import decode_cursor, encode_cursor, keyset_predicate
-from monetae.db.models import Account, Category, Person, Tag, Transaction
+from monetae.db.models import Account, Category, Loan, Person, Tag, Transaction
 from monetae.db.repository import UserScopedRepository
 from monetae.services.auth import AuthError
 
@@ -370,6 +370,29 @@ class CatalogService:
         return self._flush(lambda: repo.update(entity_id, values) or row)
 
     def delete(self, model: type[EntityT], user_id: UUID, entity_id: UUID) -> EntityT:
+        if model is Person:
+            person = self.db.scalar(
+                select(Person)
+                .where(
+                    Person.user_id == user_id, Person.id == entity_id, Person.deleted_at.is_(None)
+                )
+                .with_for_update()
+            )
+            if person is None:
+                raise AuthError(404, "not_found", "Person not found.")
+            if (
+                self.db.scalar(
+                    select(Loan.id)
+                    .where(
+                        Loan.user_id == user_id,
+                        Loan.person_id == entity_id,
+                        Loan.deleted_at.is_(None),
+                    )
+                    .limit(1)
+                )
+                is not None
+            ):
+                raise AuthError(409, "person_in_use", "The person has active loans.")
         if model is Account:
             row = self.db.scalar(
                 select(model)

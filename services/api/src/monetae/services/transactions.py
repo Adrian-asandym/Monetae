@@ -12,7 +12,16 @@ from sqlalchemy.sql.elements import ColumnElement
 
 from monetae.api.pagination import decode_cursor, encode_cursor
 from monetae.api.schemas.transactions import TransactionBatch, TransactionCreate, TransactionUpdate
-from monetae.db.models import Account, Category, Tag, Transaction, TransactionTag, User
+from monetae.db.models import (
+    Account,
+    Category,
+    Loan,
+    LoanMovement,
+    Tag,
+    Transaction,
+    TransactionTag,
+    User,
+)
 from monetae.db.models.ledger import SEARCH_VECTOR
 from monetae.db.repository import UserScopedRepository
 from monetae.domain.currency import Currency
@@ -343,6 +352,19 @@ class TransactionService:
         values["status"] = "posted"
         return self.update(user_id, entity_id, TransactionUpdate.model_validate(values))
 
+    def loan_ids(self, user_id: UUID, rows: list[Transaction]) -> dict[UUID, UUID]:
+        links = self.db.execute(
+            select(LoanMovement.transaction_id, LoanMovement.loan_id).where(
+                LoanMovement.user_id == user_id,
+                LoanMovement.transaction_id.in_([row.id for row in rows]),
+            )
+        ).all()
+        return {
+            transaction_id: loan_id
+            for transaction_id, loan_id in links
+            if transaction_id is not None
+        }
+
     def tag_ids(self, user_id: UUID, rows: list[Transaction]) -> dict[UUID, list[UUID]]:
         result: dict[UUID, list[UUID]] = {row.id: [] for row in rows}
         if not rows:
@@ -391,8 +413,23 @@ class TransactionService:
         if filters.date_to is not None:
             criteria.append(Transaction.occurred_at < filters.date_to)
         if filters.loan_id is not None or filters.person_id is not None:
-            # TODO(phase-3): T-206a regla 9; resolver vía loans/loan_movements.
-            criteria.append(Transaction.id.is_(None))
+            linked = (
+                select(1)
+                .select_from(LoanMovement)
+                .join(
+                    Loan, (Loan.id == LoanMovement.loan_id) & (Loan.user_id == LoanMovement.user_id)
+                )
+                .where(
+                    LoanMovement.user_id == user_id,
+                    Loan.user_id == user_id,
+                    LoanMovement.transaction_id == Transaction.id,
+                )
+            )
+            if filters.loan_id is not None:
+                linked = linked.where(Loan.id == filters.loan_id)
+            if filters.person_id is not None:
+                linked = linked.where(Loan.person_id == filters.person_id)
+            criteria.append(exists(linked))
         if filters.tag_ids:
             criteria.append(
                 exists(
