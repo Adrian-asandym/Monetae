@@ -9,6 +9,7 @@ from monetae.api.routers.categories import router as categories_router
 from monetae.api.routers.health import router as health_router
 from monetae.api.routers.people import router as people_router
 from monetae.api.routers.tags import router as tags_router
+from monetae.api.routers.transactions import router as transactions_router
 from monetae.api.routers.users import router as users_router
 from monetae.api.security import CsrfMiddleware, auth_exception_handler
 from monetae.config import Settings
@@ -37,6 +38,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(categories_router)
     application.include_router(people_router)
     application.include_router(tags_router)
+    application.include_router(transactions_router)
     return application
 
 
