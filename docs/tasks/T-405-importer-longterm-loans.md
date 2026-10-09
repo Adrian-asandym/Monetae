@@ -1,6 +1,6 @@
 # T-405 — Importador de Cashew: préstamos de largo plazo sin desembolso registrado (L1-A)
 
-> **ESTADO: LANZADA el 2026-10-09** (Run `run_f5e95406186a`; decisión **L1-A** de Adrian, ver la adenda del ADR-008).
+> **ESTADO: ACEPTADA e integrada en `master-dev` el 2026-10-09** (merge `fa06542`; Run `run_f5e95406186a`; decisión **L1-A** de Adrian, ver la adenda del ADR-008). Verificada por el coordinador: 914 pruebas, sonda con servidor real y `--dry-run` real con cuadre exacto. Publicación pendiente del gate G2 (`gate_10f2135dac21`).
 > Agente: **Codex**, modelo `gpt-6.1-sol` esfuerzo `medium` (cambio acotado en `loans.py`; el cuidado está en no romper idempotencia ni la segunda pasada de tasas).
 > Depende de: Fase 4 integrada y publicada (`origin/main` = `master-dev` en `b0a80ae`). No corre en paralelo con otra tarea.
 
