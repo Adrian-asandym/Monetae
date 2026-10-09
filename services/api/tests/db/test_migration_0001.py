@@ -66,6 +66,8 @@ def assert_schema(engine: Engine) -> None:
         "loan_movements",
         "subscriptions",
         "recurring_rules",
+        "import_runs",
+        "import_review_items",
         "alembic_version",
     }
     attempts = {c["name"]: c for c in inspector.get_columns("login_attempts")}
@@ -85,6 +87,8 @@ def assert_schema(engine: Engine) -> None:
         if table != "users":
             common.add("user_id")
         columns = {column["name"]: column for column in inspector.get_columns(table)}
+        if table in {"accounts", "categories", "people", "tags"}:
+            common.add("import_external_id")
         assert set(columns) == expected | common
         assert str(columns["id"]["type"]) == "UUID"
         id_default = columns["id"]["default"]
