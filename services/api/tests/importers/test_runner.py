@@ -60,15 +60,16 @@ def test_v48_expected_core(
     assert report.counts["accounts"].created == 4
     assert report.counts["categories"].created == 7
     assert report.counts["tags"].created == 3
-    assert report.counts["transactions"].created == 26
+    assert report.counts["transactions"].created == 30
     assert report.counts["transfers"].created == 1
     assert report.steps["loans"]["deferred"] == 0
     assert report.steps["loans"]["processed_transactions"] == 17
-    assert report.counts["deferred_recurring"].deferred == 2
-    assert report.counts["transaction_tags"].deferred == 3
-    assert report.counts["transaction_tags"].created == 0
     assert report.steps["loans"]["created"] == 7
-    assert report.steps["subscriptions"] == {}
+    assert report.counts["recurring_rules"].created == 2
+    assert report.counts["subscriptions"].created == 1
+    assert report.counts["transaction_tags"].deferred == 0
+    assert report.counts["transaction_tags"].created == 3
+    assert report.steps["subscriptions"]["scheduled_created"] == 2
     accounts = {
         a.import_external_id: a
         for a in db_session.scalars(select(Account).where(Account.user_id == import_user.id))
@@ -125,7 +126,7 @@ def test_v48_expected_core(
             source_tag.sort_order,
         )
     assert sum(len(tags) for tags in transaction_tag_map(snapshot).values()) == 3
-    assert db_session.scalar(select(func.count()).select_from(TransactionTag)) == 0
+    assert db_session.scalar(select(func.count()).select_from(TransactionTag)) == 3
     assert hashlib.sha256(source_path.read_bytes()).hexdigest() == before
 
 
@@ -145,7 +146,7 @@ def test_idempotence_preserves_manual_edits(
     before = financial_rows(db_session, import_user)
     second = run_import(db_session, import_user.id, snapshot, options)
     assert all(count.created == 0 for count in second.counts.values())
-    assert second.counts["transactions"].already_imported == 6
+    assert second.counts["transactions"].already_imported == 8
     assert financial_rows(db_session, import_user) == before
     assert (
         len(list(db_session.scalars(select(ImportRun).where(ImportRun.user_id == import_user.id))))

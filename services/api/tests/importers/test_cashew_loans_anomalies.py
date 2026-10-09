@@ -282,7 +282,8 @@ def test_anomalous_loan_amount_never_aborts_other_books(
             for r in snapshot.transactions
         ),
     )
-    report = run_import(db_session, import_user.id, changed, options)
-    assert report.outcome == "succeeded" and report.steps["loans"]["created"] == 6
+    report = run_import(db_session, import_user.id, changed, options, allow_balance_diff=True)
+    assert report.outcome == ("succeeded" if amount == "0" else "applied_with_balance_diff")
+    assert report.steps["loans"]["created"] == 6
     assert report.steps["loans"]["invalid"] == 1
     assert tx_for(db_session, import_user, "C_payment_1").kind == "income"

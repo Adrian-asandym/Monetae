@@ -62,6 +62,7 @@ class ImportContext:
     before: dict[str, Decimal] = field(default_factory=dict)
     deferred_amounts: dict[str, Decimal] = field(default_factory=dict)
     tag_links: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    skipped_pks: set[str] = field(default_factory=set)
 
     def defer(self, rows: tuple[TransactionRow, ...], entity: str) -> None:
         self.report.entity(entity).deferred += len(rows)
@@ -351,7 +352,12 @@ def _persist_report(session: Session, user_id: UUID, run: ImportRun, report: Imp
 
 
 def run_import(
-    session: Session, user_id: UUID, snapshot: Snapshot, options: ImportOptions
+    session: Session,
+    user_id: UUID,
+    snapshot: Snapshot,
+    options: ImportOptions,
+    *,
+    allow_balance_diff: bool = False,
 ) -> ImportReport:
     """El caller confirma incluso ImportExecutionError para guardar la auditoría.
 
@@ -372,6 +378,7 @@ def run_import(
     if base is None:
         raise ImportFailure("El usuario no existe; créelo con create-user.")
     report = ImportReport(
+        allow_balance_diff=allow_balance_diff,
         file_sha256=snapshot.file_sha256,
         source_schema_version=snapshot.schema_version,
         tables=dict(snapshot.tables),
@@ -423,7 +430,7 @@ def run_import(
             report.steps["loans"] = loans.run(ctx)
             report.steps["subscriptions"] = subscriptions.run(ctx)
             imported_pks = set(ctx.transactions)
-            skipped_pks = {row.pk for row in plan.skipped_transactions}
+            skipped_pks = {row.pk for row in plan.skipped_transactions} | ctx.skipped_pks
             for link in snapshot.tag_links:
                 if link.transaction_pk in skipped_pks:
                     report.entity("transaction_tags").skipped += 1
@@ -438,14 +445,36 @@ def run_import(
             ):
                 report.entity(table).deferred = report.tables.get(table, 0)
             report.entity("goals").deferred = sum(row.type == 0 for row in snapshot.objectives)
-            report.steps["phase_6"] = {"code": "pending_phase_6"}
+            report.pending_phase_6 = {
+                table: report.tables.get(table, 0)
+                for table in (
+                    "budgets",
+                    "category_budget_limits",
+                    "associated_titles",
+                    "scanner_templates",
+                )
+            }
+            report.pending_phase_6["goals"] = report.entity("goals").deferred
+            report.steps["phase_6"] = {"code": "pending_phase_6", **report.pending_phase_6}
             _balances(ctx)
             session.flush()
-            if options.dry_run:
+            report.balance_mismatch = any(b.unexplained != Decimal("0.00") for b in report.balances)
+            if report.balance_mismatch:
+                report.warnings.append("balance_mismatch")
+                report.outcome = (
+                    "applied_with_balance_diff"
+                    if allow_balance_diff and not options.dry_run
+                    else "dry_run_with_balance_diff"
+                    if allow_balance_diff
+                    else "balance_mismatch"
+                )
+            if options.dry_run or report.exit_code == 5:
                 financial.rollback()
+                report.financial_rolled_back = True
     except Exception as exc:
         # Nunca guardar SQLAlchemy str(exc): podría incluir parámetros privados.
         report.outcome = "failed"
+        report.financial_rolled_back = True
         report.warnings.append("import_failed")
         for counts in report.counts.values():
             counts.created = 0
