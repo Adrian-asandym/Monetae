@@ -62,6 +62,7 @@ class ImportContext:
     before: dict[str, Decimal] = field(default_factory=dict)
     deferred_amounts: dict[str, Decimal] = field(default_factory=dict)
     tag_links: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    skipped_pks: set[str] = field(default_factory=set)
 
     def defer(self, rows: tuple[TransactionRow, ...], entity: str) -> None:
         self.report.entity(entity).deferred += len(rows)
@@ -429,7 +430,7 @@ def run_import(
             report.steps["loans"] = loans.run(ctx)
             report.steps["subscriptions"] = subscriptions.run(ctx)
             imported_pks = set(ctx.transactions)
-            skipped_pks = {row.pk for row in plan.skipped_transactions}
+            skipped_pks = {row.pk for row in plan.skipped_transactions} | ctx.skipped_pks
             for link in snapshot.tag_links:
                 if link.transaction_pk in skipped_pks:
                     report.entity("transaction_tags").skipped += 1
