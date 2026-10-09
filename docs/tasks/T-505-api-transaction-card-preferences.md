@@ -1,6 +1,6 @@
 # T-505 — API: preferencia `transaction_card` en `users/me` (RF-47)
 
-> **ESTADO: LANZADA el 2026-10-09** (Run `run_c2cebe1745b9`; decisión D11-A de Adrian; SPEC v0.4, contrato 0.4.0).
+> **ESTADO: ACEPTADA e integrada en `master-dev` el 2026-10-09** (verificada por el coordinador: 954 pruebas, contrato 0.4.0 en verde). (Run `run_c2cebe1745b9`; decisión D11-A de Adrian; SPEC v0.4, contrato 0.4.0).
 > Agente: **Codex**, modelo `gpt-6.1-sol` esfuerzo `medium` (cambio pequeño, pero toca un esquema estricto de usuario y datos ya guardados). Corre **en paralelo con T-502** (UI; archivos disjuntos).
 
 ## Contexto
