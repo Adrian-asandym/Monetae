@@ -157,19 +157,30 @@ class ReportService:
             )
             totals[row.kind].add(row)
             totals["net"].add(row, 1 if row.kind == "income" else -1)
+        cumulative = Totals()
         items: list[CashFlowRow] = []
         for bucket in options.buckets:
-            if after is not None and bucket.start_on <= after:
-                continue
             natural_start = period_start(bucket.start_on, options.period or "monthly")
             totals = grouped.get(natural_start, {})
+            net = totals.get("net", Totals())
+            with localcontext() as context:
+                context.prec = 60
+                cumulative.report_amount += net.report_amount
+                for currency, amount in net.by_currency.items():
+                    cumulative.by_currency[currency] = (
+                        cumulative.by_currency.get(currency, Decimal(0)) + amount
+                    )
+            cumulative.unconverted_count += net.unconverted_count
+            if after is not None and bucket.start_on <= after:
+                continue
             items.append(
                 CashFlowRow(
                     start_on=bucket.start_on,
                     end_on=bucket.end_on,
                     income=totals.get("income", Totals()).representation(options.currency),
                     expense=totals.get("expense", Totals()).representation(options.currency),
-                    net=totals.get("net", Totals()).representation(options.currency),
+                    net=net.representation(options.currency),
+                    cumulative_net=cumulative.representation(options.currency),
                 )
             )
             if len(items) > limit:

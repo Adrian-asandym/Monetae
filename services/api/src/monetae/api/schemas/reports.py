@@ -17,6 +17,7 @@ class CashFlowRow(StrictModel):
     income: ReportTotal
     expense: ReportTotal
     net: ReportTotal
+    cumulative_net: ReportTotal
 
 
 class CategoryReportRow(StrictModel):

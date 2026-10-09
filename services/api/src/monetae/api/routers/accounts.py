@@ -23,13 +23,14 @@ Catalog = Annotated[CatalogService, Depends(catalog_service)]
 Csrf = Annotated[str, Header(alias="X-CSRF-Token")]
 
 
-def account(row: AccountRow, balance: Decimal) -> Account:
+def account(row: AccountRow, balance: Decimal, transaction_count: int) -> Account:
     return Account(
         name=row.name,
         type=cast(Literal["cash", "bank", "wallet", "card", "other"], row.type),
         currency=row.currency,
         initial_balance=f"{row.initial_balance:.2f}",
         balance=f"{balance:.2f}",
+        transaction_count=transaction_count,
         color=row.color,
         icon=row.icon,
         sort_order=row.sort_order,
@@ -50,9 +51,9 @@ def list_accounts(
     include_archived: bool = False,
 ) -> AccountPage:
     rows, next_cursor = service.list_accounts(identity.user.id, limit, cursor, include_archived)
-    balances = service.balances(identity.user.id, rows)
+    balances = service.account_statistics(identity.user.id, rows)
     return AccountPage(
-        items=[account(row, balances[row.id]) for row in rows], next_cursor=next_cursor
+        items=[account(row, *balances[row.id]) for row in rows], next_cursor=next_cursor
     )
 
 
@@ -63,13 +64,13 @@ def create_account(
     payload: AccountCreate, identity: Authenticated, service: Catalog, csrf: Csrf
 ) -> Account:
     row = service.create_account(identity.user.id, payload.model_dump())
-    return account(row, service.balances(identity.user.id, [row])[row.id])
+    return account(row, *service.account_statistics(identity.user.id, [row])[row.id])
 
 
 @router.get("/{id}", response_model=Account, operation_id="get_account")
 def get_account(id: UUID, identity: Authenticated, service: Catalog) -> Account:
     row = service.get(AccountRow, identity.user.id, id)
-    return account(row, service.balances(identity.user.id, [row])[row.id])
+    return account(row, *service.account_statistics(identity.user.id, [row])[row.id])
 
 
 @router.patch("/{id}", response_model=Account, operation_id="update_account")
@@ -80,7 +81,7 @@ def update_account(
     if "initial_balance" in values and values["initial_balance"] is not None:
         values["initial_balance"] = Decimal(values["initial_balance"])
     row = service.update_account(identity.user.id, id, values)
-    return account(row, service.balances(identity.user.id, [row])[row.id])
+    return account(row, *service.account_statistics(identity.user.id, [row])[row.id])
 
 
 @router.delete("/{id}", response_model=ActionResult, operation_id="delete_account")
@@ -94,10 +95,10 @@ def archive_account(
     id: UUID, payload: ArchiveRequest, identity: Authenticated, service: Catalog, csrf: Csrf
 ) -> Account:
     row = service.archive(AccountRow, identity.user.id, id)
-    return account(row, service.balances(identity.user.id, [row])[row.id])
+    return account(row, *service.account_statistics(identity.user.id, [row])[row.id])
 
 
 @router.post("/{id}/reactivate", response_model=Account, operation_id="reactivate_account")
 def reactivate_account(id: UUID, identity: Authenticated, service: Catalog, csrf: Csrf) -> Account:
     row = service.reactivate(AccountRow, identity.user.id, id)
-    return account(row, service.balances(identity.user.id, [row])[row.id])
+    return account(row, *service.account_statistics(identity.user.id, [row])[row.id])

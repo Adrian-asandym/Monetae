@@ -42,17 +42,28 @@ class TransactionCardPreferences(StrictModel):
 
 
 class UserPreferences(StrictModel):
+    default_account_id: UUID | None = None
     theme: Literal["light", "dark", "system"] = "system"
     accent_color: str | None = None
     home_widgets: list[str] = Field(default_factory=list, json_schema_extra={"uniqueItems": True})
     transaction_card: TransactionCardPreferences = Field(default_factory=TransactionCardPreferences)
+
+    @field_validator("default_account_id", mode="before")
+    @classmethod
+    def parse_default_account_id(cls, value: object) -> UUID | None:
+        # FastAPI parses JSON before strict validation; accept only UUID strings.
+        if value is None or isinstance(value, UUID):
+            return value
+        if isinstance(value, str):
+            return UUID(value)
+        raise ValueError("A UUID string is required.")
 
     @model_validator(mode="after")
     def validate_preferences(self) -> "UserPreferences":
         if len(set(self.home_widgets)) != len(self.home_widgets):
             raise ValueError("home_widgets must be unique.")
         # Materialize RF-47 for legacy jsonb without changing other optional fields.
-        self.model_fields_set.add("transaction_card")
+        self.model_fields_set.update({"transaction_card", "default_account_id"})
         return self
 
 
