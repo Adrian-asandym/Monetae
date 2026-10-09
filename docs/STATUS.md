@@ -45,6 +45,7 @@ Backend actual: **44 de 86 rutas = 71 de 127 operaciones**, 7 migraciones (cabez
 
 | Fecha | Decisión |
 |---|---|
+| 2026-10-09 (noche) | **Revisión visual de T-501 por Adrian: le agrada.** Preferencias: **superficie azul en modo oscuro** (mantener); la UI debe ser **siempre fiel a Cashew** (colores, barras de progreso, íconos) en gráficas de ingresos/gastos, objetivos y presupuestos. Pide: (1) **subir SVG propios como íconos de categoría**; (2) **favicon e ícono de la app según el modo** con `img/icono-Monetae.svg` y `img/icono-Monetae-dark.svg` (añadió también `Monetae-Logo-dark.jpg` y `Monetae-Logo-Nombre-dark.jpg`, versionados en `f31f19c`); (3) **personalizar qué detalles muestra la tarjeta de transacción** (fecha/hora, botones de acción, notas…). (1) y (3) cambian SPEC y contrato: ver D10 y D11. |
 | 2026-10-09 (tarde) | «**OK, todo A**»: **G2-A** (publicar T-405 en `main`), **D9-A** (la importación real definitiva espera a una base persistente y a las primeras pantallas de la Fase 5), y OK a arrancar la Fase 5 con `T-501`. **Adrian borró él mismo el worktree de T-405** y su rama; sus commits siguen en `master-dev`. |
 | 2026-10-09 | «**OK, todo A**»: **G1-A** (aprobar merge a `main` y push de la Fase 4), **L1-A** (T-405: préstamos de largo plazo sin desembolso con desembolso sin dinero, principal = suma de pagos, ítem `principal_assumed`), **X1-A** (transferencias entre monedas distintas, después de V1), **X2** (borrar los 4 worktrees de la Fase 4: **los borró Adrian él mismo**, junto con sus ramas `codex/T-40x`; el coordinador comprobó que sus 4 commits están en `master-dev`). |
 | 2026-10-08 (noche) | «**Acepto todas tus recomendaciones. OK, puedes continuar con el Paso 3**»: ADR-008 **J1-A, J2-C, J3-A**; autorizó un `--dry-run` sobre una **copia** del respaldo real **solo con conteos y saldos**; lanzó la Fase 4. |
@@ -61,6 +62,18 @@ Backend actual: **44 de 86 rutas = 71 de 127 operaciones**, 7 migraciones (cabez
 ## 5. Decisiones pendientes
 
 Cada una: contexto → opciones (la más recomendable primero) → impacto.
+
+**G3 · Publicar T-501 y las imágenes en `main`.** Adrian revisó el diseño y le agrada. **A (recomendada): aprobar merge y push** tras la auditoría de seguridad; B: esperar a T-502. *Nota operativa:* las copias **idénticas** de las imágenes sin versionar en la carpeta de `main` se quitan justo antes del merge (si no, el fast-forward se niega a sobrescribirlas).
+
+**D10 · Íconos SVG propios para categorías** (SPEC y contrato nuevos; hoy `category.icon` es solo un nombre).
+- **A (recomendada): en V1, con la API en la Fase 6 junto a los adjuntos** (comparten subida y almacenamiento), pero **el contrato 0.4.0 se define ya** para que la UI de la Fase 5 lo prevea: `POST/GET/DELETE /api/v1/icons` (SVG ≤ 64 KB) y `category.icon = "custom:<uuid>"`. **Seguridad (un SVG puede llevar código):** el servidor lo limpia con lista blanca (sin `script`, `foreignObject`, eventos `on*`, enlaces o `url()` externos), guarda solo la versión limpia y la sirve con `Content-Security-Policy: default-src 'none'` y `nosniff`; la UI lo pinta con `flutter_svg`, que no ejecuta scripts. *Razón:* reutiliza la infraestructura de adjuntos y no frena la UI base.
+- B: implementarlo ya, en paralelo a la Fase 5. *Contra:* abre backend y seguridad antes de tener las pantallas base.
+- C: sin subida; solo un catálogo fijo. *Contra:* no es lo pedido.
+- *Catálogo base:* los 277 íconos PNG de Cashew tienen **licencia dudosa** (su README rechaza contribuciones «por licencias y créditos»): **no copiarlos** a este repositorio público sin verificarla. Recomendado: un set abierto (Material Symbols, Apache-2.0) + los SVG de Adrian.
+
+**D11 · Personalizar los detalles de la tarjeta de transacción** (fecha, hora, nota, etiquetas, cuenta, botones de acción). Cashew ya tiene interruptores sueltos parecidos (`showAccountLabelTagInTransactionEntry`, `showExtraInfoText`…).
+- **A (recomendada): preferencia guardada en el servidor**, `UserPreferences.transaction_card` en el contrato 0.4.0 (viaja entre dispositivos y servirá para Android en V4); por defecto, el aspecto de Cashew.
+- B: solo en el navegador (`localStorage`). *Contra:* se pierde al cambiar de dispositivo.
 
 **G2 · Decision gate de T-405: merge `master-dev` → `main` y publicación** (`gate_10f2135dac21`) — **RESUELTA: A (2026-10-09).** T-405 solo toca `importers/cashew/loans.py`, sus pruebas y documentación; sin cambios de contrato, migración ni API. Verificada por el coordinador (914 pruebas, sonda con servidor real, `--dry-run` real con cuadre exacto). La auditoría de seguridad de lo que se publique se repite antes del push.
 - **A (recomendada): aprobar el merge y el push** (sin `--force`). *Razón:* verificación completa y es la forma de tener el respaldo fuera de la máquina.
