@@ -1,6 +1,6 @@
 # T-502 — UI: marca por modo (favicon/ícono), tarjeta de transacción configurable e íconos SVG de categoría
 
-> **ESTADO: LANZADA el 2026-10-09** (Run `run_c2cebe1745b9`; decisiones D10-A y D11-A de Adrian; SPEC v0.4, contrato 0.4.0).
+> **ESTADO: ACEPTADA e integrada en `master-dev` el 2026-10-09** (verificada por el coordinador: analyze limpio, 29 pruebas, build web). (Run `run_c2cebe1745b9`; decisiones D10-A y D11-A de Adrian; SPEC v0.4, contrato 0.4.0).
 > Agente: **Codex**, modelo `gpt-6.1-sol` esfuerzo `high`. Corre **en paralelo con T-505** (backend; archivos disjuntos). T-503 (cliente HTTP) va **después** de esta.
 
 ## Contexto
