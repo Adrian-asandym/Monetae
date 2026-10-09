@@ -57,6 +57,7 @@ class ImportPlan:
     transfers: tuple[tuple[TransactionPlan, TransactionPlan], ...]
     deferred_loans: tuple[TransactionRow, ...]
     deferred_recurring: tuple[TransactionRow, ...]
+    skipped_transactions: tuple[TransactionRow, ...]
     warnings: tuple[str, ...]
     review_items: tuple[ReviewItem, ...]
 
@@ -126,7 +127,8 @@ def resolve_rate(
 def map_transaction(
     row: TransactionRow, account: AccountPlan, base_currency: str
 ) -> TransactionPlan:
-    amount = abs(row.amount) if row.income else -abs(row.amount)
+    # El saldo de Cashew suma este signo; income solo sirve como diagnóstico.
+    amount = row.amount
     kind = "income" if amount > 0 else "expense"
     money, rate = normalize_transaction(
         kind,
@@ -166,27 +168,52 @@ def build_plan(snapshot: Snapshot, base_currency: str, options: ImportOptions) -
     loan_rows: list[TransactionRow] = []
     recurring_rows: list[TransactionRow] = []
     reviews: list[ReviewItem] = []
+    skipped: list[TransactionRow] = []
     for row in snapshot.transactions:
         if row.wallet_pk not in by_wallet:
-            raise ImportFailure("Una transacción referencia una cuenta inexistente.")
+            reviews.append(
+                ReviewItem(
+                    kind="orphan_transaction",
+                    payload={
+                        "transaction_pk": row.pk,
+                        "wallet_pk": row.wallet_pk,
+                    },
+                )
+            )
+            skipped.append(row)
+            continue
+        if row.type not in (None, 0, 1, 2, 3, 4):
+            reviews.append(
+                ReviewItem(
+                    kind="unsupported_transaction_type",
+                    payload={
+                        "transaction_pk": row.pk,
+                        "type": row.type,
+                    },
+                )
+            )
+            skipped.append(row)
+            continue
         if row.type in (3, 4) or row.objective_loan_pk is not None:
             loan_rows.append(row)
             continue
         if row.type in (1, 2):
             recurring_rows.append(row)
             continue
-        if row.type not in (None, 0):
-            raise ImportFailure("Tipo de transacción Cashew no soportado.")
+        if row.amount == 0:
+            reviews.append(
+                ReviewItem(kind="zero_amount_transaction", payload={"transaction_pk": row.pk})
+            )
+            skipped.append(row)
+            continue
         if (row.amount > 0) != row.income:
             reviews.append(
                 ReviewItem(
-                    kind="polarity_corrected",
+                    kind="polarity_mismatch",
                     payload={
                         "transaction_pk": row.pk,
-                        "original_amount": str(row.amount),
-                        "corrected_amount": str(
-                            abs(row.amount) if row.income else -abs(row.amount)
-                        ),
+                        "amount": str(row.amount),
+                        "income": row.income,
                     },
                 )
             )
@@ -224,6 +251,7 @@ def build_plan(snapshot: Snapshot, base_currency: str, options: ImportOptions) -
         tuple(transfers),
         tuple(loan_rows),
         tuple(recurring_rows),
+        tuple(skipped),
         tuple(warnings),
         tuple(reviews),
     )

@@ -124,9 +124,9 @@ def test_lima_initial_window_and_polarity(snapshot: Snapshot, options: ImportOpt
         changed = replace(row, amount=abs(row.amount), income=False, occurred_at=timestamp)
         plan = build_plan(replace(snapshot, transactions=(changed,)), "PEN", options)
         assert plan.normal_transactions[0].is_initial_data == expected
-        assert plan.normal_transactions[0].amount < 0
-        assert plan.normal_transactions[0].kind == "expense"
-        assert plan.review_items[0].kind == "polarity_corrected"
+        assert plan.normal_transactions[0].amount == abs(row.amount)
+        assert plan.normal_transactions[0].kind == "income"
+        assert plan.review_items[0].kind == "polarity_mismatch"
 
 
 def test_fx_absent_fails(snapshot: Snapshot) -> None:

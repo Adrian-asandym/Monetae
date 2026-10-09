@@ -403,6 +403,7 @@ def run_import(
         plan = build_plan(snapshot, base, options)
         report.warnings.extend(plan.warnings)
         report.review_items.extend(plan.review_items)
+        report.entity("transactions").skipped = len(plan.skipped_transactions)
         ctx = ImportContext(
             session,
             user_id,
@@ -422,8 +423,11 @@ def run_import(
             report.steps["loans"] = loans.run(ctx)
             report.steps["subscriptions"] = subscriptions.run(ctx)
             imported_pks = set(ctx.transactions)
+            skipped_pks = {row.pk for row in plan.skipped_transactions}
             for link in snapshot.tag_links:
-                if link.transaction_pk not in imported_pks:
+                if link.transaction_pk in skipped_pks:
+                    report.entity("transaction_tags").skipped += 1
+                elif link.transaction_pk not in imported_pks:
                     report.entity("transaction_tags").deferred += 1
             for table in (
                 "budgets",
