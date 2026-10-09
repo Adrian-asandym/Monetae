@@ -133,7 +133,10 @@ se cuentan como pendientes de Fase 6; `delete_logs` no genera entidades.
 
 `ImportContext` expone `session`, `user_id`, `snapshot`, `options`, `plan`,
 `report`, mapas de `accounts`/`categories`/`tags`/`transactions` por PK de origen,
-`before`, `deferred_amounts` y `tag_links`. `map_transaction` normaliza una fila
+`before`, `deferred_amounts`, `tag_links` y `skipped_pks` (set vacío por defecto).
+Los pasos añaden a `skipped_pks` las filas que omiten: el runner clasifica sus
+etiquetas como omitidas, además de las de `plan.skipped_transactions`, sin
+contarlas como diferidas. `map_transaction` normaliza una fila
 ordinaria con su `AccountPlan`. `insert_transaction` conserva la identidad y los
 vínculos de etiquetas al crear, incluso etiquetas archivadas; permite indicar
 `kind`, `transfer_group_id` e identidad alternativa. `defer` registra filas
@@ -160,55 +163,80 @@ ARCHITECTURE §6), con aviso de escala. La marca de datos iniciales usa fechas
 inclusivas agosto–octubre de 2025 en `America/Lima`.
 
 
-## Suscripciones y recurrentes (T-403)
+## Suscripciones y recurrentes (T-403 / T-403b)
 
-`type=1` y monto negativo crea una suscripción de gasto y su regla; `type=2`
-crea solo una regla, de ingreso o gasto según el signo. Se conservan cuenta,
-moneda, categoría (subcategoría si existe), título y nota. La suscripción guarda
-el monto absoluto y la regla/transacciones su signo original.
+Cashew crea una fila por ocurrencia: al pagar una fila copia la siguiente con
+`paid=false` y una PK `<pk_original>::predict::N` (ver
+`upcomingTransactionsFunctions.dart`, `createNewSubscriptionTransaction` y
+`updatePredictableKey`, solo lectura). El importador agrupa `type=1` y `type=2`
+por `series_id = pk.split("::predict::")[0]`, sin fusionar títulos iguales.
+Ordena cada serie por `(date_created, pk)`.
 
-El calendario usa `reoccurrence`: 1 diaria, 2 semanal, 3 mensual, 4 anual.
-`period_length` es el intervalo de 1 a 366. Personalizada (0), nula, desconocida
-u intervalo inválido conserva la fila como transacción ordinaria y genera
-`unsupported_recurrence`, sin regla ni suscripción. Monto cero, título vacío,
-suscripción con importe positivo o calendario fuera del rango de fechas se
-omite con `invalid_recurring_transaction`; otras filas continúan procesándose.
-Si esto deja dinero sin explicar, se aplica el criterio de cuadre descrito abajo.
+Cada serie válida crea **una regla**; si la plantilla más reciente tiene
+`type=1`, crea además **una suscripción de gasto**. `type=2` crea solo una regla,
+de ingreso o gasto según el signo. Título, monto, categoría/subcategoría,
+cuenta, moneda, periodo, intervalo, nota y fecha de fin proceden de la última
+fila; cada transacción histórica conserva sus propios valores. El ancla es
+la fecha de la **primera** fila en `America/Lima`. La advertencia agregada
+`recurrence_anchor_assumed:N` señala esta interpretación del ancla para N series,
+en una única línea por reporte, sin un ítem por fila.
 
-Se interpreta la fecha de cada fila válida como la **última ocurrencia registrada**:
-se conserva una transacción histórica `posted`, con su identidad original,
-fecha y etiquetas, vinculada a la regla. Esta interpretación de v48 sigue siendo
-una hipótesis: el reporte añade una sola advertencia `recurrence_anchor_assumed:N`
-con el total de filas interpretadas; no genera un ítem de revisión por fila.
+El calendario usa `reoccurrence`: 1 diaria, 2 semanal, 3 mensual, 4 anual;
+`period_length` es el intervalo de 1 a 366. Cada fila `paid=1` se importa como
+histórica `posted`, con su fecha, cuenta, categoría, monto y etiquetas, vinculada
+a la regla; la API calcula `historical_paid` y `last_paid_on` desde ese historial.
 
-El ancla es la fecha de la fila en `America/Lima`. `next_after` del dominio
-calcula la primera fecha del calendario **mayor o igual que hoy** en Lima,
-con reloj inyectable en `subscriptions.run(context, clock=...)`. Se preserva
-el día del ancla sin deriva por meses cortos (31 → 28/29 → 31, y 29 de febrero).
-Se materializa una única `scheduled`, a las 00:00 de Lima (05:00 UTC), con
-monto, cuenta, categoría, moneda y tasa provisional de la regla. La tasa se
-resuelve antes de insertar, por las reglas de T-401; las programadas llevan
-fuente `manual` igual que las creadas por la API y deben confirmarse al publicar.
+Si existe una fila `paid=0`, esa fila es la `scheduled` de la regla a las 00:00
+de Lima (05:00 UTC), con su PK original y sus valores, y fija `next_run_on` /
+`next_due_on` aunque esté vencida. Una serie con solo esa fila es válida y no
+inventa historial. Si hay varias pendientes, la primera por `(date_created, pk)`
+es la programada vinculada; las demás se conservan como `scheduled` ordinarias,
+sin vincular a la regla, y se registra una revisión `multiple_pending_occurrences`
+con `{series_id, count}`.
 
-`end_date` limita el calendario por fecha local inclusiva. Si ya pasó, la regla
-queda inactiva y la suscripción queda `archived`, con `archived_at=end_date`
-y motivo «Terminada en Cashew», conservando el historial y sin programada.
-Si la próxima fecha excede un fin que aún no pasó, tampoco se materializa.
-Las suscripciones importadas usan el archivado/reactivación de la API de Fase 3,
-que conserva el historial y cancela todas las programadas pendientes al archivar.
+Si no existe fila pendiente, `next_after` calcula la primera fecha del calendario
+mayor o igual que hoy en Lima y materializa una única `scheduled`. El reloj se
+inyecta en `subscriptions.run(context, clock=...)`. Se preserva el día del ancla
+sin deriva por meses cortos (31 → 28/29 → 31, y 29 de febrero). La tasa se resuelve
+antes de insertar por las reglas de T-401, incluida la fuente de la fila mapeada:
+las programadas también conservan `auto` cuando corresponde y se cuentan en
+`provisional_fx`; no se convierten silenciosamente en tasas manuales.
 
-Regla, suscripción e histórica usan `cashew:sqlite:<pk>` en sus respectivas
-tablas; la nueva programada usa `cashew:sqlite:<pk>:scheduled`. Reimportar omite
-identidades existentes incluso borradas lógicamente, sin cambiar las fechas,
-montos, vínculos o estados y sin regenerar cobros cancelados. Una transacción
-histórica previamente importada sin regla se conserva sin editar y se registra
-`recurrence_already_imported` para revisión.
+Si `end_date` ya pasó, la regla queda inactiva y la suscripción archivada con
+`archived_at=end_date` y motivo «Terminada en Cashew», conservando el historial
+pagado. No se materializa una programada. Las filas pendientes de una serie
+terminada se omiten para evitar cobros huérfanos, con
+`ended_series_pending_occurrence` y `{series_id, transaction_pk, due_on}`;
+cuentan como `skipped`, también sus etiquetas. Un fin futuro sigue siendo
+inclusivo: una próxima fecha calculada que lo exceda no se materializa.
 
-`steps.subscriptions` incluye `subscriptions_created`, `recurring_rules_created`,
-`already_imported`, `archived` (reglas terminadas, con o sin suscripción),
-`skipped`, `unsupported_recurrence` y `scheduled_created`. `counts` contiene
-las entidades `subscriptions` y `recurring_rules`; las históricas y programadas
-nuevas también cuentan en `counts.transactions`.
+**Fallback sin perder dinero:** una periodicidad no soportada o intervalo
+fuera de rango importa todas las filas como transacciones ordinarias (posted
+si pagadas, scheduled si pendientes), con una revisión por serie
+`unsupported_recurrence` y `{series_id, rows}`. Título vacío, plantilla de
+suscripción con monto positivo o calendario inválido hace lo mismo con
+`invalid_recurring_transaction`. Solo una fila con monto cero se omite, con
+`zero_amount_transaction` y su PK. Los enlaces de etiquetas de las filas
+ordinarias se conservan; los de filas omitidas cuentan como `skipped`.
+
+Regla y suscripción usan `cashew:sqlite:<series_id>`; cada fila original usa
+`cashew:sqlite:<pk_de_la_fila>`. Solo una programada calculada sin fila Cashew
+usa `cashew:sqlite:<series_id>:scheduled`. Una serie de una fila pagada conserva
+los mismos IDs y resultado de T-403. Reimportar omite identidades existentes,
+incluso borradas lógicamente, sin modificar la plantilla, el historial ni sus
+vínculos y sin regenerar cobros cancelados. Una transacción previamente importada
+como ordinaria no se edita para enlazarla retroactivamente; se conserva con
+revisión `recurrence_already_imported`.
+
+`steps.subscriptions` mantiene `subscriptions_created`, `recurring_rules_created`,
+`already_imported`, `archived`, `skipped`, `unsupported_recurrence` y
+`scheduled_created`, y añade `series`, `rows_total`, `historical_posted`,
+`pending_scheduled` (incluye programadas calculadas y pendientes adicionales)
+y `ordinary_fallback` (filas conservadas como ordinarias por plantilla inválida).
+Los conteos de filas procesadas incluyen las identidades ya importadas; los
+contadores `created` indican únicamente inserciones nuevas. `counts.transactions`
+cuenta todas las históricas y programadas nuevas, y `counts.subscriptions` /
+`counts.recurring_rules` cuentan las entidades por serie.
 
 ## Cuadre final y código 5
 
