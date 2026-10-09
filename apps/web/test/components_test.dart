@@ -24,6 +24,7 @@ Future<void> mount(
   Brightness brightness,
   ComponentBuilder builder, {
   bool reducedMotion = false,
+  Size captureSize = const Size(600, 520),
 }) async {
   tester.view.physicalSize = const Size(800, 700);
   tester.view.devicePixelRatio = 1;
@@ -44,8 +45,8 @@ Future<void> mount(
               child: RepaintBoundary(
                 key: _capture,
                 child: Container(
-                  width: 600,
-                  height: 520,
+                  width: captureSize.width,
+                  height: captureSize.height,
                   padding: const EdgeInsets.all(24),
                   color: MonetaeColors.of(context).background,
                   child: Builder(
@@ -302,7 +303,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(const MonetaeApp());
+    await tester.pumpWidget(const DemoApp());
     await tester.pumpAndSettle();
     expect(find.text('Transacciones'), findsOneWidget);
     await tester.tap(find.byKey(const Key('theme-switch')));
