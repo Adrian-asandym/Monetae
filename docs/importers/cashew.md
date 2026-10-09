@@ -69,7 +69,7 @@ contiene tasas: el ejemplo de uso debe incluir `--fx-rate USD=3.800000`.
 - `file_sha256`, `source_schema_version` y `tables` (conteos del SQLite).
 - `unknown_tables`, `unknown_columns`, `warnings` (códigos), `unmapped_fields`.
 - `counts`: por entidad, `created`, `already_imported`, `deferred`, `skipped`.
-- `steps`: secciones JSON extensibles de `loans`, `subscriptions` y `phase_6`.
+- `steps`: secciones JSON extensibles de `transfers`, `loans`, `subscriptions` y `phase_6`.
 - `provisional_fx`, `outcome` y `review_items` (`kind`, `payload`).
 - `balances`: por cuenta, PK de origen, UUID de cuenta, moneda, `before`,
   `cashew_balance`, `monetae_balance`, `deferred_amount` y `unexplained`.
@@ -117,11 +117,38 @@ si hace falta). Categorías de Cashew llamadas Intereses siguen siendo distintas
 de las categorías de sistema y generan aviso. El archivado y emoji de categorías
 se conservan como campos sin destino en el reporte.
 
-Las transferencias exigen dos filas recíprocas, cuentas distintas, misma moneda,
-importes opuestos y ambas pagadas. Se insertan atómicamente sin categoría, con
-un único grupo. Un par inválido se conserva como transacciones ordinarias y
-`unpaired_transfer`; una pareja parcialmente importada nunca modifica la pata
-existente y su nueva pata se inserta como ordinaria, con revisión.
+Las transferencias se forman únicamente por una referencia explícita
+`a.paired_transaction_fk = b.transaction_pk`. Se acepta si la referencia de b
+es nula o apunta de vuelta a a; el par se cuenta una sola vez. Ambas filas deben
+ser ordinarias (tipo nulo o 0, sin préstamo, no omitidas), de cuentas distintas,
+misma moneda, importes opuestos y pagadas. Se insertan atómicamente sin categoría,
+con un único grupo; nunca se empareja por parecido de importes, títulos o fechas.
+
+Si varias filas apuntan a b, o b apunta a una tercera fila, las filas implicadas
+no forman ningún par. Un par inválido conserva sus patas ordinarias y genera
+`unpaired_transfer` por cada pata ordinaria implicada, incluso la que no tiene
+referencia saliente. El payload contiene `transaction_pk`, `paired_pk` (la
+contraparte explícita entrante o saliente) y un único `reason`: el primero que
+aplique en este orden:
+
+1. `counterpart_missing`: la contraparte no existe.
+2. `counterpart_not_ordinary`: préstamo, recurrente, fila omitida o tipo distinto de 0/nulo.
+3. `same_wallet`: ambas patas usan la misma cuenta.
+4. `currency_mismatch`: monedas distintas.
+5. `amount_mismatch`: los importes no son opuestos.
+6. `unpaid`: alguna pata no está pagada.
+7. `ambiguous_counterpart`: varias referencias entrantes o referencia a una tercera fila.
+
+El emparejado entre monedas distintas queda como mejora futura: se importa como
+ordinario con `currency_mismatch`, sin inventar una tasa. Una pareja parcialmente
+importada tampoco modifica la pata existente; la nueva se inserta como ordinaria
+con el motivo existente `partially_imported`. Se mantienen la identidad por pata
+y la política de solo inserción.
+
+`steps.transfers.unpaired_by_reason` agrega el número de ítems `unpaired_transfer`
+por motivo (incluido `partially_imported`), no el número de pares, para mostrar un
+resumen sin payloads. Un reporte sin incidencias contiene un mapa vacío; los
+conteos describen el intento actual, también en simulación o reimportación.
 
 Los pasos se ejecutan en orden: cuentas → categorías → etiquetas → transacciones
 ordinarias/programadas → transferencias → `loans.run(context)` →
