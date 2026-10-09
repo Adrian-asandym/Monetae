@@ -168,7 +168,7 @@ def test_failed_post_rolls_back_and_interval_edit(client: TestClient) -> None:
     assert client.get(f"/api/v1/subscriptions/{entity}").json()["next_due_on"] == "2027-03-31"
 
 
-def test_posting_preserved_old_schedule_does_not_regress_calendar(client: TestClient) -> None:
+def test_posting_overdue_schedule_cancelled_by_archive_is_rejected(client: TestClient) -> None:
     login(client)
     entity = create_subscription(client, create_account(client), next_due_on="2026-09-01")
     past = scheduled_for(client, entity)[0]
@@ -178,6 +178,8 @@ def test_posting_preserved_old_schedule_does_not_regress_calendar(client: TestCl
         ).status_code
         == 200
     )
+    # Archivar cancela también la programada vencida (D2): ya no se puede publicar.
+    assert client.get(f"/api/v1/transactions/{past['id']}").status_code == 404
     assert (
         client.post(
             f"/api/v1/subscriptions/{entity}/reactivate", headers=csrf_headers(client)
@@ -185,17 +187,14 @@ def test_posting_preserved_old_schedule_does_not_regress_calendar(client: TestCl
         == 200
     )
     assert client.get(f"/api/v1/subscriptions/{entity}").json()["next_due_on"] == "2026-11-01"
-    assert (
-        client.post(
-            f"/api/v1/transactions/{past['id']}/post", headers=csrf_headers(client)
-        ).status_code
-        == 200
-    )
+    response = client.post(f"/api/v1/transactions/{past['id']}/post", headers=csrf_headers(client))
+    assert response.status_code == 404
+    # El calendario no cambia y sigue habiendo una sola programada.
     assert client.get(f"/api/v1/subscriptions/{entity}").json()["next_due_on"] == "2026-11-01"
     assert len(scheduled_for(client, entity)) == 1
 
 
-def test_reactivate_today_does_not_duplicate_preserved_schedule(
+def test_reactivate_today_creates_a_single_fresh_schedule(
     client: TestClient, clock: FakeClock
 ) -> None:
     clock.value = datetime(2026, 10, 7, 12, tzinfo=UTC)
@@ -208,14 +207,17 @@ def test_reactivate_today_does_not_duplicate_preserved_schedule(
         ).status_code
         == 200
     )
+    assert scheduled_for(client, entity) == []
     assert (
         client.post(
             f"/api/v1/subscriptions/{entity}/reactivate", headers=csrf_headers(client)
         ).status_code
         == 200
     )
+    # La de hoy se cancela al archivar y se materializa una nueva: nunca dos.
     scheduled = scheduled_for(client, entity)
-    assert len(scheduled) == 1 and scheduled[0]["id"] == initial["id"]
+    assert len(scheduled) == 1 and scheduled[0]["id"] != initial["id"]
+    assert str(scheduled[0]["occurred_at"]) == str(initial["occurred_at"])
 
 
 def test_calendar_overflow_rolls_back_post(client: TestClient) -> None:

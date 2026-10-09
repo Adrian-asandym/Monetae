@@ -538,12 +538,13 @@ Fin de mes y 29 de febrero conservan el ancla. Editar sincroniza la regla y
 reemplaza mediante borrado lógico sus cobros no publicados; una nueva fecha
 explícita establece una nueva ancla. Cambiar moneda o elegir una cuenta de otra
 moneda devuelve `422 currency_mismatch`: se archiva y se crea otra suscripción.
-Archivar o borrar desactiva la regla y borra lógicamente solo cobros programados
-con timestamp igual o posterior al reloj de la aplicación; conserva los pasados
-y todos los publicados. Reactivar selecciona la primera fecha del calendario
+Archivar o borrar desactiva la regla y borra lógicamente **todos** los cobros
+programados sin publicar de la regla, también los vencidos (decisión D2 de Adrian,
+2026-10-08: así no queda una programada huérfana ni aparecen dos al reactivar);
+conserva todos los publicados. Reactivar selecciona la primera fecha del calendario
 igual o posterior a hoy en America/Lima usando el reloj inyectado, y conserva
 el historial. Si ya existe un cobro de esa fecha, lo reutiliza; publicar un
-cobro vencido conservado no retrocede el calendario vigente. Repetir archive o
+cobro anterior al vigente no retrocede el calendario. Repetir archive o
 reactivate en el estado de destino devuelve `409`.
 
 **Ampliación aditiva autorizada por el coordinador en T-304:**

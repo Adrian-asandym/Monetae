@@ -2611,7 +2611,7 @@
           "subscriptions"
         ],
         "summary": "Borrado lógico de subscriptions",
-        "description": "Archivo reversible conserva historial y cancela futuras scheduled. Marca deleted_at; no elimina físicamente datos ni historial de otras entidades. Categorías de sistema protegidas; referencias vigentes pueden producir 409. Valida Origin y X-CSRF-Token; ningún user_id se acepta del cliente. Aislamiento por sesión; referencias ajenas responden 404.",
+        "description": "Archivo reversible conserva historial y cancela futuras scheduled. Marca deleted_at; no elimina físicamente datos ni historial de otras entidades. Categorías de sistema protegidas; referencias vigentes pueden producir 409. Valida Origin y X-CSRF-Token; ningún user_id se acepta del cliente. Aislamiento por sesión; referencias ajenas responden 404. Cancela (borrado lógico) todas las scheduled sin publicar de la regla, también las vencidas; los pagos posted no se tocan.",
         "security": [
           {
             "SessionCookie": []
@@ -3802,7 +3802,7 @@
           "subscriptions"
         ],
         "summary": "Archivar subscriptions",
-        "description": "Archivado reversible. Desactiva regla y borra lógicamente futuras scheduled, sin tocar pagos posted; excluye de listados y totales. Valida Origin y X-CSRF-Token; ningún user_id se acepta del cliente. Aislamiento por sesión; referencias ajenas responden 404.",
+        "description": "Archivado reversible. Desactiva regla y borra lógicamente futuras scheduled, sin tocar pagos posted; excluye de listados y totales. Valida Origin y X-CSRF-Token; ningún user_id se acepta del cliente. Aislamiento por sesión; referencias ajenas responden 404. Cancela (borrado lógico) todas las scheduled sin publicar de la regla, también las vencidas; los pagos posted no se tocan.",
         "security": [
           {
             "SessionCookie": []

@@ -79,7 +79,7 @@ def test_spec_netflix_three_payments_archive_and_reactivate(
     )
 
 
-def test_archive_preserves_past_scheduled_and_ignores_deleted_payments(
+def test_archive_cancels_overdue_scheduled_and_ignores_deleted_payments(
     client: TestClient, db_session: Session
 ) -> None:
     login(client)
@@ -94,18 +94,51 @@ def test_archive_preserves_past_scheduled_and_ignores_deleted_payments(
         ).status_code
         == 200
     )
-    next_past = scheduled_for(client, entity)[0]
+    # La siguiente programada (2026-10-01) ya venció respecto al reloj (2026-10-07).
+    overdue = scheduled_for(client, entity)[0]
     assert (
         client.post(
             f"/api/v1/subscriptions/{entity}/archive", json={}, headers=csrf_headers(client)
         ).status_code
         == 200
     )
-    assert client.get(f"/api/v1/transactions/{next_past['id']}").status_code == 200
+    # Archivar cancela también la vencida sin publicar: no queda ninguna programada.
+    assert client.get(f"/api/v1/transactions/{overdue['id']}").status_code == 404
+    assert scheduled_for(client, entity) == []
     historical = client.get(f"/api/v1/subscriptions/{entity}").json()
     assert historical["historical_paid"] == "0.00" and historical["last_paid_on"] is None
     row = db_session.get(Transaction, payment_id)
     assert row is not None and row.deleted_at is not None
+
+
+def test_archive_after_due_then_reactivate_leaves_exactly_one_scheduled(
+    client: TestClient,
+) -> None:
+    """Escenario real: se archiva tras vencer el cobro y antes de marcarlo pagado."""
+    login(client)
+    entity = create_subscription(client, create_account(client), next_due_on="2026-10-01")
+    assert len(scheduled_for(client, entity)) == 1  # vencida respecto al reloj
+    archived = client.post(
+        f"/api/v1/subscriptions/{entity}/archive", json={}, headers=csrf_headers(client)
+    )
+    assert archived.status_code == 200, archived.text
+    assert scheduled_for(client, entity) == []
+    reactivated = client.post(
+        f"/api/v1/subscriptions/{entity}/reactivate", headers=csrf_headers(client)
+    )
+    assert reactivated.status_code == 200, reactivated.text
+    assert reactivated.json()["next_due_on"] == "2026-11-01"
+    pending = scheduled_for(client, entity)
+    assert len(pending) == 1 and str(pending[0]["occurred_at"]).startswith("2026-11-01")
+
+
+def test_delete_cancels_overdue_scheduled(client: TestClient) -> None:
+    login(client)
+    entity = create_subscription(client, create_account(client), next_due_on="2026-10-01")
+    assert len(scheduled_for(client, entity)) == 1
+    deleted = client.delete(f"/api/v1/subscriptions/{entity}", headers=csrf_headers(client))
+    assert deleted.status_code == 200, deleted.text
+    assert scheduled_for(client, entity) == []
 
 
 def test_reason_limit(client: TestClient) -> None:

@@ -253,16 +253,23 @@ class SubscriptionService:
         self.db.flush()
         return row
 
-    def _cancel_scheduled(self, row: Subscription, *, future_only: bool) -> None:
-        query = update(Transaction).where(
-            Transaction.user_id == row.user_id,
-            Transaction.recurring_rule_id == row.recurring_rule_id,
-            Transaction.status == "scheduled",
-            Transaction.deleted_at.is_(None),
+    def _cancel_scheduled(self, row: Subscription) -> None:
+        """Borra lógicamente TODAS las programadas sin publicar de la regla.
+
+        Incluye las vencidas: si no, al archivar justo después de un vencimiento
+        quedaría una programada huérfana y, al reactivar, aparecerían dos.
+        Los cobros publicados no se tocan.
+        """
+        self.db.execute(
+            update(Transaction)
+            .where(
+                Transaction.user_id == row.user_id,
+                Transaction.recurring_rule_id == row.recurring_rule_id,
+                Transaction.status == "scheduled",
+                Transaction.deleted_at.is_(None),
+            )
+            .values(deleted_at=self.clock.now())
         )
-        if future_only:
-            query = query.where(Transaction.occurred_at >= self.clock.now())
-        self.db.execute(query.values(deleted_at=self.clock.now()))
 
     def update(
         self, user_id: UUID, subscription_id: UUID, payload: schema.SubscriptionUpdate
@@ -283,7 +290,7 @@ class SubscriptionService:
                 row.anchor_on = row.next_due_on
             self.model(row)
             self._references(row)
-        self._cancel_scheduled(row, future_only=False)
+        self._cancel_scheduled(row)
         for name in (
             "account_id",
             "currency",
@@ -314,7 +321,7 @@ class SubscriptionService:
             result.archive_reason,
         )
         rule.active = False
-        self._cancel_scheduled(row, future_only=True)
+        self._cancel_scheduled(row)
         self.db.flush()
         return row
 
@@ -340,7 +347,7 @@ class SubscriptionService:
         rule = self.rule(row, lock=True)
         rule.active = False
         row.deleted_at = rule.deleted_at = self.clock.now()
-        self._cancel_scheduled(row, future_only=True)
+        self._cancel_scheduled(row)
         self.db.flush()
 
     @staticmethod
@@ -353,7 +360,7 @@ class SubscriptionService:
     def advance(self, row: Subscription, rule: RecurringRule, scheduled_on: date) -> None:
         if not rule.active or row.status != "active" or row.deleted_at is not None:
             return
-        # Publicar un cobro vencido conservado al archivar no retrocede el calendario.
+        # Publicar una programada anterior a la vigente no retrocede el calendario.
         if scheduled_on < rule.next_run_on:
             return
         row.next_due_on = rule.next_run_on = self.next_after(row, scheduled_on)
