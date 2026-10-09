@@ -531,3 +531,116 @@ quedan idénticos. Verificaciones: pub get, analyze limpio, 83 tests verdes sin
 actualizar goldens, release web correcto y búsqueda de acoplamientos vacía.
 Se mantiene la estimación anterior de Fase 5 y no quedan decisiones pendientes
 en este seguimiento.
+
+## T-507
+
+Fecha: 2026-10-09. Rama: `codex/T-507-ui-budgets-goals`. Contrato **0.5.0**.
+Se entregan componentes presentacionales y una demo aislada; **Inicio conserva
+su composición**. Sin dependencias nuevas, sin cambios en backend, contrato o
+infraestructura y sin tocar la pila de revisión `monetae-review`. No se accedió
+ni se listó ningún respaldo real: todos los ejemplos son sintéticos.
+
+### Componentes y diferencias frente a Cashew
+
+| Referencia leída (Cashew `budget/lib/`) | Adaptación y diferencia |
+|---|---|
+| `widgets/budgetContainer.dart`: `BudgetContainer`, `BudgetTimeline` | `BudgetCard`: radio exterior 20, título 24, cabecera con padding 23/13 y tinte del presupuesto; importe principal 18 y texto secundario 13. «Restante» y «Excedido» son el importe enviado por el servidor (valor absoluto para la etiqueta de exceso); además se muestra gastado/total. La cabecera líquida de `AnimatedGooBackground` se sustituye por tinte estático; no se añade `sa3_liquid`. Se omiten botón de historial, navegación implícita y el cálculo de gasto/permitido por día, sin campos equivalentes en estos DTO. `onTap` queda a cargo del caller. |
+| `widgets/budgetContainer.dart`: `BudgetProgress`, `AnimatedProgress`, `TodayIndicator`; `widgets/progressBar.dart` | `BudgetProgress`: barra lineal de 19.2 px, pista y relleno pastel del color recibido, extremos redondeados, porcentaje y transición de 1500 ms con `easeInOutCubic`. Por encima del 40 %, el porcentaje se centra dentro del relleno claro, como Cashew, para conservar contraste también en oscuro; si no, se centra en la pista. Conserva «Hoy» (9 px, radio 6, línea 3×22) y fechas a los lados. No hay sacudida de exceso ni capas de gastos pendientes/miembros, que el contrato no entrega; se mantiene el porcentaje >100 con barra acotada. Movimiento reducido omite animación. |
+| `pages/objectivesListPage.dart`: `ObjectiveContainer`; `pages/homePage/homePageObjectives.dart` | `GoalCard`: **progreso lineal**, como el `ObjectiveContainer` que usa Inicio, no un círculo de avance. Radio 20, padding 30/20 y 18/23 vertical, título e importe principal 24, meta secundaria 15, ícono 30 en círculo de 50. El círculo es el fondo del ícono. Se usa `Goal.kind` (ahorro/gasto) en vez del contador de transacciones no disponible; fecha límite explícita si existe, sin calcular dinero restante ni allowance. El avance ≥ meta se pinta verde y se etiqueta «Completado», sin almacenar estado. No hay préstamos modelados como objetivos (RF-32). |
+| `widgets/animatedCircularProgress.dart` | Se estudió, pero no se porta: no es el indicador de avance del objetivo de Inicio. Se usa en otras variantes del original (miembros/préstamos), fuera de esta tarea. |
+| `pages/homePage/{homePageBudgets,homePageObjectives}.dart`; `pages/{budgetsListPage,objectivesListPage}.dart`; `struct/defaultPreferences.dart` | `BudgetCardList`/`GoalCardList`: horizontal en Inicio (500/400 px en escritorio y 95 % del espacio estrecho) o vertical (separación 16), alturas naturales, empty tile de al menos 160 px. Scroll nativo de Flutter con arrastre táctil/ratón/trackpad reemplaza el carrusel con zoom/snap; no se añade `carousel_slider` ni se fija altura según la primera tarjeta. La creación/selección son callbacks opcionales; la demo no inventa CRUD ni preferencias de fijación. Vacíos es/en, sin ejemplos financieros en la app real. |
+| Íconos y temas | Se reutilizan tema azul oscuro de T-501, `CategoryIcon`/`CategoryIconSource` de T-502 y el formateador peruano de T-504b. Catálogo Material y SVG propio sintético; no se copian PNG de Cashew. El caller entrega los bytes de SVG; si faltan, se usa el ícono de reserva. Fuentes y diferencias generales del tema siguen lo documentado en T-501. |
+
+Cada archivo derivado incluye fuente, autoría y aviso GPL-3.0; `apps/web/NOTICE`
+recoge las rutas y modificaciones. El tema oscuro conserva la superficie azul
+de Monetae; el presupuesto usa su tinte propio, igual que el componente de
+referencia. Las capturas fijan la adaptación para revisión visual de Adrian;
+no equivalen a una aprobación humana de fidelidad al original.
+
+### Contrato, geometría y demostración
+
+`tool/generate_dtos.py` genera `Budget`, `BudgetCategoryLimit`, `Goal`,
+`BudgetPage` y `GoalPage`, además del subconjunto existente. Conserva todos los
+campos de 0.5.0, enums, nullable, límites anidados y `ReportTotal`. La regeneración
+incluye también `Account.transaction_count`, `UserPreferences.default_account_id`
+y `CashFlowRow.cumulative_net`; se adaptan las fixtures y expectativas previas
+con valores literales, sin ensamblar todavía esas funciones en Inicio.
+
+Todos los importes son cadenas exactas: `spent_amount`, `remaining_amount`,
+`progress_amount`, importe del presupuesto/meta y `report_total`. **No se resta,
+suma ni convierte dinero en Flutter.** `DecimalProgress.fromAmounts` normaliza
+las escalas decimales como enteros `BigInt`, divide el numerador entre el objetivo
+con seis decimales de precisión geométrica y acota la fracción entre 0 y 1 antes
+de convertirla a `double`. Solo ese cociente adimensional entra en el layout.
+El porcentaje textual se redondea con enteros y conserva el exceso (120 %);
+un avance negativo pinta cero sin alterar la cadena monetaria mostrada. El
+indicador «Completado» compara el cociente con uno y es solo presentación.
+«Excedido» usa el signo del restante enviado, nunca una diferencia calculada.
+
+«Hoy» usa fechas de calendario suministradas por el caller: posición entre
+`start_on` y `end_on`, visible únicamente dentro del rango. No se resuelven
+recurrencias ni se presume que la zona del navegador sea America/Lima; con
+`end_on` nulo se omite. Se necesita que la integración entregue el rango del
+reporte y el día local. Los `ReportTotal` secundarios solo aparecen si cambia la
+moneda o hay originales extranjeros; muestran cadenas del servidor y su aviso
+`unconverted_count`, sin reconstruir el convertido ni mezclarlo con la barra.
+
+`/#/demo/budgets-goals` abre tres presupuestos (en curso/casi agotado/excedido)
+y tres objetivos (a medias/completado/SVG propio), PEN y USD, con tema e idioma,
+orientación y vacíos controlables. Se llega también desde `/#/demo`; no hay
+peticiones HTTP en esta ruta. README documenta su uso y la API de los componentes.
+
+### Qué necesita T-509 para ensamblar Inicio
+
+1. Colocar `GoalCardList` antes de `BudgetCardList`, según `docs/ui/home-layout.md`,
+   respetando `home_widgets`; mantener los datos sintéticos solo en las demos.
+2. Conectar/paginar `/reports/goals` y `/reports/budgets` cuando estén implementados
+   en Fase 6. Mientras falten, usar vacío i18n ante 404/501, con carga/error/reintento
+   y retorno al acceso ante 401 conforme al cliente existente. Los DTO de páginas
+   ya están disponibles; T-507 no añade transporte ni reglas de presupuestos.
+3. Pasar el día de America/Lima y el rango del reporte desde la API. No derivar
+   ciclos semanales/mensuales ni importes permitidos por día en la UI. Resolver
+   callbacks de detalle/creación y preferencias de selección/fijación cuando el
+   contrato y los flujos correspondientes estén disponibles.
+4. Alimentar `customIcons` desde la biblioteca de SVG saneados de Fase 6;
+   el catálogo y el fallback ya funcionan. Mantener el formato peruano compartido
+   y los colores del DTO, con acento del tema cuando son nulos.
+5. Ensamblar el resto pendiente: saludo, cuentas con nº de transacciones y cuenta
+   predeterminada, cuatro botones inferiores, circular con tres categorías/swipe,
+   línea con `cumulative_net` del servidor, últimas 25 transacciones y cuadro «+».
+   T-507 no cambia ninguno de esos bloques ni añade gráficos históricos de
+   presupuestos: esos datos y su pantalla pertenecen al flujo de Fase 6.
+6. Revisar disposición, fidelidad y scroll con Adrian en claro/oscuro después de
+   la integración; decidir si la reproducción del zoom/snap del carrusel requiere
+   una adaptación posterior. Las diferencias de esta entrega están explícitas.
+
+### Verificación final
+
+- `python3 -I tool/generate_dtos.py` y formato del archivo generado: correcto;
+  salida reproducible del contrato 0.5.0, sin dependencias del generador.
+- `flutter pub get`: correcto; `pubspec.yaml`/`pubspec.lock` no cambian.
+- `dart analyze`: **sin incidencias**.
+- `flutter test`: **116 pruebas verdes** (83 previas + 33 nuevas), **64 goldens**
+  comparados **sin actualizar referencias** en la ejecución final. Los 26 nuevos
+  cubren presupuesto en curso/casi agotado/excedido, objetivo a medias/completado,
+  listas de ambos tipos horizontales/verticales con/sin datos, claro/oscuro.
+  Los 38 anteriores quedan intactos. Se inspeccionaron capturas representativas
+  de ambos temas, tarjetas y listas, incluido el porcentaje dentro del relleno.
+- Pruebas adicionales: proporción 0/parcial/1/exceso/negativa, escalas diferentes,
+  importes superiores a la precisión de `double`, fechas del marcador/extremos,
+  decimales/nullable/enums/límites anidados del DTO, formato peruano PEN/USD,
+  restante literal (sin reconstrucción), ausencia de totales duplicados, aviso
+  sin tasa, SVG propio, fallback de acento y callbacks/scroll a **390 px**.
+  Se cubren controles de idioma/tema/orientación/vacío de la demo y regresión del
+  contraste de «50 %» en oscuro. Las expectativas del PATCH existente incorporan
+  `default_account_id` nullable de 0.5.0.
+- `flutter build web --release`: **correcto**, compilación final **112.8 s**,
+  dry-run Wasm correcto. Persiste únicamente el aviso previo de fuente Cupertino
+  referido en T-504; MaterialIcons se incluye y sus goldens pasan.
+- `grep -rE 'drift|firebase|appStateSettings|package:budget/' lib`: **vacío**
+  (`limpio`). `git diff --check`: correcto. Solo archivos permitidos; `build/`
+  queda ignorado y no se incorpora a los commits.
+
+No quedan bloqueos de implementación dentro de T-507. La integración HTTP de
+presupuestos/metas espera a Fase 6 y el ensamblado de Inicio a T-509, con revisión
+visual de Adrian según la regla de fidelidad de SPEC.

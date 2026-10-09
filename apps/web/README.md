@@ -183,3 +183,51 @@ float; los doubles de las gráficas solo representan coordenadas y proporciones.
 El resumen omite el desglose secundario cuando existe una sola moneda original
 igual a la de reporte; lo muestra cuando hay varias monedas o una original
 distinta. Se evita así repetir el mismo importe en las tarjetas Gasto/Ingreso.
+
+### Presupuestos y objetivos (T-507)
+
+`/#/demo/budgets-goals` abre una ruta aislada, sin sesión ni peticiones HTTP,
+con tres presupuestos (en curso, casi agotado y excedido), objetivos a medias y
+completado, PEN/USD y un SVG propio sintético. Incluye controles es/en, tema
+claro/oscuro, listas horizontales/verticales y estado vacío. También se abre desde
+la demo de componentes. Inicio no cambia: su ensamblado pertenece a T-509.
+
+`BudgetCard` y `GoalCard` reciben `BudgetDto`/`GoalDto` generados del contrato
+**0.5.0**. `BudgetCardList`/`GoalCardList` reciben listas, orientación y callbacks
+opcionales de selección/creación; sin callback no hay controles de creación.
+La lista horizontal usa anchos de 500/400 px en escritorio y 95 % del espacio
+estrecho, con arrastre táctil, ratón o trackpad; la vertical conserva altura
+natural y separación de 16 px. SVGs se reciben como bytes en `customIcons`, como
+en T-502; un ícono aún no disponible usa el catálogo de reserva.
+
+Los importes vienen directamente de `spent_amount`, `remaining_amount`,
+`progress_amount`, `amount`, `target_amount` y `report_total`. No hay restas,
+sumas ni conversiones monetarias. `DecimalProgress.fromAmounts` alinea las
+escalas con `BigInt` y divide las cadenas exactas para obtener una proporción:
+solo el cociente geométrico, truncado a seis decimales y acotado a [0,1], pasa
+a `double`. El porcentaje de texto se redondea con enteros y puede superar
+100 %, aunque la barra esté llena. Una proporción negativa se pinta en cero;
+el importe negativo del servidor se conserva en el texto. «Excedido» usa el
+signo de `remaining_amount`, no una resta; «Completado» es un indicador visual
+de progreso ≥ meta, sin guardar un estado financiero.
+
+La marca «Hoy» usa únicamente el rango `start_on`/`end_on` suministrado y el día
+local que recibe en `today`; no infiere periodos recurrentes ni la zona del
+navegador. Sin fin, sin día o fuera del rango se omite. El caller de Inicio deberá
+pasar la fecha de America/Lima y un rango de reporte resuelto por la API.
+`ReportTotal` se muestra adicionalmente si cambia la moneda o incluye originales
+extranjeros; nunca se usa un convertido para medir una meta de otra moneda.
+El aviso `unconverted_count` conserva el valor y los originales del servidor.
+Las barras animan en 1500 ms y respetan movimiento reducido.
+
+Verificación de componentes y goldens nuevos:
+
+```bash
+flutter test test/budgets_goals_test.dart
+# Solo para un cambio visual deliberado revisado:
+flutter test test/budgets_goals_test.dart --update-goldens
+```
+
+Hay 26 goldens claro/oscuro: cinco casos de tarjeta y listas de ambos tipos,
+horizontales/verticales, con/sin datos. Procedencia en NOTICE y cada archivo
+derivado; diferencias e integración pendiente en el informe, sección «T-507».
