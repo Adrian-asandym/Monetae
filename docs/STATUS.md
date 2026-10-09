@@ -20,7 +20,7 @@
 | Estado | Contenido |
 |---|---|
 | ✅ **Completo** | Fases 0–3 y **Fase 4 (importador de Cashew)**, publicadas en `origin/main` (`b0a80ae`). **T-405 (L1-A)** aceptada e integrada en `master-dev` (`fa06542`), aún sin publicar. |
-| 🔄 **En curso** | **Fase 5 iniciada (2026-10-09):** `T-501` (spike de desacople de widgets) lanzada con Codex `gpt-6.1-sol` high, Run `run_c2cebe1745b9`, tarea `task_5df2d0fe6f4d`, rama `codex/T-501-ui-decoupling-spike`, terminal `term_8475022b-01dd-4067-8cbc-a3583edd1e79`. |
+| 🔄 **En curso** | **Fase 5 (UI Flutter Web).** `T-501` (spike) **aceptada e integrada en `master-dev`** (`524d76c`), sin publicar: `apps/web` con tema, tarjeta de transacción, gráfico circular y animación desacoplados (sin Drift ni `appStateSettings`), DTO desde OpenAPI, i18n es/en, 12 pruebas con 8 goldens claro/oscuro, `flutter build web` OK, atribución GPL (`apps/web/NOTICE`, `LICENSE` de Cashew). Informe: `docs/cashew-analysis/05-ui-spike-results.md`: **8–10 tareas** de desacople (antes 6–8; 1,25×, bajo el umbral de 1,5×), ADR-001 A se mantiene. **Pendiente: revisión visual de Adrian** y planificar las siguientes tareas de la Fase 5. |
 | ⏳ **Pendiente** | **Gate G2** (publicar T-405) · decidir **cuándo** hacer la importación real definitiva (§5, D9) · Fase 5 (UI Flutter; `T-501`) · Fase 6 (incluye presupuestos, metas y reglas de título, hoy listados como «pendiente de Fase 6» por el importador) · Fase 7 · despliegue VPS → V2 → V3 → V4. |
 
 Backend actual: **44 de 86 rutas = 71 de 127 operaciones**, 7 migraciones (cabeza `0007`), **914 pruebas** con PostgreSQL real, más el comando `python -m monetae.cli import-cashew`. Detalle en el Anexo A.
@@ -92,6 +92,8 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
 ## 6. Siguiente paso concreto
 
+> **Actualizado 2026-10-09 (tarde):** G2 y D9 resueltos (A). Siguiente: (1) **Adrian revisa en Chrome** la compilación de T-501 (`python3 -I -m http.server 8090 --bind 127.0.0.1 --directory <worktree T-501>/apps/web/build/web`, abrir `http://localhost:8090`; si el worktree ya no existe, `flutter build web --release` en `apps/web`) y dice qué preferencias visuales se conservan; (2) el coordinador escribe las tareas T-502… de la Fase 5 (cliente HTTP tipado y sesión, ensamblado de pantallas, resto del desacople según el informe) y propone el gate para publicar T-501. Lo que sigue más abajo es histórico de G2.
+
 **Primero, Adrian responde G2 y D9 (§5; basta la letra).** Después:
 
 | Si… | Se hace | Quién | Cómo se verifica |
@@ -107,7 +109,7 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
 ## 7. Estado del Run, de los worktrees y de los agentes abiertos
 
-**Run de la Fase 5: `run_c2cebe1745b9`** (T-501 `task_5df2d0fe6f4d` en curso). G2 `gate_10f2135dac21` resuelto; T-405 publicada (`a87f06b`).
+**Run de la Fase 5: `run_c2cebe1745b9`** (T-501 `task_5df2d0fe6f4d` `completed`; su worktree `Monetae-codex-T-501-ui-decoupling-spike` sigue en disco con `build/web` para la revisión visual, borrable después). G2 `gate_10f2135dac21` resuelto; T-405 publicada (`a87f06b`).
 
 **Run de la Fase 4: `run_f5e95406186a`.** Tareas completadas: T-401 `task_e32a402a4dec` (+T-401b `task_83ae6f5c2bbc`), T-402 `task_8e0dc0347237`, T-403 `task_9b25b87c9b93` (+T-403b `task_03fd94d8705d`), T-404 `task_9450f697ce8a` y T-405 `task_3206ef52f01d`. **Gate G2 `gate_10f2135dac21` abierto** (cuelga de T-405: puede figurar `blocked`; se marca `completed` al resolverlo). Gate G1 `gate_1e81cf0fd994` resuelto. **Ningún worker vivo**: el de T-405 terminó; su terminal sigue abierta pero inactiva. Run de la Fase 3: `run_63b520544a30`. Runs anteriores: `run_bef8ecfc67a7` (Fase 0), `run_2cddcd14320c` (Fase 1), `run_70f5f187fe16` (Fase 2). El CLI **no cierra Runs**; no usar `orchestration reset`. Al retomar: `orca orchestration run-use --id run_f5e95406186a`.
 
