@@ -1,6 +1,6 @@
 # T-507 — UI: tarjetas de presupuestos y objetivos fieles a Cashew (con barras de progreso)
 
-> **ESTADO: LANZADA el 2026-10-09** (Run `run_c2cebe1745b9`; OK de Adrian; SPEC v0.5, contrato 0.5.0). Corre **en paralelo con T-508** (API; archivos disjuntos).
+> **ESTADO: ACEPTADA e integrada en `master-dev` el 2026-10-09** (verificada por el coordinador: 116 pruebas, 64 goldens, build web). **Pendiente para T-509:** en modo oscuro el carril de fondo de la barra de presupuesto apenas se distingue; en Cashew el carril completo es visible. (Run `run_c2cebe1745b9`; OK de Adrian; SPEC v0.5, contrato 0.5.0). Corre **en paralelo con T-508** (API; archivos disjuntos).
 > Agente: **Codex**, modelo `gpt-6.1-sol` esfuerzo `high` (desacople con fidelidad visual).
 
 ## Contexto
