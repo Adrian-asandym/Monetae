@@ -73,6 +73,7 @@ AccountDto mockAccount(AppLocalizations l, {bool usd = false}) =>
       'currency': usd ? 'USD' : 'PEN',
       'initial_balance': '0.00',
       'balance': '0.00',
+      'transaction_count': 4,
       'color': usd ? '#BA7DBD' : '#5F85C2',
       'icon': 'wallet',
       'sort_order': 0,

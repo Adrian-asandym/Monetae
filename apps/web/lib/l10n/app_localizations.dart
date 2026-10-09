@@ -601,6 +601,192 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Totales del periodo'**
   String get periodTotals;
+
+  /// No description provided for @budgets.
+  ///
+  /// In es, this message translates to:
+  /// **'Presupuestos'**
+  String get budgets;
+
+  /// No description provided for @goals.
+  ///
+  /// In es, this message translates to:
+  /// **'Objetivos'**
+  String get goals;
+
+  /// No description provided for @budgetGoalDemo.
+  ///
+  /// In es, this message translates to:
+  /// **'Presupuestos y objetivos'**
+  String get budgetGoalDemo;
+
+  /// No description provided for @emptyBudgets.
+  ///
+  /// In es, this message translates to:
+  /// **'Todavía no hay presupuestos.'**
+  String get emptyBudgets;
+
+  /// No description provided for @emptyGoals.
+  ///
+  /// In es, this message translates to:
+  /// **'Todavía no hay objetivos.'**
+  String get emptyGoals;
+
+  /// No description provided for @createBudget.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear presupuesto'**
+  String get createBudget;
+
+  /// No description provided for @createGoal.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear objetivo'**
+  String get createGoal;
+
+  /// No description provided for @dailyBudget.
+  ///
+  /// In es, this message translates to:
+  /// **'Diario'**
+  String get dailyBudget;
+
+  /// No description provided for @weeklyBudget.
+  ///
+  /// In es, this message translates to:
+  /// **'Semanal'**
+  String get weeklyBudget;
+
+  /// No description provided for @monthlyBudget.
+  ///
+  /// In es, this message translates to:
+  /// **'Mensual'**
+  String get monthlyBudget;
+
+  /// No description provided for @customBudget.
+  ///
+  /// In es, this message translates to:
+  /// **'Personalizado'**
+  String get customBudget;
+
+  /// No description provided for @savingsGoal.
+  ///
+  /// In es, this message translates to:
+  /// **'Objetivo de ahorro'**
+  String get savingsGoal;
+
+  /// No description provided for @spendingGoal.
+  ///
+  /// In es, this message translates to:
+  /// **'Objetivo de gasto'**
+  String get spendingGoal;
+
+  /// No description provided for @goalComplete.
+  ///
+  /// In es, this message translates to:
+  /// **'Completado'**
+  String get goalComplete;
+
+  /// No description provided for @progress.
+  ///
+  /// In es, this message translates to:
+  /// **'Progreso'**
+  String get progress;
+
+  /// No description provided for @today.
+  ///
+  /// In es, this message translates to:
+  /// **'Hoy'**
+  String get today;
+
+  /// No description provided for @horizontalList.
+  ///
+  /// In es, this message translates to:
+  /// **'Lista horizontal'**
+  String get horizontalList;
+
+  /// No description provided for @verticalList.
+  ///
+  /// In es, this message translates to:
+  /// **'Lista vertical'**
+  String get verticalList;
+
+  /// No description provided for @showEmptyLists.
+  ///
+  /// In es, this message translates to:
+  /// **'Mostrar listas vacías'**
+  String get showEmptyLists;
+
+  /// No description provided for @sampleFoodBudget.
+  ///
+  /// In es, this message translates to:
+  /// **'Alimentación'**
+  String get sampleFoodBudget;
+
+  /// No description provided for @sampleTravelBudget.
+  ///
+  /// In es, this message translates to:
+  /// **'Viaje'**
+  String get sampleTravelBudget;
+
+  /// No description provided for @sampleHomeBudget.
+  ///
+  /// In es, this message translates to:
+  /// **'Hogar'**
+  String get sampleHomeBudget;
+
+  /// No description provided for @sampleSavingsGoal.
+  ///
+  /// In es, this message translates to:
+  /// **'Fondo de emergencia'**
+  String get sampleSavingsGoal;
+
+  /// No description provided for @sampleSpendingGoal.
+  ///
+  /// In es, this message translates to:
+  /// **'Nueva laptop'**
+  String get sampleSpendingGoal;
+
+  /// No description provided for @sampleHolidayGoal.
+  ///
+  /// In es, this message translates to:
+  /// **'Vacaciones'**
+  String get sampleHolidayGoal;
+
+  /// No description provided for @budgetLeft.
+  ///
+  /// In es, this message translates to:
+  /// **'{amount} restante de {total}'**
+  String budgetLeft(String amount, String total);
+
+  /// No description provided for @budgetOver.
+  ///
+  /// In es, this message translates to:
+  /// **'{amount} excedido de {total}'**
+  String budgetOver(String amount, String total);
+
+  /// No description provided for @budgetSpent.
+  ///
+  /// In es, this message translates to:
+  /// **'Gastado: {amount} / {total}'**
+  String budgetSpent(String amount, String total);
+
+  /// No description provided for @goalAmounts.
+  ///
+  /// In es, this message translates to:
+  /// **'{amount} / {total}'**
+  String goalAmounts(String amount, String total);
+
+  /// No description provided for @goalDue.
+  ///
+  /// In es, this message translates to:
+  /// **'Hasta {date}'**
+  String goalDue(String date);
+
+  /// No description provided for @convertedTotal.
+  ///
+  /// In es, this message translates to:
+  /// **'Total convertido: {amount}'**
+  String convertedTotal(String amount);
 }
 
 class _AppLocalizationsDelegate

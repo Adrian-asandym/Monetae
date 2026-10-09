@@ -107,5 +107,90 @@
   "unconvertedNotice": "Some movements have no historical exchange rate and are excluded from converted totals.",
   "previousMonth": "Previous month",
   "nextMonth": "Next month",
-  "periodTotals": "Period totals"
+  "periodTotals": "Period totals",
+  "budgets": "Budgets",
+  "goals": "Goals",
+  "budgetGoalDemo": "Budgets and goals",
+  "emptyBudgets": "No budgets yet.",
+  "emptyGoals": "No goals yet.",
+  "createBudget": "Create budget",
+  "createGoal": "Create goal",
+  "dailyBudget": "Daily",
+  "weeklyBudget": "Weekly",
+  "monthlyBudget": "Monthly",
+  "customBudget": "Custom",
+  "savingsGoal": "Savings goal",
+  "spendingGoal": "Spending goal",
+  "goalComplete": "Completed",
+  "progress": "Progress",
+  "today": "Today",
+  "horizontalList": "Horizontal list",
+  "verticalList": "Vertical list",
+  "showEmptyLists": "Show empty lists",
+  "sampleFoodBudget": "Food",
+  "sampleTravelBudget": "Travel",
+  "sampleHomeBudget": "Home",
+  "sampleSavingsGoal": "Emergency fund",
+  "sampleSpendingGoal": "New laptop",
+  "sampleHolidayGoal": "Holiday",
+  "budgetLeft": "{amount} left of {total}",
+  "@budgetLeft": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "budgetOver": "{amount} over {total}",
+  "@budgetOver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "budgetSpent": "Spent: {amount} / {total}",
+  "@budgetSpent": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "goalAmounts": "{amount} / {total}",
+  "@goalAmounts": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "goalDue": "Due {date}",
+  "@goalDue": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "convertedTotal": "Converted total: {amount}",
+  "@convertedTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  }
 }

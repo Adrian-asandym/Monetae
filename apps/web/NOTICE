@@ -43,3 +43,23 @@ Paths above are under lib/ in Monetae. Components use server ReportTotal values,
 exact localized decimal strings and normalized chart geometry. Original database
 and global preference coupling is removed; charts show period flow rather than
 client-calculated cumulative amounts. No new dependencies or category PNG assets.
+
+T-507 modifications (2026-10-09):
+- budget/lib/widgets/budgetContainer.dart (BudgetContainer, BudgetTimeline)
+  → lib/widgets/budget_card.dart
+- budget/lib/widgets/budgetContainer.dart (BudgetProgress, AnimatedProgress,
+  TodayIndicator) and budget/lib/widgets/progressBar.dart
+  → lib/widgets/budget_progress.dart
+- budget/lib/pages/objectivesListPage.dart (ObjectiveContainer)
+  → lib/widgets/goal_card.dart
+- budget/lib/pages/homePage/{homePageBudgets,homePageObjectives}.dart and
+  budget/lib/pages/{budgetsListPage,objectivesListPage}.dart
+  → lib/widgets/budget_goal_lists.dart
+Copyright (C) 2023 James Kokoska; GPL version 3, as reproduced in LICENSE.
+These adaptations retain rounded cards, tinted budget headers, timeline markers,
+linear progress with rounded ends, and objective icon composition. Native Flutter
+scrolling replaces carousel_slider; no new dependencies. Server DTOs replace
+local finance queries, global preferences and transaction counters. Labels retain
+exact decimal strings; BigInt quotients supply bounded presentation geometry.
+Liquid/shake effects, pending/shared overlays, navigation and daily allowances
+are omitted. Material icons and original synthetic SVGs follow the T-502 notice.

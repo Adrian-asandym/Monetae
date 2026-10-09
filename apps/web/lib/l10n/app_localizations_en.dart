@@ -268,4 +268,109 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get periodTotals => 'Period totals';
+
+  @override
+  String get budgets => 'Budgets';
+
+  @override
+  String get goals => 'Goals';
+
+  @override
+  String get budgetGoalDemo => 'Budgets and goals';
+
+  @override
+  String get emptyBudgets => 'No budgets yet.';
+
+  @override
+  String get emptyGoals => 'No goals yet.';
+
+  @override
+  String get createBudget => 'Create budget';
+
+  @override
+  String get createGoal => 'Create goal';
+
+  @override
+  String get dailyBudget => 'Daily';
+
+  @override
+  String get weeklyBudget => 'Weekly';
+
+  @override
+  String get monthlyBudget => 'Monthly';
+
+  @override
+  String get customBudget => 'Custom';
+
+  @override
+  String get savingsGoal => 'Savings goal';
+
+  @override
+  String get spendingGoal => 'Spending goal';
+
+  @override
+  String get goalComplete => 'Completed';
+
+  @override
+  String get progress => 'Progress';
+
+  @override
+  String get today => 'Today';
+
+  @override
+  String get horizontalList => 'Horizontal list';
+
+  @override
+  String get verticalList => 'Vertical list';
+
+  @override
+  String get showEmptyLists => 'Show empty lists';
+
+  @override
+  String get sampleFoodBudget => 'Food';
+
+  @override
+  String get sampleTravelBudget => 'Travel';
+
+  @override
+  String get sampleHomeBudget => 'Home';
+
+  @override
+  String get sampleSavingsGoal => 'Emergency fund';
+
+  @override
+  String get sampleSpendingGoal => 'New laptop';
+
+  @override
+  String get sampleHolidayGoal => 'Holiday';
+
+  @override
+  String budgetLeft(String amount, String total) {
+    return '$amount left of $total';
+  }
+
+  @override
+  String budgetOver(String amount, String total) {
+    return '$amount over $total';
+  }
+
+  @override
+  String budgetSpent(String amount, String total) {
+    return 'Spent: $amount / $total';
+  }
+
+  @override
+  String goalAmounts(String amount, String total) {
+    return '$amount / $total';
+  }
+
+  @override
+  String goalDue(String date) {
+    return 'Due $date';
+  }
+
+  @override
+  String convertedTotal(String amount) {
+    return 'Converted total: $amount';
+  }
 }
