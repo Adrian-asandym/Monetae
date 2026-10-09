@@ -8,10 +8,10 @@
 
 | | |
 |---|---|
-| **Última actualización** | **2026-10-09, ~01:10 (America/Lima)** — Fase 4 integrada en `master-dev`, a la espera de decision gate |
+| **Última actualización** | **2026-10-08, ~23:25 (America/Lima)** — cierre de sesión; Fase 4 integrada en `master-dev`, a la espera de decision gate |
 | **`origin`** | `origin/main` = `origin/master-dev` = **`0e74c67`** (Fase 3 + contrato 0.3.0 + ADR-008 y tareas). **No incluye la Fase 4.** |
 | **`main`** | `0e74c67`. |
-| **`master-dev`** | **la cabeza actual (`git log -1`)**, con toda la Fase 4 (migración `0007`, importador de Cashew y su CLI) y sin publicar. Va por delante de `main` con código, pruebas y documentación. |
+| **`master-dev`** | **`8dcb65d` + el commit de este cierre (`git log -1`)**, con toda la Fase 4 (migración `0007`, importador de Cashew y su CLI) y sin publicar. Va por delante de `main` con código, pruebas y documentación. |
 | **Gate abierto** | `gate_1e81cf0fd994`: merge de la Fase 4 a `main` y push. **Pendiente de Adrian.** |
 | **SPEC / ARCHITECTURE / contrato** | SPEC v0.3 · `docs/ARCHITECTURE.md` v0.3 · `docs/api/openapi.json` **0.3.0** (la Fase 4 no cambió el contrato HTTP: el importador es solo línea de comandos). |
 
@@ -72,19 +72,28 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
 ## 6. Siguiente paso concreto
 
-1. **Adrian responde G1, L1 y X1** (basta la letra).
-2. Si L1 = A: abrir **T-405** (Codex `gpt-6.1-sol`, medio) en `loans.py`, con prueba sobre copia sintética y repetir el `--dry-run` real (solo agregados). Nueva tarea sobre `master-dev`, BD propia (proyecto y puerto libres), verificación completa del coordinador como en T-401…T-404.
-3. Auditoría de seguridad, resolver el gate, `git merge --ff-only master-dev` en el worktree de `main` y push (`GIT_TERMINAL_PROMPT=0 git -c credential.helper= -c credential.helper='!gh auth git-credential' push origin main master-dev`, sin `--force`).
-4. **Fase 5 (UI Flutter)**: empieza con `T-501` (spike de desacople de widgets), ya escrita. Flutter pide disco (hoy ≈ 3,7 GB libres): limpiar los worktrees de la Fase 4 (`Monetae-codex-T-40x-*`, todos fusionados) antes, con permiso de Adrian.
-5. **La importación real definitiva** (`apply` sobre la base de Adrian) se hace después de L1, con una copia del respaldo fuera de `reference/backups` y un `--dry-run` previo.
+**Primero, Adrian responde G1, L1 y X1 (§5; basta la letra).** Después, según lo que elija:
+
+| Si… | Se hace | Agente / modelo / esfuerzo | Rama y BD | Cómo lo verifico |
+|---|---|---|---|---|
+| **L1 = A** | **T-405**: en `importers/cashew/loans.py`, los préstamos de largo plazo sin desembolso enlazado se crean con un desembolso **sin dinero** (`transaction_id` nulo), principal = suma de sus pagos, fecha justo antes del primer pago, ítem de revisión `principal_assumed`; los pagos se importan como pagos reales. La spec (`docs/tasks/T-405-…`) la escribe el coordinador **contrastada con `loans.py` y el ADR-008** antes de lanzar. | Codex `gpt-6.1-sol` · medium | `codex/T-405-importer-longterm-loans` desde `master-dev`; BD propia: `MONETAE_DB_PORT=5440 COMPOSE_PROJECT_NAME=monetae-t405` | `ruff`, `mypy`, `pytest` con PostgreSQL y `alembic` corridos por mí; lectura del código; sonda manual con copias de la fixture y rarezas; **repetir el `--dry-run` real** (copia en el scratchpad, solo agregados) y comprobar que el cuadre sigue en 0,00 |
+| **L1 = B o C** | B: tarea equivalente (cobros como `kind='loan'` sin préstamo); C: nada | — | — | — |
+| **X1 = B** | **T-406**: emparejar transferencias entre monedas con la tasa implícita (después de T-405) | Codex `gpt-6.1-sol` · medium | `codex/T-406-importer-fx-transfers`, BD `5441` / `monetae-t406` | igual que arriba |
+| **G1 = A** | Auditoría de seguridad repetida sobre lo que se publique, `gate-resolve`, `git merge --ff-only master-dev` en el worktree de `main`, push sin `--force` (`GIT_TERMINAL_PROMPT=0 git -c credential.helper= -c credential.helper='!gh auth git-credential' push origin main master-dev`) y marcar `task_9450f697ce8a` como `completed` | coordinador | — | `git ls-remote origin` debe mostrar ambas ramas en la cabeza nueva |
+
+**Después, Fase 5 (UI Flutter):** primera tarea `T-501` (spike de desacople de widgets de Cashew, `docs/tasks/T-501-ui-decoupling-spike.md`, ya escrita): Codex (modelo medio-alto), rama `codex/T-501-ui-decoupling-spike`. Flutter pide disco (hoy ≈ 3,5 GB libres): **borrar antes los 4 worktrees fusionados de la Fase 4**, con OK de Adrian.
+
+**La importación real definitiva** (`apply` sobre la base de Adrian) va **después de L1 y X1**: el importador es solo-inserción y no corrige lo ya importado. Procedimiento: copia del respaldo fuera de `reference/backups`, `--dry-run` previo, `apply`, borrar la copia.
+
+**Antes de lanzar cualquier tarea:** `orca skills get orchestration --full` (Orca se actualiza), `orca status --json`, `docker version`, `git worktree list`, disco ≥ 3 GB y el puerto de la BD de la tarea libre.
 
 ## 7. Estado del Run, de los worktrees y de los agentes abiertos
 
-**Run de la Fase 4: `run_f5e95406186a`.** Tareas T-401 `task_e32a402a4dec` (+T-401b `task_83ae6f5c2bbc`), T-402 `task_8e0dc0347237`, T-403 `task_9b25b87c9b93` (+T-403b `task_03fd94d8705d`), T-404 `task_9450f697ce8a`: todas completadas, **ningún worker vivo**, terminales liberados. Run de la Fase 3: `run_63b520544a30`. Runs anteriores: `run_bef8ecfc67a7` (Fase 0), `run_2cddcd14320c` (Fase 1), `run_70f5f187fe16` (Fase 2). El CLI **no cierra Runs**; no usar `orchestration reset`.
+**Run de la Fase 4: `run_f5e95406186a`.** Tareas T-401 `task_e32a402a4dec` (+T-401b `task_83ae6f5c2bbc`), T-402 `task_8e0dc0347237`, T-403 `task_9b25b87c9b93` (+T-403b `task_03fd94d8705d`) `completed`; **T-404 `task_9450f697ce8a` figura `blocked`** solo porque cuelga el gate abierto `gate_1e81cf0fd994` (se marca `completed` al resolverlo). **Ningún worker vivo**: verificado con `worker-list` (sin terminales por reclamar), sin procesos de agentes ni servidores y sin contenedores. Las filas `unverifiable` de `worker-list` corresponden a terminales ya liberados, no a agentes en ejecución. Run de la Fase 3: `run_63b520544a30`. Runs anteriores: `run_bef8ecfc67a7` (Fase 0), `run_2cddcd14320c` (Fase 1), `run_70f5f187fe16` (Fase 2). El CLI **no cierra Runs**; no usar `orchestration reset`. Al retomar: `orca orchestration run-use --id run_f5e95406186a`.
 
-**Worktrees:** `Monetae` → `main`, `Monetae-master-dev` → `master-dev`, y los de la Fase 4 ya fusionados (`Monetae-codex-T-401-importer-core`, `-T-402-importer-loans`, `-T-403-importer-subs`, `-T-404-importer-transfers`), que se pueden borrar con `git worktree remove` + `git branch -d` cuando Adrian lo apruebe. Sin contenedores ni `.env` sueltos. Disco ≈ 3,5 GB libres.
+**Worktrees:** `Monetae` → `main`, `Monetae-master-dev` → `master-dev`, y los 4 de la Fase 4, **todos fusionados** y borrables con OK de Adrian: `Monetae-codex-T-401-importer-core`, `-T-402-importer-loans`, `-T-403-importer-subs`, `-T-404-importer-transfers` (`git worktree remove` + `git branch -d`). Sin `.env` sueltos ni copias del respaldo real. Disco ≈ 3,5 GB libres.
 
-**Paneles de Orca:** el del coordinador, `lupuna` (otro proyecto), «Monetae Cashew analysis phase 0» y `…Monetae-codex-T-202-money-fx` (antiguos; Adrian puede cerrarlos) y los terminales de los workers de la Fase 4.
+**Paneles de Orca abiertos (2):** el del coordinador y `lupuna` (otro proyecto, no se toca). Adrian ya cerró los paneles antiguos.
 
 ## 8. Limitaciones y riesgos conocidos
 
