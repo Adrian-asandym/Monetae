@@ -443,6 +443,7 @@ def run_import(
         report.warnings.append("import_failed")
         for counts in report.counts.values():
             counts.created = 0
+        report.provisional_fx = 0
         report.balances.clear()
         _persist_report(session, user_id, run, report)
         message = (

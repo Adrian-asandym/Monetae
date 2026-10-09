@@ -144,22 +144,25 @@ def _import_cashew(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = SafeArgumentParser(prog="monetae", allow_abbrev=False)
+    arguments = sys.argv[1:] if argv is None else argv
+    parser_class = (
+        ImportArgumentParser if arguments[:1] == ["import-cashew"] else SafeArgumentParser
+    )
+    parser = parser_class(prog="monetae", allow_abbrev=False)
     commands = parser.add_subparsers(dest="command", required=True)
     create = commands.add_parser("create-user", allow_abbrev=False)
     create.add_argument("--email", required=True)
     create.add_argument("--base-currency", default="PEN")
     create.add_argument("--locale", choices=["es", "en"], default="es")
     create.add_argument("--password-stdin", action="store_true")
-    importer = ImportArgumentParser(prog="monetae import-cashew", allow_abbrev=False)
+    importer = commands.add_parser("import-cashew", allow_abbrev=False)
     importer.add_argument("--file", required=True)
     importer.add_argument("--user-email", required=True)
     importer.add_argument("--dry-run", action="store_true")
     importer.add_argument("--report-file")
     importer.add_argument("--fx-rate", action="append", default=[])
     importer.add_argument("--loan-fx-rates")
-    commands.add_parser("import-cashew", parents=[importer], add_help=False, allow_abbrev=False)
-    args = parser.parse_args(argv)
+    args = parser.parse_args(arguments)
     if args.command == "import-cashew":
         return _import_cashew(args)
     try:
