@@ -265,7 +265,7 @@ def test_foreign_template_rates(
         db_session.scalars(select(Transaction).where(Transaction.user_id == import_user.id))
     )
     assert len(rows) == 2 and all(r.fx_rate_to_base == rule.fx_rate_to_base for r in rows)
-    assert report.provisional_fx == int(rate_source == "settings")
+    assert report.provisional_fx == 2 * int(rate_source == "settings")
 
 
 def test_dry_run_and_two_users(
@@ -420,9 +420,13 @@ def test_invalid_recurring_row_does_not_abort_other_templates(
         options,
         allow_balance_diff=True,
     )
-    assert report.review_items[-1].kind == "invalid_recurring_transaction"
+    assert report.review_items[-1].kind == (
+        "zero_amount_transaction" if anomaly == "zero" else "invalid_recurring_transaction"
+    )
     assert report.steps["subscriptions"]["skipped"] == 1
-    assert report.counts["transactions"].skipped == 1
+    assert report.counts["transactions"].skipped == int(anomaly == "zero")
+    assert report.exit_code == 0
+    assert not report.balance_mismatch
     assert report.counts["recurring_rules"].created == 1
     assert report.counts["subscriptions"].created == 0
     assert (
