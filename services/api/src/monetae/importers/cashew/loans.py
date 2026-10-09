@@ -114,8 +114,10 @@ def _ordinary(ctx: ImportContext, rows: tuple[TransactionRow, ...]) -> None:
     for row in rows:
         if not row.paid:
             ctx.report.entity("transactions").skipped += 1
+            ctx.skipped_pks.add(row.pk)
         elif row.amount == 0:
             ctx.report.entity("transactions").skipped += 1
+            ctx.skipped_pks.add(row.pk)
             ctx.report.review_items.append(
                 ReviewItem(kind="zero_amount_transaction", payload={"transaction_pk": row.pk})
             )
@@ -132,6 +134,7 @@ def _ordinary(ctx: ImportContext, rows: tuple[TransactionRow, ...]) -> None:
                 )
             except DomainError as exc:
                 ctx.report.entity("transactions").skipped += 1
+                ctx.skipped_pks.add(row.pk)
                 ctx.report.review_items.append(
                     ReviewItem(
                         kind="ledger_invalid",
@@ -762,9 +765,9 @@ def run(ctx: ImportContext) -> dict[str, JsonValue]:
         try:
             plan = _plan(ctx, identity, name, direction, wallet_pk, rows, single=single)
             _create(ctx, plan)
-            ctx.report.entity("transactions").skipped += (
-                sum(not r.paid for r in rows) if not single else 0
-            )
+            unpaid = [r.pk for r in rows if not r.paid] if not single else []
+            ctx.report.entity("transactions").skipped += len(unpaid)
+            ctx.skipped_pks.update(unpaid)
         except (DomainError, AmbiguousLoan) as exc:
             invalid += 1
             ctx.report.entity("loans").skipped += 1

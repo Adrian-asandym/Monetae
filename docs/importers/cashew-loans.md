@@ -131,12 +131,11 @@ de `expected.json` se interpretan según el ADR-008, que documenta las decisione
 posteriormente aceptadas.
 
 Con T-401 y T-402 no queda dinero de préstamos diferido y `unexplained=0.00`
-en las cuatro cuentas del fixture. Hasta integrar T-403, las dos filas recurrentes
-siguen diferidas por su propio paso. La UI de resolución manual de los demás
+en las cuatro cuentas del fixture. Con T-403 integrada, las filas recurrentes se importan
+por su propio paso y no queda nada diferido. La UI de resolución manual de los demás
 ítems corresponde a las fases posteriores; esta tarea solo resuelve tasas J3.
 
-Limitación de reporte aceptada por coordinación en T-402: las etiquetas de filas
-de préstamo omitidas por R7 o importe inválido figuran como `deferred` y no como
-`skipped` en `transaction_tags`. No afecta al dinero ni a los saldos. El runner
-no expone todavía las PK omitidas por las extensiones; lo valorará el coordinador
-al integrar T-402 y T-403. Esta tarea conserva `runner.py` sin cambios.
+Etiquetas de filas omitidas: las filas de préstamo que se omiten (R7 `paid = 0` dentro
+de un objetivo, importe 0 o fila inválida) se registran en `ImportContext.skipped_pks`,
+por lo que sus vínculos de etiquetas figuran como `skipped` (no `deferred`) en
+`transaction_tags`. Integrado por el coordinador tras T-403.

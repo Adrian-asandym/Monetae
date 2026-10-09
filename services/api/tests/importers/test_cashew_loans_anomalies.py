@@ -13,7 +13,7 @@ from monetae.domain.currency import Currency
 from monetae.domain.loans import replay
 from monetae.domain.money import Money
 from monetae.importers.cashew.mapping import ImportOptions, external_id
-from monetae.importers.cashew.reader import Snapshot
+from monetae.importers.cashew.reader import Snapshot, TagLinkRow
 from monetae.importers.cashew.runner import run_import
 
 from .test_cashew_loans_ledger import CASES, ROW_MAP, financial_rows, loan_for, movements, tx_for
@@ -287,3 +287,19 @@ def test_anomalous_loan_amount_never_aborts_other_books(
     assert report.steps["loans"]["created"] == 6
     assert report.steps["loans"]["invalid"] == 1
     assert tx_for(db_session, import_user, "C_payment_1").kind == "income"
+
+
+def test_tag_links_of_omitted_loan_rows_are_skipped_not_deferred(
+    db_session: Session, import_user: User, snapshot: Snapshot, options: ImportOptions
+) -> None:
+    first = next(r for r in snapshot.transactions if r.pk == ROW_MAP["E_disbursement"])
+    unpaid = replace(first, pk="synthetic-unpaid-tagged", amount=Decimal("-12"), paid=False)
+    changed = replace(
+        snapshot,
+        transactions=snapshot.transactions + (unpaid,),
+        tag_links=snapshot.tag_links + (TagLinkRow(unpaid.pk, snapshot.tags[0].pk),),
+    )
+    report = run_import(db_session, import_user.id, changed, options)
+    tags = report.counts["transaction_tags"]
+    assert tags.skipped == 1
+    assert tags.deferred == 0
