@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from uuid import UUID, uuid4
 
+from pydantic import JsonValue
 from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 
@@ -338,6 +339,15 @@ def _balances(ctx: ImportContext) -> None:
 
 def _persist_report(session: Session, user_id: UUID, run: ImportRun, report: ImportReport) -> None:
     run.finished_at = datetime.now(UTC)
+    reasons: dict[str, JsonValue] = {}
+    for item in report.review_items:
+        if item.kind == "unpaired_transfer":
+            reason = item.payload.get("reason")
+            if isinstance(reason, str):
+                count = reasons.get(reason, 0)
+                assert isinstance(count, int)
+                reasons[reason] = count + 1
+    report.steps["transfers"] = {"unpaired_by_reason": reasons}
     run.report = report.model_dump(mode="json")
     for item in report.review_items:
         session.add(

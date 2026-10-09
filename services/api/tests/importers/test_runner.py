@@ -311,15 +311,13 @@ def test_name_collisions_and_system_category(
     )
 
 
-@pytest.mark.parametrize("mode", ["nonreciprocal", "different_amount", "same_account", "unpaid"])
+@pytest.mark.parametrize("mode", ["different_amount", "same_account", "unpaid"])
 def test_invalid_transfer_becomes_ordinary(
     db_session: Session, import_user: User, snapshot: Snapshot, options: ImportOptions, mode: str
 ) -> None:
     outgoing = next(r for r in snapshot.transactions if r.pk == ROW_MAP["H_out"])
     incoming = next(r for r in snapshot.transactions if r.pk == ROW_MAP["H_in"])
-    if mode == "nonreciprocal":
-        incoming = replace(incoming, paired_pk=None)
-    elif mode == "different_amount":
+    if mode == "different_amount":
         incoming = replace(incoming, amount=Decimal("199.00"))
     elif mode == "same_account":
         incoming = replace(incoming, wallet_pk=outgoing.wallet_pk)

@@ -152,6 +152,70 @@ def map_transaction(
     )
 
 
+def _pair_transfers(
+    snapshot: Snapshot, normal: dict[str, TransactionPlan]
+) -> tuple[list[tuple[TransactionPlan, TransactionPlan]], set[str], list[ReviewItem]]:
+    rows = {row.pk: row for row in snapshot.transactions}
+    incoming: dict[str, list[str]] = {}
+    for row in snapshot.transactions:
+        if row.paired_pk is not None:
+            incoming.setdefault(row.paired_pk, []).append(row.pk)
+    ambiguous: set[str] = set()
+    for target, sources in incoming.items():
+        if len(sources) > 1:
+            ambiguous.update((target, *sources))
+        target_row = rows.get(target)
+        if target_row is not None and target_row.paired_pk is not None:
+            for source in sources:
+                if target_row.paired_pk != source:
+                    ambiguous.update((source, target, target_row.paired_pk))
+
+    transfers: list[tuple[TransactionPlan, TransactionPlan]] = []
+    paired: set[str] = set()
+    reviews: list[ReviewItem] = []
+    for pk, mapped in normal.items():
+        if pk in paired:
+            continue
+        row = mapped.source
+        sources = incoming.get(pk, [])
+        counterpart_pk = row.paired_pk or (sources[0] if sources else None)
+        if counterpart_pk is None:
+            continue
+        other = normal.get(counterpart_pk)
+        reason: str | None = None
+        # Orden de precedencia contractual: una sola explicación por fila.
+        if counterpart_pk not in rows:
+            reason = "counterpart_missing"
+        elif other is None:
+            reason = "counterpart_not_ordinary"
+        elif row.wallet_pk == other.source.wallet_pk:
+            reason = "same_wallet"
+        elif mapped.currency != other.currency:
+            reason = "currency_mismatch"
+        elif mapped.amount != -other.amount or row.amount != -other.source.amount:
+            reason = "amount_mismatch"
+        elif not row.paid or not other.source.paid:
+            reason = "unpaid"
+        elif pk in ambiguous or counterpart_pk in ambiguous:
+            reason = "ambiguous_counterpart"
+        if reason is None:
+            assert other is not None
+            transfers.append((mapped, other))
+            paired.update((pk, counterpart_pk))
+        else:
+            reviews.append(
+                ReviewItem(
+                    kind="unpaired_transfer",
+                    payload={
+                        "transaction_pk": pk,
+                        "paired_pk": counterpart_pk,
+                        "reason": reason,
+                    },
+                )
+            )
+    return transfers, paired, reviews
+
+
 def build_plan(snapshot: Snapshot, base_currency: str, options: ImportOptions) -> ImportPlan:
     rates = _settings_rates(snapshot)
     warnings: list[str] = []
@@ -218,33 +282,8 @@ def build_plan(snapshot: Snapshot, base_currency: str, options: ImportOptions) -
                 )
             )
         normal[row.pk] = map_transaction(row, by_wallet[row.wallet_pk], base_currency)
-    transfers: list[tuple[TransactionPlan, TransactionPlan]] = []
-    paired: set[str] = set()
-    for pk, mapped in normal.items():
-        row = mapped.source
-        if row.paired_pk is None or pk in paired:
-            continue
-        other = normal.get(row.paired_pk)
-        if (
-            other is not None
-            and other.source.paired_pk == pk
-            and row.pk != other.source.pk
-            and row.wallet_pk != other.source.wallet_pk
-            and mapped.currency == other.currency
-            and mapped.amount == -other.amount
-            and row.amount == -other.source.amount
-            and row.paid
-            and other.source.paid
-        ):
-            transfers.append((mapped, other))
-            paired.update((pk, other.source.pk))
-        else:
-            reviews.append(
-                ReviewItem(
-                    kind="unpaired_transfer",
-                    payload={"transaction_pk": pk, "paired_pk": row.paired_pk},
-                )
-            )
+    transfers, paired, transfer_reviews = _pair_transfers(snapshot, normal)
+    reviews.extend(transfer_reviews)
     return ImportPlan(
         tuple(accounts),
         tuple(row for pk, row in normal.items() if pk not in paired),
