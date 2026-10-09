@@ -51,15 +51,17 @@ def test_anomaly_keeps_other_rows_and_reimport_is_insertion_only(
     path, anomaly = anomalous_source
     snapshot = read_snapshot(path)
     digest = hashlib.sha256(path.read_bytes()).hexdigest()
-    report = run_import(db_session, import_user.id, snapshot, options)
+    report = run_import(db_session, import_user.id, snapshot, options, allow_balance_diff=True)
     pk = ROW_MAP["I_food"]
     skipped = anomaly != "polarity"
-    assert report.outcome == "succeeded"
-    assert report.counts["transactions"].created == (5 if skipped else 6)
+    assert report.outcome == (
+        "applied_with_balance_diff" if anomaly == "unsupported" else "succeeded"
+    )
+    assert report.counts["transactions"].created == (9 if skipped else 10)
     assert report.counts["transactions"].skipped == int(skipped)
     assert report.counts["transactions"].deferred == 0
     assert report.counts["deferred_loans"].deferred == 17
-    assert report.counts["deferred_recurring"].deferred == 2
+    assert report.counts["recurring_rules"].created == 2
     assert len(report.review_items) == 1
     review = report.review_items[0]
     kinds = {
@@ -115,10 +117,10 @@ def test_anomaly_keeps_other_rows_and_reimport_is_insertion_only(
         if source_row.note:
             assert source_row.note not in review.model_dump_json()
     before = financial_rows(db_session, import_user)
-    second = run_import(db_session, import_user.id, snapshot, options)
+    second = run_import(db_session, import_user.id, snapshot, options, allow_balance_diff=True)
     assert all(count.created == 0 for count in second.counts.values())
     assert second.counts["transactions"].skipped == int(skipped)
-    assert second.counts["transactions"].already_imported == (5 if skipped else 6)
+    assert second.counts["transactions"].already_imported == (7 if skipped else 8)
     assert financial_rows(db_session, import_user) == before
     assert hashlib.sha256(path.read_bytes()).hexdigest() == digest
 
@@ -133,12 +135,14 @@ def test_dry_run_with_anomaly_keeps_only_audit(
     snapshot = read_snapshot(path)
     before = financial_rows(db_session, import_user)
     report = run_import(db_session, import_user.id, snapshot, replace(options, dry_run=True))
-    assert report.outcome == "succeeded"
-    assert report.counts["transactions"].created == (6 if anomaly == "polarity" else 5)
+    assert report.outcome == ("balance_mismatch" if anomaly == "unsupported" else "succeeded")
+    assert report.counts["transactions"].created == (10 if anomaly == "polarity" else 9)
     assert report.counts["transactions"].skipped == int(anomaly != "polarity")
     assert financial_rows(db_session, import_user) == before
     audit = db_session.scalar(select(ImportRun).where(ImportRun.user_id == import_user.id))
-    assert audit is not None and audit.mode == "dry_run" and audit.report["outcome"] == "succeeded"
+    assert (
+        audit is not None and audit.mode == "dry_run" and audit.report["outcome"] == report.outcome
+    )
     review = db_session.scalar(
         select(ImportReviewItem).where(ImportReviewItem.user_id == import_user.id)
     )
@@ -165,11 +169,12 @@ def test_orphan_is_skipped_before_deferred_steps_and_tag_links(
         )
     report = run_import(db_session, import_user.id, read_snapshot(source_path), options)
     assert report.counts["transactions"].skipped == 1
-    assert report.counts["transactions"].created == 6
-    assert report.counts["deferred_recurring"].deferred == 1
+    assert report.counts["transactions"].created == 8
+    assert report.counts["recurring_rules"].created == 1
     assert report.counts["deferred_loans"].deferred == 17
     assert report.counts["transaction_tags"].skipped == 1
-    assert report.counts["transaction_tags"].deferred == 2
+    assert report.counts["transaction_tags"].deferred == 0
+    assert report.counts["transaction_tags"].created == 2
     assert report.review_items[0].payload == {"transaction_pk": pk, "wallet_pk": "0"}
     assert all(balance.unexplained == 0 for balance in report.balances)
 
