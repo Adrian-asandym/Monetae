@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'api/api_client.dart';
 import 'pages/login_page.dart';
+import 'pages/budget_goal_demo_page.dart';
 import 'pages/home_page.dart';
 import 'pages/transactions_page.dart';
 import 'presentation/transaction_presenter.dart';
@@ -23,6 +24,7 @@ import 'widgets/transaction_card.dart';
 void main() => runApp(switch (Uri.base.fragment) {
   '/demo' => const DemoApp(),
   '/demo/home' => const DemoApp(showHome: true),
+  '/demo/budgets-goals' => const DemoApp(showBudgetsGoals: true),
   _ => const MonetaeApp(),
 });
 
@@ -120,8 +122,13 @@ class _MonetaeAppState extends State<MonetaeApp> {
 }
 
 class DemoApp extends StatefulWidget {
-  const DemoApp({super.key, this.showHome = false});
+  const DemoApp({
+    super.key,
+    this.showHome = false,
+    this.showBudgetsGoals = false,
+  });
   final bool showHome;
+  final bool showBudgetsGoals;
   @override
   State<DemoApp> createState() => _DemoAppState();
 }
@@ -140,7 +147,23 @@ class _DemoAppState extends State<DemoApp> {
     theme: monetaeTheme(brightness: Brightness.light, accent: _accent),
     darkTheme: monetaeTheme(brightness: Brightness.dark, accent: _accent),
     themeMode: _dark ? ThemeMode.dark : ThemeMode.light,
-    home: widget.showHome
+    routes: {
+      '/demo/budgets-goals': (_) => BudgetGoalDemoPage(
+        onThemeToggle: () => setState(() => _dark = !_dark),
+        onLocaleToggle: () => setState(
+          () => _locale = Locale(_locale.languageCode == 'es' ? 'en' : 'es'),
+        ),
+      ),
+    },
+    home: widget.showBudgetsGoals
+        ? BudgetGoalDemoPage(
+            onThemeToggle: () => setState(() => _dark = !_dark),
+            onLocaleToggle: () => setState(
+              () =>
+                  _locale = Locale(_locale.languageCode == 'es' ? 'en' : 'es'),
+            ),
+          )
+        : widget.showHome
         ? HomePage(onThemeToggle: () => setState(() => _dark = !_dark))
         : SpikePage(
             dark: _dark,
@@ -292,6 +315,12 @@ class _SpikePageState extends State<SpikePage> {
                     ),
                     icon: const Icon(Icons.home_outlined),
                     label: Text(l.home),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () =>
+                        Navigator.of(context).pushNamed('/demo/budgets-goals'),
+                    icon: const Icon(Icons.flag_outlined),
+                    label: Text(l.budgetGoalDemo),
                   ),
                   Wrap(
                     spacing: 20,

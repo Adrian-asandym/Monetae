@@ -196,7 +196,13 @@ void main() {
           }
           if (request.url.path == '/api/v1/categories') return page([]);
           return page([
-            syntheticFlow('2026-10-01', '0.00', '0.00', '0.00').toJson(),
+            syntheticFlow(
+              '2026-10-01',
+              '0.00',
+              '0.00',
+              '0.00',
+              '0.00',
+            ).toJson(),
           ]);
         }),
       );
@@ -308,7 +314,13 @@ void main() {
             return page([]);
           }
           return page([
-            syntheticFlow('2026-10-01', '0.00', '0.00', '0.00').toJson(),
+            syntheticFlow(
+              '2026-10-01',
+              '0.00',
+              '0.00',
+              '0.00',
+              '0.00',
+            ).toJson(),
           ]);
         }),
       );
@@ -438,6 +450,12 @@ void main() {
             endOn: '2026-10-31',
             expense: expense,
             income: income,
+            cumulativeNet: ReportTotalDto(
+              byCurrency: [],
+              reportCurrency: 'PEN',
+              reportAmount: '-90.00',
+              unconvertedCount: 0,
+            ),
             net: ReportTotalDto(
               byCurrency: [],
               reportCurrency: 'PEN',

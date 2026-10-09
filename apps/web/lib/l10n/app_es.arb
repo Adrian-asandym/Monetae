@@ -107,5 +107,90 @@
   "unconvertedNotice": "Algunos movimientos no tienen tasa histórica y quedan fuera de los totales convertidos.",
   "previousMonth": "Mes anterior",
   "nextMonth": "Mes siguiente",
-  "periodTotals": "Totales del periodo"
+  "periodTotals": "Totales del periodo",
+  "budgets": "Presupuestos",
+  "goals": "Objetivos",
+  "budgetGoalDemo": "Presupuestos y objetivos",
+  "emptyBudgets": "Todavía no hay presupuestos.",
+  "emptyGoals": "Todavía no hay objetivos.",
+  "createBudget": "Crear presupuesto",
+  "createGoal": "Crear objetivo",
+  "dailyBudget": "Diario",
+  "weeklyBudget": "Semanal",
+  "monthlyBudget": "Mensual",
+  "customBudget": "Personalizado",
+  "savingsGoal": "Objetivo de ahorro",
+  "spendingGoal": "Objetivo de gasto",
+  "goalComplete": "Completado",
+  "progress": "Progreso",
+  "today": "Hoy",
+  "horizontalList": "Lista horizontal",
+  "verticalList": "Lista vertical",
+  "showEmptyLists": "Mostrar listas vacías",
+  "sampleFoodBudget": "Alimentación",
+  "sampleTravelBudget": "Viaje",
+  "sampleHomeBudget": "Hogar",
+  "sampleSavingsGoal": "Fondo de emergencia",
+  "sampleSpendingGoal": "Nueva laptop",
+  "sampleHolidayGoal": "Vacaciones",
+  "budgetLeft": "{amount} restante de {total}",
+  "@budgetLeft": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "budgetOver": "{amount} excedido de {total}",
+  "@budgetOver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "budgetSpent": "Gastado: {amount} / {total}",
+  "@budgetSpent": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "goalAmounts": "{amount} / {total}",
+  "@goalAmounts": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "goalDue": "Hasta {date}",
+  "@goalDue": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "convertedTotal": "Total convertido: {amount}",
+  "@convertedTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  }
 }

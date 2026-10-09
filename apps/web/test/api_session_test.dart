@@ -185,6 +185,7 @@ void main() {
               'accent_color': '#BA7DBD',
               'home_widgets': ['accounts', 'transactions'],
               'transaction_card': none.toJson(),
+              'default_account_id': null,
             },
           });
           return ok(profile(card: none));
@@ -203,6 +204,7 @@ void main() {
         'accent_color': null,
         'home_widgets': <String>[],
         'transaction_card': const TransactionCardPreferencesDto().toJson(),
+        'default_account_id': null,
       });
     },
   );
