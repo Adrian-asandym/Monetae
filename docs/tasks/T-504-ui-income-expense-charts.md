@@ -1,6 +1,6 @@
 # T-504 — UI: gráficas de ingresos y gastos fieles a Cashew + ajustes de la tarjeta
 
-> **ESTADO: LANZADA el 2026-10-09** (Run `run_c2cebe1745b9`; OK de Adrian al plan G4 + T-504 ∥ T-506). Corre **en paralelo con T-506** (API de reportes; archivos disjuntos). T-507 (presupuestos y metas) va después.
+> **ESTADO: ACEPTADA e integrada en `master-dev` el 2026-10-09** tras el seguimiento **T-504b** (formato peruano de importes «S/ 1,234.50» en español —`intl` no lo trae ni con `es_PE`— y resumen sin importe duplicado). Verificada por el coordinador: 83 pruebas, 38 goldens, build web. (Run `run_c2cebe1745b9`; OK de Adrian al plan G4 + T-504 ∥ T-506). Corre **en paralelo con T-506** (API de reportes; archivos disjuntos). T-507 (presupuestos y metas) va después.
 > Agente: **Codex**, modelo `gpt-6.1-sol` esfuerzo `high` (desacople de varios componentes de Cashew con fidelidad visual).
 
 ## Contexto
