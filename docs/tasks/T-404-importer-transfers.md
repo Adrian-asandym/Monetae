@@ -1,6 +1,6 @@
 # T-404 — Importador de Cashew: transferencias con emparejado unidireccional y motivos
 
-> **ESTADO: LANZADA el 2026-10-08** (Run `run_f5e95406186a`). Hallazgo del `--dry-run` autorizado sobre una copia del respaldo real.
+> **ESTADO: ACEPTADA e integrada en `master-dev` el 2026-10-08** (merge `e9394fb`; Run `run_f5e95406186a`). Los seguimientos T-402b/T-403b/T-401b y los hallazgos del `--dry-run` real quedan en `docs/importers/cashew*.md` y `docs/STATUS.md`.
 > Agente: **Codex**, modelo `gpt-6.1-sol` esfuerzo `medium` (corrección acotada en el emparejado; el cuidado está en no emparejar mal).
 > Depende de: T-401, T-402 y T-403 integradas en `master-dev`. No corre en paralelo con otra tarea.
 

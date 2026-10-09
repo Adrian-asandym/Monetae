@@ -1,6 +1,6 @@
 # T-402 — Importador de Cashew: préstamos (largo plazo y pago único)
 
-> **ESTADO: LANZADA el 2026-10-08 (T-401 aceptada e integrada en `master-dev`)** (Run `run_f5e95406186a`). ADR-008 **aceptado** (J1-A, J2-C, J3-A, 2026-10-08).
+> **ESTADO: ACEPTADA e integrada en `master-dev` el 2026-10-08** (merge `4f336fd`; Run `run_f5e95406186a`). Los seguimientos T-402b/T-403b/T-401b y los hallazgos del `--dry-run` real quedan en `docs/importers/cashew*.md` y `docs/STATUS.md`.
 > Escrita con las opciones **aceptadas** del ADR-008 (**J1-A, J2-C, J3-A**).
 > Agente: **Codex**, modelo `gpt-6.1-sol` esfuerzo `high` (regla de negocio sobre datos reales; usa `gpt-6-astra` si T-401 pidió devoluciones o si esta tarea vuelve más de una vez).
 > Depende de: **T-401** integrada (migración `0007`, lector, runner y opciones). Corre **en paralelo con T-403** (archivos disjuntos).
