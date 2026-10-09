@@ -1,6 +1,6 @@
 # T-503 — UI: cliente HTTP tipado, sesión y primera pantalla con datos reales
 
-> **ESTADO: LANZADA el 2026-10-09** (Run `run_c2cebe1745b9`; plan aprobado por Adrian, «todo A»). Depende de T-502 y T-505, ya integradas en `master-dev`.
+> **ESTADO: ACEPTADA e integrada en `master-dev` el 2026-10-09** (verificada por el coordinador: analyze limpio, 47 pruebas, build web y recorrido real por nginx). (Run `run_c2cebe1745b9`; plan aprobado por Adrian, «todo A»). Depende de T-502 y T-505, ya integradas en `master-dev`.
 > Agente: **Codex**, modelo `gpt-6.1-sol` esfuerzo `high` (sesión, CSRF y proxy: errores sutiles). Sin otra tarea en paralelo que toque `apps/web` o `infra/`.
 
 ## Objetivo
