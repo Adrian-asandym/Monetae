@@ -88,6 +88,8 @@ class ImportContext:
         )
         if existing is not None:
             self.report.entity("transactions").already_imported += 1
+            if existing.fx_rate_source != "manual":
+                self.report.provisional_fx += 1
             self.transactions[source.pk] = existing
             return existing
         account = self.accounts[source.wallet_pk]

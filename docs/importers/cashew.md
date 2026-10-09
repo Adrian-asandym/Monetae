@@ -54,7 +54,8 @@ se usa el JSON `app_settings.settings_j_s_o_n`:
 
 Ejemplo: `{"customCurrencyAmounts": {"pen": "3.8", "usd": 1}}` produce
 USD→PEN `3.800000`. Las tasas globales se guardan como `auto` y se cuentan en
-`provisional_fx` al crear transacciones: **no son tasas históricas**. No cambian
+`provisional_fx` para las transacciones procesadas, también si ya estaban
+importadas: **no son tasas históricas**. No cambian
 las tasas de transacciones ya importadas. Si falta una tasa necesaria, el
 comando falla antes de insertar entidades financieras. El fixture original no
 contiene tasas: el ejemplo de uso debe incluir `--fx-rate USD=3.800000`.

@@ -410,3 +410,27 @@ def test_deleted_imported_rows_are_never_recreated(
     second = run_import(db_session, import_user.id, snapshot, options)
     assert all(count.created == 0 for count in second.counts.values())
     assert financial_rows(db_session, import_user) == before
+
+
+def test_reimport_does_not_replace_provisional_rate(
+    db_session: Session, import_user: User, snapshot: Snapshot
+) -> None:
+    row = next(row for row in snapshot.transactions if row.pk == ROW_MAP["C_disbursement"])
+    row = replace(row, objective_loan_pk=None, type=None)
+    altered = replace(
+        snapshot,
+        transactions=(row,),
+        settings_json=('{"cachedCurrencyExchange": {"usd": 1, "pen": 3.8}}',),
+    )
+    first = run_import(db_session, import_user.id, altered, ImportOptions())
+    assert first.provisional_fx == 1
+    before = financial_rows(db_session, import_user)
+    second = run_import(
+        db_session,
+        import_user.id,
+        altered,
+        ImportOptions(fx_rate_overrides={"USD": Decimal("4.2")}),
+    )
+    assert second.counts["transactions"].created == 0
+    assert second.provisional_fx == 1
+    assert financial_rows(db_session, import_user) == before
