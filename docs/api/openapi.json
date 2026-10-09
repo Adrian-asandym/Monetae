@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Monetae API",
-    "version": "0.4.0",
-    "description": "Contrato inicial V1 basado en SPEC v0.4, ARCHITECTURE v0.2 y ADR aceptadas 002/003/004/006. Dinero como cadenas decimales; aislamiento por sesión y borrado lógico. Documentación y observaciones en README.md.",
+    "version": "0.5.0",
+    "description": "Contrato inicial V1 basado en SPEC v0.5, ARCHITECTURE v0.2 y ADR aceptadas 002/003/004/006. Dinero como cadenas decimales; aislamiento por sesión y borrado lógico. Documentación y observaciones en README.md.",
     "license": {
       "name": "GPL-3.0-only",
       "identifier": "GPL-3.0-only"
@@ -9067,6 +9067,12 @@
               }
             ],
             "readOnly": true
+          },
+          "transaction_count": {
+            "type": "integer",
+            "minimum": 0,
+            "readOnly": true,
+            "description": "RF-49: número de transacciones publicadas y no borradas de la cuenta (de cualquier tipo, incluidas patas de transferencias y movimientos de préstamo). Se calcula, no se guarda."
           }
         },
         "required": [
@@ -9082,7 +9088,8 @@
           "updated_at",
           "deleted_at",
           "balance",
-          "archived_at"
+          "archived_at",
+          "transaction_count"
         ]
       },
       "CategoryCreate": {
@@ -11607,10 +11614,21 @@
           },
           "transaction_card": {
             "$ref": "#/components/schemas/TransactionCardPreferences"
+          },
+          "default_account_id": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "RF-48: cuenta por defecto para nuevas transacciones (Cashew: selectedWalletPk). Debe ser una cuenta propia, activa y no archivada; si no, 422 `account_not_found`. Si la cuenta se archiva o borra después, `GET /users/me` devuelve null."
           }
         },
         "required": [],
-        "description": "Preferencias estrictas de presentación, persistidas en users.preferences jsonb: tema, acento, widgets ordenados y detalles de la tarjeta de transacción (RF-47)."
+        "description": "Preferencias estrictas de presentación, persistidas en users.preferences jsonb: tema, acento, widgets ordenados detalles de la tarjeta de transacción (RF-47) y cuenta por defecto (RF-48)."
       },
       "CurrentUser": {
         "type": "object",
@@ -12209,6 +12227,10 @@
           },
           "net": {
             "$ref": "#/components/schemas/ReportTotal"
+          },
+          "cumulative_net": {
+            "$ref": "#/components/schemas/ReportTotal",
+            "description": "RF-38: neto acumulado desde el inicio del rango pedido hasta el final de esta fila (sube con ingresos y baja con gastos; gráfico de líneas de Cashew). Mismas reglas de conversión que `net`."
           }
         },
         "required": [
@@ -12216,7 +12238,8 @@
           "end_on",
           "income",
           "expense",
-          "net"
+          "net",
+          "cumulative_net"
         ],
         "description": "Ingreso/gasto estadístico excluye capital de préstamos y transferencias; interés en fecha de pago."
       },

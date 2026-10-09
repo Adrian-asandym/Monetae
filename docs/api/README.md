@@ -708,3 +708,10 @@ son exclusivamente el modelo/registro/migración de tasas y las dos adaptaciones
 de pruebas de migración expresamente autorizadas por el coordinador. El contrato,
 las dependencias y la UI no cambian. La pila de la tarea y su `.env` se eliminan
 al completar la verificación; no se toca la pila `monetae-review`.
+
+## Cambios del contrato 0.5.0 (SPEC v0.5, disposición de Inicio)
+
+- `UserPreferences.default_account_id` (RF-48): cuenta por defecto para nuevas transacciones; propia, activa y no archivada o 422 `account_not_found`; `GET /users/me` devuelve null si la cuenta se archivó o borró después.
+- `Account.transaction_count` (RF-49, solo lectura): transacciones publicadas y no borradas de la cuenta, de cualquier tipo.
+- `CashFlowRow.cumulative_net` (RF-38): neto acumulado desde el inicio del rango hasta el final de la fila, para el gráfico de líneas acumulado de Cashew.
+Implementación: T-508. Regenerar el cliente de la UI desde `openapi.json` 0.5.0.

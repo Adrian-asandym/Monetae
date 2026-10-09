@@ -1,6 +1,6 @@
 # SPEC.md — Monetae
 
-> Versión 0.4 · 2026-10-09 · Autor: Adrian (revisión: Claude). Historial de cambios en §18.
+> Versión 0.5 · 2026-10-09 · Autor: Adrian (revisión: Claude). Historial de cambios en §18.
 > Documento fuente de verdad del producto. Los agentes lo leen junto con `AGENTS.md`.
 > Los cambios de alcance se registran como ADR en `docs/decisions/`, no se improvisan en código.
 
@@ -131,7 +131,9 @@ Ver reglas en la sección 8.
 - **RF-37** Sesiones con expiración y cierre de sesión en todos los dispositivos.
 
 ### 5.10 Inicio y gráficos
-- **RF-38** Pantalla de inicio personalizable con widgets al estilo Cashew: saldo por cuenta/moneda, gasto por categoría, evolución en el tiempo, progreso de presupuestos, próximos pagos, préstamos pendientes, suscripciones activas.
+- **RF-38** Pantalla de inicio personalizable con widgets al estilo Cashew: saldo por cuenta/moneda, gasto por categoría, evolución en el tiempo, progreso de presupuestos, próximos pagos, préstamos pendientes, suscripciones activas. **Disposición de referencia (v0.5, Adrian):** `docs/ui/home-layout.md` — saludo, cuentas, objetivos, presupuestos, circular de gastos (leyenda de las 3 categorías con más gasto; deslizar para ingresos), gráfico de líneas **acumulado** (sube con ingresos, baja con gastos), 25 últimas transacciones y botón «+» destacado.
+- **RF-48** **Cuenta por defecto (v0.5):** el usuario elige desde Inicio la cuenta que se propone al crear una transacción (preferencia en el servidor); la elegida se resalta con el color de la cuenta.
+- **RF-49** **Navegación (v0.5):** barra inferior de 4 botones como Cashew (Inicio, Transacciones, Presupuestos, Más). Cada cuenta muestra en Inicio nombre, saldo, número de transacciones y color.
 - **RF-39** Tema claro/oscuro y color de acento configurable. En modo oscuro, superficie azul por defecto (preferencia de Adrian, v0.4). El ícono de la app y el favicon siguen el modo (versiones clara y oscura en `img/`).
 - **RF-47** **Tarjeta de transacción configurable (v0.4):** el usuario elige qué detalles muestra cada tarjeta: fecha, hora, nota, etiquetas, cuenta y botones de acción. Se guarda como preferencia en el servidor (viaja entre dispositivos). Por defecto se ve como en Cashew. Es solo presentación: no cambia datos ni cálculos.
 - **Fidelidad visual (v0.4):** gráficas de ingresos y gastos, presupuestos, metas y sus barras de progreso, colores e íconos replican el diseño de Cashew; cada componente se acepta con capturas de referencia en claro y oscuro y la revisión visual de Adrian.
@@ -349,3 +351,4 @@ Bot de Telegram, clasificador de categorías, asistente Hermes, RAG, app Android
 | 0.2 | 2026-10-07 | **Etiquetas** (RF-43 a RF-45, tablas `tags` y `transaction_tags`, criterio de aceptación). **Importador** (§11): SQLite como fuente primaria y CSV solo de rescate (RF-40a, RF-40h), trabajo siempre sobre una copia (RF-40g), tolerancia al esquema v48 (RF-40i) e importación de etiquetas (RF-40j). ADR-001 marcado como aceptado (§15). Aprobado por Adrian. |
 | 0.3 | 2026-10-07 | ADR-002, 003, 004, 006 y 007 aceptados (opción A, §15). `loan_movements` incorpora `interest_part` y `principal_part` en los pagos (ADR-003, §6). Aprobado por Adrian. |
 | 0.4 | 2026-10-09 | Tras la revisión visual del spike de UI (T-501): **íconos SVG propios** para categorías (RF-46, tabla `user_icons`, saneado obligatorio; catálogo base abierto, sin copiar los PNG de Cashew), **tarjeta de transacción configurable** guardada en el servidor (RF-47), superficie azul en oscuro e ícono/favicon según el modo (RF-39), **fidelidad visual a Cashew** como criterio de aceptación (§5.10), seguridad de archivos subidos (§12), dos criterios nuevos (§14). Correcciones: §2 (contexto de Cashew confirmado) y §8 (archivar cancela **todas** las programadas sin publicar, D2). Contrato `openapi.json` 0.4.0. Decisiones D10-A y D11-A de Adrian. |
+| 0.5 | 2026-10-09 | Tras revisar T-503/T-504: disposición de Inicio de referencia (`docs/ui/home-layout.md`, RF-38), **cuenta por defecto** (RF-48), **navegación de 4 botones** y nº de transacciones por cuenta (RF-49). Contrato 0.5.0: `UserPreferences.default_account_id`, `Account.transaction_count`, `CashFlowRow.cumulative_net`. Aprobado por Adrian (su descripción del 2026-10-09). |
