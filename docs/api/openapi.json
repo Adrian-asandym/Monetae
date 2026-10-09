@@ -11297,6 +11297,18 @@
             "items": {
               "$ref": "#/components/schemas/BudgetCategoryLimit"
             }
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Color de la tarjeta y de la barra de progreso (como en Cashew); null usa el color de acento."
           }
         },
         "required": [
@@ -11392,6 +11404,18 @@
           "report_total": {
             "$ref": "#/components/schemas/ReportTotal",
             "readOnly": true
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Color de la tarjeta y de la barra de progreso (como en Cashew); null usa el color de acento."
           }
         },
         "required": [
@@ -11409,7 +11433,8 @@
           "deleted_at",
           "spent_amount",
           "remaining_amount",
-          "report_total"
+          "report_total",
+          "color"
         ]
       },
       "GoalCreate": {
@@ -11442,6 +11467,31 @@
                 "type": "null"
               }
             ]
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Color de la tarjeta y de la barra de progreso (como en Cashew); null usa el color de acento."
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Ícono del catálogo base o `custom:<uuid>` (RF-46), como los objetivos de Cashew."
           }
         },
         "required": [
@@ -11513,6 +11563,31 @@
           "report_total": {
             "$ref": "#/components/schemas/ReportTotal",
             "readOnly": true
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Color de la tarjeta y de la barra de progreso (como en Cashew); null usa el color de acento."
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Ícono del catálogo base o `custom:<uuid>` (RF-46), como los objetivos de Cashew."
           }
         },
         "required": [
@@ -11526,7 +11601,9 @@
           "updated_at",
           "deleted_at",
           "progress_amount",
-          "report_total"
+          "report_total",
+          "color",
+          "icon"
         ]
       },
       "TransactionAssignment": {
@@ -13091,6 +13168,18 @@
             "items": {
               "$ref": "#/components/schemas/BudgetCategoryLimit"
             }
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Color de la tarjeta y de la barra de progreso (como en Cashew); null usa el color de acento."
           }
         },
         "required": [],
@@ -13127,6 +13216,31 @@
                 "type": "null"
               }
             ]
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Color de la tarjeta y de la barra de progreso (como en Cashew); null usa el color de acento."
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Ícono del catálogo base o `custom:<uuid>` (RF-46), como los objetivos de Cashew."
           }
         },
         "required": [],

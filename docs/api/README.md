@@ -714,4 +714,5 @@ al completar la verificación; no se toca la pila `monetae-review`.
 - `UserPreferences.default_account_id` (RF-48): cuenta por defecto para nuevas transacciones; propia, activa y no archivada o 422 `account_not_found`; `GET /users/me` devuelve null si la cuenta se archivó o borró después.
 - `Account.transaction_count` (RF-49, solo lectura): transacciones publicadas y no borradas de la cuenta, de cualquier tipo.
 - `CashFlowRow.cumulative_net` (RF-38): neto acumulado desde el inicio del rango hasta el final de la fila, para el gráfico de líneas acumulado de Cashew.
-Implementación: T-508. Regenerar el cliente de la UI desde `openapi.json` 0.5.0.
+- `Budget.color`, `Goal.color` y `Goal.icon` (y en sus `Create`/`Update`): color de la tarjeta y la barra de progreso, e ícono del objetivo, como en Cashew. Su API se implementa en la Fase 6.
+Implementación de los tres primeros: T-508. Regenerar el cliente de la UI desde `openapi.json` 0.5.0.
