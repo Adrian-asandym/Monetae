@@ -617,6 +617,6 @@ Decisiones D10-A y D11-A de Adrian (2026-10-09), SPEC v0.4.
 
 - **RF-46 · Íconos SVG propios (tag `icons`, 4 operaciones nuevas):** `GET/POST /api/v1/icons`, `DELETE /api/v1/icons/{id}` (409 `icon_in_use` si una categoría activa lo usa) y `GET /api/v1/icons/{id}/download` (SVG saneado con `Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; sandbox` y `nosniff`). Esquemas `UserIcon`, `UserIconUpload` (≤ 64 KiB, 200 por usuario, 413/415/422 `invalid_svg`/`icon_limit_reached`) y `UserIconPage`. **Implementación prevista en la Fase 6**, junto con los adjuntos.
 - **`Category.icon`** (y `CategoryCreate`/`CategoryUpdate`): clave del catálogo base o `custom:<uuid>`; máximo 64 caracteres; un `custom:` inexistente, borrado o ajeno devuelve 422 `icon_not_found` (Fase 6).
-- **RF-47 · `UserPreferences.transaction_card`** (`TransactionCardPreferences`): `show_date`, `show_time`, `show_note`, `show_tags`, `show_account`, `show_actions`, con valores por defecto que reproducen Cashew (`true`, `false`, `true`, `true`, `false`, `false`). Se implementa en T-505.
+- **RF-47 · `UserPreferences.transaction_card`** (`TransactionCardPreferences`): `show_date`, `show_time`, `show_note`, `show_tags`, `show_account`, `show_actions`, con valores por defecto que reproducen Cashew (`true`, `false`, `true`, `true`, `false`, `false`). Implementado en T-505.
 
 Totales: 89 paths, 131 operaciones. Quien genere el cliente de la UI debe regenerarlo desde `openapi.json` 0.4.0.

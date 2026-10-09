@@ -13,6 +13,7 @@ from monetae.api.schemas.auth import (
     PasswordLogin,
     Session,
     SessionPage,
+    TransactionCardPreferences,
     UserPreferences,
     UserUpdate,
 )
@@ -134,6 +135,7 @@ def test_schema_properties_mirror_contract() -> None:
         CurrentUser,
         UserUpdate,
         UserPreferences,
+        TransactionCardPreferences,
         Session,
         SessionPage,
         ActionResult,
