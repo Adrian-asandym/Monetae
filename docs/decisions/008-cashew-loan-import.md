@@ -66,4 +66,11 @@ Cashew **no guarda tasa por transacción**; solo tiene un tipo de cambio global 
 
 ## Decisión de Adrian
 
-*(pendiente — responde J1, J2 y J3 con la letra elegida; «todo recomendado» vale. Indica también si vetas alguna regla R1–R8.)*
+- **2026-10-08 (noche): «todo A»** como respuesta a las recomendaciones.
+  - **J1 = A** (pago sintetizado en la misma cuenta, marcado para revisión) — **decidido**.
+  - **J3 = A** (no adivinar la tasa; segunda pasada con `--loan-fx-rates`) — **decidido**.
+  - **J2 — pendiente de aclarar:** en J2 la opción **recomendada es la C** (partir el pago en «saldo exacto» + ingreso/gasto ordinario por el exceso); la **A** es otra (ajuste de capital, que cambia el principal). «Todo A» podría significar «todo lo recomendado» o la letra A de J2. **No se lanza T-402 hasta que Adrian confirme la letra de J2.**
+  - Reglas R1–R8: sin vetos.
+- Permiso para un `--dry-run` sobre una copia del respaldo real (solo conteos y saldos): **sin responder**; no bloquea T-401. Hasta entonces solo se usan los fixtures sintéticos.
+
+**Estado: PROPUESTO** (pasa a ACEPTADO cuando Adrian confirme J2).

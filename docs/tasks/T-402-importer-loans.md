@@ -1,6 +1,6 @@
 # T-402 — Importador de Cashew: préstamos (largo plazo y pago único)
 
-> **ESTADO: PLANIFICADA — NO LANZAR** hasta que Adrian apruebe el **ADR-008** y dé el OK al Paso 3 (2026-10-08).
+> **ESTADO: PLANIFICADA — NO LANZAR** hasta que Adrian confirme la letra de **J2** del ADR-008 (J1-A y J3-A ya decididos el 2026-10-08) y dé el OK a esta tarea.
 > Escrita con las opciones **recomendadas** del ADR-008 (**J1-A, J2-C, J3-A**). Si Adrian elige otras, el coordinador reescribe las secciones «Reglas» y «Pruebas» antes de lanzar.
 > Agente: **Codex**, modelo `gpt-6.1-sol` esfuerzo `high` (regla de negocio sobre datos reales; usa `gpt-6-astra` si T-401 pidió devoluciones o si esta tarea vuelve más de una vez).
 > Depende de: **T-401** integrada (migración `0007`, lector, runner y opciones). Corre **en paralelo con T-403** (archivos disjuntos).
