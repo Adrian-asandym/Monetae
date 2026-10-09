@@ -76,10 +76,33 @@ Importes en JSON son cadenas decimales. El saldo de Cashew suma los importes
 brutos de las filas `paid=1`. Monetae suma el saldo inicial y las transacciones
 `posted` sin borrado lógico. `unexplained = cashew_balance - monetae_balance -
 deferred_amount`. El reporte del modo de simulación contiene saldos **proyectados**,
-aunque las cuentas y transacciones nuevas se reviertan. Las correcciones de
-polaridad se registran como `polarity_corrected`; su efecto en el saldo queda
-visible en `unexplained`. Un saldo previo o una edición manual posterior puede
+aunque las cuentas y transacciones nuevas se reviertan. El signo almacenado en Cashew determina ingreso/gasto y se conserva aunque
+contradiga `income`; esa anomalía genera `polarity_mismatch` con
+`transaction_pk`, `amount` e `income`, sin modificar el dinero ni el saldo. Un saldo previo o una edición manual posterior puede
 producir diferencia: la importación no sobrescribe ni ajusta esas filas.
+
+## Filas problemáticas (T-401b)
+
+Estas anomalías individuales no abortan el resto de la importación: la fila se
+omite, incrementa `counts.transactions.skipped` y genera un ítem de revisión:
+
+- Transacción ordinaria (tipo nulo o 0) con importe cero:
+  `zero_amount_transaction` con `transaction_pk`.
+- Cuenta inexistente (incluido `wallet_fk="0"` si no existe esa cuenta):
+  `orphan_transaction` con `transaction_pk` y `wallet_pk`.
+- Tipo fuera de 0–4: `unsupported_transaction_type` con `transaction_pk` y `type`.
+
+No se cuentan como importadas ni diferidas; sus vínculos de etiquetas también
+se cuentan como omitidos. Se detectan cuenta inexistente y tipo desconocido
+antes de pasar filas a los pasos de préstamos o recurrentes. Las revisiones no
+incluyen títulos, notas ni nombres. Si una fila omitida estaba pagada y su cuenta
+existe, su importe sigue en `cashew_balance` y su efecto queda visible en
+`unexplained`, sin compensación ni importe diferido artificial. Una cuenta
+huérfana no tiene saldo de destino: se señala por sus PK en la revisión.
+
+En las transacciones ordinarias el signo del importe almacenado tiene prioridad
+sobre `income`, por ser el que usa `SUM(amount)` de Cashew. `polarity_mismatch`
+reemplaza a `polarity_corrected`: se conserva el importe y se avisa, sin invertirlo.
 
 ## Alcance de T-401 y extensión
 
