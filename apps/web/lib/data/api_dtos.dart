@@ -1389,6 +1389,217 @@ final class TagPageDto {
   };
 }
 
+final class CurrencyTotalDto {
+  const CurrencyTotalDto({required this.currency, required this.amount});
+
+  final String currency;
+  final String amount;
+
+  factory CurrencyTotalDto.fromJson(Map<String, Object?> json) {
+    _keys(json, {'currency', 'amount'}, {'amount', 'currency'}, {
+      'currency',
+      'amount',
+    });
+    return CurrencyTotalDto(
+      currency: _value<String>(json['currency'], 'currency', false)!,
+      amount: _value<String>(json['amount'], 'amount', false)!,
+    );
+  }
+
+  Map<String, Object?> toJson() => {'currency': currency, 'amount': amount};
+}
+
+final class ReportTotalDto {
+  const ReportTotalDto({
+    required this.byCurrency,
+    required this.reportCurrency,
+    required this.reportAmount,
+    required this.unconvertedCount,
+  });
+
+  final List<CurrencyTotalDto> byCurrency;
+  final String reportCurrency;
+  final String reportAmount;
+  final int unconvertedCount;
+
+  factory ReportTotalDto.fromJson(Map<String, Object?> json) {
+    _keys(
+      json,
+      {'by_currency', 'report_currency', 'report_amount', 'unconverted_count'},
+      {'by_currency', 'report_amount', 'report_currency', 'unconverted_count'},
+      {'by_currency', 'report_currency', 'report_amount', 'unconverted_count'},
+    );
+    return ReportTotalDto(
+      byCurrency: List<CurrencyTotalDto>.unmodifiable(
+        (json['by_currency'] as List<Object?>).map(
+          (value) => CurrencyTotalDto.fromJson(_object(value)),
+        ),
+      ),
+      reportCurrency: _value<String>(
+        json['report_currency'],
+        'report_currency',
+        false,
+      )!,
+      reportAmount: _value<String>(
+        json['report_amount'],
+        'report_amount',
+        false,
+      )!,
+      unconvertedCount: _value<int>(
+        json['unconverted_count'],
+        'unconverted_count',
+        false,
+      )!,
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'by_currency': byCurrency.map((value) => value.toJson()).toList(),
+    'report_currency': reportCurrency,
+    'report_amount': reportAmount,
+    'unconverted_count': unconvertedCount,
+  };
+}
+
+final class CashFlowRowDto {
+  const CashFlowRowDto({
+    required this.startOn,
+    required this.endOn,
+    required this.income,
+    required this.expense,
+    required this.net,
+  });
+
+  final String startOn;
+  final String endOn;
+  final ReportTotalDto income;
+  final ReportTotalDto expense;
+  final ReportTotalDto net;
+
+  factory CashFlowRowDto.fromJson(Map<String, Object?> json) {
+    _keys(
+      json,
+      {'start_on', 'end_on', 'income', 'expense', 'net'},
+      {'end_on', 'expense', 'income', 'net', 'start_on'},
+      {'start_on', 'end_on', 'income', 'expense', 'net'},
+    );
+    return CashFlowRowDto(
+      startOn: _value<String>(json['start_on'], 'start_on', false)!,
+      endOn: _value<String>(json['end_on'], 'end_on', false)!,
+      income: ReportTotalDto.fromJson(_object(json['income'])),
+      expense: ReportTotalDto.fromJson(_object(json['expense'])),
+      net: ReportTotalDto.fromJson(_object(json['net'])),
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'start_on': startOn,
+    'end_on': endOn,
+    'income': income.toJson(),
+    'expense': expense.toJson(),
+    'net': net.toJson(),
+  };
+}
+
+enum CategoryReportRowKind { income, expense }
+
+final class CategoryReportRowDto {
+  const CategoryReportRowDto({
+    required this.categoryId,
+    required this.kind,
+    required this.startOn,
+    required this.endOn,
+    required this.total,
+  });
+
+  final String? categoryId;
+  final CategoryReportRowKind kind;
+  final String startOn;
+  final String endOn;
+  final ReportTotalDto total;
+
+  factory CategoryReportRowDto.fromJson(Map<String, Object?> json) {
+    _keys(
+      json,
+      {'category_id', 'kind', 'start_on', 'end_on', 'total'},
+      {'category_id', 'end_on', 'kind', 'start_on', 'total'},
+      {'kind', 'start_on', 'end_on', 'total'},
+    );
+    return CategoryReportRowDto(
+      categoryId: _value<String>(json['category_id'], 'category_id', true),
+      kind: _enum(json['kind'], 'kind', <String, CategoryReportRowKind>{
+        'income': CategoryReportRowKind.income,
+        'expense': CategoryReportRowKind.expense,
+      }, false)!,
+      startOn: _value<String>(json['start_on'], 'start_on', false)!,
+      endOn: _value<String>(json['end_on'], 'end_on', false)!,
+      total: ReportTotalDto.fromJson(_object(json['total'])),
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'category_id': categoryId,
+    'kind': {
+      CategoryReportRowKind.income: 'income',
+      CategoryReportRowKind.expense: 'expense',
+    }[kind],
+    'start_on': startOn,
+    'end_on': endOn,
+    'total': total.toJson(),
+  };
+}
+
+final class CashFlowRowPageDto {
+  const CashFlowRowPageDto({required this.items, required this.nextCursor});
+
+  final List<CashFlowRowDto> items;
+  final String? nextCursor;
+
+  factory CashFlowRowPageDto.fromJson(Map<String, Object?> json) {
+    _keys(json, {'items', 'next_cursor'}, {'items', 'next_cursor'}, {'items'});
+    return CashFlowRowPageDto(
+      items: List<CashFlowRowDto>.unmodifiable(
+        (json['items'] as List<Object?>).map(
+          (value) => CashFlowRowDto.fromJson(_object(value)),
+        ),
+      ),
+      nextCursor: _value<String>(json['next_cursor'], 'next_cursor', true),
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'items': items.map((value) => value.toJson()).toList(),
+    'next_cursor': nextCursor,
+  };
+}
+
+final class CategoryReportRowPageDto {
+  const CategoryReportRowPageDto({
+    required this.items,
+    required this.nextCursor,
+  });
+
+  final List<CategoryReportRowDto> items;
+  final String? nextCursor;
+
+  factory CategoryReportRowPageDto.fromJson(Map<String, Object?> json) {
+    _keys(json, {'items', 'next_cursor'}, {'items', 'next_cursor'}, {'items'});
+    return CategoryReportRowPageDto(
+      items: List<CategoryReportRowDto>.unmodifiable(
+        (json['items'] as List<Object?>).map(
+          (value) => CategoryReportRowDto.fromJson(_object(value)),
+        ),
+      ),
+      nextCursor: _value<String>(json['next_cursor'], 'next_cursor', true),
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'items': items.map((value) => value.toJson()).toList(),
+    'next_cursor': nextCursor,
+  };
+}
+
 T? _value<T>(Object? value, String key, bool nullable) {
   if (value == null && nullable) return null;
   if (value is! T) throw FormatException('Invalid field type: $key');
