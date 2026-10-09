@@ -1,6 +1,6 @@
 # ADR-008 — Cómo se convierten los préstamos de Cashew al importar
 
-- **Estado:** PROPUESTO — **pendiente de Adrian** (decisiones J1, J2 y J3; las demás reglas son por defecto y puede vetarlas)
+- **Estado:** **ACEPTADO** — J1-A, J2-C, J3-A (decididos por Adrian el 2026-10-08)
 - **Fecha:** 2026-10-08 · **Autor:** Claude
 - **Relacionado:** SPEC RF-40a…j (§11), RF-22, §7; ADR-003; `docs/cashew-analysis/02-loans.md` §7; fixture `services/api/tests/fixtures/cashew_v48/` (casos A–F); tarea `T-402`
 
@@ -66,11 +66,11 @@ Cashew **no guarda tasa por transacción**; solo tiene un tipo de cambio global 
 
 ## Decisión de Adrian
 
-- **2026-10-08 (noche): «todo A»** como respuesta a las recomendaciones.
-  - **J1 = A** (pago sintetizado en la misma cuenta, marcado para revisión) — **decidido**.
-  - **J3 = A** (no adivinar la tasa; segunda pasada con `--loan-fx-rates`) — **decidido**.
-  - **J2 — pendiente de aclarar:** en J2 la opción **recomendada es la C** (partir el pago en «saldo exacto» + ingreso/gasto ordinario por el exceso); la **A** es otra (ajuste de capital, que cambia el principal). «Todo A» podría significar «todo lo recomendado» o la letra A de J2. **No se lanza T-402 hasta que Adrian confirme la letra de J2.**
+- **2026-10-08 (noche): «todo A»** a las recomendaciones; **aclarado el mismo día: «Acepto todas tus recomendaciones»**. Por tanto:
+  - **J1 = A** — pago sintetizado en la misma cuenta, marcado para revisión.
+  - **J2 = C** — partir el pago en «saldo exacto» + ingreso/gasto ordinario por el exceso. *(Nota: en J2 la recomendada era la C; «todo A» se había leído como la letra A y se aclaró.)*
+  - **J3 = A** — no adivinar la tasa; segunda pasada con `--loan-fx-rates`.
   - Reglas R1–R8: sin vetos.
-- Permiso para un `--dry-run` sobre una copia del respaldo real (solo conteos y saldos): **sin responder**; no bloquea T-401. Hasta entonces solo se usan los fixtures sintéticos.
+- **Prueba con el respaldo real:** Adrian **autoriza** (2026-10-08) un `--dry-run` sobre una **copia** de su respaldo, **al final de la Fase 4**, que devuelva **solo conteos y saldos** (nunca filas, títulos ni notas). Lo ejecuta el coordinador; el original no se toca (RF-40g).
 
-**Estado: PROPUESTO** (pasa a ACEPTADO cuando Adrian confirme J2).
+**Estado: ACEPTADO.**

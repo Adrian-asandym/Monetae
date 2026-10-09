@@ -1,6 +1,6 @@
 # T-401 — Importador de Cashew: migración 0007 y núcleo (cuentas, categorías, etiquetas, transacciones, transferencias)
 
-> **ESTADO: PLANIFICADA — NO LANZAR** hasta que Adrian dé el OK al Paso 3 (2026-10-08).
+> **ESTADO: LANZADA el 2026-10-08** (Run `run_f5e95406186a`; OK de Adrian al Paso 3).
 > Agente: **Codex**, modelo `gpt-6.1-sol` esfuerzo `high` (esquema real v48 desconocido, idempotencia y migración).
 > Depende de: nada (Fase 3 integrada en `master-dev`). **Eres el único dueño de las migraciones**: creas la `0007`. T-402 y T-403 salen de tu rama ya integrada.
 

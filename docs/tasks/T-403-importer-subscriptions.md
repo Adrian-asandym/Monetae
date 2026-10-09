@@ -1,6 +1,6 @@
 # T-403 — Importador de Cashew: suscripciones, recurrentes y cuadre final
 
-> **ESTADO: PLANIFICADA — NO LANZAR** hasta que Adrian dé el OK al Paso 3 (2026-10-08).
+> **ESTADO: PLANIFICADA — se lanza cuando T-401 esté aceptada e integrada** (Run `run_f5e95406186a`; OK de Adrian al Paso 3, 2026-10-08).
 > Agente: **Codex**, modelo `gpt-6.1-sol` esfuerzo `medium` (reglas acotadas; el cuidado está en fechas y en el cuadre de saldos).
 > Depende de: **T-401** integrada. Corre **en paralelo con T-402** (archivos disjuntos; esta tarea posee `runner.py`, `report.py` y `cli.py` a partir de T-401).
 > Alcance acordado (D4-A, D4b-A del 2026-10-08): **no** se hacen las rutas `/imports` (4 operaciones) ni se importan presupuestos, metas ni reglas; quedan listados como «pendiente de Fase 6» y las rutas de subida de archivos, para las Fases 5-6.
