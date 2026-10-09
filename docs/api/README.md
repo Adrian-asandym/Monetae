@@ -620,3 +620,91 @@ Decisiones D10-A y D11-A de Adrian (2026-10-09), SPEC v0.4.
 - **RF-47 · `UserPreferences.transaction_card`** (`TransactionCardPreferences`): `show_date`, `show_time`, `show_note`, `show_tags`, `show_account`, `show_actions`, con valores por defecto que reproducen Cashew (`true`, `false`, `true`, `true`, `false`, `false`). Implementado en T-505.
 
 Totales: 89 paths, 131 operaciones. Quien genere el cliente de la UI debe regenerarlo desde `openapi.json` 0.4.0.
+
+## Reportes (T-506)
+
+`GET /api/v1/reports/cash-flow` y `GET /api/v1/reports/categories` implementan los
+modelos del contrato **0.4.0** (`CashFlowRowPage`, `CategoryReportRowPage`,
+`ReportTotal`, `CurrencyTotal`). Requieren sesión y son consultas de solo lectura,
+sin bloqueos de fila. Todas las entidades financieras se filtran por el usuario;
+las referencias de cuenta o persona inexistentes, borradas o ajenas devuelven 404.
+
+Cuentan únicamente ingresos y gastos publicados y no borrados, incluido el
+historial de suscripciones archivadas. Se excluyen transferencias y capital de
+préstamos. El interés se obtiene de `interest_part` de los movimientos `payment`
+activos, con préstamo y transacción activos: se reconoce en la fecha del pago,
+como ingreso si se prestó y gasto si se recibió el préstamo, en las categorías de
+sistema `interest_income` / `interest_expense`. No se cuentan intereses pendientes
+ni condonaciones (`write_off`). El pago actual crea solo una transacción
+`kind=loan`; el reporte extrae su interés sin duplicar una transacción ordinaria.
+Para pagos entre monedas, se multiplica por `fx_rate_applied`; `by_currency`
+conserva la moneda de la cuenta del pago. `account_id` filtra la cuenta realmente
+utilizada; con `person_id` se devuelve **solo el interés** de los préstamos de esa
+persona, excluyendo transacciones ordinarias que no tienen persona asociada.
+
+`income`, `expense` y los totales por categoría son magnitudes positivas;
+`net = income - expense` conserva el signo. Cada total muestra `by_currency`
+ordenado por código de moneda, sin sumar monedas distintas. El convertido usa
+`fx_rate_to_base` de cada transacción, y, si la moneda de reporte difiere de la
+base, multiplica por la tasa histórica base→reporte del día **local** de la
+transacción o del último día anterior. Esto se aplica también cuando la moneda
+original coincide con la de reporte. Sin tasa, la entrada no contribuye al
+convertido y aumenta `unconverted_count`, conservándose en `by_currency`.
+En `net`, este contador suma las entradas sin convertir de ingresos y gastos.
+Los cálculos usan `NUMERIC` / `Decimal` y redondean con `ROUND_HALF_UP` a dos
+decimales solo al formar el total final; dinero y tasas nunca se serializan como
+números de coma flotante. `report_currency` omiso toma la preferencia del usuario.
+
+Los periodos son días, semanas ISO (lunes a domingo), meses y años naturales en
+`users.timezone`. El rango es inclusivo; `start_on` / `end_on` de cada fila se
+recortan al rango solicitado. Sin `date_to`, se usa hoy en esa zona. Sin
+`date_from`, se toma el inicio del periodo de `date_to` menos once periodos: doce
+cubos, incluido el periodo actual parcial (por ejemplo, mensual hasta
+2026-10-07 empieza en 2025-11-01). `cash-flow` usa `monthly` por defecto y devuelve
+todos los periodos, incluidos los vacíos con `0.00`, `by_currency=[]` y contador
+cero. `categories` sin `period` usa el mismo rango predeterminado de doce meses y
+lo agrega en un único cubo; con `period`, agrupa por ese periodo y devuelve solo
+filas con movimiento. Una categoría ausente se representa con `category_id=null`.
+
+`date_from > date_to` devuelve 422 `invalid_date_range`; más de 400 cubos devuelve
+422 `range_too_large`. Los extremos de fecha que impiden construir los límites
+calendarios también devuelven 422 `invalid_date_range`. La paginación usa `limit`
+(1–200, 50 por defecto) y cursores firmados ligados al usuario, recurso y filtros
+efectivos. El orden es cronológico ascendente; en categorías, dentro de cada
+periodo, importe convertido descendente, luego `kind` y UUID de categoría
+(`null` primero en ese desempate). Un cursor inválido o reutilizado con otros
+filtros devuelve 400 `invalid_cursor`.
+
+La migración **0008**, autorizada por el coordinador al comprobar que la tabla
+prevista en ARCHITECTURE §5.8 aún no existía, incorpora `exchange_rates`: tabla
+global del sistema **sin `user_id` ni `deleted_at`**, con par de monedas, fecha,
+tasa positiva y fuente `manual` / `auto:<proveedor>`, UUID y timestamps. Es única
+por par/fecha/fuente y tiene un índice por par/fecha. En fechas empatadas, manda
+`manual`, luego se desempata por fuente y UUID. Estos endpoints solo leen tasas;
+no se incorpora proveedor ni API de escritura. El downgrade 0008→0007 elimina
+solo esa tabla global, conservando las entidades financieras.
+
+La agregación de transacciones e interés se hace en **una consulta SQL** por
+reporte, con preagregación diaria antes de buscar tasas históricas; no se cargan
+transacciones individuales ni se consulta por categoría o periodo desde Python.
+Las pruebas usan PostgreSQL real y datos sintéticos, incluida una sonda TCP con
+`uvicorn` / `httpx`: login seguido inmediatamente de ambos reportes debe dar 200.
+
+Primera medición local con 20 000 transacciones sintéticas y conversión histórica:
+**cash-flow 250,0 ms; categories 72,7 ms**, cuatro sentencias SQL por petición
+(incluida la sesión). La suite comprueba el límite de un segundo y la ausencia de
+consultas por fila y bloqueos de lectura.
+
+Verificación final de T-506: **1014 pruebas pasan** con PostgreSQL real en
+`monetae-t506` / puerto 5446 y `MONETAE_REQUIRE_DB=1` (60 nuevas sobre las 954
+anteriores), en 563,55 s. Permanece únicamente el aviso previo de Starlette/httpx.
+`uv sync --frozen`, `uv lock --check`, `ruff check`, `ruff format --check`,
+`mypy` estricto, `alembic upgrade head`, `alembic check` y
+`python3 -I scripts/check_openapi.py` pasan; no hay `type: ignore` en `src`.
+La migración 0008 pasa el recorrido 0007→0008→0007→0008 sin diferencias con
+metadata. La sonda con uvicorn real devuelve 200 en ambos reportes inmediatamente
+tras login. La rama incorpora `master-dev`; los cambios fuera del alcance inicial
+son exclusivamente el modelo/registro/migración de tasas y las dos adaptaciones
+de pruebas de migración expresamente autorizadas por el coordinador. El contrato,
+las dependencias y la UI no cambian. La pila de la tarea y su `.env` se eliminan
+al completar la verificación; no se toca la pila `monetae-review`.
