@@ -34,7 +34,7 @@ def test_migration_0007_roundtrip_with_data(database_url: str, db_engine: Engine
         )
     try:
         for _ in range(2):
-            command.upgrade(config, "0007")
+            command.upgrade(config, "head")
             command.check(config)
             with Session(db_engine) as session:
                 account = session.get(Account, account_id)
@@ -63,7 +63,7 @@ def test_migration_0007_roundtrip_with_data(database_url: str, db_engine: Engine
             assert "import_external_id" not in {
                 c["name"] for c in inspector.get_columns("accounts")
             }
-        command.upgrade(config, "0007")
+        command.upgrade(config, "head")
         command.check(config)
         with Session(db_engine) as session:
             account = session.get(Account, account_id)
