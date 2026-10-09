@@ -19,3 +19,10 @@ ThemeExtension fields and callbacks. Money remains exact decimal wire strings;
 chart weights are presentation ratios only. Localization uses Flutter gen-l10n.
 The application name and branding use Monetae's own assets.
 No original copyright notices have been removed or invented.
+
+T-502 modifications (2026-10-09): configurable transaction details, daily headers
+and presentation-only callbacks; optional custom SVG category artwork in the
+existing card/chart composition. Brand SVGs are Monetae's own assets; the mock
+house illustration is original synthetic artwork. Category catalog icons use
+Flutter Material Icons (Apache-2.0); no Cashew category PNGs were copied.
+flutter_svg is used to render vectors without HTML/DOM or a JavaScript runtime.
