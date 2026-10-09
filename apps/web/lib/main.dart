@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 
+import 'api/api_client.dart';
+import 'pages/login_page.dart';
+import 'pages/transactions_page.dart';
+import 'presentation/transaction_presenter.dart';
+import 'session/session_controller.dart';
 import 'data/mock_data.dart';
 import 'data/api_dtos.dart';
 import 'widgets/brand_logo.dart';
@@ -13,15 +18,98 @@ import 'widgets/fade_in.dart';
 import 'widgets/theme_preview.dart';
 import 'widgets/transaction_card.dart';
 
-void main() => runApp(const MonetaeApp());
+void main() =>
+    runApp(Uri.base.fragment == '/demo' ? const DemoApp() : const MonetaeApp());
 
 class MonetaeApp extends StatefulWidget {
-  const MonetaeApp({super.key});
+  const MonetaeApp({super.key, this.api});
+  final ApiClient? api;
   @override
   State<MonetaeApp> createState() => _MonetaeAppState();
 }
 
 class _MonetaeAppState extends State<MonetaeApp> {
+  late final ApiClient _api;
+  late final SessionController _session;
+  @override
+  void initState() {
+    super.initState();
+    _api = widget.api ?? ApiClient();
+    _session = SessionController(_api)..addListener(_changed);
+    _session.restore();
+  }
+
+  void _changed() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _session.removeListener(_changed);
+    _session.dispose();
+    if (widget.api == null) _api.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final user = _session.user;
+    final preferences = user?.preferences;
+    final accent = presentationColor(preferences?.accentColor);
+    final mode = switch (preferences?.theme) {
+      UserPreferencesTheme.light => ThemeMode.light,
+      UserPreferencesTheme.dark => ThemeMode.dark,
+      _ => ThemeMode.system,
+    };
+    return MaterialApp(
+      onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+      debugShowCheckedModeBanner: false,
+      locale: Locale(user?.locale.name ?? 'es'),
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      theme: monetaeTheme(brightness: Brightness.light, accent: accent),
+      darkTheme: monetaeTheme(brightness: Brightness.dark, accent: accent),
+      themeMode: mode,
+      routes: {
+        '/demo': (context) => Scaffold(
+          appBar: AppBar(
+            title: Text(AppLocalizations.of(context).syntheticData),
+          ),
+          body: const DemoApp(),
+        ),
+      },
+      home: Builder(
+        builder: (context) {
+          if (_session.loading) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+          if (user == null) {
+            return LoginPage(
+              onLogin: _session.login,
+              busy: _session.busy,
+              error: _session.error,
+            );
+          }
+          return TransactionsPage(
+            key: ValueKey(user.id),
+            session: _session,
+            onDemo: () => Navigator.of(context).pushNamed('/demo'),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class DemoApp extends StatefulWidget {
+  const DemoApp({super.key});
+  @override
+  State<DemoApp> createState() => _DemoAppState();
+}
+
+class _DemoAppState extends State<DemoApp> {
   bool _dark = false;
   Locale _locale = const Locale('es');
   Color _accent = const Color(0xFF5F85C2);

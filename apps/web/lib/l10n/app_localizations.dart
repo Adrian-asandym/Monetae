@@ -427,6 +427,144 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Persona de prueba'**
   String get sampleLoanParty;
+
+  /// No description provided for @loginTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Bienvenido a Monetae'**
+  String get loginTitle;
+
+  /// No description provided for @loginSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tus finanzas, en un solo lugar.'**
+  String get loginSubtitle;
+
+  /// No description provided for @email.
+  ///
+  /// In es, this message translates to:
+  /// **'Correo electrónico'**
+  String get email;
+
+  /// No description provided for @password.
+  ///
+  /// In es, this message translates to:
+  /// **'Contraseña'**
+  String get password;
+
+  /// No description provided for @signIn.
+  ///
+  /// In es, this message translates to:
+  /// **'Iniciar sesión'**
+  String get signIn;
+
+  /// No description provided for @signOut.
+  ///
+  /// In es, this message translates to:
+  /// **'Cerrar sesión'**
+  String get signOut;
+
+  /// No description provided for @sessionRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Inicia sesión para continuar.'**
+  String get sessionRequired;
+
+  /// No description provided for @requestForbidden.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo verificar la solicitud. Recarga e inténtalo de nuevo.'**
+  String get requestForbidden;
+
+  /// No description provided for @requestConflict.
+  ///
+  /// In es, this message translates to:
+  /// **'Los datos han cambiado. Recarga e inténtalo de nuevo.'**
+  String get requestConflict;
+
+  /// No description provided for @requestInvalid.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisa los datos e inténtalo de nuevo.'**
+  String get requestInvalid;
+
+  /// No description provided for @tooManyAttempts.
+  ///
+  /// In es, this message translates to:
+  /// **'Demasiados intentos. Espera antes de volver a intentarlo.'**
+  String get tooManyAttempts;
+
+  /// No description provided for @connectionError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo conectar con el servidor.'**
+  String get connectionError;
+
+  /// No description provided for @loadMore.
+  ///
+  /// In es, this message translates to:
+  /// **'Cargar más'**
+  String get loadMore;
+
+  /// No description provided for @retry.
+  ///
+  /// In es, this message translates to:
+  /// **'Reintentar'**
+  String get retry;
+
+  /// No description provided for @refresh.
+  ///
+  /// In es, this message translates to:
+  /// **'Actualizar'**
+  String get refresh;
+
+  /// No description provided for @emptyTransactions.
+  ///
+  /// In es, this message translates to:
+  /// **'Todavía no hay transacciones.'**
+  String get emptyTransactions;
+
+  /// No description provided for @demo.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver demostración'**
+  String get demo;
+
+  /// No description provided for @backToApp.
+  ///
+  /// In es, this message translates to:
+  /// **'Volver a Monetae'**
+  String get backToApp;
+
+  /// No description provided for @savingPreferences.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardando preferencias…'**
+  String get savingPreferences;
+
+  /// No description provided for @unavailableAccount.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuenta no disponible'**
+  String get unavailableAccount;
+
+  /// No description provided for @unavailableTag.
+  ///
+  /// In es, this message translates to:
+  /// **'Etiqueta no disponible'**
+  String get unavailableTag;
+
+  /// No description provided for @transfer.
+  ///
+  /// In es, this message translates to:
+  /// **'Transferencia'**
+  String get transfer;
+
+  /// No description provided for @currencyAmount.
+  ///
+  /// In es, this message translates to:
+  /// **'{currency} {amount}'**
+  String currencyAmount(String currency, String amount);
 }
 
 class _AppLocalizationsDelegate

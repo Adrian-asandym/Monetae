@@ -183,4 +183,78 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get sampleLoanParty => 'Persona de prueba';
+
+  @override
+  String get loginTitle => 'Bienvenido a Monetae';
+
+  @override
+  String get loginSubtitle => 'Tus finanzas, en un solo lugar.';
+
+  @override
+  String get email => 'Correo electrónico';
+
+  @override
+  String get password => 'Contraseña';
+
+  @override
+  String get signIn => 'Iniciar sesión';
+
+  @override
+  String get signOut => 'Cerrar sesión';
+
+  @override
+  String get sessionRequired => 'Inicia sesión para continuar.';
+
+  @override
+  String get requestForbidden =>
+      'No se pudo verificar la solicitud. Recarga e inténtalo de nuevo.';
+
+  @override
+  String get requestConflict =>
+      'Los datos han cambiado. Recarga e inténtalo de nuevo.';
+
+  @override
+  String get requestInvalid => 'Revisa los datos e inténtalo de nuevo.';
+
+  @override
+  String get tooManyAttempts =>
+      'Demasiados intentos. Espera antes de volver a intentarlo.';
+
+  @override
+  String get connectionError => 'No se pudo conectar con el servidor.';
+
+  @override
+  String get loadMore => 'Cargar más';
+
+  @override
+  String get retry => 'Reintentar';
+
+  @override
+  String get refresh => 'Actualizar';
+
+  @override
+  String get emptyTransactions => 'Todavía no hay transacciones.';
+
+  @override
+  String get demo => 'Ver demostración';
+
+  @override
+  String get backToApp => 'Volver a Monetae';
+
+  @override
+  String get savingPreferences => 'Guardando preferencias…';
+
+  @override
+  String get unavailableAccount => 'Cuenta no disponible';
+
+  @override
+  String get unavailableTag => 'Etiqueta no disponible';
+
+  @override
+  String get transfer => 'Transferencia';
+
+  @override
+  String currencyAmount(String currency, String amount) {
+    return '$currency $amount';
+  }
 }

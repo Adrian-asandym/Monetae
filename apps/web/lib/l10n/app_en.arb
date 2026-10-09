@@ -92,5 +92,38 @@
       }
     }
   },
-  "sampleLoanParty": "Example person"
+  "sampleLoanParty": "Example person",
+  "loginTitle": "Welcome to Monetae",
+  "loginSubtitle": "Your finances, all in one place.",
+  "email": "Email",
+  "password": "Password",
+  "signIn": "Sign in",
+  "signOut": "Sign out",
+  "sessionRequired": "Sign in to continue.",
+  "requestForbidden": "The request could not be verified. Reload and try again.",
+  "requestConflict": "The data has changed. Reload and try again.",
+  "requestInvalid": "Check your details and try again.",
+  "tooManyAttempts": "Too many attempts. Wait before trying again.",
+  "connectionError": "Could not connect to the server.",
+  "loadMore": "Load more",
+  "retry": "Try again",
+  "refresh": "Refresh",
+  "emptyTransactions": "No transactions yet.",
+  "demo": "View demo",
+  "backToApp": "Back to Monetae",
+  "savingPreferences": "Saving preferences…",
+  "unavailableAccount": "Account unavailable",
+  "unavailableTag": "Tag unavailable",
+  "transfer": "Transfer",
+  "currencyAmount": "{currency} {amount}",
+  "@currencyAmount": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  }
 }

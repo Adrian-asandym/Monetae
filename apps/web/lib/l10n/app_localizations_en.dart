@@ -183,4 +183,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sampleLoanParty => 'Example person';
+
+  @override
+  String get loginTitle => 'Welcome to Monetae';
+
+  @override
+  String get loginSubtitle => 'Your finances, all in one place.';
+
+  @override
+  String get email => 'Email';
+
+  @override
+  String get password => 'Password';
+
+  @override
+  String get signIn => 'Sign in';
+
+  @override
+  String get signOut => 'Sign out';
+
+  @override
+  String get sessionRequired => 'Sign in to continue.';
+
+  @override
+  String get requestForbidden =>
+      'The request could not be verified. Reload and try again.';
+
+  @override
+  String get requestConflict => 'The data has changed. Reload and try again.';
+
+  @override
+  String get requestInvalid => 'Check your details and try again.';
+
+  @override
+  String get tooManyAttempts => 'Too many attempts. Wait before trying again.';
+
+  @override
+  String get connectionError => 'Could not connect to the server.';
+
+  @override
+  String get loadMore => 'Load more';
+
+  @override
+  String get retry => 'Try again';
+
+  @override
+  String get refresh => 'Refresh';
+
+  @override
+  String get emptyTransactions => 'No transactions yet.';
+
+  @override
+  String get demo => 'View demo';
+
+  @override
+  String get backToApp => 'Back to Monetae';
+
+  @override
+  String get savingPreferences => 'Saving preferences…';
+
+  @override
+  String get unavailableAccount => 'Account unavailable';
+
+  @override
+  String get unavailableTag => 'Tag unavailable';
+
+  @override
+  String get transfer => 'Transfer';
+
+  @override
+  String currencyAmount(String currency, String amount) {
+    return '$currency $amount';
+  }
 }
