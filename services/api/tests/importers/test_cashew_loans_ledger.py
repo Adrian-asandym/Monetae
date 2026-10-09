@@ -245,24 +245,40 @@ def test_invalid_objective_keeps_cash_and_other_books(
         transactions=tuple(r for r in snapshot.transactions if r.pk != ROW_MAP["B_disbursement"]),
     )
     report = run_import(db_session, import_user.id, changed, options)
-    assert report.steps["loans"]["created"] == 6 and report.steps["loans"]["invalid"] == 1
-    assert any(
-        i.kind == "ledger_invalid" and i.payload["objective_pk"] == CASES["B"]["objective_pk"]
-        for i in report.review_items
-    )
-    assert tx_for(db_session, import_user, "B_payment_1").kind == "income"
-    assert tx_for(db_session, import_user, "B_payment_2").kind == "income"
-    assert all(b.unexplained == 0 for b in report.balances)
+    assert report.steps["loans"]["created"] == 7 and report.steps["loans"]["invalid"] == 0
+    loan = loan_for(db_session, import_user, "B")
+    assert loan.principal == Decimal("500")
     assert (
-        db_session.scalar(
-            select(Loan.id).where(
-                Loan.user_id == import_user.id,
-                Loan.import_external_id
-                == external_id("objective:" + cast(str, CASES["B"]["objective_pk"])),
-            )
-        )
-        is None
+        replay(Money(loan.principal, Currency(loan.currency)), movements(db_session, loan)).status
+        == "settled"
     )
+    stored = list(
+        db_session.scalars(
+            select(LoanMovement)
+            .where(LoanMovement.user_id == import_user.id, LoanMovement.loan_id == loan.id)
+            .order_by(LoanMovement.sequence)
+        )
+    )
+    assert len(stored) == 3
+    assert stored[0].kind == "disbursement" and stored[0].transaction_id is None
+    for movement, name, amount in zip(
+        stored[1:], ("B_payment_1", "B_payment_2"), (300, 200), strict=True
+    ):
+        transaction = tx_for(db_session, import_user, name)
+        assert transaction.kind == "loan" and transaction.amount == amount
+        assert movement.transaction_id == transaction.id
+        source = next(r for r in changed.transactions if r.pk == ROW_MAP[name])
+        account = db_session.get(Account, transaction.account_id)
+        assert account is not None and account.import_external_id == external_id(source.wallet_pk)
+    item = next(i for i in report.review_items if i.kind == "principal_assumed")
+    assert item.payload == {
+        "loan_external_id": loan.import_external_id,
+        "objective_pk": CASES["B"]["objective_pk"],
+        "payments": 2,
+        "assumed_principal": "500.00",
+        "currency": "PEN",
+    }
+    assert all(b.unexplained == 0 for b in report.balances)
 
 
 def test_people_alias_normalization_and_shared_person(

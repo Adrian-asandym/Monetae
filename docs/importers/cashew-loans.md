@@ -1,7 +1,7 @@
 # Importación de préstamos de Cashew
 
-T-402 aplica el [ADR-008 aceptado](../decisions/008-cashew-loan-import.md):
-J1-A, J2-C y J3-A. El respaldo se procesa con el lector de T-401, siempre
+T-402 y T-405 aplican el [ADR-008 aceptado](../decisions/008-cashew-loan-import.md):
+J1-A, J2-C, J3-A y la adenda L1-A. El respaldo se procesa con el lector de T-401, siempre
 sobre una copia y en solo lectura. Las pruebas usan exclusivamente datos
 sintéticos y PostgreSQL real.
 
@@ -13,12 +13,35 @@ el principal es el primer desembolso, ordenando por `(date_created, pk)`.
 El importe nominal del objetivo, su archivado y la modalidad «solo diferencia»
 no cambian estas reglas. `opened_on` usa la fecha del desembolso en America/Lima.
 
+Si un objetivo `type=1`, después de descartar `paid=0`, solo tiene pagos,
+L1-A añade un desembolso **sin dinero**: `transaction_id`, `fx_rate_applied` y
+`note` nulos, `sequence=0`, un segundo antes del primer pago en orden
+`(occurred_at, pk)`. No crea una transacción ni cambia el saldo de ninguna cuenta.
+El principal supuesto suma los pagos que serán movimientos reales, en la moneda
+del préstamo: importe absoluto en la misma moneda, o conversión con la tasa
+explícita de `--loan-fx-rates` para ese PK. Los pagos en otra moneda sin tasa
+siguen como transacciones ordinarias con `fx_rate_required` y no suman al principal.
+Los pagos reales conservan sus cuentas y secuencias 1…n; el libro queda `settled`.
+Sin pagos pagados, o si ninguno se puede convertir y la suma es cero, sigue
+siendo `ledger_invalid`, sin préstamo y con el efectivo ordinario.
+
+Cada préstamo así creado tiene un ítem privado `principal_assumed` con
+`loan_external_id`, `objective_pk`, `payments` (número de pagos reales),
+`assumed_principal` (decimal como texto) y `currency`, sin títulos, nombres ni
+notas. Reimportarlo no duplica el desembolso ni modifica su principal.
+
+El préstamo permanece `settled` mientras nadie lo corrija. Si en realidad queda
+capital pendiente, se añade un movimiento **`adjustment`** por el capital pendiente
+real mediante `POST /api/v1/loans/{id}/movements`, **sin dinero**. No se corrige
+con el `PUT` del desembolso: la API lo trata como un movimiento **con dinero** y
+crearía una transacción en una cuenta, cambiando su saldo.
+
 Las transacciones con `objective_loan_fk` pertenecen a ese objetivo, incluso
 cuando también tienen un tipo especial. Sin esa FK, `type=3` produce un préstamo
 `lent` de pago único y `type=4` uno `borrowed`. Las identidades son
 `cashew:sqlite:objective:<pk>` y `cashew:sqlite:tx:<pk>` respectivamente.
 
-Cada desembolso y pago genera su transacción `kind=loan`, con el signo original,
+Cada desembolso con dinero y cada pago genera su transacción `kind=loan`, con el signo original,
 la cuenta y moneda reales, las etiquetas de origen, `source=import` y la identidad
 `cashew:sqlite:<pk>`. No recibe categoría ordinaria. Cada pago reparte primero
 interés y después capital mediante `split_payment`. No se adivinan cargos de
@@ -77,7 +100,8 @@ La coordinación aprobó estas salvaguardas durante T-402:
 
 Un cobro en otra moneda sin tasa explícita se conserva como ingreso/gasto
 ordinario y se registra `fx_rate_required` con PK de transacción, moneda e
-identidad del préstamo. El préstamo permanece abierto.
+identidad del préstamo. Con un desembolso registrado, el préstamo permanece abierto;
+con el desembolso sin dinero de L1-A, queda saldado por los pagos incluidos.
 
 ```bash
 # Archivo JSON local: {"<transaction_pk>": "3.800000"}
@@ -90,6 +114,14 @@ La tasa representa unidades de la moneda de cuenta por unidad del préstamo:
 380 PEN / 3.800000 = 100 USD, con `ROUND_HALF_UP`. También puede proporcionarse
 en la primera importación. La tasa global para valorar una transacción en la
 moneda base es independiente de esta tasa histórica del préstamo.
+
+En los préstamos L1-A hay que proporcionar `--loan-fx-rates` **en la primera
+importación** para incluir esos pagos en el principal supuesto. Una tasa nueva
+en una segunda pasada intentaría añadir un pago que no estaba en ese principal:
+se registra `ambiguous_loan` con `reason=second_pass_conflict`, sin cambiar la
+transacción, los movimientos ni el ítem `fx_rate_required` pendiente. Las tasas
+ya aplicadas se reutilizan para verificar el libro original; volver a darlas
+no modifica nada.
 
 La segunda pasada exige una revisión J3 abierta y efectivo original intacto.
 Comprueba el libro persistido contra la fuente, conserva los repartos anteriores
@@ -121,6 +153,8 @@ por tipo de revisión. Las revisiones privadas se guardan en PostgreSQL y en el
 reporte solicitado; la salida estándar contiene solo conteos/códigos/saldos.
 No imprime títulos, notas ni nombres. Las reimportaciones pueden añadir auditoría,
 pero no duplican entidades financieras.
+La salida estándar tampoco imprime el importe del principal supuesto; solo el
+conteo de `principal_assumed`, cuyo payload se conserva en la revisión privada.
 
 Resultados de la fixture con las decisiones aceptadas: A paga 100+100 y deja
 un gasto ordinario de 10; B y E quedan saldados con cada pago en su propia cuenta;
