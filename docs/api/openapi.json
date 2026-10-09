@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Monetae API",
-    "version": "0.3.0",
-    "description": "Contrato inicial V1 basado en SPEC v0.3, ARCHITECTURE v0.2 y ADR aceptadas 002/003/004/006. Dinero como cadenas decimales; aislamiento por sesión y borrado lógico. Documentación y observaciones en README.md.",
+    "version": "0.4.0",
+    "description": "Contrato inicial V1 basado en SPEC v0.4, ARCHITECTURE v0.2 y ADR aceptadas 002/003/004/006. Dinero como cadenas decimales; aislamiento por sesión y borrado lógico. Documentación y observaciones en README.md.",
     "license": {
       "name": "GPL-3.0-only",
       "identifier": "GPL-3.0-only"
@@ -99,6 +99,10 @@
     {
       "name": "attachments",
       "description": "Operaciones de attachments."
+    },
+    {
+      "name": "icons",
+      "description": "Íconos SVG propios para categorías (RF-46)."
     }
   ],
   "security": [
@@ -8461,6 +8465,271 @@
           }
         ]
       }
+    },
+    "/api/v1/icons": {
+      "get": {
+        "operationId": "list_icons",
+        "tags": [
+          "icons"
+        ],
+        "summary": "Listar íconos propios",
+        "description": "RF-46: íconos SVG propios activos. Sesión obligatoria; aislamiento por usuario: un ícono ajeno devuelve 404.",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Problem400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem422"
+          },
+          "200": {
+            "description": "Operación correcta.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserIconPage"
+                }
+              }
+            }
+          }
+        },
+        "x-paginated": true,
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/Cursor"
+          }
+        ]
+      },
+      "post": {
+        "operationId": "upload_icon",
+        "tags": [
+          "icons"
+        ],
+        "summary": "Subir ícono SVG propio",
+        "description": "RF-46: sube y sanea un SVG (ver UserIconUpload). Se guarda solo la versión saneada. Sesión obligatoria; aislamiento por usuario: un ícono ajeno devuelve 404. Valida Origin y X-CSRF-Token; no admite user_id del cliente.",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Problem400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem422"
+          },
+          "201": {
+            "description": "Ícono creado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserIcon"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "El mismo SVG saneado ya existía: se devuelve ese ícono.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserIcon"
+                }
+              }
+            }
+          },
+          "413": {
+            "$ref": "#/components/responses/Problem413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Problem415"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CsrfToken"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UserIconUpload"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/icons/{id}": {
+      "delete": {
+        "operationId": "delete_icon",
+        "tags": [
+          "icons"
+        ],
+        "summary": "Borrar ícono propio lógicamente",
+        "description": "RF-46: marca deleted_at. Si alguna categoría activa lo usa devuelve 409 `icon_in_use` (nada desaparece de la vista sin aviso). Sesión obligatoria; aislamiento por usuario: un ícono ajeno devuelve 404. Valida Origin y X-CSRF-Token; no admite user_id del cliente.",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Problem400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem422"
+          },
+          "200": {
+            "description": "Operación correcta.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Uuid"
+            },
+            "description": "UUID propio del usuario de la sesión."
+          },
+          {
+            "$ref": "#/components/parameters/CsrfToken"
+          }
+        ]
+      }
+    },
+    "/api/v1/icons/{id}/download": {
+      "get": {
+        "operationId": "download_icon",
+        "tags": [
+          "icons"
+        ],
+        "summary": "Descargar ícono SVG saneado",
+        "description": "RF-46: devuelve la versión saneada con `Content-Type: image/svg+xml`, `Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; sandbox`, `X-Content-Type-Options: nosniff` y caché privada. La UI lo dibuja con un renderizador que no ejecuta scripts. Sesión obligatoria; aislamiento por usuario: un ícono ajeno devuelve 404.",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Problem400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem422"
+          },
+          "200": {
+            "description": "SVG saneado.",
+            "headers": {
+              "Content-Security-Policy": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "default-src 'none'; style-src 'unsafe-inline'; sandbox"
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "nosniff"
+                  ]
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "private, max-age=86400"
+              }
+            },
+            "content": {
+              "image/svg+xml": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Uuid"
+            },
+            "description": "UUID propio del usuario de la sesión."
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -8844,12 +9113,15 @@
           "icon": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
               },
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "Clave del catálogo base de íconos o `custom:<uuid>` de un ícono propio activo del usuario (RF-46). Un `custom:` inexistente, borrado o ajeno devuelve 422 `icon_not_found`."
           },
           "color": {
             "anyOf": [
@@ -8895,12 +9167,15 @@
           "icon": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
               },
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "Clave del catálogo base de íconos o `custom:<uuid>` de un ícono propio activo del usuario (RF-46). Un `custom:` inexistente, borrado o ajeno devuelve 422 `icon_not_found`."
           },
           "color": {
             "anyOf": [
@@ -11329,10 +11604,13 @@
             },
             "uniqueItems": true,
             "description": "Lista ordenada de identificadores de widgets; el orden del array determina su orden de presentación (RF-38)."
+          },
+          "transaction_card": {
+            "$ref": "#/components/schemas/TransactionCardPreferences"
           }
         },
         "required": [],
-        "description": "Preferencias estrictas de presentación, persistidas en users.preferences jsonb: tema, acento y widgets ordenados."
+        "description": "Preferencias estrictas de presentación, persistidas en users.preferences jsonb: tema, acento, widgets ordenados y detalles de la tarjeta de transacción (RF-47)."
       },
       "CurrentUser": {
         "type": "object",
@@ -12380,12 +12658,15 @@
           "icon": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
               },
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "Clave del catálogo base de íconos o `custom:<uuid>` de un ícono propio activo del usuario (RF-46). Un `custom:` inexistente, borrado o ajeno devuelve 422 `icon_not_found`."
           },
           "color": {
             "anyOf": [
@@ -13780,6 +14061,156 @@
           "adjustment_id"
         ],
         "description": "Referencia a efecto creado atómicamente con el pago. adjustment: adjustment_id presente, amount en moneda del préstamo, transaction_id/account_id nulos. income/expense: transaction_id/account_id presentes, amount en moneda de cuenta, adjustment_id nulo. Si cuenta difiere, pago = round(applied_amount × fx_rate_applied) y exceso = resto del importe físico, sin perder céntimos."
+      },
+      "TransactionCardPreferences": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "RF-47: qué detalles muestra la tarjeta de transacción. Los valores por defecto reproducen el aspecto de Cashew. Solo presentación; no cambia datos ni cálculos.",
+        "properties": {
+          "show_date": {
+            "type": "boolean",
+            "default": true,
+            "description": "Fecha (en Cashew, como cabecera de grupo)."
+          },
+          "show_time": {
+            "type": "boolean",
+            "default": false,
+            "description": "Hora de la transacción."
+          },
+          "show_note": {
+            "type": "boolean",
+            "default": true,
+            "description": "Nota de la transacción, si tiene."
+          },
+          "show_tags": {
+            "type": "boolean",
+            "default": true,
+            "description": "Etiquetas asignadas."
+          },
+          "show_account": {
+            "type": "boolean",
+            "default": false,
+            "description": "Nombre de la cuenta (Cashew: showAccountLabelTagInTransactionEntry = false)."
+          },
+          "show_actions": {
+            "type": "boolean",
+            "default": false,
+            "description": "Botones de acción visibles (editar, duplicar, borrar)."
+          }
+        },
+        "required": []
+      },
+      "UserIcon": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "RF-46: ícono SVG propio, ya saneado por el servidor. La versión original nunca se guarda ni se sirve.",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Uuid",
+            "readOnly": true
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "content_type": {
+            "type": "string",
+            "enum": [
+              "image/svg+xml"
+            ]
+          },
+          "size_bytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65536,
+            "description": "Tamaño de la versión saneada."
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "readOnly": true,
+            "description": "Huella de la versión saneada; dos subidas iguales del mismo usuario devuelven el ícono existente."
+          },
+          "created_at": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "updated_at": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "deleted_at": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Timestamp"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "content_type",
+          "size_bytes",
+          "sha256",
+          "created_at",
+          "updated_at",
+          "deleted_at"
+        ]
+      },
+      "UserIconUpload": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "RF-46: multipart con un SVG (máximo 64 KiB, hasta 200 íconos activos por usuario). El servidor parsea el XML sin resolver entidades externas y lo sanea con lista blanca: elimina `script`, `foreignObject`, `style` con `url()` o `@import`, atributos de evento `on*` y cualquier `href` que no sea un fragmento interno (`#id`). 413 por tamaño, 415 si no es SVG, 422 `invalid_svg` si no es XML válido o queda vacío tras sanear, 422 `icon_limit_reached` al superar el límite.",
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "x-max-size-bytes": 65536,
+            "x-allowed-content-types": [
+              "image/svg+xml"
+            ],
+            "description": "Máximo 65536 bytes. Solo image/svg+xml."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60,
+            "description": "Opcional; por defecto, el nombre del archivo sin extensión."
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "x-max-icons-per-user": 200
+      },
+      "UserIconPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserIcon"
+            }
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ]
       }
     },
     "parameters": {

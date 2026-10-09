@@ -1,6 +1,6 @@
 # SPEC.md — Monetae
 
-> Versión 0.3 · 2026-10-07 · Autor: Adrian (revisión: Claude). Historial de cambios en §18.
+> Versión 0.4 · 2026-10-09 · Autor: Adrian (revisión: Claude). Historial de cambios en §18.
 > Documento fuente de verdad del producto. Los agentes lo leen junto con `AGENTS.md`.
 > Los cambios de alcance se registran como ADR en `docs/decisions/`, no se improvisan en código.
 
@@ -33,7 +33,7 @@ Bot de Telegram, clasificador de categorías, Hermes/RAG, app móvil, cuentas de
 | P4 | Una suscripción cancelada (p. ej. Netflix) sigue ocupando espacio en la sección de suscripciones. | Las suscripciones se pueden **archivar** de forma reversible: salen de la vista principal y del total, pero el historial de pagos se conserva. |
 | P5 | Copias de seguridad en Google Drive con fallos desde hace meses. | Los respaldos no dependen de Drive (ver 5.11). |
 
-### Contexto técnico de Cashew (a confirmar en la Fase 0)
+### Contexto técnico de Cashew (confirmado en la Fase 0, ver `docs/cashew-analysis/`)
 - Flutter + Drift (SQLite) + Firebase; licencia GPL-3.0; el autor no acepta contribuciones externas.
 - Según su README, un préstamo de largo plazo se modela como una **meta (objective)** cuyo total se calcula con transacciones de polaridad contraria. Hipótesis: de ahí nacen P1 a P3. La Fase 0 debe confirmarlo.
 - Cashew guarda los datos en el dispositivo y sincroniza vía Firebase; Monetae usará un servidor propio como fuente de verdad.
@@ -73,7 +73,8 @@ V2 y V3 **no se implementan en V1**, pero V1 deja listos los datos y endpoints l
 - **RF-04** Vista de inicio con cuenta/moneda seleccionable y conversión a la moneda de reporte (ver sección 9).
 
 ### 5.2 Categorías
-- **RF-05** Categorías de ingreso y de gasto, con subcategorías (un nivel), ícono y color. Incluir una categoría de sistema **"Intereses"** (ingreso y gasto) usada por los préstamos.
+- **RF-05** Categorías de ingreso y de gasto, con subcategorías (un nivel), ícono (del catálogo base o propio, RF-46) y color. Incluir una categoría de sistema **"Intereses"** (ingreso y gasto) usada por los préstamos.
+- **RF-46** **Íconos propios (v0.4):** el usuario sube sus propios **SVG** (máximo 64 KiB, hasta 200 activos) a una biblioteca personal y los usa como ícono de sus categorías. El servidor **sanea** cada SVG con una lista blanca (sin scripts, `foreignObject`, eventos ni enlaces o recursos externos), guarda **solo la versión saneada** y la sirve con cabeceras que impiden ejecutar nada; la UI la dibuja con un renderizador que no ejecuta scripts. Un ícono en uso por una categoría activa no se puede borrar. **Catálogo base:** un set abierto con licencia compatible (p. ej. Material Symbols, Apache-2.0); los íconos PNG de Cashew **no** se copian mientras su licencia no esté verificada.
 - **RF-06** Títulos frecuentes → categoría sugerida (equivalente a los "custom titles" de Cashew). Se guarda en una tabla de reglas editable (base para V2, ver sección 13).
 
 ### 5.3 Transacciones
@@ -131,7 +132,9 @@ Ver reglas en la sección 8.
 
 ### 5.10 Inicio y gráficos
 - **RF-38** Pantalla de inicio personalizable con widgets al estilo Cashew: saldo por cuenta/moneda, gasto por categoría, evolución en el tiempo, progreso de presupuestos, próximos pagos, préstamos pendientes, suscripciones activas.
-- **RF-39** Tema claro/oscuro y color de acento configurable.
+- **RF-39** Tema claro/oscuro y color de acento configurable. En modo oscuro, superficie azul por defecto (preferencia de Adrian, v0.4). El ícono de la app y el favicon siguen el modo (versiones clara y oscura en `img/`).
+- **RF-47** **Tarjeta de transacción configurable (v0.4):** el usuario elige qué detalles muestra cada tarjeta: fecha, hora, nota, etiquetas, cuenta y botones de acción. Se guarda como preferencia en el servidor (viaja entre dispositivos). Por defecto se ve como en Cashew. Es solo presentación: no cambia datos ni cálculos.
+- **Fidelidad visual (v0.4):** gráficas de ingresos y gastos, presupuestos, metas y sus barras de progreso, colores e íconos replican el diseño de Cashew; cada componente se acepta con capturas de referencia en claro y oscuro y la revisión visual de Adrian.
 
 ### 5.11 Importación, exportación y respaldos
 - **RF-40** **Importador de backup de Cashew** (sección 11).
@@ -148,9 +151,10 @@ Comunes a todas las tablas: `id` (UUID), `user_id`, `created_at`, `updated_at`, 
 
 | Tabla | Campos clave |
 |-------|--------------|
-| `users` | email, google_sub (nullable), password_hash (nullable), timezone, base_currency, locale |
+| `users` | email, google_sub (nullable), password_hash (nullable), timezone, base_currency, locale, preferences (jsonb: tema, acento, widgets, tarjeta de transacción RF-47) |
 | `accounts` | name, type, currency, initial_balance, color, icon, sort_order, archived_at |
-| `categories` | parent_id, kind (income/expense), name, icon, color, is_system |
+| `categories` | parent_id, kind (income/expense), name, icon (clave del catálogo o `custom:<uuid>`), color, is_system |
+| `user_icons` | name, content_type (`image/svg+xml`), svg saneado, size_bytes, sha256 (RF-46) |
 | `people` | name, aliases (lista), note |
 | `tags` | name, color, icon, emoji, sort_order, archived_at |
 | `transaction_tags` | transaction_id, tag_id (vínculo N:M; únicos mientras no estén borrados lógicamente) |
@@ -207,7 +211,7 @@ Préstamo de S/ 1000 con pagos de S/ 50, S/ 120, S/ 30 y S/ 800 en fechas distin
 
 ## 8. Reglas de suscripciones y archivo
 
-1. **Archivar**: pasa la suscripción a `archived`, guarda `archived_at` y un motivo opcional, y **cancela los cobros futuros programados**. No toca transacciones pasadas.
+1. **Archivar**: pasa la suscripción a `archived`, guarda `archived_at` y un motivo opcional, y **cancela todos los cobros programados sin publicar** (también los vencidos; decisión D2 de 2026-10-08). No toca transacciones pasadas.
 2. **Visibilidad**: una suscripción archivada no aparece en el listado principal, ni en los totales mensual/anual de suscripciones, ni en el gráfico de suscripciones, que muestra solo compromisos vigentes.
 3. **Sección "Archivadas"**: plegada, con total pagado histórico, última fecha de pago y fecha de archivo.
 4. **Reactivar**: botón manual, o sugerencia automática cuando se registra una transacción con el mismo título (el usuario confirma; no se reactiva solo).
@@ -215,7 +219,7 @@ Préstamo de S/ 1000 con pagos de S/ 50, S/ 120, S/ 30 y S/ 800 en fechas distin
 6. **Historial**: los pagos pasados siguen en transacciones y en los gráficos de gasto por categoría de los meses en que ocurrieron.
 
 Criterios de aceptación:
-- Dado Netflix activa con 3 pagos previos, cuando la archivo, entonces desaparece del listado principal y del total, las 3 transacciones siguen visibles y no hay cobros futuros programados.
+- Dado Netflix activa con 3 pagos previos, cuando la archivo, entonces desaparece del listado principal y del total, las 3 transacciones siguen visibles y no queda ningún cobro programado sin publicar.
 - Dado Netflix archivada, cuando registro un pago "Netflix", entonces el sistema sugiere reactivarla y, si acepto, vuelve al listado con su historial.
 
 ---
@@ -266,7 +270,7 @@ La API es REST bajo `/api/v1`, con OpenAPI generado y versionado en `docs/api/op
 
 - **Tipado estricto**: Python con `mypy --strict`, Pydantic v2 en los bordes, `Decimal` para dinero; Dart con análisis estático sin advertencias.
 - **Aislamiento de datos**: test automático con dos usuarios que demuestre que ninguno puede leer ni modificar datos del otro.
-- **Seguridad**: contraseñas con argon2, secretos solo por variables de entorno, CORS restringido, límite de intentos de login, ningún endpoint sin autenticar salvo login y salud.
+- **Seguridad**: contraseñas con argon2, secretos solo por variables de entorno, CORS restringido, límite de intentos de login, ningún endpoint sin autenticar salvo login y salud. Los archivos subidos por el usuario (adjuntos, íconos SVG) se validan por contenido real, con límite de tamaño; los SVG se sanean y se sirven con `Content-Security-Policy` restrictiva y `X-Content-Type-Options: nosniff`.
 - **Privacidad**: sin telemetría; nada de datos reales a servicios externos. En V2, al LLM solo se envía el texto del mensaje y la lista de categorías, nunca la base completa.
 - **Rendimiento**: con decenas de miles de transacciones, las pantallas principales responden en menos de 1 s en local (índices por `user_id, occurred_at`).
 - **Portabilidad**: todo corre con `docker compose up` en WSL2 (AlmaLinux 9) y en el VPS.
@@ -295,6 +299,8 @@ La API es REST bajo `/api/v1`, con OpenAPI generado y versionado en `docs/api/op
 - [ ] Un cobro en otra cuenta o moneda actualiza la cuenta correcta (P3).
 - [ ] Archivar y reactivar una suscripción cumple la sección 8 (P4).
 - [ ] El importador procesa una **copia** del backup real de Adrian (SQLite) en modo `--dry-run` con saldos idénticos a Cashew, e importa sus etiquetas.
+- [ ] Íconos SVG propios: se suben, se sanean (un SVG con script queda sin él), se asignan a categorías y se ven en claro y oscuro (RF-46).
+- [ ] La tarjeta de transacción muestra u oculta fecha, hora, nota, etiquetas, cuenta y acciones según la preferencia guardada (RF-47).
 - [ ] Etiquetas: se crean, se asignan a transacciones (también en lote) y se filtran por una o varias.
 - [ ] Presupuestos, metas, notificaciones web, login con Google, bloqueo con PIN/WebAuthn y exportación funcionan.
 - [ ] `mypy --strict`, `ruff` y todos los tests pasan; test de aislamiento entre usuarios incluido.
@@ -342,3 +348,4 @@ Bot de Telegram, clasificador de categorías, asistente Hermes, RAG, app Android
 | 0.1 | 2026-10-05 | Versión inicial. |
 | 0.2 | 2026-10-07 | **Etiquetas** (RF-43 a RF-45, tablas `tags` y `transaction_tags`, criterio de aceptación). **Importador** (§11): SQLite como fuente primaria y CSV solo de rescate (RF-40a, RF-40h), trabajo siempre sobre una copia (RF-40g), tolerancia al esquema v48 (RF-40i) e importación de etiquetas (RF-40j). ADR-001 marcado como aceptado (§15). Aprobado por Adrian. |
 | 0.3 | 2026-10-07 | ADR-002, 003, 004, 006 y 007 aceptados (opción A, §15). `loan_movements` incorpora `interest_part` y `principal_part` en los pagos (ADR-003, §6). Aprobado por Adrian. |
+| 0.4 | 2026-10-09 | Tras la revisión visual del spike de UI (T-501): **íconos SVG propios** para categorías (RF-46, tabla `user_icons`, saneado obligatorio; catálogo base abierto, sin copiar los PNG de Cashew), **tarjeta de transacción configurable** guardada en el servidor (RF-47), superficie azul en oscuro e ícono/favicon según el modo (RF-39), **fidelidad visual a Cashew** como criterio de aceptación (§5.10), seguridad de archivos subidos (§12), dos criterios nuevos (§14). Correcciones: §2 (contexto de Cashew confirmado) y §8 (archivar cancela **todas** las programadas sin publicar, D2). Contrato `openapi.json` 0.4.0. Decisiones D10-A y D11-A de Adrian. |
