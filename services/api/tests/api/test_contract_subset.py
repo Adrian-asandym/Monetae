@@ -46,6 +46,12 @@ from monetae.api.schemas.loans import (
     WriteOffRequest,
 )
 from monetae.api.schemas.people import Person, PersonCreate, PersonPage, PersonUpdate
+from monetae.api.schemas.reports import (
+    CashFlowRow,
+    CashFlowRowPage,
+    CategoryReportRow,
+    CategoryReportRowPage,
+)
 from monetae.api.schemas.subscriptions import (
     CurrencyTotal,
     ReportTotal,
@@ -96,12 +102,16 @@ def test_mounted_operations_security_responses_and_csrf() -> None:
                     for p in operation["parameters"]
                 )
             count += 1
-    assert count == 71
+    assert count == 73
 
 
 def test_schema_properties_mirror_contract() -> None:
     schemas = json.loads(CONTRACT.read_text())["components"]["schemas"]
     models: list[type[BaseModel]] = [
+        CashFlowRow,
+        CashFlowRowPage,
+        CategoryReportRow,
+        CategoryReportRowPage,
         Subscription,
         SubscriptionCreate,
         SubscriptionUpdate,
