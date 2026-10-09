@@ -1,6 +1,6 @@
 # T-506 — API: reportes `cash-flow` y `categories` (ingresos y gastos para las gráficas)
 
-> **ESTADO: LANZADA el 2026-10-09** (Run `run_c2cebe1745b9`; OK de Adrian al plan G4 + T-504 ∥ T-506). Corre **en paralelo con T-504** (UI; archivos disjuntos).
+> **ESTADO: ACEPTADA e integrada en `master-dev` el 2026-10-09** (verificada por el coordinador: 1014 pruebas, `0008` ida y vuelta, `alembic check` limpio). Durante la tarea el coordinador autorizó: **migración `0008` `exchange_rates`** (tabla global ya diseñada en ARCHITECTURE/ADR-004 que nunca se había creado), adaptar `test_migration_0001`/`0007`, y fijó: rango por defecto con el periodo actual parcial (12 cubos), `person_id` = solo interés, tasa más reciente ≤ día con `manual` primero, `start_on`/`end_on` recortados al rango, magnitudes positivas con `net` con signo, interés en la moneda de la cuenta del pago. (Run `run_c2cebe1745b9`; OK de Adrian al plan G4 + T-504 ∥ T-506). Corre **en paralelo con T-504** (UI; archivos disjuntos).
 > Agente: **Codex**, modelo `gpt-6.1-sol` esfuerzo `high` (agregación multimoneda, interés de préstamos y aislamiento).
 
 ## Objetivo
