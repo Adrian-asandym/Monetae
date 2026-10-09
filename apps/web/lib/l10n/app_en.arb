@@ -1,0 +1,76 @@
+{
+  "@@locale": "en",
+  "appTitle": "Monetae",
+  "spikeTitle": "Monetae components",
+  "syntheticData": "Preview · synthetic data",
+  "transactions": "Transactions",
+  "categoryChart": "Spending by category",
+  "themePreview": "Color palette",
+  "lightTheme": "Light theme",
+  "darkTheme": "Dark theme",
+  "language": "Language",
+  "accent": "Accent color",
+  "blueAccent": "Blue",
+  "greenAccent": "Green",
+  "purpleAccent": "Purple",
+  "income": "Income",
+  "expense": "Expense",
+  "scheduled": "Scheduled",
+  "loanMovement": "Loan movement",
+  "sampleAccount": "Sample cash account",
+  "dollarAccount": "Sample USD account",
+  "foodCategory": "Food",
+  "workCategory": "Work",
+  "transportCategory": "Transport",
+  "homeCategory": "Home",
+  "sampleLunch": "Sample lunch",
+  "sampleNote": "Synthetic note for reviewing the component.",
+  "sampleWork": "Sample work",
+  "sampleLoan": "Sample loan payment",
+  "sampleUpcoming": "Sample upcoming payment",
+  "sampleTag": "Sample",
+  "emptyChart": "No data",
+  "chartTotal": "Sample total",
+  "selectionHint": "Select a category",
+  "allCategories": "All categories",
+  "fadePreview": "Animated entry",
+  "replayAnimation": "Replay animation",
+  "compact": "Compact view",
+  "cardSubtitle": "{category} · {account}",
+  "penAmount": "S/ {amount}",
+  "usdAmount": "US$ {amount}",
+  "percent": "{value}%",
+  "themeCard": "Surface",
+  "themeBackground": "Background",
+  "@cardSubtitle": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      },
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "@penAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "@usdAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "@percent": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  }
+}

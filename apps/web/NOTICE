@@ -1,0 +1,21 @@
+Monetae — UI component spike (T-501)
+
+Original work: Cashew, Copyright (C) 2023 James Kokoska
+Source: https://github.com/jameskokoska/Cashew
+License: GNU GPL version 3; original license reproduced verbatim in LICENSE.
+
+Modified for Monetae on 2026-10-09:
+- budget/lib/colors.dart → lib/theme/monetae_theme.dart
+- budget/lib/widgets/transactionEntry/{transactionEntry,transactionEntryAmount,
+  incomeAmountArrow,transactionEntryNote,transactionEntryTag,transactionLabel}.dart
+  → lib/widgets/transaction_card.dart
+- budget/lib/widgets/pieChart.dart → lib/widgets/category_pie_chart.dart
+- budget/lib/struct/customDelayedCurve.dart → lib/widgets/custom_delayed_curve.dart
+- budget/lib/widgets/fadeIn.dart (FadeIn only) → lib/widgets/fade_in.dart
+
+The components retain the original visual composition and selected algorithms.
+Global state, local database types and data access were replaced by typed inputs,
+ThemeExtension fields and callbacks. Money remains exact decimal wire strings;
+chart weights are presentation ratios only. Localization uses Flutter gen-l10n.
+The application name and branding use Monetae's own assets.
+No original copyright notices have been removed or invented.

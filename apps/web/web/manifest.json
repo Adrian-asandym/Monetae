@@ -1,0 +1,18 @@
+{
+  "name": "Monetae",
+  "short_name": "Monetae",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#E9EEF7",
+  "theme_color": "#5F85C2",
+  "description": "Monetae",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "monetae-logo.jpg",
+      "sizes": "any",
+      "type": "image/jpeg"
+    }
+  ]
+}
