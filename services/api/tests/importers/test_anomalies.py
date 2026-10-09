@@ -57,13 +57,15 @@ def test_anomaly_keeps_other_rows_and_reimport_is_insertion_only(
     assert report.outcome == (
         "applied_with_balance_diff" if anomaly == "unsupported" else "succeeded"
     )
-    assert report.counts["transactions"].created == (9 if skipped else 10)
+    assert report.counts["transactions"].created == (29 if skipped else 30)
     assert report.counts["transactions"].skipped == int(skipped)
     assert report.counts["transactions"].deferred == 0
-    assert report.counts["deferred_loans"].deferred == 17
+    assert report.steps["loans"]["deferred"] == 0
+    assert report.steps["loans"]["processed_transactions"] == 17
     assert report.counts["recurring_rules"].created == 2
-    assert len(report.review_items) == 1
-    review = report.review_items[0]
+    reviews = [item for item in report.review_items if item.payload.get("transaction_pk") == pk]
+    assert len(reviews) == 1
+    review = reviews[0]
     kinds = {
         "zero_null": "zero_amount_transaction",
         "zero_0": "zero_amount_transaction",
@@ -136,7 +138,7 @@ def test_dry_run_with_anomaly_keeps_only_audit(
     before = financial_rows(db_session, import_user)
     report = run_import(db_session, import_user.id, snapshot, replace(options, dry_run=True))
     assert report.outcome == ("balance_mismatch" if anomaly == "unsupported" else "succeeded")
-    assert report.counts["transactions"].created == (10 if anomaly == "polarity" else 9)
+    assert report.counts["transactions"].created == (30 if anomaly == "polarity" else 29)
     assert report.counts["transactions"].skipped == int(anomaly != "polarity")
     assert financial_rows(db_session, import_user) == before
     audit = db_session.scalar(select(ImportRun).where(ImportRun.user_id == import_user.id))
@@ -169,9 +171,10 @@ def test_orphan_is_skipped_before_deferred_steps_and_tag_links(
         )
     report = run_import(db_session, import_user.id, read_snapshot(source_path), options)
     assert report.counts["transactions"].skipped == 1
-    assert report.counts["transactions"].created == 8
+    assert report.counts["transactions"].created == 28
     assert report.counts["recurring_rules"].created == 1
-    assert report.counts["deferred_loans"].deferred == 17
+    assert report.steps["loans"]["deferred"] == 0
+    assert report.steps["loans"]["processed_transactions"] == 17
     assert report.counts["transaction_tags"].skipped == 1
     assert report.counts["transaction_tags"].deferred == 0
     assert report.counts["transaction_tags"].created == 2
@@ -190,7 +193,8 @@ def test_unsupported_type_with_loan_fk_is_not_deferred(
         connection.execute("UPDATE transactions SET type = 9 WHERE transaction_pk = ?", (pk,))
     report = run_import(db_session, import_user.id, read_snapshot(source_path), options)
     assert report.counts["transactions"].skipped == 1
-    assert report.counts["deferred_loans"].deferred == 16
+    assert report.steps["loans"]["deferred"] == 0
+    assert report.steps["loans"]["processed_transactions"] == 16
     assert report.review_items[0].kind == "unsupported_transaction_type"
     usd_balance = next(balance for balance in report.balances if balance.currency == "USD")
     assert usd_balance.unexplained == Decimal("-100.00")
@@ -210,6 +214,11 @@ def test_transfer_with_contradictory_income_keeps_both_signs(
         )
     report = run_import(db_session, import_user.id, read_snapshot(source_path), options)
     assert report.counts["transfers"].created == 1
-    assert len(report.review_items) == 2
-    assert all(review.kind == "polarity_mismatch" for review in report.review_items)
+    reviews = [
+        item
+        for item in report.review_items
+        if item.payload.get("transaction_pk") in (ROW_MAP["H_out"], ROW_MAP["H_in"])
+    ]
+    assert len(reviews) == 2
+    assert all(review.kind == "polarity_mismatch" for review in reviews)
     assert all(balance.unexplained == 0 for balance in report.balances)

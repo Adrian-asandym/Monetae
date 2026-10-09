@@ -383,7 +383,7 @@ def test_failure_after_subscriptions_is_atomic(
         original(context, clock=import_clock)
         assert context.report.counts["subscriptions"].created == 1
         assert context.report.counts["recurring_rules"].created == 2
-        assert context.report.counts["transactions"].created == 10
+        assert context.report.counts["transactions"].created == 30
         raise RuntimeError("SYNTHETIC_PRIVATE_DETAIL")
 
     monkeypatch.setattr(subscriptions, "run", fail)

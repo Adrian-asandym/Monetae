@@ -337,7 +337,13 @@ def test_provisional_fx_includes_pending_and_generated_schedule(
         changes={"wallet_fk": usd_pk},
     )
     report = run_import(db_session, import_user.id, read_snapshot(source_path), ImportOptions())
-    assert report.exit_code == 0 and report.provisional_fx == 2
+    assert report.exit_code == 0
+    assert report.provisional_fx == sum(
+        r.fx_rate_source == "auto"
+        for r in db_session.scalars(
+            select(Transaction).where(Transaction.user_id == import_user.id)
+        )
+    )
     rule = db_session.scalar(
         select(RecurringRule).where(
             RecurringRule.user_id == import_user.id,

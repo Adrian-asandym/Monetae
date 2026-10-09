@@ -27,7 +27,7 @@ con `outcome=failed`, sin parámetros SQL ni mensajes internos privados.
 Las opciones son `--file`, `--user-email`, `--dry-run`, `--report-file`,
 `--fx-rate MONEDA=TASA` (repetible), `--loan-fx-rates ARCHIVO.json` y
 `--allow-balance-diff`.
-Las tasas de préstamos se pasan al paso reservado a T-402; no las utiliza el
+Las tasas de préstamos se pasan al paso de T-402; no las utiliza el
 núcleo. Su formato es `{"<transaction_pk>": "3.800000"}`. Las tasas deben ser
 positivas, finitas y no redondear a cero. El reporte no puede sobrescribir ninguna
 entrada ni escribirse en `reference/backups`.
@@ -126,8 +126,7 @@ existente y su nueva pata se inserta como ordinaria, con revisión.
 Los pasos se ejecutan en orden: cuentas → categorías → etiquetas → transacciones
 ordinarias/programadas → transferencias → `loans.run(context)` →
 `subscriptions.run(context)`. T-403 importa las suscripciones y recurrentes;
-el stub de préstamos de T-401 cuenta sus filas e importes pagados como diferidos
-hasta integrar T-402. Los presupuestos,
+T-402 importa los préstamos y su efectivo, sin importe diferido. Los presupuestos,
 límites, reglas de categorización, plantillas de escaneo, configuración y metas
 se cuentan como pendientes de Fase 6; `delete_logs` no genera entidades.
 
@@ -246,9 +245,8 @@ Después de todos los pasos se exige, **para cada cuenta**:
 unexplained = cashew_balance − monetae_balance − deferred_amount = 0.00
 ```
 
-Solo sigue diferido lo que un paso realmente dejó pendiente: el stub de
-préstamos lo explica hasta integrar T-402; las suscripciones importadas no
-aportan diferido. Una fila omitida pagada no se compensa artificialmente.
+Solo sigue diferido lo que un paso realmente dejó pendiente: los préstamos de T-402 y las series de T-403b ya no
+aportan importe diferido. Una fila omitida pagada no se compensa artificialmente.
 
 Si alguna cuenta no cuadra, el reporte incluye `balance_mismatch=true`, el
 aviso `balance_mismatch` y las diferencias por cuenta. Por defecto se **revierte

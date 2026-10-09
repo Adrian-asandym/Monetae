@@ -60,14 +60,15 @@ def test_v48_expected_core(
     assert report.counts["accounts"].created == 4
     assert report.counts["categories"].created == 7
     assert report.counts["tags"].created == 3
-    assert report.counts["transactions"].created == 10
+    assert report.counts["transactions"].created == 30
     assert report.counts["transfers"].created == 1
-    assert report.counts["deferred_loans"].deferred == 17
+    assert report.steps["loans"]["deferred"] == 0
+    assert report.steps["loans"]["processed_transactions"] == 17
+    assert report.steps["loans"]["created"] == 7
     assert report.counts["recurring_rules"].created == 2
     assert report.counts["subscriptions"].created == 1
     assert report.counts["transaction_tags"].deferred == 0
     assert report.counts["transaction_tags"].created == 3
-    assert report.steps["loans"] == {}
     assert report.steps["subscriptions"]["scheduled_created"] == 2
     accounts = {
         a.import_external_id: a
@@ -169,7 +170,10 @@ def test_dry_run_keeps_audit_and_reviews(
         len(
             list(
                 db_session.scalars(
-                    select(ImportReviewItem).where(ImportReviewItem.import_run_id == run.id)
+                    select(ImportReviewItem).where(
+                        ImportReviewItem.import_run_id == run.id,
+                        ImportReviewItem.kind == "polarity_mismatch",
+                    )
                 )
             )
         )
@@ -209,7 +213,7 @@ def test_midway_failure_is_atomic(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     def fail(context: ImportContext) -> dict[str, JsonValue]:
-        assert context.report.counts["transactions"].created == 6
+        assert context.report.counts["transactions"].created == 26
         raise RuntimeError("Synthetic failure containing private text")
 
     monkeypatch.setattr(subscriptions, "run", fail)
@@ -271,7 +275,7 @@ def test_global_fx_and_manual_priority(
     assert row is not None
     assert row.fx_rate_to_base == Decimal("3.900000" if override else "3.800000")
     assert row.fx_rate_source == ("manual" if override else "auto")
-    assert report.provisional_fx == (0 if override else 1)
+    assert report.provisional_fx == (0 if override else 4)
     assert all(b.unexplained == Decimal("0.00") for b in report.balances)
 
 

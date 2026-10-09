@@ -22,7 +22,7 @@ from .test_cashew_subscriptions_import import all_rows
 from .test_runner import ROW_MAP
 
 
-def test_full_reconciliation_with_loan_stub(
+def test_full_reconciliation_with_integrated_loans(
     db_session: Session,
     import_user: User,
     snapshot: Snapshot,
@@ -31,7 +31,7 @@ def test_full_reconciliation_with_loan_stub(
     report = run_import(db_session, import_user.id, snapshot, options)
     assert report.exit_code == 0 and not report.balance_mismatch
     assert len(report.balances) == 4
-    assert any(b.deferred_amount != 0 for b in report.balances)
+    assert all(b.deferred_amount == Decimal("0.00") for b in report.balances)
     for balance in report.balances:
         assert balance.unexplained == Decimal("0.00")
         assert balance.cashew_balance == balance.monetae_balance + balance.deferred_amount
