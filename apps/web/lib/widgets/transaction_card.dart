@@ -113,7 +113,7 @@ class TransactionCard extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
-                          model.account.name,
+                          model.account?.name ?? l.unavailableAccount,
                           key: const Key('transaction-account'),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

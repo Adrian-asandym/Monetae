@@ -327,3 +327,84 @@ Los goldens fijan esta adaptación; no equivalen a una ejecución o comparación
 píxel a píxel de Cashew. Se mantienen las diferencias geométricas y de fuente
 ya registradas en T-501. Quedan la revisión visual de Adrian, el cliente/persistencia
 T-503/T-505 y la API de SVG saneados de Fase 6, conforme al alcance asignado.
+
+## T-503
+
+Fecha: 2026-10-09. Rama: `codex/T-503-ui-api-client-session`. Contrato **0.4.0**.
+
+La entrada principal usa la API real con sesión del servidor. `GET /users/me`
+decide acceso o transacciones y obtiene la cookie CSRF pre-login. El acceso
+mantiene la paleta pastel, los campos redondeados y la marca propia por modo;
+conserva el fondo azul de T-502 en oscuro. La demo sintética sigue disponible en
+`/#/demo`, sin HTTP, y desde la barra de la app autenticada.
+
+### Implementación y alcance
+
+- `lib/api/api_client.dart`: transporte `package:http`, rutas relativas, lectura
+  de `monetae_csrf` por escritura, DTOs tipados y errores Problem traducidos.
+  `BrowserClient.withCredentials` entrega las cookies al navegador: Dart nunca
+  lee ni guarda la cookie HttpOnly. El token CSRF se relee tras login/logout.
+- `lib/session/session_controller.dart`: restauración, login/logout y guardado
+  confirmado por el servidor. Una respuesta 401 vuelve al acceso; los 401
+  tardíos de peticiones de una sesión anterior no borran un login posterior.
+- `lib/api/transaction_feed.dart` y `transaction_presenter.dart`: catálogos
+  paginados (incluidos archivados), transacciones por cursor y presentación
+  diaria en America/Lima, incluso al cruzar medianoche UTC. Montos y tasas
+  conservan exactamente sus cadenas; no hay sumas ni conversiones monetarias.
+  Las referencias de catálogo borradas usan etiquetas de reserva conservando
+  el historial. `custom:<uuid>` usa el respaldo Material de T-502.
+- El panel RF-47 lee el perfil y envía el objeto `preferences` **entero** en
+  PATCH. Conserva tema, acento y widgets ordenados; bloquea controles mientras
+  guarda y mantiene el valor confirmado si falla. Se prueba el payload y la
+  restauración en una nueva instancia de la app.
+- `tool/generate_dtos.py` amplía la generación desde OpenAPI a perfil,
+  preferencias, login por contraseña, sesión, páginas, etiquetas y Problem;
+  conserva campos requeridos/opcionales, enums, nulabilidad y tipos estrictos.
+- `infra/web/default.conf` y Compose: nginx oficial `1.28.0-alpine` sirve
+  `build/web` del host en solo lectura. `/api/` va a `api:8000`, conservando
+  **`Host $http_host` con puerto**, Origin y cabeceras `X-Forwarded-*`.
+  Puertos API/web parametrizables y publicados solo en `127.0.0.1`; CORS sigue
+  vacío y el valor predeterminado de cookies Secure no cambia. `.env.example`
+  explica el ajuste temporal a `false` para HTTP local.
+
+Las acciones de edición/duplicado/borrado se pueden mostrar según RF-47 pero
+están deshabilitadas en la lista real; esos flujos pertenecen a tareas siguientes.
+La demo conserva sus callbacks y mensajes de presentación. No se implementan
+Google, subida de SVG ni reglas financieras en la UI. Solo se añaden las
+dependencias autorizadas `http` y `web`, antes transitivas; sin otro paquete.
+
+### Verificación
+
+- `flutter pub get`: correcto; lockfile solo promueve `http` y `web` a directas.
+- `dart analyze`: **sin incidencias**.
+- `flutter test`: **47 pruebas** (29 previas + 18 nuevas), **22 goldens**;
+  comparados sin actualizar referencias. Los únicos goldens nuevos son acceso
+  claro/oscuro, revisados visualmente completos, sin recortar el formulario.
+- `flutter build web --release`: correcto; incluye el dry-run Wasm. El compilador
+  conserva el aviso previo del set de fuentes Cupertino procedente del gráfico;
+  MaterialIcons se genera y las pruebas y goldens pasan.
+- Búsqueda `drift|firebase|appStateSettings|package:budget/` en `apps/web/lib`:
+  **limpio**. `git diff --check`: correcto; no se versiona `build/` ni `.env`.
+- `bash apps/web/tool/e2e_session.sh`: servidores reales con proyecto
+  `monetae-t503`, PostgreSQL **5444**, API **8001** y nginx **8081**, migraciones
+  al día y usuario sintético `@example.test` creado por CLI.
+
+Resultados de curl exclusivamente contra el puerto **web**:
+
+| Comprobación | HTTP |
+|---|---:|
+| index.html | 200 |
+| Perfil pre-login (obtiene cookie CSRF) | 401 |
+| Login y cookies | 200 |
+| Perfil autenticado | 200 |
+| PATCH con `Origin: http://localhost:8081` y CSRF | 200 |
+| PATCH sin CSRF | 403 |
+| PATCH con Origin ajeno | 403 |
+| Logout | 200 |
+| Perfil después de logout | 401 |
+
+Se verificó también que PATCH conserva tema, acento, orden de widgets y las seis
+preferencias. La prueba ejecuta `down -v` del proyecto propio y elimina `.env`,
+cookies y respuestas temporales incluso al fallar. Sin datos reales, sin acceder
+a respaldos ni modificar servicios o contrato. README incluye comandos locales,
+la ruta demo y la prueba reproducible. No quedan decisiones pendientes en T-503.

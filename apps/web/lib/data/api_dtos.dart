@@ -35,43 +35,98 @@ final class AccountDto {
   final String? archivedAt;
 
   factory AccountDto.fromJson(Map<String, Object?> json) {
-    _keys(json, <String>{
-      'name',
-      'type',
-      'currency',
-      'initial_balance',
-      'color',
-      'icon',
-      'sort_order',
-      'id',
-      'created_at',
-      'updated_at',
-      'deleted_at',
-      'balance',
-      'archived_at',
-    }, optional: false);
+    _keys(
+      json,
+      {
+        'name',
+        'type',
+        'currency',
+        'initial_balance',
+        'color',
+        'icon',
+        'sort_order',
+        'id',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+        'balance',
+        'archived_at',
+      },
+      {
+        'archived_at',
+        'balance',
+        'color',
+        'created_at',
+        'currency',
+        'deleted_at',
+        'icon',
+        'id',
+        'initial_balance',
+        'name',
+        'sort_order',
+        'type',
+        'updated_at',
+      },
+      {
+        'name',
+        'type',
+        'currency',
+        'initial_balance',
+        'sort_order',
+        'id',
+        'created_at',
+        'updated_at',
+        'balance',
+      },
+    );
     return AccountDto(
-      name: _string(json, 'name', false)!,
-      type: _enum(json, 'type', <String, AccountType>{
+      name: _value<String>(json['name'], 'name', false)!,
+      type: _enum(json['type'], 'type', <String, AccountType>{
         'cash': AccountType.cash,
         'bank': AccountType.bank,
         'wallet': AccountType.wallet,
         'card': AccountType.card,
         'other': AccountType.other,
       }, false)!,
-      currency: _string(json, 'currency', false)!,
-      initialBalance: _string(json, 'initial_balance', false)!,
-      color: _string(json, 'color', true),
-      icon: _string(json, 'icon', true),
-      sortOrder: json['sort_order'] as int,
-      id: _string(json, 'id', false)!,
-      createdAt: _string(json, 'created_at', false)!,
-      updatedAt: _string(json, 'updated_at', false)!,
-      deletedAt: _string(json, 'deleted_at', true),
-      balance: _string(json, 'balance', false)!,
-      archivedAt: _string(json, 'archived_at', true),
+      currency: _value<String>(json['currency'], 'currency', false)!,
+      initialBalance: _value<String>(
+        json['initial_balance'],
+        'initial_balance',
+        false,
+      )!,
+      color: _value<String>(json['color'], 'color', true),
+      icon: _value<String>(json['icon'], 'icon', true),
+      sortOrder: _value<int>(json['sort_order'], 'sort_order', false)!,
+      id: _value<String>(json['id'], 'id', false)!,
+      createdAt: _value<String>(json['created_at'], 'created_at', false)!,
+      updatedAt: _value<String>(json['updated_at'], 'updated_at', false)!,
+      deletedAt: _value<String>(json['deleted_at'], 'deleted_at', true),
+      balance: _value<String>(json['balance'], 'balance', false)!,
+      archivedAt: _value<String>(json['archived_at'], 'archived_at', true),
     );
   }
+
+  Map<String, Object?> toJson() => {
+    'name': name,
+    'type': {
+      AccountType.cash: 'cash',
+      AccountType.bank: 'bank',
+      AccountType.wallet: 'wallet',
+      AccountType.card: 'card',
+      AccountType.other: 'other',
+    }[type],
+    'currency': currency,
+    'initial_balance': initialBalance,
+    'color': color,
+    'icon': icon,
+    'sort_order': sortOrder,
+    'id': id,
+    'created_at': createdAt,
+    'updated_at': updatedAt,
+    'deleted_at': deletedAt,
+    'balance': balance,
+    'archived_at': archivedAt,
+  };
 }
 
 enum CategoryKind { income, expense }
@@ -106,39 +161,81 @@ final class CategoryDto {
   final CategorySystemKey? systemKey;
 
   factory CategoryDto.fromJson(Map<String, Object?> json) {
-    _keys(json, <String>{
-      'name',
-      'kind',
-      'parent_id',
-      'icon',
-      'color',
-      'id',
-      'created_at',
-      'updated_at',
-      'deleted_at',
-      'is_system',
-      'system_key',
-    }, optional: false);
+    _keys(
+      json,
+      {
+        'name',
+        'kind',
+        'parent_id',
+        'icon',
+        'color',
+        'id',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+        'is_system',
+        'system_key',
+      },
+      {
+        'color',
+        'created_at',
+        'deleted_at',
+        'icon',
+        'id',
+        'is_system',
+        'kind',
+        'name',
+        'parent_id',
+        'system_key',
+        'updated_at',
+      },
+      {'name', 'kind', 'id', 'created_at', 'updated_at', 'is_system'},
+    );
     return CategoryDto(
-      name: _string(json, 'name', false)!,
-      kind: _enum(json, 'kind', <String, CategoryKind>{
+      name: _value<String>(json['name'], 'name', false)!,
+      kind: _enum(json['kind'], 'kind', <String, CategoryKind>{
         'income': CategoryKind.income,
         'expense': CategoryKind.expense,
       }, false)!,
-      parentId: _string(json, 'parent_id', true),
-      icon: _string(json, 'icon', true),
-      color: _string(json, 'color', true),
-      id: _string(json, 'id', false)!,
-      createdAt: _string(json, 'created_at', false)!,
-      updatedAt: _string(json, 'updated_at', false)!,
-      deletedAt: _string(json, 'deleted_at', true),
-      isSystem: json['is_system'] as bool,
-      systemKey: _enum(json, 'system_key', <String, CategorySystemKey>{
-        'interest_income': CategorySystemKey.interestIncome,
-        'interest_expense': CategorySystemKey.interestExpense,
-      }, true),
+      parentId: _value<String>(json['parent_id'], 'parent_id', true),
+      icon: _value<String>(json['icon'], 'icon', true),
+      color: _value<String>(json['color'], 'color', true),
+      id: _value<String>(json['id'], 'id', false)!,
+      createdAt: _value<String>(json['created_at'], 'created_at', false)!,
+      updatedAt: _value<String>(json['updated_at'], 'updated_at', false)!,
+      deletedAt: _value<String>(json['deleted_at'], 'deleted_at', true),
+      isSystem: _value<bool>(json['is_system'], 'is_system', false)!,
+      systemKey: _enum(
+        json['system_key'],
+        'system_key',
+        <String, CategorySystemKey>{
+          'interest_income': CategorySystemKey.interestIncome,
+          'interest_expense': CategorySystemKey.interestExpense,
+        },
+        true,
+      ),
     );
   }
+
+  Map<String, Object?> toJson() => {
+    'name': name,
+    'kind': {
+      CategoryKind.income: 'income',
+      CategoryKind.expense: 'expense',
+    }[kind],
+    'parent_id': parentId,
+    'icon': icon,
+    'color': color,
+    'id': id,
+    'created_at': createdAt,
+    'updated_at': updatedAt,
+    'deleted_at': deletedAt,
+    'is_system': isSystem,
+    'system_key': {
+      CategorySystemKey.interestIncome: 'interest_income',
+      CategorySystemKey.interestExpense: 'interest_expense',
+    }[systemKey],
+  };
 }
 
 enum TransactionKind { income, expense, transfer, loan }
@@ -203,52 +300,102 @@ final class TransactionDto {
   final List<String> reactivationSuggestions;
 
   factory TransactionDto.fromJson(Map<String, Object?> json) {
-    _keys(json, <String>{
-      'account_id',
-      'category_id',
-      'kind',
-      'amount',
-      'currency',
-      'occurred_at',
-      'status',
-      'title',
-      'note',
-      'fx_rate_to_base',
-      'fx_rate_source',
-      'tag_ids',
-      'id',
-      'created_at',
-      'updated_at',
-      'deleted_at',
-      'transfer_group_id',
-      'recurring_rule_id',
-      'loan_id',
-      'source',
-      'categorization_source',
-      'is_initial_data',
-      'reactivation_suggestions',
-    }, optional: false);
+    _keys(
+      json,
+      {
+        'account_id',
+        'category_id',
+        'kind',
+        'amount',
+        'currency',
+        'occurred_at',
+        'status',
+        'title',
+        'note',
+        'fx_rate_to_base',
+        'fx_rate_source',
+        'tag_ids',
+        'id',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+        'transfer_group_id',
+        'recurring_rule_id',
+        'loan_id',
+        'source',
+        'categorization_source',
+        'is_initial_data',
+        'reactivation_suggestions',
+      },
+      {
+        'account_id',
+        'amount',
+        'categorization_source',
+        'category_id',
+        'created_at',
+        'currency',
+        'deleted_at',
+        'fx_rate_source',
+        'fx_rate_to_base',
+        'id',
+        'is_initial_data',
+        'kind',
+        'loan_id',
+        'note',
+        'occurred_at',
+        'reactivation_suggestions',
+        'recurring_rule_id',
+        'source',
+        'status',
+        'tag_ids',
+        'title',
+        'transfer_group_id',
+        'updated_at',
+      },
+      {
+        'account_id',
+        'kind',
+        'amount',
+        'currency',
+        'occurred_at',
+        'status',
+        'title',
+        'fx_rate_to_base',
+        'fx_rate_source',
+        'tag_ids',
+        'id',
+        'created_at',
+        'updated_at',
+        'source',
+        'is_initial_data',
+        'reactivation_suggestions',
+      },
+    );
     return TransactionDto(
-      accountId: _string(json, 'account_id', false)!,
-      categoryId: _string(json, 'category_id', true),
-      kind: _enum(json, 'kind', <String, TransactionKind>{
+      accountId: _value<String>(json['account_id'], 'account_id', false)!,
+      categoryId: _value<String>(json['category_id'], 'category_id', true),
+      kind: _enum(json['kind'], 'kind', <String, TransactionKind>{
         'income': TransactionKind.income,
         'expense': TransactionKind.expense,
         'transfer': TransactionKind.transfer,
         'loan': TransactionKind.loan,
       }, false)!,
-      amount: _string(json, 'amount', false)!,
-      currency: _string(json, 'currency', false)!,
-      occurredAt: _string(json, 'occurred_at', false)!,
-      status: _enum(json, 'status', <String, TransactionStatus>{
+      amount: _value<String>(json['amount'], 'amount', false)!,
+      currency: _value<String>(json['currency'], 'currency', false)!,
+      occurredAt: _value<String>(json['occurred_at'], 'occurred_at', false)!,
+      status: _enum(json['status'], 'status', <String, TransactionStatus>{
         'posted': TransactionStatus.posted,
         'scheduled': TransactionStatus.scheduled,
       }, false)!,
-      title: _string(json, 'title', false)!,
-      note: _string(json, 'note', true),
-      fxRateToBase: _string(json, 'fx_rate_to_base', false)!,
+      title: _value<String>(json['title'], 'title', false)!,
+      note: _value<String>(json['note'], 'note', true),
+      fxRateToBase: _value<String>(
+        json['fx_rate_to_base'],
+        'fx_rate_to_base',
+        false,
+      )!,
       fxRateSource: _enum(
-        json,
+        json['fx_rate_source'],
         'fx_rate_source',
         <String, TransactionFxRateSource>{
           'manual': TransactionFxRateSource.manual,
@@ -257,23 +404,31 @@ final class TransactionDto {
         false,
       )!,
       tagIds: List<String>.unmodifiable(
-        (json['tag_ids'] as List<Object?>).cast<String>(),
+        (json['tag_ids'] as List<Object?>).map((value) => value as String),
       ),
-      id: _string(json, 'id', false)!,
-      createdAt: _string(json, 'created_at', false)!,
-      updatedAt: _string(json, 'updated_at', false)!,
-      deletedAt: _string(json, 'deleted_at', true),
-      transferGroupId: _string(json, 'transfer_group_id', true),
-      recurringRuleId: _string(json, 'recurring_rule_id', true),
-      loanId: _string(json, 'loan_id', true),
-      source: _enum(json, 'source', <String, TransactionSource>{
+      id: _value<String>(json['id'], 'id', false)!,
+      createdAt: _value<String>(json['created_at'], 'created_at', false)!,
+      updatedAt: _value<String>(json['updated_at'], 'updated_at', false)!,
+      deletedAt: _value<String>(json['deleted_at'], 'deleted_at', true),
+      transferGroupId: _value<String>(
+        json['transfer_group_id'],
+        'transfer_group_id',
+        true,
+      ),
+      recurringRuleId: _value<String>(
+        json['recurring_rule_id'],
+        'recurring_rule_id',
+        true,
+      ),
+      loanId: _value<String>(json['loan_id'], 'loan_id', true),
+      source: _enum(json['source'], 'source', <String, TransactionSource>{
         'web': TransactionSource.web,
         'import': TransactionSource.import,
         'telegram': TransactionSource.telegram,
         'api': TransactionSource.api,
       }, false)!,
       categorizationSource: _enum(
-        json,
+        json['categorization_source'],
         'categorization_source',
         <String, TransactionCategorizationSource>{
           'manual': TransactionCategorizationSource.manual,
@@ -283,12 +438,65 @@ final class TransactionDto {
         },
         true,
       ),
-      isInitialData: json['is_initial_data'] as bool,
+      isInitialData: _value<bool>(
+        json['is_initial_data'],
+        'is_initial_data',
+        false,
+      )!,
       reactivationSuggestions: List<String>.unmodifiable(
-        (json['reactivation_suggestions'] as List<Object?>).cast<String>(),
+        (json['reactivation_suggestions'] as List<Object?>).map(
+          (value) => value as String,
+        ),
       ),
     );
   }
+
+  Map<String, Object?> toJson() => {
+    'account_id': accountId,
+    'category_id': categoryId,
+    'kind': {
+      TransactionKind.income: 'income',
+      TransactionKind.expense: 'expense',
+      TransactionKind.transfer: 'transfer',
+      TransactionKind.loan: 'loan',
+    }[kind],
+    'amount': amount,
+    'currency': currency,
+    'occurred_at': occurredAt,
+    'status': {
+      TransactionStatus.posted: 'posted',
+      TransactionStatus.scheduled: 'scheduled',
+    }[status],
+    'title': title,
+    'note': note,
+    'fx_rate_to_base': fxRateToBase,
+    'fx_rate_source': {
+      TransactionFxRateSource.manual: 'manual',
+      TransactionFxRateSource.auto: 'auto',
+    }[fxRateSource],
+    'tag_ids': tagIds,
+    'id': id,
+    'created_at': createdAt,
+    'updated_at': updatedAt,
+    'deleted_at': deletedAt,
+    'transfer_group_id': transferGroupId,
+    'recurring_rule_id': recurringRuleId,
+    'loan_id': loanId,
+    'source': {
+      TransactionSource.web: 'web',
+      TransactionSource.import: 'import',
+      TransactionSource.telegram: 'telegram',
+      TransactionSource.api: 'api',
+    }[source],
+    'categorization_source': {
+      TransactionCategorizationSource.manual: 'manual',
+      TransactionCategorizationSource.rule: 'rule',
+      TransactionCategorizationSource.model: 'model',
+      TransactionCategorizationSource.llm: 'llm',
+    }[categorizationSource],
+    'is_initial_data': isInitialData,
+    'reactivation_suggestions': reactivationSuggestions,
+  };
 }
 
 enum UserIconContentType { imageSvgXml }
@@ -315,29 +523,69 @@ final class UserIconDto {
   final String? deletedAt;
 
   factory UserIconDto.fromJson(Map<String, Object?> json) {
-    _keys(json, <String>{
-      'id',
-      'name',
-      'content_type',
-      'size_bytes',
-      'sha256',
-      'created_at',
-      'updated_at',
-      'deleted_at',
-    }, optional: false);
+    _keys(
+      json,
+      {
+        'id',
+        'name',
+        'content_type',
+        'size_bytes',
+        'sha256',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+      },
+      {
+        'content_type',
+        'created_at',
+        'deleted_at',
+        'id',
+        'name',
+        'sha256',
+        'size_bytes',
+        'updated_at',
+      },
+      {
+        'id',
+        'name',
+        'content_type',
+        'size_bytes',
+        'sha256',
+        'created_at',
+        'updated_at',
+      },
+    );
     return UserIconDto(
-      id: _string(json, 'id', false)!,
-      name: _string(json, 'name', false)!,
-      contentType: _enum(json, 'content_type', <String, UserIconContentType>{
-        'image/svg+xml': UserIconContentType.imageSvgXml,
-      }, false)!,
-      sizeBytes: json['size_bytes'] as int,
-      sha256: _string(json, 'sha256', false)!,
-      createdAt: _string(json, 'created_at', false)!,
-      updatedAt: _string(json, 'updated_at', false)!,
-      deletedAt: _string(json, 'deleted_at', true),
+      id: _value<String>(json['id'], 'id', false)!,
+      name: _value<String>(json['name'], 'name', false)!,
+      contentType: _enum(
+        json['content_type'],
+        'content_type',
+        <String, UserIconContentType>{
+          'image/svg+xml': UserIconContentType.imageSvgXml,
+        },
+        false,
+      )!,
+      sizeBytes: _value<int>(json['size_bytes'], 'size_bytes', false)!,
+      sha256: _value<String>(json['sha256'], 'sha256', false)!,
+      createdAt: _value<String>(json['created_at'], 'created_at', false)!,
+      updatedAt: _value<String>(json['updated_at'], 'updated_at', false)!,
+      deletedAt: _value<String>(json['deleted_at'], 'deleted_at', true),
     );
   }
+
+  Map<String, Object?> toJson() => {
+    'id': id,
+    'name': name,
+    'content_type': {
+      UserIconContentType.imageSvgXml: 'image/svg+xml',
+    }[contentType],
+    'size_bytes': sizeBytes,
+    'sha256': sha256,
+    'created_at': createdAt,
+    'updated_at': updatedAt,
+    'deleted_at': deletedAt,
+  };
 }
 
 final class TransactionCardPreferencesDto {
@@ -358,21 +606,45 @@ final class TransactionCardPreferencesDto {
   final bool showActions;
 
   factory TransactionCardPreferencesDto.fromJson(Map<String, Object?> json) {
-    _keys(json, <String>{
-      'show_date',
-      'show_time',
-      'show_note',
-      'show_tags',
-      'show_account',
-      'show_actions',
-    }, optional: true);
+    _keys(
+      json,
+      {
+        'show_date',
+        'show_time',
+        'show_note',
+        'show_tags',
+        'show_account',
+        'show_actions',
+      },
+      {},
+      {
+        'show_date',
+        'show_time',
+        'show_note',
+        'show_tags',
+        'show_account',
+        'show_actions',
+      },
+    );
     return TransactionCardPreferencesDto(
-      showDate: _bool(json, 'show_date', true),
-      showTime: _bool(json, 'show_time', false),
-      showNote: _bool(json, 'show_note', true),
-      showTags: _bool(json, 'show_tags', true),
-      showAccount: _bool(json, 'show_account', false),
-      showActions: _bool(json, 'show_actions', false),
+      showDate: (json.containsKey('show_date')
+          ? _value<bool>(json['show_date'], 'show_date', false)!
+          : true),
+      showTime: (json.containsKey('show_time')
+          ? _value<bool>(json['show_time'], 'show_time', false)!
+          : false),
+      showNote: (json.containsKey('show_note')
+          ? _value<bool>(json['show_note'], 'show_note', false)!
+          : true),
+      showTags: (json.containsKey('show_tags')
+          ? _value<bool>(json['show_tags'], 'show_tags', false)!
+          : true),
+      showAccount: (json.containsKey('show_account')
+          ? _value<bool>(json['show_account'], 'show_account', false)!
+          : false),
+      showActions: (json.containsKey('show_actions')
+          ? _value<bool>(json['show_actions'], 'show_actions', false)!
+          : false),
     );
   }
 
@@ -402,40 +674,745 @@ final class TransactionCardPreferencesDto {
   };
 }
 
-T? _enum<T>(
-  Map<String, Object?> json,
-  String key,
-  Map<String, T> values,
-  bool nullable,
-) {
-  final wire = _string(json, key, nullable);
-  if (wire == null) return null;
+final class TagDto {
+  const TagDto({
+    required this.name,
+    required this.color,
+    required this.icon,
+    required this.emoji,
+    required this.sortOrder,
+    required this.id,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.deletedAt,
+    required this.archivedAt,
+  });
+
+  final String name;
+  final String? color;
+  final String? icon;
+  final String? emoji;
+  final int sortOrder;
+  final String id;
+  final String createdAt;
+  final String updatedAt;
+  final String? deletedAt;
+  final String? archivedAt;
+
+  factory TagDto.fromJson(Map<String, Object?> json) {
+    _keys(
+      json,
+      {
+        'name',
+        'color',
+        'icon',
+        'emoji',
+        'sort_order',
+        'id',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+        'archived_at',
+      },
+      {
+        'archived_at',
+        'color',
+        'created_at',
+        'deleted_at',
+        'emoji',
+        'icon',
+        'id',
+        'name',
+        'sort_order',
+        'updated_at',
+      },
+      {'name', 'sort_order', 'id', 'created_at', 'updated_at'},
+    );
+    return TagDto(
+      name: _value<String>(json['name'], 'name', false)!,
+      color: _value<String>(json['color'], 'color', true),
+      icon: _value<String>(json['icon'], 'icon', true),
+      emoji: _value<String>(json['emoji'], 'emoji', true),
+      sortOrder: _value<int>(json['sort_order'], 'sort_order', false)!,
+      id: _value<String>(json['id'], 'id', false)!,
+      createdAt: _value<String>(json['created_at'], 'created_at', false)!,
+      updatedAt: _value<String>(json['updated_at'], 'updated_at', false)!,
+      deletedAt: _value<String>(json['deleted_at'], 'deleted_at', true),
+      archivedAt: _value<String>(json['archived_at'], 'archived_at', true),
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'name': name,
+    'color': color,
+    'icon': icon,
+    'emoji': emoji,
+    'sort_order': sortOrder,
+    'id': id,
+    'created_at': createdAt,
+    'updated_at': updatedAt,
+    'deleted_at': deletedAt,
+    'archived_at': archivedAt,
+  };
+}
+
+enum UserPreferencesTheme { light, dark, system }
+
+final class UserPreferencesDto {
+  const UserPreferencesDto({
+    this.theme,
+    this.accentColor,
+    this.homeWidgets,
+    this.transactionCard = const TransactionCardPreferencesDto(),
+  });
+
+  final UserPreferencesTheme? theme;
+  final String? accentColor;
+  final List<String>? homeWidgets;
+  final TransactionCardPreferencesDto transactionCard;
+
+  factory UserPreferencesDto.fromJson(Map<String, Object?> json) {
+    _keys(
+      json,
+      {'theme', 'accent_color', 'home_widgets', 'transaction_card'},
+      {},
+      {'theme', 'home_widgets', 'transaction_card'},
+    );
+    return UserPreferencesDto(
+      theme: _enum(json['theme'], 'theme', <String, UserPreferencesTheme>{
+        'light': UserPreferencesTheme.light,
+        'dark': UserPreferencesTheme.dark,
+        'system': UserPreferencesTheme.system,
+      }, true),
+      accentColor: _value<String>(json['accent_color'], 'accent_color', true),
+      homeWidgets: json['home_widgets'] == null
+          ? null
+          : List<String>.unmodifiable(
+              (json['home_widgets'] as List<Object?>).map(
+                (value) => value as String,
+              ),
+            ),
+      transactionCard: (json.containsKey('transaction_card')
+          ? TransactionCardPreferencesDto.fromJson(
+              _object(json['transaction_card']),
+            )
+          : const TransactionCardPreferencesDto()),
+    );
+  }
+
+  UserPreferencesDto copyWith({
+    UserPreferencesTheme? theme,
+    String? accentColor,
+    List<String>? homeWidgets,
+    TransactionCardPreferencesDto? transactionCard,
+  }) => UserPreferencesDto(
+    theme: theme ?? this.theme,
+    accentColor: accentColor ?? this.accentColor,
+    homeWidgets: homeWidgets ?? this.homeWidgets,
+    transactionCard: transactionCard ?? this.transactionCard,
+  );
+
+  Map<String, Object?> toJson() => {
+    'theme':
+        {
+          UserPreferencesTheme.light: 'light',
+          UserPreferencesTheme.dark: 'dark',
+          UserPreferencesTheme.system: 'system',
+        }[theme] ??
+        'system',
+    'accent_color': accentColor,
+    'home_widgets': homeWidgets ?? const <String>[],
+    'transaction_card': transactionCard.toJson(),
+  };
+}
+
+enum CurrentUserLocale { es, en }
+
+final class CurrentUserDto {
+  const CurrentUserDto({
+    required this.id,
+    required this.email,
+    required this.preferences,
+    required this.pinConfigured,
+    required this.locked,
+    required this.webauthnEnabled,
+    required this.timezone,
+    required this.baseCurrency,
+    required this.locale,
+    required this.lockAfterMinutes,
+    required this.reportCurrency,
+  });
+
+  final String id;
+  final String email;
+  final UserPreferencesDto preferences;
+  final bool pinConfigured;
+  final bool locked;
+  final bool webauthnEnabled;
+  final String timezone;
+  final String baseCurrency;
+  final CurrentUserLocale locale;
+  final int? lockAfterMinutes;
+  final String reportCurrency;
+
+  factory CurrentUserDto.fromJson(Map<String, Object?> json) {
+    _keys(
+      json,
+      {
+        'id',
+        'email',
+        'preferences',
+        'pin_configured',
+        'locked',
+        'webauthn_enabled',
+        'timezone',
+        'base_currency',
+        'locale',
+        'lock_after_minutes',
+        'report_currency',
+      },
+      {
+        'base_currency',
+        'email',
+        'id',
+        'locale',
+        'lock_after_minutes',
+        'locked',
+        'pin_configured',
+        'preferences',
+        'report_currency',
+        'timezone',
+        'webauthn_enabled',
+      },
+      {
+        'id',
+        'email',
+        'preferences',
+        'pin_configured',
+        'locked',
+        'webauthn_enabled',
+        'timezone',
+        'base_currency',
+        'locale',
+        'report_currency',
+      },
+    );
+    return CurrentUserDto(
+      id: _value<String>(json['id'], 'id', false)!,
+      email: _value<String>(json['email'], 'email', false)!,
+      preferences: UserPreferencesDto.fromJson(_object(json['preferences'])),
+      pinConfigured: _value<bool>(
+        json['pin_configured'],
+        'pin_configured',
+        false,
+      )!,
+      locked: _value<bool>(json['locked'], 'locked', false)!,
+      webauthnEnabled: _value<bool>(
+        json['webauthn_enabled'],
+        'webauthn_enabled',
+        false,
+      )!,
+      timezone: _value<String>(json['timezone'], 'timezone', false)!,
+      baseCurrency: _value<String>(
+        json['base_currency'],
+        'base_currency',
+        false,
+      )!,
+      locale: _enum(json['locale'], 'locale', <String, CurrentUserLocale>{
+        'es': CurrentUserLocale.es,
+        'en': CurrentUserLocale.en,
+      }, false)!,
+      lockAfterMinutes: _value<int>(
+        json['lock_after_minutes'],
+        'lock_after_minutes',
+        true,
+      ),
+      reportCurrency: _value<String>(
+        json['report_currency'],
+        'report_currency',
+        false,
+      )!,
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'id': id,
+    'email': email,
+    'preferences': preferences.toJson(),
+    'pin_configured': pinConfigured,
+    'locked': locked,
+    'webauthn_enabled': webauthnEnabled,
+    'timezone': timezone,
+    'base_currency': baseCurrency,
+    'locale': {CurrentUserLocale.es: 'es', CurrentUserLocale.en: 'en'}[locale],
+    'lock_after_minutes': lockAfterMinutes,
+    'report_currency': reportCurrency,
+  };
+}
+
+final class PasswordLoginDto {
+  const PasswordLoginDto({
+    required this.method,
+    required this.email,
+    required this.password,
+  });
+
+  final String method;
+  final String email;
+  final String password;
+
+  factory PasswordLoginDto.fromJson(Map<String, Object?> json) {
+    _keys(
+      json,
+      {'method', 'email', 'password'},
+      {'email', 'method', 'password'},
+      {'method', 'email', 'password'},
+    );
+    return PasswordLoginDto(
+      method: _value<String>(json['method'], 'method', false)!,
+      email: _value<String>(json['email'], 'email', false)!,
+      password: _value<String>(json['password'], 'password', false)!,
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'method': method,
+    'email': email,
+    'password': password,
+  };
+}
+
+final class AuthenticatedSessionDto {
+  const AuthenticatedSessionDto({
+    required this.user,
+    required this.csrfToken,
+    required this.expiresAt,
+  });
+
+  final CurrentUserDto user;
+  final String csrfToken;
+  final String expiresAt;
+
+  factory AuthenticatedSessionDto.fromJson(Map<String, Object?> json) {
+    _keys(
+      json,
+      {'user', 'csrf_token', 'expires_at'},
+      {'csrf_token', 'expires_at', 'user'},
+      {'user', 'csrf_token', 'expires_at'},
+    );
+    return AuthenticatedSessionDto(
+      user: CurrentUserDto.fromJson(_object(json['user'])),
+      csrfToken: _value<String>(json['csrf_token'], 'csrf_token', false)!,
+      expiresAt: _value<String>(json['expires_at'], 'expires_at', false)!,
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'user': user.toJson(),
+    'csrf_token': csrfToken,
+    'expires_at': expiresAt,
+  };
+}
+
+final class ActionResultDto {
+  const ActionResultDto({required this.success, required this.affectedCount});
+
+  final bool success;
+  final int affectedCount;
+
+  factory ActionResultDto.fromJson(Map<String, Object?> json) {
+    _keys(json, {'success', 'affected_count'}, {'affected_count', 'success'}, {
+      'success',
+      'affected_count',
+    });
+    return ActionResultDto(
+      success: _value<bool>(json['success'], 'success', false)!,
+      affectedCount: _value<int>(
+        json['affected_count'],
+        'affected_count',
+        false,
+      )!,
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'success': success,
+    'affected_count': affectedCount,
+  };
+}
+
+enum UserUpdateLocale { es, en }
+
+final class UserUpdateDto {
+  const UserUpdateDto({
+    this.timezone,
+    this.baseCurrency,
+    this.locale,
+    this.lockAfterMinutes,
+    this.reportCurrency,
+    this.preferences,
+  });
+
+  final String? timezone;
+  final String? baseCurrency;
+  final UserUpdateLocale? locale;
+  final int? lockAfterMinutes;
+  final String? reportCurrency;
+  final UserPreferencesDto? preferences;
+
+  factory UserUpdateDto.fromJson(Map<String, Object?> json) {
+    _keys(
+      json,
+      {
+        'timezone',
+        'base_currency',
+        'locale',
+        'lock_after_minutes',
+        'report_currency',
+        'preferences',
+      },
+      {},
+      {'timezone', 'base_currency', 'locale', 'report_currency', 'preferences'},
+    );
+    return UserUpdateDto(
+      timezone: _value<String>(json['timezone'], 'timezone', true),
+      baseCurrency: _value<String>(
+        json['base_currency'],
+        'base_currency',
+        true,
+      ),
+      locale: _enum(json['locale'], 'locale', <String, UserUpdateLocale>{
+        'es': UserUpdateLocale.es,
+        'en': UserUpdateLocale.en,
+      }, true),
+      lockAfterMinutes: _value<int>(
+        json['lock_after_minutes'],
+        'lock_after_minutes',
+        true,
+      ),
+      reportCurrency: _value<String>(
+        json['report_currency'],
+        'report_currency',
+        true,
+      ),
+      preferences: json['preferences'] == null
+          ? null
+          : UserPreferencesDto.fromJson(_object(json['preferences'])),
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    if (timezone != null) 'timezone': timezone,
+    if (baseCurrency != null) 'base_currency': baseCurrency,
+    if (locale != null)
+      'locale': {UserUpdateLocale.es: 'es', UserUpdateLocale.en: 'en'}[locale],
+    if (lockAfterMinutes != null) 'lock_after_minutes': lockAfterMinutes,
+    if (reportCurrency != null) 'report_currency': reportCurrency,
+    if (preferences != null) 'preferences': preferences?.toJson(),
+  };
+}
+
+final class FieldErrorDto {
+  const FieldErrorDto({
+    required this.field,
+    required this.message,
+    required this.code,
+  });
+
+  final String field;
+  final String message;
+  final String code;
+
+  factory FieldErrorDto.fromJson(Map<String, Object?> json) {
+    _keys(json, {'field', 'message', 'code'}, {'code', 'field', 'message'}, {
+      'field',
+      'message',
+      'code',
+    });
+    return FieldErrorDto(
+      field: _value<String>(json['field'], 'field', false)!,
+      message: _value<String>(json['message'], 'message', false)!,
+      code: _value<String>(json['code'], 'code', false)!,
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'field': field,
+    'message': message,
+    'code': code,
+  };
+}
+
+enum OverpaymentOptionAction { adjustment, incomeExpense }
+
+final class OverpaymentOptionDto {
+  const OverpaymentOptionDto({
+    required this.action,
+    required this.description,
+    required this.appliedAmount,
+  });
+
+  final OverpaymentOptionAction action;
+  final String description;
+  final String appliedAmount;
+
+  factory OverpaymentOptionDto.fromJson(Map<String, Object?> json) {
+    _keys(
+      json,
+      {'action', 'description', 'applied_amount'},
+      {'action', 'applied_amount', 'description'},
+      {'action', 'description', 'applied_amount'},
+    );
+    return OverpaymentOptionDto(
+      action: _enum(json['action'], 'action', <String, OverpaymentOptionAction>{
+        'adjustment': OverpaymentOptionAction.adjustment,
+        'income_expense': OverpaymentOptionAction.incomeExpense,
+      }, false)!,
+      description: _value<String>(json['description'], 'description', false)!,
+      appliedAmount: _value<String>(
+        json['applied_amount'],
+        'applied_amount',
+        false,
+      )!,
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'action': {
+      OverpaymentOptionAction.adjustment: 'adjustment',
+      OverpaymentOptionAction.incomeExpense: 'income_expense',
+    }[action],
+    'description': description,
+    'applied_amount': appliedAmount,
+  };
+}
+
+final class ProblemDto {
+  const ProblemDto({
+    required this.type,
+    required this.title,
+    required this.status,
+    required this.detail,
+    this.instance,
+    this.code,
+    this.errors,
+    this.outstanding,
+    this.excessAmount,
+    this.currency,
+    this.options,
+  });
+
+  final String type;
+  final String title;
+  final int status;
+  final String detail;
+  final String? instance;
+  final String? code;
+  final List<FieldErrorDto>? errors;
+  final String? outstanding;
+  final String? excessAmount;
+  final String? currency;
+  final List<OverpaymentOptionDto>? options;
+
+  factory ProblemDto.fromJson(Map<String, Object?> json) {
+    _keys(
+      json,
+      {
+        'type',
+        'title',
+        'status',
+        'detail',
+        'instance',
+        'code',
+        'errors',
+        'outstanding',
+        'excess_amount',
+        'currency',
+        'options',
+      },
+      {'detail', 'status', 'title', 'type'},
+      {
+        'type',
+        'title',
+        'status',
+        'detail',
+        'instance',
+        'code',
+        'errors',
+        'outstanding',
+        'excess_amount',
+        'currency',
+        'options',
+      },
+    );
+    return ProblemDto(
+      type: _value<String>(json['type'], 'type', false)!,
+      title: _value<String>(json['title'], 'title', false)!,
+      status: _value<int>(json['status'], 'status', false)!,
+      detail: _value<String>(json['detail'], 'detail', false)!,
+      instance: _value<String>(json['instance'], 'instance', true),
+      code: _value<String>(json['code'], 'code', true),
+      errors: json['errors'] == null
+          ? null
+          : List<FieldErrorDto>.unmodifiable(
+              (json['errors'] as List<Object?>).map(
+                (value) => FieldErrorDto.fromJson(_object(value)),
+              ),
+            ),
+      outstanding: _value<String>(json['outstanding'], 'outstanding', true),
+      excessAmount: _value<String>(
+        json['excess_amount'],
+        'excess_amount',
+        true,
+      ),
+      currency: _value<String>(json['currency'], 'currency', true),
+      options: json['options'] == null
+          ? null
+          : List<OverpaymentOptionDto>.unmodifiable(
+              (json['options'] as List<Object?>).map(
+                (value) => OverpaymentOptionDto.fromJson(_object(value)),
+              ),
+            ),
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'type': type,
+    'title': title,
+    'status': status,
+    'detail': detail,
+    if (instance != null) 'instance': instance,
+    if (code != null) 'code': code,
+    if (errors != null)
+      'errors': errors?.map((value) => value.toJson()).toList(),
+    if (outstanding != null) 'outstanding': outstanding,
+    if (excessAmount != null) 'excess_amount': excessAmount,
+    if (currency != null) 'currency': currency,
+    if (options != null)
+      'options': options?.map((value) => value.toJson()).toList(),
+  };
+}
+
+final class AccountPageDto {
+  const AccountPageDto({required this.items, required this.nextCursor});
+
+  final List<AccountDto> items;
+  final String? nextCursor;
+
+  factory AccountPageDto.fromJson(Map<String, Object?> json) {
+    _keys(json, {'items', 'next_cursor'}, {'items', 'next_cursor'}, {'items'});
+    return AccountPageDto(
+      items: List<AccountDto>.unmodifiable(
+        (json['items'] as List<Object?>).map(
+          (value) => AccountDto.fromJson(_object(value)),
+        ),
+      ),
+      nextCursor: _value<String>(json['next_cursor'], 'next_cursor', true),
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'items': items.map((value) => value.toJson()).toList(),
+    'next_cursor': nextCursor,
+  };
+}
+
+final class CategoryPageDto {
+  const CategoryPageDto({required this.items, required this.nextCursor});
+
+  final List<CategoryDto> items;
+  final String? nextCursor;
+
+  factory CategoryPageDto.fromJson(Map<String, Object?> json) {
+    _keys(json, {'items', 'next_cursor'}, {'items', 'next_cursor'}, {'items'});
+    return CategoryPageDto(
+      items: List<CategoryDto>.unmodifiable(
+        (json['items'] as List<Object?>).map(
+          (value) => CategoryDto.fromJson(_object(value)),
+        ),
+      ),
+      nextCursor: _value<String>(json['next_cursor'], 'next_cursor', true),
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'items': items.map((value) => value.toJson()).toList(),
+    'next_cursor': nextCursor,
+  };
+}
+
+final class TransactionPageDto {
+  const TransactionPageDto({required this.items, required this.nextCursor});
+
+  final List<TransactionDto> items;
+  final String? nextCursor;
+
+  factory TransactionPageDto.fromJson(Map<String, Object?> json) {
+    _keys(json, {'items', 'next_cursor'}, {'items', 'next_cursor'}, {'items'});
+    return TransactionPageDto(
+      items: List<TransactionDto>.unmodifiable(
+        (json['items'] as List<Object?>).map(
+          (value) => TransactionDto.fromJson(_object(value)),
+        ),
+      ),
+      nextCursor: _value<String>(json['next_cursor'], 'next_cursor', true),
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'items': items.map((value) => value.toJson()).toList(),
+    'next_cursor': nextCursor,
+  };
+}
+
+final class TagPageDto {
+  const TagPageDto({required this.items, required this.nextCursor});
+
+  final List<TagDto> items;
+  final String? nextCursor;
+
+  factory TagPageDto.fromJson(Map<String, Object?> json) {
+    _keys(json, {'items', 'next_cursor'}, {'items', 'next_cursor'}, {'items'});
+    return TagPageDto(
+      items: List<TagDto>.unmodifiable(
+        (json['items'] as List<Object?>).map(
+          (value) => TagDto.fromJson(_object(value)),
+        ),
+      ),
+      nextCursor: _value<String>(json['next_cursor'], 'next_cursor', true),
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'items': items.map((value) => value.toJson()).toList(),
+    'next_cursor': nextCursor,
+  };
+}
+
+T? _value<T>(Object? value, String key, bool nullable) {
+  if (value == null && nullable) return null;
+  if (value is! T) throw FormatException('Invalid field type: $key');
+  return value;
+}
+
+Map<String, Object?> _object(Object? value) => (value as Map<String, Object?>);
+
+T? _enum<T>(Object? wire, String key, Map<String, T> values, bool nullable) {
+  if (wire == null && nullable) return null;
   final value = values[wire];
   if (value == null) throw FormatException('Invalid enum: $key');
   return value;
 }
 
-String? _string(Map<String, Object?> json, String key, bool nullable) {
-  final value = json[key];
-  if (value == null && nullable) return null;
-  if (value is! String) throw FormatException('Expected string: $key');
-  return value;
-}
-
-bool _bool(Map<String, Object?> json, String key, bool fallback) {
-  if (!json.containsKey(key)) return fallback;
-  final value = json[key];
-  if (value is! bool) throw FormatException('Expected boolean: $key');
-  return value;
-}
-
 void _keys(
   Map<String, Object?> json,
-  Set<String> requiredKeys, {
-  bool optional = false,
-}) {
-  if ((!optional && json.length != requiredKeys.length) ||
-      !requiredKeys.containsAll(json.keys)) {
+  Set<String> allowed,
+  Set<String> required,
+  Set<String> nonnullable,
+) {
+  if (!allowed.containsAll(json.keys) ||
+      !json.keys.toSet().containsAll(required) ||
+      nonnullable.any((key) => json.containsKey(key) && json[key] == null)) {
     throw const FormatException('Missing or unknown DTO fields');
   }
 }

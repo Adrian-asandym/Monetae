@@ -28,7 +28,7 @@ class TransactionCardModel {
 
   final TransactionDto transaction;
   final CategoryDto? category;
-  final AccountDto account;
+  final AccountDto? account;
   final String amountLabel;
   final String? secondaryAmountLabel;
   final String subtitle;
