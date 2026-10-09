@@ -419,7 +419,7 @@ Contrato **0.4.0**, datos exclusivamente sintéticos. No se accedió ni se list�
 
 | Componente de referencia | Adaptación y diferencia deliberada |
 |---|---|
-| `homePageAllSpendingSummary` + `transactionsAmountBox` | Dos cajas, gasto a la izquierda e ingreso a la derecha; radio 15, padding 15/17, títulos 18 e importes 21, mismos colores financieros por tema. Reciben un `CashFlowRow` mensual de la API. El desglose original por moneda sustituye el contador de transacciones, que el contrato no proporciona. Se omite la animación numérica para conservar las cadenas exactas. |
+| `homePageAllSpendingSummary` + `transactionsAmountBox` | Dos cajas, gasto a la izquierda e ingreso a la derecha; radio 15, padding 15/17, títulos 18 e importes 21, mismos colores financieros por tema. Reciben un `CashFlowRow` mensual de la API. El desglose original por moneda sustituye el contador de transacciones, que el contrato no proporciona, solo cuando hay varias monedas o una original distinta de la de reporte; en moneda única igual a reporte se omite. Se omite la animación numérica para conservar las cadenas exactas. |
 | `lineGraph` + `homePageLineGraph` | Trazo 3, extremos redondos, puntos ocultos salvo una fila única, cuadrícula discontinua `[2,8]`, relleno degradado alfa 100→1, transición 2000 ms `fastLinearToSlowEaseIn`, tooltip redondeado 8. Evolución **por periodo**, dos series ingreso/gasto; no se calcula el acumulado que usa Cashew por defecto. Se conservan los ceros del servidor en vez de eliminar entradas vacías. Eje vertical con cero y máximo, ambos etiquetas decimales exactas; no se inventan importes intermedios con floats. |
 | `incomeExpenseTabSelector` / `slidingSelectorIncomeExpense` | Control gasto/ingreso de 45 px, radio 15, fondos de acento .1/.25 y flechas financieras de 24 px. Selección controlada y accesible por teclado; `InkWell` y `AnimatedContainer` sustituyen los controladores/globales y la opción «todos». Alimenta el circular por `CategoryReportRow.kind`; al cambiar se limpia la categoría seleccionada. |
 | `homePagePieChart` + circular de T-501 | Mantiene los sectores, discos y badges de T-501; añade leyenda con íconos Material, porcentajes y barras de progreso redondeadas. Los pesos/porcentajes son solo geometría normalizada; importes y desgloses se muestran desde las cadenas de `ReportTotal`. No convierte ni suma dinero. El selector explícito sustituye el swipe/indicador de páginas del original móvil; en escritorio sigue mostrando un circular seleccionado, sin el doble panel del original. La leyenda mantiene los ListTile del spike con barras de 5 px, frente a la composición más completa de `categoryEntry`. |
@@ -458,10 +458,14 @@ preferencias confirmadas del perfil al vivir ahora en una ruta secundaria.
 es/en. Los originales de `by_currency` se conservan visibles, incluso si una
 categoría tiene total convertido cero y por ello no tiene sector.
 
-Un único formateador usa símbolos/patrones/separadores de **intl** con el locale
-es/en; agrupa las cadenas sin pasarlas por double y sin redondearlas. Por ejemplo,
-en `es`: `48,50 S/`, `48,50 US$`, `48,50 €` (espacio no separable); en `en`, el
-símbolo va delante. La familia de símbolos compartidos se califica siempre con
+Un único formateador usa símbolos de **intl** y agrupa las cadenas sin pasarlas
+por double y sin redondearlas. Tras la revisión T-504b se restaura el formato
+peruano aprobado para `es`: símbolo delante con espacio, miles con coma, decimal
+con punto y dos decimales (`S/ 1,234.50`, `US$ 48.50`, `€ 48.50`). `intl` con
+`es` o `es_PE` no produce ese formato, por lo que se fija explícitamente. Para
+`en` se conserva el patrón `en_US`, sin espacio (`US$1,234.50`); un negativo
+explícito lleva el signo antes del símbolo, y la tarjeta sigue usando flecha/color.
+La familia de símbolos compartidos se califica siempre con
 formas específicas (`US$`, `CA$`, `A$`, `JP¥`, `CN¥`, etc.), para que dos monedas
 no se confundan ni cambie la etiqueta al añadir otra. El catálogo de símbolos
 simples de intl no distingue esos casos: se complementa con calificadores
@@ -473,7 +477,7 @@ No se añade ninguna etiqueta de tipo de moneda a tarjetas ni gráficas.
 ### Verificación y estimación pendiente
 
 Flutter 3.47.6 / Dart 3.13.5. Verificación final: `flutter pub get`, `dart analyze`
-sin incidencias, `flutter test` con **72 pruebas verdes**, **36 goldens**
+sin incidencias, `flutter test` con **83 pruebas verdes**, **38 goldens**
 comparados sin actualizar referencias, y `flutter build web --release` correcto.
 El build conserva el aviso previo de fuente Cupertino procedente de fl_chart;
 MaterialIcons está empaquetada, y el dry-run Wasm compila.
@@ -507,3 +511,23 @@ solo desacople visual pendiente **4–6 tareas / 6–10 h**. No incluye los endp
 pendientes de Fase 6, API de SVG, heatmap opcional ni nuevas funciones de negocio.
 T-506 se integra aparte; esta entrega ya soporta tanto sus respuestas 200 como
 su ausencia temporal. No quedan decisiones de diseño bloqueantes en T-504.
+
+### Seguimiento T-504b
+
+La revisión del coordinador detectó dos regresiones: el patrón español de intl
+había cambiado el formato peruano aprobado, y el resumen repetía el importe
+en el desglose de una sola moneda igual a la de reporte. Se corrigen ambas
+en el formateador compartido y en `IncomeExpenseSummary`, sin cambiar el cliente
+ni hacer operaciones monetarias. La regla se aplica a tarjetas, resumen, ejes,
+tooltips, leyendas y filas porque todos usan el mismo formateador.
+
+Nueve pruebas unitarias nuevas cubren `es`/`en`, PEN/USD/EUR, miles, negativos,
+valor absoluto, cero, dos decimales y cifras mayores que la precisión de double;
+también cubren `es_PE`. El golden de resumen habitual verifica una sola línea
+por importe; dos goldens nuevos muestran el caso multimoneda y el de una sola
+moneda original distinta de reporte. Solo se regeneran los 28 goldens afectados
+por los importes/composición; los ocho de tema, marca, circular aislado y acceso
+quedan idénticos. Verificaciones: pub get, analyze limpio, 83 tests verdes sin
+actualizar goldens, release web correcto y búsqueda de acoplamientos vacía.
+Se mantiene la estimación anterior de Fase 5 y no quedan decisiones pendientes
+en este seguimiento.

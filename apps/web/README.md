@@ -170,9 +170,16 @@ Recorre los cursores de reportes y categorías, sin calcular totales ni converti
 monedas. `by_currency` conserva el desglose original; `unconverted_count > 0`
 muestra un aviso discreto, incluso si el total convertido es cero.
 
-Los símbolos, separadores y posición del importe siguen `intl` y el locale del
-usuario (`es` o `en`). Las familias de símbolos compartidos se califican siempre:
+Los símbolos proceden de `intl`. Para `es`, el formato peruano aprobado usa
+símbolo delante y espacio, miles con coma y decimal con punto (dos decimales):
+`S/ 1,234.50`, `US$ 1,234.50`, `€ 1,234.50`; un negativo explícito lleva el signo
+antes del símbolo. Para `en`, se conserva el patrón `en_US` de intl, sin ese
+espacio: `S/1,234.50`. Las familias de símbolos compartidos se califican siempre:
 US$, CA$, A$, JP¥, CN¥, etc. Esto evita cambiar etiquetas al añadir otra moneda;
 no se muestran códigos ISO. Para una moneda sin símbolo conocido por intl se
 usa el signo monetario genérico ¤. Las cadenas decimales se agrupan sin pasar por
 float; los doubles de las gráficas solo representan coordenadas y proporciones.
+
+El resumen omite el desglose secundario cuando existe una sola moneda original
+igual a la de reporte; lo muestra cuando hay varias monedas o una original
+distinta. Se evita así repetir el mismo importe en las tarjetas Gasto/Ingreso.
