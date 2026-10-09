@@ -74,3 +74,15 @@ Cashew **no guarda tasa por transacción**; solo tiene un tipo de cambio global 
 - **Prueba con el respaldo real:** Adrian **autoriza** (2026-10-08) un `--dry-run` sobre una **copia** de su respaldo, **al final de la Fase 4**, que devuelva **solo conteos y saldos** (nunca filas, títulos ni notas). Lo ejecuta el coordinador; el original no se toca (RF-40g).
 
 **Estado: ACEPTADO.**
+
+## Adenda (2026-10-09) — L1-A: préstamos de largo plazo sin desembolso registrado
+
+**Hallazgo (`--dry-run` real):** en el respaldo real los préstamos de largo plazo no tienen su desembolso como transacción enlazada, solo cobros o pagos. Con R1/R2 el préstamo fallaba con `MissingDisbursementError` y sus cobros se importaban como ingresos ordinarios (problema P1).
+
+**Decisión de Adrian (2026-10-09, «todo A»): L1 = A.**
+
+| # | Situación en Cashew | Tratamiento |
+|---|---|---|
+| R9 | Objetivo `type = 1` sin fila de desembolso pagada, pero con al menos un pago | Se crea el préstamo con un **desembolso sin dinero** (`transaction_id` nulo, sin cambio en ningún saldo), **principal supuesto = suma de sus pagos** (en la moneda del préstamo; un pago en otra moneda sin tasa no suma), fecha un segundo antes del primer pago, y un ítem de revisión `principal_assumed`. Los pagos se importan como pagos reales en sus cuentas. Sin pagos, sigue siendo `ledger_invalid`. |
+
+**Consecuencia y corrección.** El préstamo queda `settled` hasta que alguien lo corrija. Si en realidad queda capital pendiente, se añade un movimiento **`adjustment`** (sin dinero) por ese capital. **No** se corrige con el `PUT` del desembolso: la API lo trata como un movimiento con dinero y crearía una transacción en una cuenta (T-405 lo documenta). Tarea: `docs/tasks/T-405-importer-longterm-loans.md`.
