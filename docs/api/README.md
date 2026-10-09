@@ -588,3 +588,24 @@ httpx verifica crear→archivar→listar/totales→reactivar y visibilidad inmed
 del commit entre peticiones; Compose reconstruido arranca correctamente.
 El diff contiene solo los 22 archivos permitidos; la rama está actualizada con
 `master-dev`. El contrato congelado y las dependencias no se modifican.
+
+## Cambios del contrato durante la Fase 3 (versión 0.3.0)
+
+Aprobados por Adrian al aceptar el merge de la Fase 3 (2026-10-08) e incorporados a
+`openapi.json` por el coordinador. Son **aditivos**: ninguna petición válida de la
+versión 0.2.0 deja de serlo.
+
+- `POST /loans/{id}/movements`: `409 loan_already_settled` cuando
+  `excess_handling=income_expense` se aplica a un préstamo ya saldado (no existe
+  movimiento que devolver). También documenta `disbursement_exists` y
+  `ledger_inconsistent` en el `409`.
+- `PUT /loans/{id}/movements/{movement_id}`: `422 movement_kind_immutable` (el
+  `kind` no cambia; se borra y se crea otro) e `invalid_excess_handling`;
+  `409 ledger_inconsistent` con `movement_index`.
+- `SubscriptionCreate` y `SubscriptionUpdate`: campo opcional **solo de entrada**
+  `fx_rate_to_base` (`ExchangeRate`). En la moneda base solo admite `1.000000`
+  (`422 invalid_fx_rate`); en otra moneda es obligatorio al crear (`422
+  fx_rate_required`) y es **provisional**: el usuario la confirma o corrige al
+  publicar cada cobro. No se devuelve en `Subscription`.
+
+Quien genere el cliente de la UI debe regenerarlo desde `openapi.json` 0.3.0.

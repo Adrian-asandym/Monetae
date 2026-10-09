@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Monetae API",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "description": "Contrato inicial V1 basado en SPEC v0.3, ARCHITECTURE v0.2 y ADR aceptadas 002/003/004/006. Dinero como cadenas decimales; aislamiento por sesión y borrado lógico. Documentación y observaciones en README.md.",
     "license": {
       "name": "GPL-3.0-only",
@@ -2430,7 +2430,7 @@
           "subscriptions"
         ],
         "summary": "Crear subscriptions",
-        "description": "Archivo reversible conserva historial y cancela futuras scheduled. Valida Origin y X-CSRF-Token; ningún user_id se acepta del cliente. Aislamiento por sesión; referencias ajenas responden 404.",
+        "description": "Archivo reversible conserva historial y cancela futuras scheduled. Valida Origin y X-CSRF-Token; ningún user_id se acepta del cliente. Aislamiento por sesión; referencias ajenas responden 404. Moneda distinta de la base: exige fx_rate_to_base (422 fx_rate_required); en moneda base solo admite 1.000000 (422 invalid_fx_rate).",
         "security": [
           {
             "SessionCookie": []
@@ -2544,7 +2544,7 @@
           "subscriptions"
         ],
         "summary": "Editar subscriptions",
-        "description": "Archivo reversible conserva historial y cancela futuras scheduled. Actualización parcial explícita; recalcula derivados. Valida Origin y X-CSRF-Token; ningún user_id se acepta del cliente. Aislamiento por sesión; referencias ajenas responden 404.",
+        "description": "Archivo reversible conserva historial y cancela futuras scheduled. Actualización parcial explícita; recalcula derivados. Valida Origin y X-CSRF-Token; ningún user_id se acepta del cliente. Aislamiento por sesión; referencias ajenas responden 404. fx_rate_to_base opcional actualiza la tasa provisional (solo moneda distinta de la base); cambiar la moneda responde 422 currency_mismatch (archivar y crear otra).",
         "security": [
           {
             "SessionCookie": []
@@ -4375,7 +4375,7 @@
           "loans"
         ],
         "summary": "Registrar movimiento",
-        "description": "Desembolso único; pagos variables, intereses, ajustes solo capital y condonaciones con reparto. Pago excesivo sin excess_handling: 422 loan_overpayment con opciones, no persiste nada. Con adjustment crea ajuste inmediatamente antes y pago completo; con income_expense aplica saldo exacto y transacción normal por exceso en misma cuenta. Una sola transacción de BD, sin estado intermedio ni reintento parcial. Tras 422 usar Idempotency-Key NUEVA. Valida Origin y X-CSRF-Token; aislamiento por sesión y referencias ajenas 404.",
+        "description": "Desembolso único; pagos variables, intereses, ajustes solo capital y condonaciones con reparto. Pago excesivo sin excess_handling: 422 loan_overpayment con opciones, no persiste nada. Con adjustment crea ajuste inmediatamente antes y pago completo; con income_expense aplica saldo exacto y transacción normal por exceso en misma cuenta. Una sola transacción de BD, sin estado intermedio ni reintento parcial. Tras 422 usar Idempotency-Key NUEVA. Valida Origin y X-CSRF-Token; aislamiento por sesión y referencias ajenas 404. Con income_expense sobre un préstamo ya saldado (saldo 0) no existe movimiento que devolver: responde 409 loan_already_settled sin persistir nada (usar excess_handling=adjustment, que reabre y paga, o registrar un ingreso/gasto normal en /transactions).",
         "security": [
           {
             "SessionCookie": []
@@ -4416,7 +4416,8 @@
             "$ref": "#/components/responses/Problem404"
           },
           "409": {
-            "$ref": "#/components/responses/Problem409"
+            "$ref": "#/components/responses/Problem409",
+            "description": "Conflicto de estado: loan_already_settled (income_expense sobre préstamo saldado), disbursement_exists (el desembolso ya existe) o ledger_inconsistent (un movimiento retroactivo invalidaría el reparto de uno posterior, con movement_index)."
           },
           "422": {
             "description": "Validación estricta o pago excesivo sin elección: ofrece opciones RF-22 y no guarda nada.",
@@ -4538,7 +4539,7 @@
           "loans"
         ],
         "summary": "Editar movimiento explícitamente",
-        "description": "Reemplaza el movimiento y transacción vinculada atómicamente; al editar desembolso también actualiza principal. Revalida todos los repartos posteriores; 409 si invalidaría saldo/reparto. Valida Origin y X-CSRF-Token; ningún user_id se acepta del cliente. Aislamiento por sesión; referencias ajenas responden 404.",
+        "description": "Reemplaza el movimiento y transacción vinculada atómicamente; al editar desembolso también actualiza principal. Revalida todos los repartos posteriores; 409 si invalidaría saldo/reparto. Valida Origin y X-CSRF-Token; ningún user_id se acepta del cliente. Aislamiento por sesión; referencias ajenas responden 404. El tipo (kind) de un movimiento no cambia: un kind distinto responde 422 movement_kind_immutable sin modificar nada (para cambiar de tipo se borra y se crea otro). excess_handling solo existe al crear un pago.",
         "security": [
           {
             "SessionCookie": []
@@ -4568,10 +4569,12 @@
             "$ref": "#/components/responses/Problem404"
           },
           "409": {
-            "$ref": "#/components/responses/Problem409"
+            "$ref": "#/components/responses/Problem409",
+            "description": "ledger_inconsistent: la edición invalidaría saldo o reparto posterior (incluye movement_index); no se aplica ningún cambio."
           },
           "422": {
-            "$ref": "#/components/responses/Problem422"
+            "$ref": "#/components/responses/Problem422",
+            "description": "Validación estricta, movement_kind_immutable o invalid_excess_handling."
           }
         },
         "parameters": [
@@ -10569,6 +10572,10 @@
                 "type": "null"
               }
             ]
+          },
+          "fx_rate_to_base": {
+            "$ref": "#/components/schemas/ExchangeRate",
+            "description": "Opcional y solo de entrada (no se devuelve en Subscription). Tasa provisional a la moneda base para los cobros programados; el usuario la confirma o corrige al publicar cada cobro con POST /transactions/{id}/post. Moneda base: solo admite 1.000000 (otro valor: 422 invalid_fx_rate). Moneda distinta de la base y sin tasa: 422 fx_rate_required."
           }
         },
         "required": [
@@ -12647,6 +12654,10 @@
                 "type": "null"
               }
             ]
+          },
+          "fx_rate_to_base": {
+            "$ref": "#/components/schemas/ExchangeRate",
+            "description": "Opcional y solo de entrada (no se devuelve en Subscription). Tasa provisional a la moneda base para los cobros programados; el usuario la confirma o corrige al publicar cada cobro con POST /transactions/{id}/post. Moneda base: solo admite 1.000000 (otro valor: 422 invalid_fx_rate). Moneda distinta de la base y sin tasa: 422 fx_rate_required."
           }
         },
         "required": [],
