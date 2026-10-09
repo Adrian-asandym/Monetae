@@ -39,6 +39,7 @@ Backend actual: **44 de 86 rutas = 71 de 127 operaciones**, 7 migraciones (cabez
 
 | Fecha | Decisión |
 |---|---|
+| 2026-10-09 | «**OK, todo A**»: **G1-A** (aprobar merge a `main` y push de la Fase 4), **L1-A** (T-405: préstamos de largo plazo sin desembolso con desembolso sin dinero, principal = suma de pagos, ítem `principal_assumed`), **X1-A** (transferencias entre monedas distintas, después de V1), **X2** (borrar los 4 worktrees de la Fase 4: **los borró Adrian él mismo**, junto con sus ramas `codex/T-40x`; el coordinador comprobó que sus 4 commits están en `master-dev`). |
 | 2026-10-08 (noche) | «**Acepto todas tus recomendaciones. OK, puedes continuar con el Paso 3**»: ADR-008 **J1-A, J2-C, J3-A**; autorizó un `--dry-run` sobre una **copia** del respaldo real **solo con conteos y saldos**; lanzó la Fase 4. |
 | 2026-10-08 (noche) | **«Acepto todas tus recomendaciones. OK, puedes continuar con el Paso 3».** Queda **ADR-008 ACEPTADO** con **J1-A, J2-C, J3-A** (la letra de J2 se aclaró: la recomendada es la C). **Autoriza un `--dry-run` sobre una copia de su respaldo real al final de la Fase 4** (solo conteos y saldos, nunca filas). **Lanza la Fase 4.** |
 | 2026-10-08 (noche) | **«Todo A»** a las recomendaciones: **D1-A** (publicar tras verificar), **D2-A** (cancelar todas las programadas sin publicar), **D3-A**, **D4-A**, **D4b-A**, **D5: J1-A y J3-A**, **D8-A** (tasa de importación: `--fx-rate`, o la de `app_settings` como provisional). **J2 queda por aclarar**: la recomendada es la **C** y «A» es otra opción (ver §5). Confirmó que **el push de las 17:36 fue suyo**. Ejecutó `wsl --shutdown` para restablecer Docker. |
@@ -54,17 +55,19 @@ Backend actual: **44 de 86 rutas = 71 de 127 operaciones**, 7 migraciones (cabez
 
 Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
-**G1 · Decision gate de la Fase 4: merge `master-dev` → `main` y publicación.** Auditoría de seguridad de lo que se publica: sin `.env`, claves ni `reference/`; solo los 3 fixtures sintéticos; sin datos del respaldo real.
+> **Resueltas el 2026-10-09 (Adrian, «todo A»): G1-A, L1-A, X1-A, X2.** Se conservan las opciones como registro.
+
+**G1 · Decision gate de la Fase 4: merge `master-dev` → `main` y publicación — RESUELTA: A.** Auditoría de seguridad de lo que se publica: sin `.env`, claves ni `reference/`; solo los 3 fixtures sintéticos; sin datos del respaldo real.
 - **A (recomendada): aprobar y publicar** (sin `--force`). *Razón:* 898 pruebas, el dry-run real cuadra al céntimo y es la forma de tener respaldo fuera de la máquina.
 - B: esperar a resolver L1 y X1 y publicar todo junto.
 
-**L1 · Préstamos de largo plazo SIN desembolso registrado.** En el respaldo real los préstamos de largo plazo no tienen su desembolso como transacción enlazada (solo cobros o pagos). Hoy fallan con `MissingDisbursementError`: se importan como transacciones **ordinarias** (el saldo cuadra), pero un cobro de préstamo se cuenta como **ingreso** (justo el problema P1) y el préstamo no aparece.
+**L1 · Préstamos de largo plazo SIN desembolso registrado — RESUELTA: A (T-405).** En el respaldo real los préstamos de largo plazo no tienen su desembolso como transacción enlazada (solo cobros o pagos). Hoy fallan con `MissingDisbursementError`: se importan como transacciones **ordinarias** (el saldo cuadra), pero un cobro de préstamo se cuenta como **ingreso** (justo el problema P1) y el préstamo no aparece.
 - **A (recomendada): crear el préstamo con un desembolso sin dinero** (`transaction_id` nulo, permitido por `ARCHITECTURE.md`/el `CHECK`), con **principal = suma de los pagos vinculados** (queda saldado), fecha justo antes del primer pago, y un ítem de revisión `principal_assumed`; los pagos se importan como pagos reales en sus cuentas. Adrian corrige el principal después con el `PUT` del desembolso. *Razón:* el préstamo, sus pagos y su historial quedan visibles, el capital no cuenta como ingreso y todo es corregible.
 - B: importar los cobros/pagos como transacciones `kind='loan'` sin préstamo + revisión. *Razón:* no se inventa ningún principal; *contra:* no hay préstamo visible.
 - C: dejarlo como hoy (ordinarias). *Contra:* distorsiona las estadísticas.
 - *Impacto:* tarea corta T-405 (`loans.py`); la importación real definitiva debe esperar a esta decisión porque el importador es solo-inserción.
 
-**X1 · Transferencias entre monedas distintas.** Se importan como un gasto y un ingreso ordinarios (con motivo `currency_mismatch`); Monetae sí soporta transferencias entre monedas.
+**X1 · Transferencias entre monedas distintas — RESUELTA: A (después de V1; no hay T-406).** Se importan como un gasto y un ingreso ordinarios (con motivo `currency_mismatch`); Monetae sí soporta transferencias entre monedas.
 - **A (recomendada): dejarlo para después de V1** (son pocas; no hay reportes hasta la Fase 6 y se puede re-vincular entonces).
 - B: implementarlo ahora (T-406): emparejar con la tasa implícita del par. *Contra:* más trabajo y riesgo antes de ver reportes; y el importador es solo-inserción, así que re-importar no corregiría las ya importadas.
 
@@ -91,7 +94,7 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
 **Run de la Fase 4: `run_f5e95406186a`.** Tareas T-401 `task_e32a402a4dec` (+T-401b `task_83ae6f5c2bbc`), T-402 `task_8e0dc0347237`, T-403 `task_9b25b87c9b93` (+T-403b `task_03fd94d8705d`) `completed`; **T-404 `task_9450f697ce8a` figura `blocked`** solo porque cuelga el gate abierto `gate_1e81cf0fd994` (se marca `completed` al resolverlo). **Ningún worker vivo**: verificado con `worker-list` (sin terminales por reclamar), sin procesos de agentes ni servidores y sin contenedores. Las filas `unverifiable` de `worker-list` corresponden a terminales ya liberados, no a agentes en ejecución. Run de la Fase 3: `run_63b520544a30`. Runs anteriores: `run_bef8ecfc67a7` (Fase 0), `run_2cddcd14320c` (Fase 1), `run_70f5f187fe16` (Fase 2). El CLI **no cierra Runs**; no usar `orchestration reset`. Al retomar: `orca orchestration run-use --id run_f5e95406186a`.
 
-**Worktrees:** `Monetae` → `main`, `Monetae-master-dev` → `master-dev`, y los 4 de la Fase 4, **todos fusionados** y borrables con OK de Adrian: `Monetae-codex-T-401-importer-core`, `-T-402-importer-loans`, `-T-403-importer-subs`, `-T-404-importer-transfers` (`git worktree remove` + `git branch -d`). Sin `.env` sueltos ni copias del respaldo real. Disco ≈ 3,5 GB libres.
+**Worktrees:** solo `Monetae` → `main` y `Monetae-master-dev` → `master-dev`. Adrian borró (2026-10-09) los 4 de la Fase 4 y sus ramas `codex/T-40x`; sus commits siguen en `master-dev`. Sin `.env` sueltos ni copias del respaldo real. Disco ≈ 3,7 GB libres.
 
 **Paneles de Orca abiertos (2):** el del coordinador y `lupuna` (otro proyecto, no se toca). Adrian ya cerró los paneles antiguos.
 
