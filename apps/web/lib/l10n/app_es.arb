@@ -72,5 +72,25 @@
         "type": "String"
       }
     }
-  }
+  },
+  "cardSettings": "Detalles de la tarjeta",
+  "showDate": "Fecha por día",
+  "showTime": "Hora",
+  "showNote": "Nota",
+  "showTags": "Etiquetas",
+  "showAccount": "Cuenta",
+  "showActions": "Acciones",
+  "editTransaction": "Editar",
+  "duplicateTransaction": "Duplicar",
+  "deleteTransaction": "Borrar",
+  "tintCategoryIcons": "Teñir íconos propios",
+  "actionPreview": "Vista de prueba: {action}",
+  "@actionPreview": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "sampleLoanParty": "Persona de prueba"
 }

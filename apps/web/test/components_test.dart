@@ -8,6 +8,7 @@ import 'package:monetae_web/data/mock_data.dart';
 import 'package:monetae_web/l10n/app_localizations.dart';
 import 'package:monetae_web/main.dart';
 import 'package:monetae_web/presentation/component_models.dart';
+import 'package:monetae_web/presentation/category_icon_source.dart';
 import 'package:monetae_web/theme/monetae_theme.dart';
 import 'package:monetae_web/widgets/category_pie_chart.dart';
 import 'package:monetae_web/widgets/custom_delayed_curve.dart';
@@ -62,7 +63,7 @@ Future<void> mount(
   await tester.pump();
 }
 
-void main() {
+void loadGoldenFonts() {
   setUpAll(() async {
     // Use Flutter's bundled Roboto instead of the block-shaped Ahem test font.
     // Locate it in the SDK running flutter_tester; no system font dependency.
@@ -87,7 +88,10 @@ void main() {
     loader.addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
     await loader.load();
   });
+}
 
+void main() {
+  loadGoldenFonts();
   for (final brightness in Brightness.values) {
     final mode = brightness.name;
     testWidgets('theme tokens, accent and preview $mode', (tester) async {
@@ -157,7 +161,7 @@ void main() {
         (_, l) => TransactionCard(model: mockCards(l).first, compact: true),
       );
       expect(find.byType(Tooltip), findsOneWidget);
-      expect(find.text('Ejemplo'), findsNothing);
+      expect(find.text('Ejemplo'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
@@ -203,7 +207,7 @@ void main() {
                 percentLabel: '0%',
                 amountLabel: '0.00',
                 color: Colors.grey,
-                icon: Icons.home,
+                icon: CategoryIconSource.base('home'),
               ),
               ...mockSlices(l),
             ],
@@ -315,6 +319,14 @@ void main() {
     await tester.tap(find.text('Green').last);
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+    await tester.tap(find.text('Card details'));
+    await tester.pumpAndSettle();
+    for (final field in ['time', 'account', 'actions']) {
+      final toggle = find.byKey(Key('show-$field'));
+      await tester.ensureVisible(toggle);
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+    }
     tester.view.physicalSize = const Size(390, 1000);
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);

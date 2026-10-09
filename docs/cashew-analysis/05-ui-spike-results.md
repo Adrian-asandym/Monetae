@@ -219,3 +219,111 @@ de pantallas, los dos componentes clasificados como reescritura ni las funciones
 de Fase 6; tampoco convierte el mock en producto terminado. Antes de comprometer
 las siguientes tareas, revisar el build y acordar qué preferencias visuales se
 conservan; no hace falta cambiar la estrategia A con la evidencia obtenida.
+
+## T-502
+
+Fecha: 2026-10-09. Rama: `codex/T-502-ui-brand-and-card`. Contrato **0.4.0**;
+SPEC v0.4, RF-39/RF-46/RF-47, decisiones D10-A y D11-A. Solo se modifican
+`apps/web/**` y esta sección; sin lectura/listado de respaldos ni datos reales.
+
+### Marca y superficie azul
+
+Se copiaron sin cambios ambos SVG de ícono y ambos JPG con nombre desde `img/`
+a `assets/brand/`; los originales permanecen intactos. `BrandLogo` dibuja con
+`flutter_svg` el ícono claro/oscuro según el tema interno; se retiraron las dos
+copias antiguas `monetae-logo.jpg`. Los JPG con nombre quedan disponibles como
+assets, mientras que la cabecera usa el ícono vectorial.
+
+`web/index.html` incluye favicon PNG de respaldo y dos enlaces SVG con
+`media="(prefers-color-scheme: light|dark)"`, además del apple-touch-icon PNG.
+**Limitación del navegador:** favicon según el modo del sistema/navegador,
+ícono dentro de la app según el tema de Flutter; cambiar el interruptor interno
+no cambia `prefers-color-scheme`. El manifiesto usa PNG claros estables 192/512
+y maskable 512, todos reales, generados reproduciblemente por
+`tool/generate_brand_icons_test.dart` con `flutter_svg` y `Picture.toImage`.
+También genera favicon 32 y Apple 180. No se instalaron rasterizadores del sistema;
+el maskable usa fondo opaco y el dibujo cabe en el círculo seguro central.
+
+Se conserva el tema de T-501: acento azul `#5F85C2`, `tinted = true`, fondo oscuro
+mezclado .92 y superficie de tarjeta .8. Los goldens de marca/tarjetas oscuras y
+las aserciones de tokens fijan este predeterminado, sin modificar la geometría ni
+los tonos financieros originales. Los demás acentos siguen siendo configurables.
+
+### Tarjeta configurable y diferencias frente a Cashew
+
+Los DTO Account/Category/Transaction se regeneran desde 0.4.0 y se añaden
+UserIcon y TransactionCardPreferences. El generador trata los enums MIME como
+identificadores Dart válidos y toma los seis defaults directamente del contrato;
+el parser rechaza claves desconocidas y booleanos nulos/no booleanos.
+Las preferencias tienen `copyWith` y serialización `toJson` para T-503/T-505.
+
+Por defecto, fecha/nota/etiquetas visibles, hora/cuenta/acciones ocultas.
+`TransactionCardList` muestra **una cabecera por día** cuando `show_date` es true,
+sin repetirla dentro de las tarjetas. Los modelos reciben claves, fechas y horas
+ya formateadas; el mock representa America/Lima con fechas sintéticas. Se retiró
+la cuenta de los subtítulos predeterminados del spike, que contradecía el default
+`showAccountLabelTagInTransactionEntry = false` de Cashew; ahora tiene un detalle
+propio. En el movimiento de préstamo el subtítulo muestra una persona sintética.
+La nota oculta también desaparece del tooltip compacto. Para respetar RF-47,
+`show_tags` manda también en la vista compacta: se elimina la omisión
+incondicional de etiquetas del spike; los demás detalles mantienen sus controles.
+
+Se mantienen círculo de 47 px, ícono de 27 px, tipografía, importes, flecha,
+colores y composición del spike. Se añaden hora y nombre de cuenta pequeños, y
+una fila adaptable de editar/duplicar/borrar cuando se habilita `show_actions`:
+**solo callbacks**, sin mutaciones, navegación ni reglas financieras. Frente a
+las acciones de Cashew, la demostración solo muestra un mensaje traducido. El
+panel local de seis interruptores usa i18n es/en; no se ha adelantado la
+persistencia, autenticación o cliente HTTP de T-503/T-505.
+
+### SVG de categoría y diferencias frente a Cashew
+
+`CategoryIconSource` acepta clave del catálogo base Material (Apache-2.0) o
+`custom:<uuid>` resuelta contra bytes suministrados por el caller. Los bytes
+se copian y quedan inmutables; una clave desconocida o un SVG pendiente puede
+usar fallback Material. `CategoryIcon` utiliza `SvgPicture.memory`, compartido
+por tarjeta, gráfico y leyenda, dentro de los mismos círculos y con las mismas
+medidas del spike. Se mantiene la geometría circular de Cashew y sus badges;
+los SVG preservan sus colores por defecto y aceptan tinte opcional mediante
+`ColorFilter`, equivalente visual a `colorTintCategoryIcon = false` del original.
+El catálogo base conserva los Material del spike, sin copiar el catálogo PNG de
+Cashew cuya licencia no se ha verificado. El ícono de casa del mock es un SVG
+sintético creado para esta tarea.
+
+Dependencia directa nueva: **flutter_svg 2.3.0** (constraint `^2.3.0`), autorizada
+por T-502 y necesaria tanto para marca como categorías; versiones transitivas
+en `pubspec.lock`. No se añadieron otras dependencias directas. El renderizador
+vectorial no crea un DOM ni ejecuta JavaScript. La prueba inserta `<script>` y
+`onload` con instrucciones que lanzarían errores y comprueba píxeles RGBA
+idénticos al SVG limpio, además del render correcto en tarjeta y gráfico en
+ambos temas. El parser puede imprimir `unhandled element <script/>`; es una
+advertencia de elemento ignorado, sin excepción de render. **Esto no sustituye
+el saneado del servidor**, obligatorio con lista blanca y cabeceras en Fase 6;
+no se implementa subida ni almacenamiento aquí.
+
+### Verificación y pendientes
+
+Flutter 3.47.6 / Dart 3.13.5:
+
+- `python3 -I tool/generate_dtos.py` + `dart format lib/data/api_dtos.dart`: correcto.
+- `flutter pub get`, `flutter gen-l10n`: correctos; lockfile y localizaciones versionados.
+- `flutter test tool/generate_brand_icons_test.dart`: **1 prueba**, genera los cinco PNG.
+- `dart analyze`: **No issues found!**.
+- `flutter test`, sin `--update-goldens`: **29 pruebas verdes**.
+- **20 goldens** claro/oscuro: los ocho del spike (tema sin cambios; tarjetas,
+  pie y fade actualizados por las variantes deliberadas) y doce nuevos de marca,
+  tarjeta default/todos/ninguno, SVG propio y SVG hostil. Capturas inspeccionadas;
+  tinte opcional y tamaño real de SVG 27 px cubiertos.
+- Interacciones: seis interruptores independientes, callbacks de las tres
+  acciones, dos cabeceras por dos días sin ocultar movimientos, tooltip compacto,
+  bytes inmutables/fallback, demo es/en/tema/acento y detalles completos a 390 px.
+- `flutter build web --release`: correcto; salida `build/web` ignorada por git.
+- PNG: cabeceras/dimensiones 32/180/192/512/512 comprobadas, fuentes copiadas
+  idénticas y todas las rutas del manifiesto apuntan a archivos existentes.
+- `grep -rE 'drift|firebase|appStateSettings|package:budget/' apps/web/lib`: vacío;
+  ningún PNG de categoría copiado de Cashew; originales `img/` sin cambios.
+
+Los goldens fijan esta adaptación; no equivalen a una ejecución o comparación
+píxel a píxel de Cashew. Se mantienen las diferencias geométricas y de fuente
+ya registradas en T-501. Quedan la revisión visual de Adrian, el cliente/persistencia
+T-503/T-505 y la API de SVG saneados de Fase 6, conforme al alcance asignado.
