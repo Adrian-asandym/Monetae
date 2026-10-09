@@ -45,6 +45,7 @@ Backend actual: **44 de 86 rutas = 71 de 127 operaciones**, 7 migraciones (cabez
 
 | Fecha | Decisión |
 |---|---|
+| 2026-10-09 (tarde) | «**OK, todo A**»: **G2-A** (publicar T-405 en `main`), **D9-A** (la importación real definitiva espera a una base persistente y a las primeras pantallas de la Fase 5), y OK a arrancar la Fase 5 con `T-501`. **Adrian borró él mismo el worktree de T-405** y su rama; sus commits siguen en `master-dev`. |
 | 2026-10-09 | «**OK, todo A**»: **G1-A** (aprobar merge a `main` y push de la Fase 4), **L1-A** (T-405: préstamos de largo plazo sin desembolso con desembolso sin dinero, principal = suma de pagos, ítem `principal_assumed`), **X1-A** (transferencias entre monedas distintas, después de V1), **X2** (borrar los 4 worktrees de la Fase 4: **los borró Adrian él mismo**, junto con sus ramas `codex/T-40x`; el coordinador comprobó que sus 4 commits están en `master-dev`). |
 | 2026-10-08 (noche) | «**Acepto todas tus recomendaciones. OK, puedes continuar con el Paso 3**»: ADR-008 **J1-A, J2-C, J3-A**; autorizó un `--dry-run` sobre una **copia** del respaldo real **solo con conteos y saldos**; lanzó la Fase 4. |
 | 2026-10-08 (noche) | **«Acepto todas tus recomendaciones. OK, puedes continuar con el Paso 3».** Queda **ADR-008 ACEPTADO** con **J1-A, J2-C, J3-A** (la letra de J2 se aclaró: la recomendada es la C). **Autoriza un `--dry-run` sobre una copia de su respaldo real al final de la Fase 4** (solo conteos y saldos, nunca filas). **Lanza la Fase 4.** |
@@ -61,12 +62,12 @@ Backend actual: **44 de 86 rutas = 71 de 127 operaciones**, 7 migraciones (cabez
 
 Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
-**G2 · Decision gate de T-405: merge `master-dev` → `main` y publicación** (`gate_10f2135dac21`, **abierto**). T-405 solo toca `importers/cashew/loans.py`, sus pruebas y documentación; sin cambios de contrato, migración ni API. Verificada por el coordinador (914 pruebas, sonda con servidor real, `--dry-run` real con cuadre exacto). La auditoría de seguridad de lo que se publique se repite antes del push.
+**G2 · Decision gate de T-405: merge `master-dev` → `main` y publicación** (`gate_10f2135dac21`) — **RESUELTA: A (2026-10-09).** T-405 solo toca `importers/cashew/loans.py`, sus pruebas y documentación; sin cambios de contrato, migración ni API. Verificada por el coordinador (914 pruebas, sonda con servidor real, `--dry-run` real con cuadre exacto). La auditoría de seguridad de lo que se publique se repite antes del push.
 - **A (recomendada): aprobar el merge y el push** (sin `--force`). *Razón:* verificación completa y es la forma de tener el respaldo fuera de la máquina.
 - B: aprobar solo el merge local, sin push.
 - C: esperar. *Contra:* nada la bloquea; solo retrasa la copia remota.
 
-**D9 · ¿Cuándo hacer la importación real definitiva (`apply`)?** Aún no hay una base persistente (la de Compose se borra con `down -v`; la del VPS llega en el hito de despliegue) y el importador es solo-inserción: si algo sale mal hay que vaciar la base y repetir. Los ítems de revisión (préstamos con principal supuesto, pagos sintetizados, transferencias sin emparejar, personas provisionales…) hoy solo se ven por SQL o API; la UI para revisarlos llega en las Fases 5–6.
+**D9 · ¿Cuándo hacer la importación real definitiva (`apply`)? — RESUELTA: A (2026-10-09).** Aún no hay una base persistente (la de Compose se borra con `down -v`; la del VPS llega en el hito de despliegue) y el importador es solo-inserción: si algo sale mal hay que vaciar la base y repetir. Los ítems de revisión (préstamos con principal supuesto, pagos sintetizados, transferencias sin emparejar, personas provisionales…) hoy solo se ven por SQL o API; la UI para revisarlos llega en las Fases 5–6.
 - **A (recomendada): esperar a tener una base persistente y las primeras pantallas de la Fase 5** (o al despliegue); entonces copia → `--dry-run` → `apply`. *Razón:* esperar no pierde nada (el respaldo es una foto fija), evita importar a una base desechable y permite revisar los ítems con la UI.
 - B: importar ya a una base local desechable solo para explorar con la API o SQL. *Contra:* no es la definitiva y hay que borrarla.
 - C: hacer ya la importación definitiva en una base local persistente. *Contra:* sin UI no se pueden corregir los ítems; riesgo de repetir trabajo.
@@ -108,7 +109,7 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
 **Run de la Fase 4: `run_f5e95406186a`.** Tareas completadas: T-401 `task_e32a402a4dec` (+T-401b `task_83ae6f5c2bbc`), T-402 `task_8e0dc0347237`, T-403 `task_9b25b87c9b93` (+T-403b `task_03fd94d8705d`), T-404 `task_9450f697ce8a` y T-405 `task_3206ef52f01d`. **Gate G2 `gate_10f2135dac21` abierto** (cuelga de T-405: puede figurar `blocked`; se marca `completed` al resolverlo). Gate G1 `gate_1e81cf0fd994` resuelto. **Ningún worker vivo**: el de T-405 terminó; su terminal sigue abierta pero inactiva. Run de la Fase 3: `run_63b520544a30`. Runs anteriores: `run_bef8ecfc67a7` (Fase 0), `run_2cddcd14320c` (Fase 1), `run_70f5f187fe16` (Fase 2). El CLI **no cierra Runs**; no usar `orchestration reset`. Al retomar: `orca orchestration run-use --id run_f5e95406186a`.
 
-**Worktrees:** `Monetae` → `main`, `Monetae-master-dev` → `master-dev` y `Monetae-codex-T-405-importer-longterm-loans` → `codex/T-405-importer-longterm-loans` (**fusionado**, borrable con OK de Adrian: `git worktree remove` + `git branch -d`). Sin `.env` sueltos, sin contenedores ni servidores, sin copias del respaldo real (las de las pruebas se borraron). Disco ≈ 3,7 GB libres.
+**Worktrees:** `Monetae` → `main`, `Monetae-master-dev` → `master-dev` (Adrian borró el de T-405 y su rama el 2026-10-09). Sin `.env` sueltos, sin contenedores ni servidores, sin copias del respaldo real (las de las pruebas se borraron). Disco ≈ 3,7 GB libres.
 
 **Paneles de Orca abiertos:** el del coordinador, `lupuna` (otro proyecto, no se toca) y el de Codex de T-405 (`…Monetae-codex-T-405-importer-longterm-loans`), que Adrian puede cerrar.
 
