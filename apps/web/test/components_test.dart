@@ -25,8 +25,9 @@ Future<void> mount(
   ComponentBuilder builder, {
   bool reducedMotion = false,
   Size captureSize = const Size(600, 520),
+  Size viewSize = const Size(800, 700),
 }) async {
-  tester.view.physicalSize = const Size(800, 700);
+  tester.view.physicalSize = viewSize;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
@@ -135,8 +136,8 @@ void main() {
           ],
         ),
       );
-      expect(find.text('S/ 48.50'), findsOneWidget);
-      expect(find.text('US\$ 12.00'), findsOneWidget);
+      expect(find.text('48,50 S/'), findsOneWidget);
+      expect(find.text('12,00 US\$'), findsOneWidget);
       expect(find.text('Movimiento de préstamo'), findsOneWidget);
       await tester.tap(find.byType(TransactionCard).first);
       expect(taps, 1);
