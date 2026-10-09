@@ -44,9 +44,17 @@ class ImportReport(ReportModel):
     counts: dict[str, EntityCounts] = Field(default_factory=dict)
     steps: dict[str, dict[str, JsonValue]] = Field(default_factory=dict)
     balances: list[AccountBalance] = Field(default_factory=list)
+    balance_mismatch: bool = False
+    allow_balance_diff: bool = False
+    financial_rolled_back: bool = False
+    pending_phase_6: dict[str, int] = Field(default_factory=dict)
     review_items: list[ReviewItem] = Field(default_factory=list)
     provisional_fx: int = 0
     outcome: str = "succeeded"
+
+    @property
+    def exit_code(self) -> int:
+        return 5 if self.balance_mismatch and not self.allow_balance_diff else 0
 
     def entity(self, name: str) -> EntityCounts:
         return self.counts.setdefault(name, EntityCounts())

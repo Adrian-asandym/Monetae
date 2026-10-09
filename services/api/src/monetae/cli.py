@@ -110,7 +110,9 @@ def _import_cashew(args: argparse.Namespace) -> int:
                 print("El usuario no existe; créelo con create-user.", file=sys.stderr)
                 return 2
             try:
-                report = run_import(db, user_id, snapshot, options)
+                report = run_import(
+                    db, user_id, snapshot, options, allow_balance_diff=args.allow_balance_diff
+                )
             except ImportExecutionError as exc:
                 db.commit()  # Auditoría del fallo; el savepoint financiero ya se revirtió.
                 _write_import_report(exc.report, args.report_file)
@@ -123,7 +125,14 @@ def _import_cashew(args: argparse.Namespace) -> int:
         return 4
     # Lista blanca de salida: conteos, códigos y saldos. Sin nombres/títulos/notas ni payloads.
     summary = {
-        "code": "dry_run" if options.dry_run else "applied",
+        "code": report.outcome
+        if report.balance_mismatch
+        else "dry_run"
+        if options.dry_run
+        else "applied",
+        "balance_mismatch": report.balance_mismatch,
+        "allow_balance_diff": report.allow_balance_diff,
+        "exit_code": report.exit_code,
         "counts": {name: counts.model_dump() for name, counts in report.counts.items()},
         "provisional_fx": report.provisional_fx,
         "review_items": len(report.review_items),
@@ -140,7 +149,13 @@ def _import_cashew(args: argparse.Namespace) -> int:
         ],
     }
     print(json.dumps(summary, ensure_ascii=False))
-    return 0
+    if report.exit_code == 5:
+        print(
+            "Los saldos no cuadran; no se importó nada. "
+            "Revise el reporte o use --allow-balance-diff.",
+            file=sys.stderr,
+        )
+    return report.exit_code
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -159,6 +174,7 @@ def main(argv: list[str] | None = None) -> int:
     importer.add_argument("--file", required=True)
     importer.add_argument("--user-email", required=True)
     importer.add_argument("--dry-run", action="store_true")
+    importer.add_argument("--allow-balance-diff", action="store_true")
     importer.add_argument("--report-file")
     importer.add_argument("--fx-rate", action="append", default=[])
     importer.add_argument("--loan-fx-rates")
