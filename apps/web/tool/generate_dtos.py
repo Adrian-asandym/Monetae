@@ -1,9 +1,10 @@
-"""Generate the three spike DTOs from the repository's OpenAPI contract.
+"""Generate presentation DTOs from the repository's OpenAPI contract.
 
 No network, templates, or generator dependency. This is deliberately limited to
 these flat schemas; the HTTP client belongs to the next phase's base task.
 """
 import json
+import re
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[3]
@@ -16,10 +17,10 @@ lines = [
 ]
 
 def camel(name):
-    parts = name.split('_')
+    parts = re.split(r'[^a-zA-Z0-9]+', name)
     return parts[0] + ''.join(p.title() for p in parts[1:])
 
-for name in ['Account', 'Category', 'Transaction']:
+for name in ['Account', 'Category', 'Transaction', 'UserIcon', 'TransactionCardPreferences']:
     fields = []
     for key, prop in schemas[name]['properties'].items():
         nullable = 'anyOf' in prop
@@ -41,16 +42,28 @@ for name in ['Account', 'Category', 'Transaction']:
         else:
             typ = 'String'
             parse = '_string(json, '+repr(key)+', '+str(nullable).lower()+')'+('' if nullable else '!')
-        fields.append((key, camel(key), typ+('?' if nullable else ''), parse))
+        default = prop.get('default') if prop.get('type') == 'boolean' else None
+        if default is not None:
+            parse = '_bool(json, '+repr(key)+', '+str(default).lower()+')'
+        fields.append((key, camel(key), typ+('?' if nullable else ''), parse, default))
     lines += ['final class '+name+'Dto {', '  const '+name+'Dto({']
-    lines += ['    required this.'+f[1]+',' for f in fields]
+    lines += [('    required this.'+f[1]+',') if f[4] is None else ('    this.'+f[1]+' = '+str(f[4]).lower()+',') for f in fields]
     lines += ['  });', '']
     lines += ['  final '+f[2]+' '+f[1]+';' for f in fields]
     lines += ['', '  factory '+name+'Dto.fromJson(Map<String, Object?> json) {']
-    lines += ['    _keys(json, <String>{'+', '.join(repr(f[0]) for f in fields)+'});']
+    lines += ['    _keys(json, <String>{'+', '.join(repr(f[0]) for f in fields)+'}, optional: '+str(not schemas[name].get('required')).lower()+');']
     lines += ['    return '+name+'Dto(']
     lines += ['      '+f[1]+': '+f[3]+',' for f in fields]
-    lines += ['    );', '  }', '}', '']
+    lines += ['    );', '  }']
+    if name == 'TransactionCardPreferences':
+        lines += ['', '  TransactionCardPreferencesDto copyWith({']
+        lines += ['    bool? '+f[1]+',' for f in fields]
+        lines += ['  }) => TransactionCardPreferencesDto(']
+        lines += ['    '+f[1]+': '+f[1]+' ?? this.'+f[1]+',' for f in fields]
+        lines += ['  );', '', '  Map<String, Object?> toJson() => {']
+        lines += ['    '+repr(f[0])+': '+f[1]+',' for f in fields]
+        lines += ['  };']
+    lines += ['}', '']
 lines += [
     'T? _enum<T>(Map<String, Object?> json, String key, Map<String, T> values, bool nullable) {',
     '  final wire = _string(json, key, nullable);',
@@ -65,8 +78,14 @@ lines += [
     "  if (value is! String) throw FormatException('Expected string: $key');",
     '  return value;',
     '}', '',
-    'void _keys(Map<String, Object?> json, Set<String> requiredKeys) {',
-    '  if (json.length != requiredKeys.length || !requiredKeys.containsAll(json.keys)) {',
+    'bool _bool(Map<String, Object?> json, String key, bool fallback) {',
+    '  if (!json.containsKey(key)) return fallback;',
+    '  final value = json[key];',
+    "  if (value is! bool) throw FormatException('Expected boolean: $key');",
+    '  return value;',
+    '}', '',
+    'void _keys(Map<String, Object?> json, Set<String> requiredKeys, {bool optional = false}) {',
+    '  if ((!optional && json.length != requiredKeys.length) || !requiredKeys.containsAll(json.keys)) {',
     "    throw const FormatException('Missing or unknown DTO fields');",
     '  }',
     '}',

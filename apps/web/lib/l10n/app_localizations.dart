@@ -349,6 +349,84 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Fondo'**
   String get themeBackground;
+
+  /// No description provided for @cardSettings.
+  ///
+  /// In es, this message translates to:
+  /// **'Detalles de la tarjeta'**
+  String get cardSettings;
+
+  /// No description provided for @showDate.
+  ///
+  /// In es, this message translates to:
+  /// **'Fecha por día'**
+  String get showDate;
+
+  /// No description provided for @showTime.
+  ///
+  /// In es, this message translates to:
+  /// **'Hora'**
+  String get showTime;
+
+  /// No description provided for @showNote.
+  ///
+  /// In es, this message translates to:
+  /// **'Nota'**
+  String get showNote;
+
+  /// No description provided for @showTags.
+  ///
+  /// In es, this message translates to:
+  /// **'Etiquetas'**
+  String get showTags;
+
+  /// No description provided for @showAccount.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuenta'**
+  String get showAccount;
+
+  /// No description provided for @showActions.
+  ///
+  /// In es, this message translates to:
+  /// **'Acciones'**
+  String get showActions;
+
+  /// No description provided for @editTransaction.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar'**
+  String get editTransaction;
+
+  /// No description provided for @duplicateTransaction.
+  ///
+  /// In es, this message translates to:
+  /// **'Duplicar'**
+  String get duplicateTransaction;
+
+  /// No description provided for @deleteTransaction.
+  ///
+  /// In es, this message translates to:
+  /// **'Borrar'**
+  String get deleteTransaction;
+
+  /// No description provided for @tintCategoryIcons.
+  ///
+  /// In es, this message translates to:
+  /// **'Teñir íconos propios'**
+  String get tintCategoryIcons;
+
+  /// No description provided for @actionPreview.
+  ///
+  /// In es, this message translates to:
+  /// **'Vista de prueba: {action}'**
+  String actionPreview(String action);
+
+  /// No description provided for @sampleLoanParty.
+  ///
+  /// In es, this message translates to:
+  /// **'Persona de prueba'**
+  String get sampleLoanParty;
 }
 
 class _AppLocalizationsDelegate

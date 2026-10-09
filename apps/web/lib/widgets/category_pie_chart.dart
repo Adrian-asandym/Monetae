@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../presentation/component_models.dart';
 import '../theme/monetae_theme.dart';
+import 'category_icon.dart';
 
 class CategoryPieChart extends StatelessWidget {
   const CategoryPieChart({
@@ -15,6 +16,7 @@ class CategoryPieChart extends StatelessWidget {
     this.onSelected,
     this.large = false,
     this.animate = true,
+    this.tintCategoryIcons = false,
   });
 
   final List<CategorySlice> slices;
@@ -23,6 +25,7 @@ class CategoryPieChart extends StatelessWidget {
   final ValueChanged<String?>? onSelected;
   final bool large;
   final bool animate;
+  final bool tintCategoryIcons;
 
   @override
   Widget build(BuildContext context) {
@@ -188,8 +191,9 @@ class CategoryPieChart extends StatelessWidget {
                           color: Theme.of(context).colorScheme.surface,
                           border: Border.all(color: color, width: 2.5),
                         ),
-                        child: Icon(
-                          slice.icon,
+                        child: CategoryIcon(
+                          source: slice.icon,
+                          tintCustom: tintCategoryIcons,
                           size: selected ? 34 : 27,
                           color: slice.color,
                         ),

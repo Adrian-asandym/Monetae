@@ -5,6 +5,9 @@
 import 'package:flutter/material.dart';
 
 import '../presentation/component_models.dart';
+import '../data/api_dtos.dart';
+import '../l10n/app_localizations.dart';
+import 'category_icon.dart';
 import '../theme/monetae_theme.dart';
 
 class TransactionCard extends StatelessWidget {
@@ -12,12 +15,22 @@ class TransactionCard extends StatelessWidget {
     super.key,
     required this.model,
     this.onTap,
+    this.preferences = const TransactionCardPreferencesDto(),
+    this.onEdit,
+    this.onDuplicate,
+    this.onDelete,
+    this.tintCategoryIcon = false,
     this.onSelectionChanged,
     this.selected = false,
     this.compact = false,
   });
 
   final TransactionCardModel model;
+  final TransactionCardPreferencesDto preferences;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDuplicate;
+  final VoidCallback? onDelete;
+  final bool tintCategoryIcon;
   final VoidCallback? onTap;
   final ValueChanged<bool>? onSelectionChanged;
   final bool selected;
@@ -26,6 +39,7 @@ class TransactionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context);
     final colors = MonetaeColors.of(context);
     final amountColor = switch (model.tone) {
       AmountTone.income => colors.income,
@@ -65,7 +79,11 @@ class TransactionCard extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: pastel(model.categoryColor, theme.brightness, .55),
                 ),
-                child: Icon(model.icon, size: 27, color: model.categoryColor),
+                child: CategoryIcon(
+                  source: model.icon,
+                  color: model.categoryColor,
+                  tintCustom: tintCategoryIcon,
+                ),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -85,7 +103,51 @@ class TransactionCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontSize: 14.5, color: colors.muted),
                     ),
-                    if (!compact && note != null && note.trim().isNotEmpty)
+                    if (preferences.showTime)
+                      Text(
+                        model.timeLabel,
+                        key: const Key('transaction-time'),
+                        style: TextStyle(fontSize: 12, color: colors.muted),
+                      ),
+                    if (preferences.showAccount)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          model.account.name,
+                          key: const Key('transaction-account'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 10, color: colors.muted),
+                        ),
+                      ),
+                    if (preferences.showActions)
+                      Wrap(
+                        spacing: 2,
+                        children: [
+                          IconButton(
+                            tooltip: l.editTransaction,
+                            onPressed: onEdit,
+                            icon: const Icon(Icons.edit_outlined),
+                            iconSize: 18,
+                          ),
+                          IconButton(
+                            tooltip: l.duplicateTransaction,
+                            onPressed: onDuplicate,
+                            icon: const Icon(Icons.copy_outlined),
+                            iconSize: 18,
+                          ),
+                          IconButton(
+                            tooltip: l.deleteTransaction,
+                            onPressed: onDelete,
+                            icon: const Icon(Icons.delete_outline),
+                            iconSize: 18,
+                          ),
+                        ],
+                      ),
+                    if (preferences.showNote &&
+                        !compact &&
+                        note != null &&
+                        note.trim().isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 5),
                         child: Row(
@@ -110,7 +172,7 @@ class TransactionCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                    if (!compact && model.tags.isNotEmpty)
+                    if (preferences.showTags && model.tags.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 6),
                         child: Wrap(
@@ -176,7 +238,10 @@ class TransactionCard extends StatelessWidget {
                     model.typeLabel,
                     style: TextStyle(fontSize: 10, color: colors.muted),
                   ),
-                  if (compact && note != null && note.trim().isNotEmpty)
+                  if (preferences.showNote &&
+                      compact &&
+                      note != null &&
+                      note.trim().isNotEmpty)
                     Tooltip(
                       message: note,
                       triggerMode: TooltipTriggerMode.tap,

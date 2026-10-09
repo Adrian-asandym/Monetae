@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 
 import 'data/mock_data.dart';
+import 'data/api_dtos.dart';
+import 'widgets/brand_logo.dart';
+import 'widgets/category_icon.dart';
+import 'widgets/transaction_card_list.dart';
+import 'widgets/transaction_card_settings.dart';
 import 'l10n/app_localizations.dart';
 import 'theme/monetae_theme.dart';
 import 'widgets/category_pie_chart.dart';
@@ -64,6 +69,9 @@ class SpikePage extends StatefulWidget {
 class _SpikePageState extends State<SpikePage> {
   String? _selectedCategory;
   bool _compact = false;
+  bool _tintCategoryIcons = false;
+  TransactionCardPreferencesDto _preferences =
+      const TransactionCardPreferencesDto();
   int _animationRevision = 0;
   @override
   Widget build(BuildContext context) {
@@ -78,6 +86,7 @@ class _SpikePageState extends State<SpikePage> {
           const SizedBox(height: 20),
           CategoryPieChart(
             slices: slices,
+            tintCategoryIcons: _tintCategoryIcons,
             emptyLabel: l.emptyChart,
             selectedId: _selectedCategory,
             onSelected: (value) => setState(() => _selectedCategory = value),
@@ -92,7 +101,11 @@ class _SpikePageState extends State<SpikePage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              leading: Icon(slice.icon, color: slice.color),
+              leading: CategoryIcon(
+                source: slice.icon,
+                color: slice.color,
+                tintCustom: _tintCategoryIcons,
+              ),
               title: Text(slice.label),
               subtitle: Text(slice.percentLabel),
               trailing: Text(slice.amountLabel),
@@ -121,11 +134,19 @@ class _SpikePageState extends State<SpikePage> {
             value: _compact,
             onChanged: (value) => setState(() => _compact = value),
           ),
-          for (final card in cards)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: TransactionCard(model: card, compact: _compact),
-            ),
+          TransactionCardSettings(
+            preferences: _preferences,
+            onChanged: (value) => setState(() => _preferences = value),
+          ),
+          TransactionCardList(
+            models: cards,
+            preferences: _preferences,
+            compact: _compact,
+            tintCategoryIcons: _tintCategoryIcons,
+            onEdit: (_) => _previewAction(l.editTransaction),
+            onDuplicate: (_) => _previewAction(l.duplicateTransaction),
+            onDelete: (_) => _previewAction(l.deleteTransaction),
+          ),
         ],
       ),
     );
@@ -141,14 +162,7 @@ class _SpikePageState extends State<SpikePage> {
                 children: [
                   Row(
                     children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.asset(
-                          'assets/monetae-logo.jpg',
-                          width: 52,
-                          height: 52,
-                        ),
-                      ),
+                      const BrandLogo(),
                       const SizedBox(width: 14),
                       Expanded(
                         child: Column(
@@ -221,6 +235,13 @@ class _SpikePageState extends State<SpikePage> {
                       ),
                     ],
                   ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(l.tintCategoryIcons),
+                    value: _tintCategoryIcons,
+                    onChanged: (value) =>
+                        setState(() => _tintCategoryIcons = value),
+                  ),
                   const SizedBox(height: 24),
                   LayoutBuilder(
                     builder: (context, constraints) =>
@@ -251,7 +272,15 @@ class _SpikePageState extends State<SpikePage> {
                       children: [
                         FadeIn(
                           key: ValueKey(_animationRevision),
-                          child: TransactionCard(model: cards.first),
+                          child: TransactionCard(
+                            model: cards.first,
+                            preferences: _preferences,
+                            tintCategoryIcon: _tintCategoryIcons,
+                            onEdit: () => _previewAction(l.editTransaction),
+                            onDuplicate: () =>
+                                _previewAction(l.duplicateTransaction),
+                            onDelete: () => _previewAction(l.deleteTransaction),
+                          ),
                         ),
                         TextButton.icon(
                           onPressed: () => setState(() => _animationRevision++),
@@ -269,6 +298,13 @@ class _SpikePageState extends State<SpikePage> {
       ),
     );
   }
+
+  void _previewAction(String action) => ScaffoldMessenger.of(context)
+      .showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).actionPreview(action)),
+        ),
+      );
 
   Widget _panel(BuildContext context, String title, Widget child) => SizedBox(
     width: double.infinity,

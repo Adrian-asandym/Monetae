@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 436 436" width="512" height="512" role="img" aria-label="Icono M con flecha ascendente y moneda">
+  <!-- Moneda -->
+  <circle cx="199" cy="125" r="62" fill="#FFD05B"/>
+  <circle cx="199" cy="125" r="44" fill="#EDB93B"/>
+  <!-- M con flecha: pata izquierda hueca + diagonales -->
+  <path d="M112 222 V355 A31 31 0 0 1 50 355 V160 L197 300 L385 105"
+        fill="none" stroke="#3FD68E" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Pata derecha hueca: corte diagonal paralelo a la flecha, sin tocarla -->
+  <path d="M274 263 V355 A45 45 0 0 0 364 355 V173 L336 201 V355 A17 17 0 0 1 302 355 V235 Z"
+        fill="#3FD68E" stroke="#3FD68E" stroke-width="4" stroke-linejoin="round"/>
+  <!-- Punta de flecha -->
+  <path d="M420 72 L337 100 L396 158 Z" fill="#3FD68E" stroke="#3FD68E" stroke-width="10" stroke-linejoin="round"/>
+</svg>

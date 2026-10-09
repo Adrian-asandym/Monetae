@@ -1,10 +1,23 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../l10n/app_localizations.dart';
+import '../presentation/category_icon_source.dart';
 import '../presentation/component_models.dart';
 import 'api_dtos.dart';
 
 // Synthetic IDs, dates and amounts. No persistence or financial calculations.
+const mockCustomIconId = '00000000-0000-4000-8000-000000000050';
+// Original synthetic house illustration; no imported category artwork.
+const mockHouseSvg =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">'
+    '<path d="M3 15L16 4l13 11v14H3Z" fill="#BA7DBD"/>'
+    '<path d="M12 18h8v11h-8Z" fill="#FFD05B"/></svg>';
+Uint8List get mockHouseBytes => Uint8List.fromList(utf8.encode(mockHouseSvg));
+
 const _time = '2026-10-09T15:00:00Z';
 const mockAccountId = '00000000-0000-4000-8000-000000000001';
 const _categoryId = '00000000-0000-4000-8000-000000000010';
@@ -17,6 +30,7 @@ Map<String, Object?> get _metadata => {
 
 Map<String, Object?> mockTransactionJson({
   String id = '00000000-0000-4000-8000-000000000100',
+  String occurredAt = _time,
   String title = '',
   String? note,
   String kind = 'expense',
@@ -32,7 +46,7 @@ Map<String, Object?> mockTransactionJson({
   'kind': kind,
   'amount': amount,
   'currency': currency,
-  'occurred_at': _time,
+  'occurred_at': occurredAt,
   'status': status,
   'title': title,
   'note': note,
@@ -63,24 +77,37 @@ AccountDto mockAccount(AppLocalizations l, {bool usd = false}) =>
       'archived_at': null,
     });
 
-CategoryDto mockCategory(AppLocalizations l, {bool income = false}) =>
-    CategoryDto.fromJson({
-      ..._metadata,
-      'id': _categoryId,
-      'name': income ? l.workCategory : l.foodCategory,
-      'kind': income ? 'income' : 'expense',
-      'parent_id': null,
-      'icon': income ? 'work' : 'restaurant',
-      'color': income ? '#59A849' : '#CA995A',
-      'is_system': false,
-      'system_key': null,
-    });
+CategoryDto mockCategory(
+  AppLocalizations l, {
+  bool income = false,
+  bool custom = false,
+}) => CategoryDto.fromJson({
+  ..._metadata,
+  'id': _categoryId,
+  'name': custom ? l.homeCategory : (income ? l.workCategory : l.foodCategory),
+  'kind': income ? 'income' : 'expense',
+  'parent_id': null,
+  'icon': custom
+      ? 'custom:$mockCustomIconId'
+      : (income ? 'work' : 'restaurant'),
+  'color': custom ? '#BA7DBD' : (income ? '#59A849' : '#CA995A'),
+  'is_system': false,
+  'system_key': null,
+});
 
-List<TransactionCardModel> mockCards(AppLocalizations l) {
+List<TransactionCardModel> mockCards(
+  AppLocalizations l, {
+  Uint8List? customSvgBytes,
+}) {
   final account = mockAccount(l);
   final usdAccount = mockAccount(l, usd: true);
   final food = mockCategory(l);
   final work = mockCategory(l, income: true);
+  final home = mockCategory(l, custom: true);
+  // Presentation only: this synthetic timestamp is 10:00 in America/Lima.
+  final localDate = DateTime.parse(_time).subtract(const Duration(hours: 5));
+  final dateLabel = DateFormat.yMMMMEEEEd(l.localeName).format(localDate);
+  final timeLabel = DateFormat.Hm(l.localeName).format(localDate);
   return [
     TransactionCardModel(
       transaction: TransactionDto.fromJson(
@@ -89,8 +116,11 @@ List<TransactionCardModel> mockCards(AppLocalizations l) {
       category: food,
       account: account,
       amountLabel: l.penAmount('48.50'),
-      subtitle: l.cardSubtitle(food.name, account.name),
-      icon: Icons.restaurant_rounded,
+      subtitle: food.name,
+      dateKey: '2026-10-09',
+      dateLabel: dateLabel,
+      timeLabel: timeLabel,
+      icon: const CategoryIconSource.base('restaurant'),
       categoryColor: const Color(0xFFCA995A),
       tone: AmountTone.expense,
       typeLabel: l.expense,
@@ -108,8 +138,11 @@ List<TransactionCardModel> mockCards(AppLocalizations l) {
       category: work,
       account: account,
       amountLabel: l.penAmount('250.00'),
-      subtitle: l.cardSubtitle(work.name, account.name),
-      icon: Icons.work_rounded,
+      subtitle: work.name,
+      dateKey: '2026-10-09',
+      dateLabel: dateLabel,
+      timeLabel: timeLabel,
+      icon: const CategoryIconSource.base('work'),
       categoryColor: const Color(0xFF59A849),
       tone: AmountTone.income,
       typeLabel: l.income,
@@ -126,8 +159,11 @@ List<TransactionCardModel> mockCards(AppLocalizations l) {
       category: null,
       account: account,
       amountLabel: l.penAmount('80.00'),
-      subtitle: account.name,
-      icon: Icons.handshake_outlined,
+      subtitle: l.sampleLoanParty,
+      dateKey: '2026-10-09',
+      dateLabel: dateLabel,
+      timeLabel: timeLabel,
+      icon: const CategoryIconSource.base('loan'),
       categoryColor: const Color(0xFF6577E0),
       tone: AmountTone.neutral,
       typeLabel: l.loanMovement,
@@ -136,6 +172,7 @@ List<TransactionCardModel> mockCards(AppLocalizations l) {
       transaction: TransactionDto.fromJson(
         mockTransactionJson(
           id: '00000000-0000-4000-8000-000000000103',
+          occurredAt: '2026-10-10T15:00:00Z',
           title: l.sampleUpcoming,
           kind: 'expense',
           status: 'scheduled',
@@ -144,19 +181,29 @@ List<TransactionCardModel> mockCards(AppLocalizations l) {
           accountId: usdAccount.id,
         ),
       ),
-      category: food,
+      category: home,
       account: usdAccount,
       amountLabel: l.usdAmount('12.00'),
-      subtitle: usdAccount.name,
-      icon: Icons.calendar_month_outlined,
-      categoryColor: const Color(0xFF58A4C2),
+      subtitle: home.name,
+      dateKey: '2026-10-10',
+      dateLabel: DateFormat.yMMMMEEEEd(l.localeName)
+          .format(localDate.add(const Duration(days: 1))),
+      timeLabel: timeLabel,
+      icon: CategoryIconSource.resolve(
+        home.icon,
+        customIcons: {mockCustomIconId: customSvgBytes ?? mockHouseBytes},
+      ),
+      categoryColor: const Color(0xFFBA7DBD),
       tone: AmountTone.upcoming,
       typeLabel: l.scheduled,
     ),
   ];
 }
 
-List<CategorySlice> mockSlices(AppLocalizations l) => [
+List<CategorySlice> mockSlices(
+  AppLocalizations l, {
+  Uint8List? customSvgBytes,
+}) => [
   CategorySlice(
     id: 'food',
     label: l.foodCategory,
@@ -164,7 +211,7 @@ List<CategorySlice> mockSlices(AppLocalizations l) => [
     percentLabel: l.percent('50'),
     amountLabel: l.penAmount('150.00'),
     color: const Color(0xFFCA995A),
-    icon: Icons.restaurant_rounded,
+    icon: const CategoryIconSource.base('restaurant'),
   ),
   CategorySlice(
     id: 'transport',
@@ -173,7 +220,7 @@ List<CategorySlice> mockSlices(AppLocalizations l) => [
     percentLabel: l.percent('30'),
     amountLabel: l.penAmount('90.00'),
     color: const Color(0xFF5F85C2),
-    icon: Icons.directions_bus_rounded,
+    icon: const CategoryIconSource.base('transport'),
   ),
   CategorySlice(
     id: 'home',
@@ -182,6 +229,9 @@ List<CategorySlice> mockSlices(AppLocalizations l) => [
     percentLabel: l.percent('20'),
     amountLabel: l.penAmount('60.00'),
     color: const Color(0xFFBA7DBD),
-    icon: Icons.home_rounded,
+    icon: CategoryIconSource.resolve(
+      'custom:$mockCustomIconId',
+      customIcons: {mockCustomIconId: customSvgBytes ?? mockHouseBytes},
+    ),
   ),
 ];

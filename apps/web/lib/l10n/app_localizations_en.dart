@@ -142,4 +142,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themeBackground => 'Background';
+
+  @override
+  String get cardSettings => 'Card details';
+
+  @override
+  String get showDate => 'Date groups';
+
+  @override
+  String get showTime => 'Time';
+
+  @override
+  String get showNote => 'Note';
+
+  @override
+  String get showTags => 'Tags';
+
+  @override
+  String get showAccount => 'Account';
+
+  @override
+  String get showActions => 'Actions';
+
+  @override
+  String get editTransaction => 'Edit';
+
+  @override
+  String get duplicateTransaction => 'Duplicate';
+
+  @override
+  String get deleteTransaction => 'Delete';
+
+  @override
+  String get tintCategoryIcons => 'Tint custom icons';
+
+  @override
+  String actionPreview(String action) {
+    return 'Preview: $action';
+  }
+
+  @override
+  String get sampleLoanParty => 'Example person';
 }

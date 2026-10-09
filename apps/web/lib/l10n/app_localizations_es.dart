@@ -142,4 +142,45 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get themeBackground => 'Fondo';
+
+  @override
+  String get cardSettings => 'Detalles de la tarjeta';
+
+  @override
+  String get showDate => 'Fecha por día';
+
+  @override
+  String get showTime => 'Hora';
+
+  @override
+  String get showNote => 'Nota';
+
+  @override
+  String get showTags => 'Etiquetas';
+
+  @override
+  String get showAccount => 'Cuenta';
+
+  @override
+  String get showActions => 'Acciones';
+
+  @override
+  String get editTransaction => 'Editar';
+
+  @override
+  String get duplicateTransaction => 'Duplicar';
+
+  @override
+  String get deleteTransaction => 'Borrar';
+
+  @override
+  String get tintCategoryIcons => 'Teñir íconos propios';
+
+  @override
+  String actionPreview(String action) {
+    return 'Vista de prueba: $action';
+  }
+
+  @override
+  String get sampleLoanParty => 'Persona de prueba';
 }

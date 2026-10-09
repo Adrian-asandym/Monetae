@@ -72,5 +72,25 @@
         "type": "String"
       }
     }
-  }
+  },
+  "cardSettings": "Card details",
+  "showDate": "Date groups",
+  "showTime": "Time",
+  "showNote": "Note",
+  "showTags": "Tags",
+  "showAccount": "Account",
+  "showActions": "Actions",
+  "editTransaction": "Edit",
+  "duplicateTransaction": "Duplicate",
+  "deleteTransaction": "Delete",
+  "tintCategoryIcons": "Tint custom icons",
+  "actionPreview": "Preview: {action}",
+  "@actionPreview": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "sampleLoanParty": "Example person"
 }

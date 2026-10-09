@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/api_dtos.dart';
+import 'category_icon_source.dart';
 
 enum AmountTone { income, expense, neutral, upcoming }
 
@@ -14,6 +15,9 @@ class TransactionCardModel {
     required this.account,
     required this.amountLabel,
     required this.subtitle,
+    required this.dateKey,
+    required this.dateLabel,
+    required this.timeLabel,
     required this.icon,
     required this.categoryColor,
     required this.tone,
@@ -28,7 +32,10 @@ class TransactionCardModel {
   final String amountLabel;
   final String? secondaryAmountLabel;
   final String subtitle;
-  final IconData icon;
+  final String dateKey;
+  final String dateLabel;
+  final String timeLabel;
+  final CategoryIconSource icon;
   final Color categoryColor;
   final AmountTone tone;
   final String typeLabel;
@@ -54,5 +61,5 @@ class CategorySlice {
   final String percentLabel;
   final String amountLabel;
   final Color color;
-  final IconData icon;
+  final CategoryIconSource icon;
 }
