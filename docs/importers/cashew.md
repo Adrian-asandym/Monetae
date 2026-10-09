@@ -25,7 +25,8 @@ Si falla un paso, se revierte todo el bloque financiero y se conserva un reporte
 con `outcome=failed`, sin parámetros SQL ni mensajes internos privados.
 
 Las opciones son `--file`, `--user-email`, `--dry-run`, `--report-file`,
-`--fx-rate MONEDA=TASA` (repetible) y `--loan-fx-rates ARCHIVO.json`.
+`--fx-rate MONEDA=TASA` (repetible), `--loan-fx-rates ARCHIVO.json` y
+`--allow-balance-diff`.
 Las tasas de préstamos se pasan al paso reservado a T-402; no las utiliza el
 núcleo. Su formato es `{"<transaction_pk>": "3.800000"}`. Las tasas deben ser
 positivas, finitas y no redondear a cero. El reporte no puede sobrescribir ninguna
@@ -33,7 +34,8 @@ entrada ni escribirse en `reference/backups`.
 
 Códigos de salida: **0** correcto; **2** argumentos, usuario inexistente o ruta
 prohibida; **3** SQLite inválido, inaccesible o sin tablas mínimas; **4** error de
-importación o de escritura del reporte. Los errores se muestran en español y
+importación o de escritura del reporte; **5** saldos con diferencia sin explicar
+sin `--allow-balance-diff` (también en simulación). Los errores se muestran en español y
 sin traza. La salida estándar contiene únicamente conteos, códigos y saldos:
 no contiene nombres de cuentas, etiquetas, títulos, notas ni payloads de revisión.
 El detalle se conserva en PostgreSQL y, si se pide, en `--report-file`.
@@ -123,8 +125,9 @@ existente y su nueva pata se inserta como ordinaria, con revisión.
 
 Los pasos se ejecutan en orden: cuentas → categorías → etiquetas → transacciones
 ordinarias/programadas → transferencias → `loans.run(context)` →
-`subscriptions.run(context)`. Ambos últimos son stubs de T-401: cuentan filas
-diferidas y sus importes pagados por cuenta, sin insertar dinero. Los presupuestos,
+`subscriptions.run(context)`. T-403 importa las suscripciones y recurrentes;
+el stub de préstamos de T-401 cuenta sus filas e importes pagados como diferidos
+hasta integrar T-402. Los presupuestos,
 límites, reglas de categorización, plantillas de escaneo, configuración y metas
 se cuentan como pendientes de Fase 6; `delete_logs` no genera entidades.
 
@@ -139,8 +142,8 @@ sección de `steps` y pueden añadir conteos y revisiones al reporte compartido.
 
 `transaction_tag_map(snapshot)` entrega el mapa completo `transaction_pk →
 PK de etiquetas`. Los tres vínculos del fixture apuntan a las filas G recurrentes:
-en T-401 se conservan en ese mapa y se cuentan diferidos; **T-403** creará las
-filas `transaction_tags`. No se crean transacciones G anticipadamente.
+T-403 crea los tres vínculos sobre las transacciones históricas, incluida la
+etiqueta archivada. Las nuevas programadas no copian esas etiquetas históricas.
 
 `run_import` no hace commit: el caller confirma la transacción exterior.
 Debe confirmar también tras `ImportExecutionError` si quiere conservar su
@@ -155,3 +158,98 @@ v46) y omite columnas desconocidas. Convierte inmediatamente SQLite REAL a
 en segundos, milisegundos (`>10**11`) y microsegundos (`>=10**14`, conforme a
 ARCHITECTURE §6), con aviso de escala. La marca de datos iniciales usa fechas
 inclusivas agosto–octubre de 2025 en `America/Lima`.
+
+
+## Suscripciones y recurrentes (T-403)
+
+`type=1` y monto negativo crea una suscripción de gasto y su regla; `type=2`
+crea solo una regla, de ingreso o gasto según el signo. Se conservan cuenta,
+moneda, categoría (subcategoría si existe), título y nota. La suscripción guarda
+el monto absoluto y la regla/transacciones su signo original.
+
+El calendario usa `reoccurrence`: 1 diaria, 2 semanal, 3 mensual, 4 anual.
+`period_length` es el intervalo de 1 a 366. Personalizada (0), nula, desconocida
+u intervalo inválido conserva la fila como transacción ordinaria y genera
+`unsupported_recurrence`, sin regla ni suscripción. Monto cero, título vacío,
+suscripción con importe positivo o calendario fuera del rango de fechas se
+omite con `invalid_recurring_transaction`; otras filas continúan procesándose.
+Si esto deja dinero sin explicar, se aplica el criterio de cuadre descrito abajo.
+
+Se interpreta la fecha de cada fila válida como la **última ocurrencia registrada**:
+se conserva una transacción histórica `posted`, con su identidad original,
+fecha y etiquetas, vinculada a la regla. Esta interpretación de v48 sigue siendo
+una hipótesis: el reporte añade una sola advertencia `recurrence_anchor_assumed:N`
+con el total de filas interpretadas; no genera un ítem de revisión por fila.
+
+El ancla es la fecha de la fila en `America/Lima`. `next_after` del dominio
+calcula la primera fecha del calendario **mayor o igual que hoy** en Lima,
+con reloj inyectable en `subscriptions.run(context, clock=...)`. Se preserva
+el día del ancla sin deriva por meses cortos (31 → 28/29 → 31, y 29 de febrero).
+Se materializa una única `scheduled`, a las 00:00 de Lima (05:00 UTC), con
+monto, cuenta, categoría, moneda y tasa provisional de la regla. La tasa se
+resuelve antes de insertar, por las reglas de T-401; las programadas llevan
+fuente `manual` igual que las creadas por la API y deben confirmarse al publicar.
+
+`end_date` limita el calendario por fecha local inclusiva. Si ya pasó, la regla
+queda inactiva y la suscripción queda `archived`, con `archived_at=end_date`
+y motivo «Terminada en Cashew», conservando el historial y sin programada.
+Si la próxima fecha excede un fin que aún no pasó, tampoco se materializa.
+Las suscripciones importadas usan el archivado/reactivación de la API de Fase 3,
+que conserva el historial y cancela todas las programadas pendientes al archivar.
+
+Regla, suscripción e histórica usan `cashew:sqlite:<pk>` en sus respectivas
+tablas; la nueva programada usa `cashew:sqlite:<pk>:scheduled`. Reimportar omite
+identidades existentes incluso borradas lógicamente, sin cambiar las fechas,
+montos, vínculos o estados y sin regenerar cobros cancelados. Una transacción
+histórica previamente importada sin regla se conserva sin editar y se registra
+`recurrence_already_imported` para revisión.
+
+`steps.subscriptions` incluye `subscriptions_created`, `recurring_rules_created`,
+`already_imported`, `archived` (reglas terminadas, con o sin suscripción),
+`skipped`, `unsupported_recurrence` y `scheduled_created`. `counts` contiene
+las entidades `subscriptions` y `recurring_rules`; las históricas y programadas
+nuevas también cuentan en `counts.transactions`.
+
+## Cuadre final y código 5
+
+Después de todos los pasos se exige, **para cada cuenta**:
+
+```text
+unexplained = cashew_balance − monetae_balance − deferred_amount = 0.00
+```
+
+Solo sigue diferido lo que un paso realmente dejó pendiente: el stub de
+préstamos lo explica hasta integrar T-402; las suscripciones importadas no
+aportan diferido. Una fila omitida pagada no se compensa artificialmente.
+
+Si alguna cuenta no cuadra, el reporte incluye `balance_mismatch=true`, el
+aviso `balance_mismatch` y las diferencias por cuenta. Por defecto se **revierte
+el bloque financiero completo**, conservando `import_runs`, las revisiones,
+los conteos y saldos proyectados para auditoría; `outcome=balance_mismatch` y
+el comando devuelve **5**. La salida de error indica: «Los saldos no cuadran;
+no se importó nada. Revise el reporte o use --allow-balance-diff.»
+
+`--allow-balance-diff` permite confirmar lo financiero y devolver **0**,
+con `outcome=applied_with_balance_diff`, la bandera registrada en el reporte
+y la diferencia visible en la salida. `--dry-run` siempre revierte: también
+sale con 5 si no cuadra, o 0 y `outcome=dry_run_with_balance_diff` si se permite.
+El reporte marca `financial_rolled_back` cuando se revierte por simulación o
+cuadre; los conteos `created` en esos casos representan inserciones proyectadas.
+Una edición manual previa puede causar descuadre: nunca se sobrescribe.
+
+Para permitir explícitamente una diferencia tras revisar la simulación:
+
+```bash
+uv run python -m monetae.cli import-cashew \
+  --file /tmp/cashew-synthetic.sqlite \
+  --user-email import@example.test \
+  --fx-rate USD=3.800000 \
+  --allow-balance-diff --report-file /tmp/cashew-report.json
+```
+
+`pending_phase_6` y `steps.phase_6` listan los conteos de presupuestos (`budgets`),
+límites por categoría (`category_budget_limits`), reglas de título
+(`associated_titles`), plantillas del escáner (`scanner_templates`) y metas
+(`goals`, solo objetivos de tipo 0). No se importan todavía; tampoco se añaden
+rutas `/imports` ni de subida de archivos. La salida estándar conserva únicamente
+códigos, conteos, banderas de cuadre e importes, sin textos privados del respaldo.
