@@ -12,7 +12,7 @@
 | **`origin`** | `origin/main` = `origin/master-dev` = **`0e74c67`** (Fase 3 + contrato 0.3.0 + ADR-008 y tareas). **No incluye la Fase 4.** |
 | **`main`** | `0e74c67`. |
 | **`master-dev`** | **la cabeza actual (`git log -1`)**, con toda la Fase 4 (migración `0007`, importador de Cashew y su CLI) y sin publicar. Va por delante de `main` con código, pruebas y documentación. |
-| **Gate abierto** | `gate_c0b4a8c0ef09` *(ver `orca orchestration gate-list`)*: merge de la Fase 4 a `main` y push. **Pendiente de Adrian.** |
+| **Gate abierto** | `gate_1e81cf0fd994`: merge de la Fase 4 a `main` y push. **Pendiente de Adrian.** |
 | **SPEC / ARCHITECTURE / contrato** | SPEC v0.3 · `docs/ARCHITECTURE.md` v0.3 · `docs/api/openapi.json` **0.3.0** (la Fase 4 no cambió el contrato HTTP: el importador es solo línea de comandos). |
 
 ## 2. Fase actual
