@@ -408,3 +408,102 @@ preferencias. La prueba ejecuta `down -v` del proyecto propio y elimina `.env`,
 cookies y respuestas temporales incluso al fallar. Sin datos reales, sin acceder
 a respaldos ni modificar servicios o contrato. README incluye comandos locales,
 la ruta demo y la prueba reproducible. No quedan decisiones pendientes en T-503.
+
+## T-504
+
+Fecha: 2026-10-09. Rama: `codex/T-504-ui-income-expense-charts`.
+Contrato **0.4.0**, datos exclusivamente sintéticos. No se accedió ni se listó
+`reference/backups/`, ni se tocó la pila `monetae-review`.
+
+### Componentes y diferencias frente a Cashew
+
+| Componente de referencia | Adaptación y diferencia deliberada |
+|---|---|
+| `homePageAllSpendingSummary` + `transactionsAmountBox` | Dos cajas, gasto a la izquierda e ingreso a la derecha; radio 15, padding 15/17, títulos 18 e importes 21, mismos colores financieros por tema. Reciben un `CashFlowRow` mensual de la API. El desglose original por moneda sustituye el contador de transacciones, que el contrato no proporciona. Se omite la animación numérica para conservar las cadenas exactas. |
+| `lineGraph` + `homePageLineGraph` | Trazo 3, extremos redondos, puntos ocultos salvo una fila única, cuadrícula discontinua `[2,8]`, relleno degradado alfa 100→1, transición 2000 ms `fastLinearToSlowEaseIn`, tooltip redondeado 8. Evolución **por periodo**, dos series ingreso/gasto; no se calcula el acumulado que usa Cashew por defecto. Se conservan los ceros del servidor en vez de eliminar entradas vacías. Eje vertical con cero y máximo, ambos etiquetas decimales exactas; no se inventan importes intermedios con floats. |
+| `incomeExpenseTabSelector` / `slidingSelectorIncomeExpense` | Control gasto/ingreso de 45 px, radio 15, fondos de acento .1/.25 y flechas financieras de 24 px. Selección controlada y accesible por teclado; `InkWell` y `AnimatedContainer` sustituyen los controladores/globales y la opción «todos». Alimenta el circular por `CategoryReportRow.kind`; al cambiar se limpia la categoría seleccionada. |
+| `homePagePieChart` + circular de T-501 | Mantiene los sectores, discos y badges de T-501; añade leyenda con íconos Material, porcentajes y barras de progreso redondeadas. Los pesos/porcentajes son solo geometría normalizada; importes y desgloses se muestran desde las cadenas de `ReportTotal`. No convierte ni suma dinero. |
+| `barGraph` | No se usa en esta vista de inicio: el original recibe un presupuesto y sus rangos históricos. No se ha portado ni añadido un gráfico ajeno a esta composición; corresponde a T-507. |
+| `homePageHeatmap` | Opcional, diferido. No condiciona esta entrega. |
+| `transactionEntryTag` | Etiqueta de cuenta con radio 6, padding 4.5/1.05, texto 11.5 y fondo con alfa .25, usando `Account.color`. Color nulo/inválido: hash explícito del id, estable entre procesos y plataformas, sobre seis tonos de `colors.dart`. Una paleta finita puede repetir tonos; no se usa el hash variable de Dart. |
+
+Las fuentes, los íconos del catálogo y las diferencias geométricas del circular
+siguen lo registrado en T-501/T-502. Cada nuevo archivo derivado incluye origen,
+autoría GPL-3.0 y modificaciones; `NOTICE` recoge la procedencia. Sin dependencias
+nuevas y sin PNG de categorías de Cashew. Los goldens fijan la adaptación;
+la aceptación visual frente al original corresponde a Adrian.
+
+### Cliente, pantalla y símbolos
+
+Los DTO de los seis esquemas de reportes se generan desde OpenAPI con el
+script existente. `ApiClient.cashFlow` y `categoryReport` aceptan filtros,
+periodo, límite y cursor; los null se omiten para respetar los defaults de T-506.
+`ReportFeed` recorre todas las páginas y detecta cursores repetidos.
+
+Inicio es ahora la pantalla tras restaurar la sesión. Usa el mes natural
+seleccionado: petición diaria para la línea, mensual para **un único total**
+y categories sin `period` para el circular del rango entero. Así no suma los
+cubos diarios en Flutter. El servidor conserva sus reglas de zona horaria,
+periodos inclusivos y orden; el mes inicial de presentación usa America/Lima,
+como el resto de la UI V1. Hay navegación por meses y acceso a transacciones,
+demo, recarga y cierre de sesión. `/#/demo/home` muestra la misma composición
+con fixtures sintéticas y cambio de tema; `/#/demo` conserva el spike anterior.
+
+404/501, incluso sin JSON Problem, muestran vacío i18n; otros errores tienen
+reintento. Un 401 elimina las rutas de la sesión anterior y vuelve al acceso,
+también desde la lista de transacciones abierta. La lista escucha las
+preferencias confirmadas del perfil al vivir ahora en una ruta secundaria.
+
+`unconverted_count > 0` en resumen, flujo o categorías muestra un aviso discreto
+es/en. Los originales de `by_currency` se conservan visibles, incluso si una
+categoría tiene total convertido cero y por ello no tiene sector.
+
+Un único formateador usa símbolos/patrones/separadores de **intl** con el locale
+es/en; agrupa las cadenas sin pasarlas por double y sin redondearlas. Por ejemplo,
+en `es`: `48,50 S/`, `48,50 US$`, `48,50 €` (espacio no separable); en `en`, el
+símbolo va delante. La familia de símbolos compartidos se califica siempre con
+formas específicas (`US$`, `CA$`, `A$`, `JP¥`, `CN¥`, etc.), para que dos monedas
+no se confundan ni cambie la etiqueta al añadir otra. El catálogo de símbolos
+simples de intl no distingue esos casos: se complementa con calificadores
+convencionales explícitos, también para coronas/libras/francos. Una moneda sin
+símbolo reconocido usa `¤`, nunca el código ISO. Se eliminan los formateadores
+ARB que permitían mostrar el código y se actualiza también el mock anterior.
+No se añade ninguna etiqueta de tipo de moneda a tarjetas ni gráficas.
+
+### Verificación y estimación pendiente
+
+Flutter 3.47.6 / Dart 3.13.5. Verificación final: `flutter pub get`, `dart analyze`
+sin incidencias, `flutter test` con **72 pruebas verdes**, **36 goldens**
+comparados sin actualizar referencias, y `flutter build web --release` correcto.
+El build conserva el aviso previo de fuente Cupertino procedente de fl_chart;
+MaterialIcons está empaquetada, y el dry-run Wasm compila.
+
+Los 14 goldens nuevos cubren resumen, líneas con/sin periodos vacíos,
+selector+circular de ambos tipos, inicio demo completo y tres tarjetas
+PEN/USD/EUR con cuentas de distinto color, en claro y oscuro. Las referencias
+anteriores de tarjetas/circular se actualizan por la localización de importes y
+la etiqueta coloreada; el tema y el acceso permanecen iguales. Capturas
+inspeccionadas. Pruebas MockClient: parámetros de ambos endpoints, desgloses y
+`ReportTotal` exactos, paginación, defaults omitidos, aviso sin tasa, vacío
+404/501 en ambos endpoints, reintento 500, cambio de mes, cierre de sesión fallido y 401. También se
+comprueban importes mayores que la precisión de double, fallback de colores,
+selección ingreso/gasto y anchura de 390 px. Búsqueda de acoplamientos prohibidos
+en `lib` y `git diff --check`: limpios; `build/` queda ignorado.
+
+Estimación actualizada de lo que falta de Fase 5, separando desacople de
+ensamblado funcional (rangos orientativos, sin comprometer tareas del coordinador):
+
+| Trabajo pendiente | Tareas de 1–2 h |
+|---|---:|
+| Presupuestos y metas con progreso/historial de barras (T-507) | 2–3 |
+| Resto de widgets de inicio, orden/preferencias y animaciones pertinentes | 2–3 |
+| Formularios y navegación de transacciones/cuentas/categorías | 3–4 |
+| Pantallas de préstamos y suscripciones sobre la API existente | 3–4 |
+| Revisión de fidelidad con Adrian, responsive y recorrido completo | 2–3 |
+| **Total restante de UI Fase 5** | **12–17** |
+
+Rango aproximado **18–30 h** de implementación/revisión, incertidumbre media;
+solo desacople visual pendiente **4–6 tareas / 6–10 h**. No incluye los endpoints
+pendientes de Fase 6, API de SVG, heatmap opcional ni nuevas funciones de negocio.
+T-506 se integra aparte; esta entrega ya soporta tanto sus respuestas 200 como
+su ausencia temporal. No quedan decisiones de diseño bloqueantes en T-504.
