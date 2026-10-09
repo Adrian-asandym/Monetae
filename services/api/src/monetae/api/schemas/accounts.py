@@ -54,6 +54,7 @@ class Account(StrictModel):
     updated_at: datetime
     deleted_at: datetime | None
     balance: MoneyAmount
+    transaction_count: int = Field(ge=0, json_schema_extra={"readOnly": True})
     archived_at: datetime | None
 
 

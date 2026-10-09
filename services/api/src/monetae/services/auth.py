@@ -3,6 +3,7 @@
 import base64
 import binascii
 import hashlib
+import json
 import secrets
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
@@ -14,9 +15,11 @@ from argon2.exceptions import VerificationError
 from sqlalchemy import delete, func, select, text, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session as DbSession
+from sqlalchemy.orm import object_session
 
+from monetae.api.schemas.auth import UserPreferences
 from monetae.config import Settings
-from monetae.db.models import Category, LoginAttempt, Session, User
+from monetae.db.models import Account, Category, LoginAttempt, Session, User
 from monetae.domain.passwords import (
     EMAIL_FAILURE_LIMIT,
     IP_FAILURE_LIMIT,
@@ -300,7 +303,43 @@ class AuthService:
             raise AuthError(404, "not_found", "Session not found.")
         return len(rows)
 
+    @staticmethod
+    def preferences_for(user: User) -> UserPreferences:
+        # jsonb is a JSON boundary: UUID strings are validated in JSON mode.
+        preferences = UserPreferences.model_validate_json(json.dumps(user.preferences))
+        if preferences.default_account_id is not None:
+            db = object_session(user)
+            if db is None:
+                raise ValueError("Reading account preferences requires an attached user.")
+            if not AuthService.active_account(db, user.id, preferences.default_account_id):
+                preferences.default_account_id = None
+        return preferences
+
+    @staticmethod
+    def active_account(db: DbSession, user_id: UUID, account_id: UUID) -> bool:
+        return (
+            db.scalar(
+                select(Account.id).where(
+                    Account.id == account_id,
+                    Account.user_id == user_id,
+                    Account.deleted_at.is_(None),
+                    Account.archived_at.is_(None),
+                )
+            )
+            is not None
+        )
+
     def update_user(self, user: User, changes: dict[str, object]) -> User:
+        if "preferences" in changes:
+            preferences = UserPreferences.model_validate(changes["preferences"])
+            if preferences.default_account_id is not None and not self.active_account(
+                self.db, user.id, preferences.default_account_id
+            ):
+                raise AuthError(422, "account_not_found", "The default account was not found.")
+            changes = {
+                **changes,
+                "preferences": preferences.model_dump(mode="json", exclude_unset=True),
+            }
         if "base_currency" in changes:
             from monetae.db.models import Transaction
 

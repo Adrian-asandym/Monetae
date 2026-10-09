@@ -463,13 +463,18 @@ class CatalogService:
             query = query.where(Transaction.deleted_at.is_(None))
         return self.db.scalar(query.limit(1)) is not None
 
-    def balances(self, user_id: UUID, rows: Sequence[Account]) -> dict[UUID, Decimal]:
+    def account_statistics(
+        self, user_id: UUID, rows: Sequence[Account]
+    ) -> dict[UUID, tuple[Decimal, int]]:
         if not rows:
             return {}
-        # Una sola suma agrupada para todas las cuentas de la página.
-        totals: dict[UUID, Decimal] = dict(
-            self.db.execute(
-                select(Transaction.account_id, func.sum(Transaction.amount))
+        # One aggregate for balances and posted transaction counts across the page.
+        totals: dict[UUID, tuple[Decimal, int]] = {
+            account_id: (amount, count)
+            for account_id, amount, count in self.db.execute(
+                select(
+                    Transaction.account_id, func.sum(Transaction.amount), func.count(Transaction.id)
+                )
                 .where(
                     Transaction.user_id == user_id,
                     Transaction.account_id.in_([row.id for row in rows]),
@@ -478,5 +483,11 @@ class CatalogService:
                 )
                 .group_by(Transaction.account_id)
             ).all()
-        )
-        return {row.id: row.initial_balance + totals.get(row.id, Decimal(0)) for row in rows}
+        }
+        return {
+            row.id: (
+                row.initial_balance + totals.get(row.id, (Decimal(0), 0))[0],
+                totals.get(row.id, (Decimal(0), 0))[1],
+            )
+            for row in rows
+        }

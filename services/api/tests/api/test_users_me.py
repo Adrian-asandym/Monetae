@@ -21,7 +21,10 @@ def test_profile_isolation_and_updates(client: TestClient, application: FastAPI)
     login(client)
     first = client.get("/api/v1/users/me").json()
     assert first["email"] == "first@example.test" and first["report_currency"] == "PEN"
-    assert first["preferences"] == {"transaction_card": DEFAULT_CARD} and not first["locked"]
+    assert (
+        first["preferences"] == {"transaction_card": DEFAULT_CARD, "default_account_id": None}
+        and not first["locked"]
+    )
     assert "password_hash" not in first and "user_id" not in first
     changes = {
         "locale": "en",
@@ -38,7 +41,9 @@ def test_profile_isolation_and_updates(client: TestClient, application: FastAPI)
     updated = client.patch("/api/v1/users/me", json=changes, headers=csrf_headers(client))
     assert updated.status_code == 200
     for key, value in changes.items():
-        assert updated.json()[key] == value
+        assert updated.json()[key] == (
+            value | {"default_account_id": None} if isinstance(value, dict) else value
+        )
     assert (
         client.patch(
             "/api/v1/users/me", json={"lock_after_minutes": None}, headers=csrf_headers(client)
@@ -49,7 +54,10 @@ def test_profile_isolation_and_updates(client: TestClient, application: FastAPI)
         login(other, "second@example.test")
         second = other.get("/api/v1/users/me").json()
         assert second["id"] != first["id"]
-        assert second["preferences"] == {"transaction_card": DEFAULT_CARD}
+        assert second["preferences"] == {
+            "transaction_card": DEFAULT_CARD,
+            "default_account_id": None,
+        }
         assert second["email"] == "second@example.test"
     result = client.patch(
         "/api/v1/users/me", json={"base_currency": "USD"}, headers=csrf_headers(client)
@@ -70,10 +78,12 @@ def test_legacy_preferences_include_card_defaults(
     assert response.json()["preferences"] == {
         "theme": "dark",
         "home_widgets": ["balance"],
+        "default_account_id": None,
         "transaction_card": DEFAULT_CARD,
     }
     db_session.refresh(first)
     assert "transaction_card" not in first.preferences
+    assert "default_account_id" not in first.preferences
 
 
 def test_card_preferences_replace_persist_and_isolate(
@@ -94,7 +104,10 @@ def test_card_preferences_replace_persist_and_isolate(
         json={"preferences": {"transaction_card": {"show_time": True, "show_actions": True}}},
         headers=csrf_headers(client),
     )
-    expected = {"transaction_card": {**DEFAULT_CARD, "show_time": True, "show_actions": True}}
+    expected = {
+        "default_account_id": None,
+        "transaction_card": {**DEFAULT_CARD, "show_time": True, "show_actions": True},
+    }
     assert response.status_code == 200
     assert response.json()["preferences"] == expected
     db_session.refresh(first)
@@ -103,7 +116,8 @@ def test_card_preferences_replace_persist_and_isolate(
     with TestClient(application, base_url="https://testserver") as other:
         login(other, "second@example.test")
         assert other.get("/api/v1/users/me").json()["preferences"] == {
-            "transaction_card": DEFAULT_CARD
+            "transaction_card": DEFAULT_CARD,
+            "default_account_id": None,
         }
     db_session.refresh(second)
     assert second.preferences == {}
@@ -114,9 +128,12 @@ def test_card_preferences_replace_persist_and_isolate(
     response = client.patch(
         "/api/v1/users/me", json={"preferences": {}}, headers=csrf_headers(client)
     )
-    assert response.json()["preferences"] == {"transaction_card": DEFAULT_CARD}
+    assert response.json()["preferences"] == {
+        "transaction_card": DEFAULT_CARD,
+        "default_account_id": None,
+    }
     db_session.refresh(first)
-    assert first.preferences == {"transaction_card": DEFAULT_CARD}
+    assert first.preferences == {"transaction_card": DEFAULT_CARD, "default_account_id": None}
 
 
 @pytest.mark.parametrize("field", DEFAULT_CARD)
