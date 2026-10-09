@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 import 'api/api_client.dart';
 import 'pages/login_page.dart';
+import 'pages/home_page.dart';
 import 'pages/transactions_page.dart';
 import 'presentation/transaction_presenter.dart';
+import 'presentation/currency_format.dart';
 import 'session/session_controller.dart';
 import 'data/mock_data.dart';
 import 'data/api_dtos.dart';
@@ -18,8 +20,11 @@ import 'widgets/fade_in.dart';
 import 'widgets/theme_preview.dart';
 import 'widgets/transaction_card.dart';
 
-void main() =>
-    runApp(Uri.base.fragment == '/demo' ? const DemoApp() : const MonetaeApp());
+void main() => runApp(switch (Uri.base.fragment) {
+  '/demo' => const DemoApp(),
+  '/demo/home' => const DemoApp(showHome: true),
+  _ => const MonetaeApp(),
+});
 
 class MonetaeApp extends StatefulWidget {
   const MonetaeApp({super.key, this.api});
@@ -62,6 +67,7 @@ class _MonetaeAppState extends State<MonetaeApp> {
       _ => ThemeMode.system,
     };
     return MaterialApp(
+      key: ValueKey(user?.id),
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       debugShowCheckedModeBanner: false,
       locale: Locale(user?.locale.name ?? 'es'),
@@ -92,10 +98,20 @@ class _MonetaeAppState extends State<MonetaeApp> {
               error: _session.error,
             );
           }
-          return TransactionsPage(
-            key: ValueKey(user.id),
-            session: _session,
+          return HomePage(
+            api: _api,
+            reportCurrency: user.reportCurrency,
+            sessionError: _session.error,
+            onLogout: _session.busy ? null : _session.logout,
             onDemo: () => Navigator.of(context).pushNamed('/demo'),
+            onTransactions: () => Navigator.of(context).push<void>(
+              MaterialPageRoute(
+                builder: (_) => TransactionsPage(
+                  session: _session,
+                  onDemo: () => Navigator.of(context).pushNamed('/demo'),
+                ),
+              ),
+            ),
           );
         },
       ),
@@ -104,7 +120,8 @@ class _MonetaeAppState extends State<MonetaeApp> {
 }
 
 class DemoApp extends StatefulWidget {
-  const DemoApp({super.key});
+  const DemoApp({super.key, this.showHome = false});
+  final bool showHome;
   @override
   State<DemoApp> createState() => _DemoAppState();
 }
@@ -123,14 +140,16 @@ class _DemoAppState extends State<DemoApp> {
     theme: monetaeTheme(brightness: Brightness.light, accent: _accent),
     darkTheme: monetaeTheme(brightness: Brightness.dark, accent: _accent),
     themeMode: _dark ? ThemeMode.dark : ThemeMode.light,
-    home: SpikePage(
-      dark: _dark,
-      accent: _accent,
-      locale: _locale,
-      onDarkChanged: (value) => setState(() => _dark = value),
-      onLocaleChanged: (value) => setState(() => _locale = value),
-      onAccentChanged: (value) => setState(() => _accent = value),
-    ),
+    home: widget.showHome
+        ? HomePage(onThemeToggle: () => setState(() => _dark = !_dark))
+        : SpikePage(
+            dark: _dark,
+            accent: _accent,
+            locale: _locale,
+            onDarkChanged: (value) => setState(() => _dark = value),
+            onLocaleChanged: (value) => setState(() => _locale = value),
+            onAccentChanged: (value) => setState(() => _accent = value),
+          ),
   );
 }
 
@@ -206,7 +225,7 @@ class _SpikePageState extends State<SpikePage> {
           const Divider(),
           ListTile(
             title: Text(l.chartTotal),
-            trailing: Text(l.penAmount('300.00')),
+            trailing: Text(formatCurrency('300.00', 'PEN', l.localeName)),
           ),
         ],
       ),
@@ -267,6 +286,13 @@ class _SpikePageState extends State<SpikePage> {
                     ],
                   ),
                   const SizedBox(height: 20),
+                  OutlinedButton.icon(
+                    onPressed: () => Navigator.of(context).push<void>(
+                      MaterialPageRoute(builder: (_) => const HomePage()),
+                    ),
+                    icon: const Icon(Icons.home_outlined),
+                    label: Text(l.home),
+                  ),
                   Wrap(
                     spacing: 20,
                     runSpacing: 12,

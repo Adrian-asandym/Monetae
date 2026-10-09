@@ -153,3 +153,33 @@ Para un cambio visual deliberado y revisado: `flutter test --update-goldens`.
 Procedencia y modificaciones en NOTICE; licencia original íntegra en LICENSE.
 Informe y diferencias frente a Cashew:
 `../../docs/cashew-analysis/05-ui-spike-results.md`, sección «T-502».
+
+### Gráficas de inicio (T-504)
+
+Tras restaurar la sesión se abre Inicio: resumen del mes, evolución diaria y
+categorías con selector gasto/ingreso. La barra permite abrir las transacciones,
+recargar, recorrer meses, cerrar sesión y acceder a la demo. Los endpoints de
+reportes aún no integrados (404/501) presentan un vacío traducido. Un 401 elimina
+las rutas de la sesión anterior y vuelve al acceso.
+
+`/#/demo/home` abre directamente Inicio con datos sintéticos y permite alternar
+el tema; `/#/demo` conserva la prueba de componentes, con acceso a Inicio.
+El cliente pide el mismo rango en tres consultas: cash-flow diario, cash-flow
+mensual (un único total del mes) y categories sin period (todo el rango).
+Recorre los cursores de reportes y categorías, sin calcular totales ni convertir
+monedas. `by_currency` conserva el desglose original; `unconverted_count > 0`
+muestra un aviso discreto, incluso si el total convertido es cero.
+
+Los símbolos proceden de `intl`. Para `es`, el formato peruano aprobado usa
+símbolo delante y espacio, miles con coma y decimal con punto (dos decimales):
+`S/ 1,234.50`, `US$ 1,234.50`, `€ 1,234.50`; un negativo explícito lleva el signo
+antes del símbolo. Para `en`, se conserva el patrón `en_US` de intl, sin ese
+espacio: `S/1,234.50`. Las familias de símbolos compartidos se califican siempre:
+US$, CA$, A$, JP¥, CN¥, etc. Esto evita cambiar etiquetas al añadir otra moneda;
+no se muestran códigos ISO. Para una moneda sin símbolo conocido por intl se
+usa el signo monetario genérico ¤. Las cadenas decimales se agrupan sin pasar por
+float; los doubles de las gráficas solo representan coordenadas y proporciones.
+
+El resumen omite el desglose secundario cuando existe una sola moneda original
+igual a la de reporte; lo muestra cuando hay varias monedas o una original
+distinta. Se evita así repetir el mismo importe en las tarjetas Gasto/Ingreso.

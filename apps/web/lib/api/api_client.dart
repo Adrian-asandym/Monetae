@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import '../data/api_dtos.dart';
 import '../l10n/app_localizations.dart';
 import 'browser_environment.dart';
+import 'report_query.dart';
 
 enum ApiErrorKind {
   unauthorized,
@@ -16,7 +17,8 @@ enum ApiErrorKind {
 }
 
 final class ApiException implements Exception {
-  const ApiException(this.kind, {this.problem});
+  const ApiException(this.kind, {this.problem, this.statusCode});
+  final int? statusCode;
   final ApiErrorKind kind;
   final ProblemDto? problem;
 
@@ -96,7 +98,11 @@ final class ApiClient {
       if (kind == ApiErrorKind.unauthorized && revision == _sessionRevision) {
         onUnauthorized?.call();
       }
-      throw ApiException(kind, problem: problem);
+      throw ApiException(
+        kind,
+        problem: problem,
+        statusCode: response.statusCode,
+      );
     }
     try {
       return jsonDecode(response.body) as Map<String, Object?>;
@@ -181,6 +187,30 @@ final class ApiClient {
       CategoryDto.fromJson(await _request('GET', 'categories/$id'));
   Future<TagDto> tag(String id) async =>
       TagDto.fromJson(await _request('GET', 'tags/$id'));
+
+  Future<CashFlowRowPageDto> cashFlow({
+    ReportQuery query = const ReportQuery(),
+    String? cursor,
+    int limit = 100,
+  }) async => CashFlowRowPageDto.fromJson(
+    await _request(
+      'GET',
+      'reports/cash-flow',
+      query: query.toQuery(cursor: cursor, limit: limit),
+    ),
+  );
+
+  Future<CategoryReportRowPageDto> categoryReport({
+    ReportQuery query = const ReportQuery(),
+    String? cursor,
+    int limit = 100,
+  }) async => CategoryReportRowPageDto.fromJson(
+    await _request(
+      'GET',
+      'reports/categories',
+      query: query.toQuery(cursor: cursor, limit: limit),
+    ),
+  );
 
   void close() => _client.close();
 }

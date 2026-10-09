@@ -8,6 +8,7 @@ import '../session/session_controller.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/transaction_card_list.dart';
 import '../widgets/transaction_card_settings.dart';
+import 'home_page.dart';
 
 class TransactionsPage extends StatefulWidget {
   const TransactionsPage({
@@ -28,8 +29,19 @@ class _TransactionsPageState extends State<TransactionsPage> {
   @override
   void initState() {
     super.initState();
+    widget.session.addListener(_sessionChanged);
     _feed = TransactionFeed(widget.session.api);
     _load(refresh: true);
+  }
+
+  void _sessionChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    widget.session.removeListener(_sessionChanged);
+    super.dispose();
   }
 
   Future<void> _load({bool refresh = false}) async {
@@ -56,7 +68,8 @@ class _TransactionsPageState extends State<TransactionsPage> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final profile = widget.session.user!;
+    final profile = widget.session.user;
+    if (profile == null) return const SizedBox.shrink();
     final error = _error ?? widget.session.error;
     return Scaffold(
       appBar: AppBar(
@@ -66,6 +79,18 @@ class _TransactionsPageState extends State<TransactionsPage> {
         ),
         title: Text(l.transactions),
         actions: [
+          IconButton(
+            tooltip: l.home,
+            icon: const Icon(Icons.home_outlined),
+            onPressed: () => Navigator.of(context).push<void>(
+              MaterialPageRoute(
+                builder: (_) => HomePage(
+                  api: widget.session.api,
+                  reportCurrency: profile.reportCurrency,
+                ),
+              ),
+            ),
+          ),
           IconButton(
             tooltip: l.refresh,
             onPressed: _loading ? null : () => _load(refresh: true),

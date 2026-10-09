@@ -18,7 +18,7 @@
   "scheduled": "Scheduled",
   "loanMovement": "Loan movement",
   "sampleAccount": "Sample cash account",
-  "dollarAccount": "Sample USD account",
+  "dollarAccount": "Sample dollar account",
   "foodCategory": "Food",
   "workCategory": "Work",
   "transportCategory": "Transport",
@@ -37,8 +37,6 @@
   "replayAnimation": "Replay animation",
   "compact": "Compact view",
   "cardSubtitle": "{category} · {account}",
-  "penAmount": "S/ {amount}",
-  "usdAmount": "US$ {amount}",
   "percent": "{value}%",
   "themeCard": "Surface",
   "themeBackground": "Background",
@@ -48,20 +46,6 @@
         "type": "String"
       },
       "account": {
-        "type": "String"
-      }
-    }
-  },
-  "@penAmount": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "@usdAmount": {
-    "placeholders": {
-      "amount": {
         "type": "String"
       }
     }
@@ -115,15 +99,13 @@
   "unavailableAccount": "Account unavailable",
   "unavailableTag": "Tag unavailable",
   "transfer": "Transfer",
-  "currencyAmount": "{currency} {amount}",
-  "@currencyAmount": {
-    "placeholders": {
-      "currency": {
-        "type": "String"
-      },
-      "amount": {
-        "type": "String"
-      }
-    }
-  }
+  "home": "Home",
+  "cashFlow": "Income and expenses",
+  "categoryDistribution": "Categories",
+  "uncategorized": "Uncategorized",
+  "emptyReports": "There are no reports for this period yet.",
+  "unconvertedNotice": "Some movements have no historical exchange rate and are excluded from converted totals.",
+  "previousMonth": "Previous month",
+  "nextMonth": "Next month",
+  "periodTotals": "Period totals"
 }

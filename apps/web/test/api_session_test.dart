@@ -277,6 +277,11 @@ void main() {
     addTearDown(api.close);
     await tester.pumpWidget(MonetaeApp(api: api));
     await tester.pumpAndSettle();
+    if (find.byKey(const Key('home-transactions')).evaluate().isNotEmpty) {
+      await tester.tap(find.byKey(const Key('home-transactions')));
+      await tester.pumpAndSettle();
+    }
+    await tester.pumpAndSettle();
     expect(find.byType(TransactionCard), findsOneWidget);
     expired = true;
     await tester.tap(find.byTooltip('Actualizar'));
@@ -298,6 +303,11 @@ void main() {
       );
       addTearDown(api.close);
       await tester.pumpWidget(MonetaeApp(api: api));
+      await tester.pumpAndSettle();
+      if (find.byKey(const Key('home-transactions')).evaluate().isNotEmpty) {
+        await tester.tap(find.byKey(const Key('home-transactions')));
+        await tester.pumpAndSettle();
+      }
       await tester.pumpAndSettle();
       await tester.enterText(
         find.byKey(const Key('login-email')),
@@ -355,7 +365,7 @@ void main() {
     final models = presentTransactions(feed, l);
     expect(models.map((m) => m.dateKey), ['2026-10-08', '2026-10-07']);
     expect(models.first.timeLabel, '22:30');
-    expect(models.last.amountLabel, contains('9999999999999999.99'));
+    expect(models.last.amountLabel, contains('9,999,999,999,999,999.99'));
     expect(models.first.icon.materialIcon, Icons.category_rounded);
     expect(models.first.tags, ['Etiqueta sintética']);
   });
@@ -468,6 +478,11 @@ void main() {
     addTearDown(api.close);
     await tester.pumpWidget(MonetaeApp(api: api));
     await tester.pumpAndSettle();
+    if (find.byKey(const Key('home-transactions')).evaluate().isNotEmpty) {
+      await tester.tap(find.byKey(const Key('home-transactions')));
+      await tester.pumpAndSettle();
+    }
+    await tester.pumpAndSettle();
     await tester.tap(find.text(l.cardSettings));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('show-date')));
@@ -475,6 +490,11 @@ void main() {
     expect(card.showDate, false);
     await tester.pumpWidget(const SizedBox());
     await tester.pumpWidget(MonetaeApp(api: api));
+    await tester.pumpAndSettle();
+    if (find.byKey(const Key('home-transactions')).evaluate().isNotEmpty) {
+      await tester.tap(find.byKey(const Key('home-transactions')));
+      await tester.pumpAndSettle();
+    }
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('date-2026-10-08')), findsNothing);
     expect(find.byType(TransactionCard), findsOneWidget);
@@ -602,6 +622,11 @@ void main() {
     );
     addTearDown(api.close);
     await tester.pumpWidget(MonetaeApp(api: api));
+    await tester.pumpAndSettle();
+    if (find.byKey(const Key('home-transactions')).evaluate().isNotEmpty) {
+      await tester.tap(find.byKey(const Key('home-transactions')));
+      await tester.pumpAndSettle();
+    }
     await tester.pumpAndSettle();
     expect(find.byType(TransactionCard), findsOneWidget);
     await tester.tap(find.byKey(const Key('load-more')));

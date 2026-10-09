@@ -6,6 +6,7 @@ import '../data/api_dtos.dart';
 import '../l10n/app_localizations.dart';
 import 'category_icon_source.dart';
 import 'component_models.dart';
+import 'currency_format.dart';
 
 Color presentationColor(
   String? value, {
@@ -39,15 +40,12 @@ TransactionCardModel _present(
     TransactionKind.loan => l.loanMovement,
     TransactionKind.transfer => l.transfer,
   };
-  // String formatting only: preserve decimal digits; no floating-point parsing.
-  final digits = item.amount.startsWith('-')
-      ? item.amount.substring(1)
-      : item.amount;
-  final amount = switch (item.currency) {
-    'PEN' => l.penAmount(digits),
-    'USD' => l.usdAmount(digits),
-    _ => l.currencyAmount(item.currency, digits),
-  };
+  final amount = formatCurrency(
+    item.amount,
+    item.currency,
+    l.localeName,
+    absolute: true,
+  );
   return TransactionCardModel(
     transaction: item,
     category: category,

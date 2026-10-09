@@ -25,8 +25,9 @@ Future<void> mount(
   ComponentBuilder builder, {
   bool reducedMotion = false,
   Size captureSize = const Size(600, 520),
+  Size viewSize = const Size(800, 700),
 }) async {
-  tester.view.physicalSize = const Size(800, 700);
+  tester.view.physicalSize = viewSize;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
