@@ -23,8 +23,16 @@ from monetae.db.base import UserScopedModel
 
 
 class Account(UserScopedModel):
+    import_external_id: Mapped[str | None] = mapped_column(Text)
     __tablename__ = "accounts"
     __table_args__ = (
+        Index(
+            "uq_accounts_user_import_external",
+            "user_id",
+            "import_external_id",
+            unique=True,
+            postgresql_where=text("import_external_id IS NOT NULL AND deleted_at IS NULL"),
+        ),
         UniqueConstraint("id", "user_id", name="uq_accounts_id_user_id"),
         CheckConstraint("type IN ('cash', 'bank', 'wallet', 'card', 'other')", name="type"),
         CheckConstraint("currency = upper(currency)", name="currency_upper"),
@@ -50,8 +58,16 @@ class Account(UserScopedModel):
 
 
 class Category(UserScopedModel):
+    import_external_id: Mapped[str | None] = mapped_column(Text)
     __tablename__ = "categories"
     __table_args__ = (
+        Index(
+            "uq_categories_user_import_external",
+            "user_id",
+            "import_external_id",
+            unique=True,
+            postgresql_where=text("import_external_id IS NOT NULL AND deleted_at IS NULL"),
+        ),
         UniqueConstraint("id", "user_id", name="uq_categories_id_user_id"),
         CheckConstraint("kind IN ('income', 'expense')", name="kind"),
         CheckConstraint("system_key IN ('interest_income', 'interest_expense')", name="system_key"),
@@ -75,8 +91,16 @@ class Category(UserScopedModel):
 
 
 class Person(UserScopedModel):
+    import_external_id: Mapped[str | None] = mapped_column(Text)
     __tablename__ = "people"
     __table_args__ = (
+        Index(
+            "uq_people_user_import_external",
+            "user_id",
+            "import_external_id",
+            unique=True,
+            postgresql_where=text("import_external_id IS NOT NULL AND deleted_at IS NULL"),
+        ),
         UniqueConstraint("id", "user_id", name="uq_people_id_user_id"),
         Index("ix_people_aliases", "aliases", postgresql_using="gin"),
         Index("ix_people_name", func.lower(text("name"))),
@@ -88,8 +112,16 @@ class Person(UserScopedModel):
 
 
 class Tag(UserScopedModel):
+    import_external_id: Mapped[str | None] = mapped_column(Text)
     __tablename__ = "tags"
     __table_args__ = (
+        Index(
+            "uq_tags_user_import_external",
+            "user_id",
+            "import_external_id",
+            unique=True,
+            postgresql_where=text("import_external_id IS NOT NULL AND deleted_at IS NULL"),
+        ),
         UniqueConstraint("id", "user_id", name="uq_tags_id_user_id"),
         Index(
             "uq_tags_user_id_name",

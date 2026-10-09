@@ -24,8 +24,16 @@ from monetae.db.models.ledger import Transaction
 
 
 class RecurringRule(UserScopedModel):
+    import_external_id: Mapped[str | None] = mapped_column(Text)
     __tablename__ = "recurring_rules"
     __table_args__ = (
+        Index(
+            "uq_recurring_rules_user_import_external",
+            "user_id",
+            "import_external_id",
+            unique=True,
+            postgresql_where=text("import_external_id IS NOT NULL AND deleted_at IS NULL"),
+        ),
         UniqueConstraint("id", "user_id", name="uq_recurring_rules_id_user_id"),
         ForeignKeyConstraint(
             ["account_id", "user_id"],
@@ -74,8 +82,16 @@ class RecurringRule(UserScopedModel):
 
 
 class Subscription(UserScopedModel):
+    import_external_id: Mapped[str | None] = mapped_column(Text)
     __tablename__ = "subscriptions"
     __table_args__ = (
+        Index(
+            "uq_subscriptions_user_import_external",
+            "user_id",
+            "import_external_id",
+            unique=True,
+            postgresql_where=text("import_external_id IS NOT NULL AND deleted_at IS NULL"),
+        ),
         UniqueConstraint("id", "user_id", name="uq_subscriptions_id_user_id"),
         UniqueConstraint("recurring_rule_id", name="uq_subscriptions_recurring_rule"),
         ForeignKeyConstraint(

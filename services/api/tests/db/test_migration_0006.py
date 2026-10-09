@@ -47,7 +47,7 @@ def test_roundtrip_with_materialized_payment_preserves_transactions(
 
     config = migration_config(database_url)
     command.downgrade(config, "0005")
-    command.upgrade(config, "0006")
+    command.upgrade(config, "head")
     with Session(db_engine) as db:
         user = User(email=f"migration-{uuid4().hex}@example.test", report_currency="PEN")
         db.add(user)
@@ -85,7 +85,7 @@ def test_roundtrip_with_materialized_payment_preserves_transactions(
             for column in Transaction.__table__.columns:
                 expected = None if column.name == "recurring_rule_id" else snapshot[column.name]
                 assert getattr(after[0], column.name) == expected
-        command.upgrade(config, "0006")
+        command.upgrade(config, "head")
         command.check(config)
         with Session(db_engine) as db:
             row = db.get(Transaction, transaction_id)
