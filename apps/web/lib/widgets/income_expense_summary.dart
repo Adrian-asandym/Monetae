@@ -32,6 +32,9 @@ class IncomeExpenseSummary extends StatelessWidget {
     Color color,
   ) {
     final l = AppLocalizations.of(context);
+    final showBreakdown =
+        total.byCurrency.map((value) => value.currency).toSet().length > 1 ||
+        total.byCurrency.any((value) => value.currency != total.reportCurrency);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 17),
       decoration: BoxDecoration(
@@ -56,15 +59,17 @@ class IncomeExpenseSummary extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            currencyBreakdown(total, l).join(' · '),
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12,
-              color: MonetaeColors.of(context).muted,
+          if (showBreakdown) ...[
+            const SizedBox(height: 6),
+            Text(
+              currencyBreakdown(total, l).join(' · '),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                color: MonetaeColors.of(context).muted,
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

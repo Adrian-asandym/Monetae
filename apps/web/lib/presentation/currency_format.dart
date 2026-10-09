@@ -1,7 +1,8 @@
 import 'package:intl/intl.dart';
 
-/// Intl supplies locale patterns, separators and symbols. Decimal strings are
-/// grouped without parsing to floating point, rounding or changing their digits.
+/// Intl supplies symbols and the en_US pattern. Spanish uses Monetae's
+/// approved Peru presentation: symbol, space, comma grouping and decimal point.
+/// Contract decimal strings are formatted without floating-point parsing or rounding.
 String currencySymbol(String currency, String locale) {
   final simple = NumberFormat.simpleCurrency(
     locale: locale,
@@ -64,18 +65,23 @@ String formatCurrency(
 }) {
   final negative = amount.startsWith('-') && !absolute;
   final digits = amount.replaceFirst(RegExp(r'^[-+]'), '').split('.');
+  final symbol = currencySymbol(currency, locale);
+  // Intl's es/es_PE pattern uses a decimal comma and trailing symbol. The
+  // product's Spanish format is explicitly Peruvian, including for EUR/USD.
+  final spanish = locale.split(RegExp('[-_]')).first == 'es';
   final format = NumberFormat.currency(
-    locale: locale,
+    locale: 'en_US',
     name: currency,
-    symbol: currencySymbol(currency, locale),
+    symbol: symbol,
+    decimalDigits: 2,
   );
   final whole = digits.first.replaceAllMapped(
     RegExp(r'\B(?=(\d{3})+(?!\d))'),
     (_) => format.symbols.GROUP_SEP,
   );
-  final fraction = digits.length == 1
-      ? ''
-      : '${format.symbols.DECIMAL_SEP}${digits[1]}';
+  final fractionDigits = digits.length == 1 ? '00' : digits[1].padRight(2, '0');
+  final fraction = '${format.symbols.DECIMAL_SEP}$fractionDigits';
+  if (spanish) return '${negative ? '-' : ''}$symbol $whole$fraction';
   final prefix = negative ? format.negativePrefix : format.positivePrefix;
   final suffix = negative ? format.negativeSuffix : format.positiveSuffix;
   return '$prefix$whole$fraction$suffix';

@@ -216,14 +216,14 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('unconverted-notice')), findsOneWidget);
       expect(find.byType(PieChart), findsNothing);
-      expect(find.textContaining('25,30'), findsOneWidget);
+      expect(find.textContaining('25.30'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
   test('exact localized currency strings and qualified shared symbols', () {
     expect(
       formatCurrency('12345678901234567890.01', 'EUR', 'es'),
-      '12.345.678.901.234.567.890,01 €',
+      '€ 12,345,678,901,234,567,890.01',
     );
     expect(formatCurrency('-1234.50', 'USD', 'en'), '-US\$1,234.50');
     for (final currency in ['PEN', 'USD', 'EUR', 'CAD', 'AUD', 'JPY', 'CNY']) {
@@ -406,9 +406,55 @@ void main() {
         (_, l) => IncomeExpenseSummary(row: mockReports(l).summary!),
         captureSize: const Size(600, 190),
       );
+      expect(find.text('S/ 170.00'), findsOneWidget);
+      expect(find.text('S/ 500.00'), findsOneWidget);
       await expectLater(
         find.byKey(const Key('capture')),
         matchesGoldenFile('goldens/summary_$mode.png'),
+      );
+    });
+    testWidgets('summary original currencies $mode', (tester) async {
+      const expense = ReportTotalDto(
+        byCurrency: [
+          CurrencyTotalDto(currency: 'PEN', amount: '90.00'),
+          CurrencyTotalDto(currency: 'USD', amount: '100.00'),
+        ],
+        reportCurrency: 'PEN',
+        reportAmount: '470.00',
+        unconvertedCount: 0,
+      );
+      const income = ReportTotalDto(
+        byCurrency: [CurrencyTotalDto(currency: 'USD', amount: '100.00')],
+        reportCurrency: 'PEN',
+        reportAmount: '380.00',
+        unconvertedCount: 0,
+      );
+      await harness.mount(
+        tester,
+        brightness,
+        (_, _) => const IncomeExpenseSummary(
+          row: CashFlowRowDto(
+            startOn: '2026-10-01',
+            endOn: '2026-10-31',
+            expense: expense,
+            income: income,
+            net: ReportTotalDto(
+              byCurrency: [],
+              reportCurrency: 'PEN',
+              reportAmount: '-90.00',
+              unconvertedCount: 0,
+            ),
+          ),
+        ),
+        captureSize: const Size(600, 190),
+      );
+      expect(find.text('S/ 470.00'), findsOneWidget);
+      expect(find.text('S/ 90.00 · US\$ 100.00'), findsOneWidget);
+      expect(find.text('S/ 380.00'), findsOneWidget);
+      expect(find.text('US\$ 100.00'), findsOneWidget);
+      await expectLater(
+        find.byKey(const Key('capture')),
+        matchesGoldenFile('goldens/summary_breakdown_$mode.png'),
       );
     });
     for (final emptyPeriods in [true, false]) {

@@ -136,8 +136,8 @@ void main() {
           ],
         ),
       );
-      expect(find.text('48,50 S/'), findsOneWidget);
-      expect(find.text('12,00 US\$'), findsOneWidget);
+      expect(find.text('S/ 48.50'), findsOneWidget);
+      expect(find.text('US\$ 12.00'), findsOneWidget);
       expect(find.text('Movimiento de préstamo'), findsOneWidget);
       await tester.tap(find.byType(TransactionCard).first);
       expect(taps, 1);
