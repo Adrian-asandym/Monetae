@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass, field, replace
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
@@ -169,15 +169,24 @@ def _append(
         plan.cash.append(cash)
 
 
+def _payment_amount(
+    loan_currency: str, row: TransactionRow, currency: str, rate_value: Decimal | None
+) -> tuple[Money | None, ExchangeRate | None]:
+    rate = (
+        ExchangeRate(Currency(loan_currency), Currency(currency), rate_value)
+        if currency != loan_currency and rate_value is not None
+        else None
+    )
+    if currency != loan_currency and rate is None:
+        return None, None
+    return loan_amount_from_account(Money(abs(row.amount), Currency(currency)), rate), rate
+
+
 def _payment(
     plan: LedgerPlan, row: TransactionRow, currency: str, rate_value: Decimal | None
 ) -> None:
-    rate = (
-        ExchangeRate(Currency(plan.currency), Currency(currency), rate_value)
-        if currency != plan.currency and rate_value is not None
-        else None
-    )
-    if currency != plan.currency and rate is None:
+    amount, rate = _payment_amount(plan.currency, row, currency, rate_value)
+    if amount is None:
         plan.cash.append(
             Cash(row, row.amount, "income" if row.amount > 0 else "expense", external_id(row.pk))
         )
@@ -185,7 +194,6 @@ def _payment(
             _review("fx_rate_required", plan.identity, transaction_pk=row.pk, currency=currency)
         )
         return
-    amount = loan_amount_from_account(Money(abs(row.amount), Currency(currency)), rate)
     state = replay(plan.principal, [p.movement for p in plan.movements])
     try:
         split = split_payment(amount, state)
@@ -255,12 +263,42 @@ def _plan(
     ordered = tuple(sorted(rows, key=lambda r: (r.occurred_at, r.pk)))
     eligible = [r for r in ordered if single or r.paid]
     first = next((r for r in eligible if r.income == (direction == "borrowed")), None)
+    selected_rates = ctx.options.loan_fx_rates if rates is None else rates
+    assumed = first is None and not single and bool(eligible)
+    payments = 0
+    principal = Money(0, Currency(account.currency))
+    if assumed:
+        for row in eligible:
+            if row.amount == 0 or (row.amount > 0) != row.income:
+                raise InvalidMovementError("invalid_cash_polarity_or_amount")
+            amount, _ = _payment_amount(
+                account.currency,
+                row,
+                ctx.accounts[row.wallet_pk].currency,
+                selected_rates.get(row.pk),
+            )
+            if amount is not None:
+                principal += amount
+                payments += 1
+        if not principal.is_zero():
+            first = replace(eligible[0], occurred_at=eligible[0].occurred_at - timedelta(seconds=1))
     if first is None:
         replay(Money(Decimal("0.01"), Currency(account.currency)), [])
         raise AssertionError("unreachable")
-    principal = Money(abs(first.amount), Currency(account.currency))
+    if not assumed:
+        principal = Money(abs(first.amount), Currency(account.currency))
     plan = LedgerPlan(identity, name, direction, account.currency, principal, ordered)
-    selected_rates = ctx.options.loan_fx_rates if rates is None else rates
+    if assumed:
+        _append(plan, MovementKind.DISBURSEMENT, principal, first)
+        plan.reviews.append(
+            _review(
+                "principal_assumed",
+                identity,
+                payments=payments,
+                assumed_principal=str(principal.amount),
+                currency=account.currency,
+            )
+        )
     for row in ordered:
         if not single and not row.paid:
             plan.reviews.append(_review("unpaid_loan_transaction", identity, transaction_pk=row.pk))
@@ -579,6 +617,9 @@ def _plan_conversions(
     pending: list[ImportReviewItem],
     supplied: dict[str, Decimal],
 ) -> FxResolution:
+    # L1-A: un pago excluido del principal supuesto exige corrección manual.
+    if baseline.movements[0].cash is None:
+        raise AmbiguousLoan("second_pass_conflict")
     identity, name, direction, rows = (
         baseline.identity,
         baseline.name,
