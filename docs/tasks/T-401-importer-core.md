@@ -1,6 +1,6 @@
 # T-401 — Importador de Cashew: migración 0007 y núcleo (cuentas, categorías, etiquetas, transacciones, transferencias)
 
-> **ESTADO: LANZADA el 2026-10-08** (Run `run_f5e95406186a`; OK de Adrian al Paso 3).
+> **ESTADO: ACEPTADA e integrada en `master-dev` el 2026-10-08** (merge `069d6d4`; Run `run_f5e95406186a`). Incluye el seguimiento **T-401b**: las filas anómalas (importe 0, cuenta huérfana, `type` desconocido) se **omiten** con un `review_item` en vez de abortar, y manda el **signo del importe** (no la bandera `income`), que solo genera `polarity_mismatch`. Donde esta spec dice lo contrario, manda `docs/importers/cashew.md`.
 > Agente: **Codex**, modelo `gpt-6.1-sol` esfuerzo `high` (esquema real v48 desconocido, idempotencia y migración).
 > Depende de: nada (Fase 3 integrada en `master-dev`). **Eres el único dueño de las migraciones**: creas la `0007`. T-402 y T-403 salen de tu rama ya integrada.
 

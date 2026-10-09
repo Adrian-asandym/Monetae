@@ -1,6 +1,6 @@
 # T-402 — Importador de Cashew: préstamos (largo plazo y pago único)
 
-> **ESTADO: PLANIFICADA — se lanza cuando T-401 esté aceptada e integrada** (Run `run_f5e95406186a`). ADR-008 **aceptado** (J1-A, J2-C, J3-A, 2026-10-08).
+> **ESTADO: LANZADA el 2026-10-08 (T-401 aceptada e integrada en `master-dev`)** (Run `run_f5e95406186a`). ADR-008 **aceptado** (J1-A, J2-C, J3-A, 2026-10-08).
 > Escrita con las opciones **aceptadas** del ADR-008 (**J1-A, J2-C, J3-A**).
 > Agente: **Codex**, modelo `gpt-6.1-sol` esfuerzo `high` (regla de negocio sobre datos reales; usa `gpt-6-astra` si T-401 pidió devoluciones o si esta tarea vuelve más de una vez).
 > Depende de: **T-401** integrada (migración `0007`, lector, runner y opciones). Corre **en paralelo con T-403** (archivos disjuntos).
@@ -52,9 +52,13 @@ No tocar `runner.py`, `report.py`, `reader.py`, `mapping.py`, `cli.py`, la migra
 ## Criterios de aceptación (con salidas en `worker_done`)
 
 ```bash
+# BD PROPIA de esta tarea: otro worker corre en paralelo. NO uses el proyecto ni el puerto por defecto
+# (5433) y NO ejecutes `down` sobre un proyecto que no sea el tuyo.
+export MONETAE_DB_PORT=5434 COMPOSE_PROJECT_NAME=monetae-t402
 cp .env.example .env && docker compose -f infra/docker-compose.yml up -d db
 cd services/api
-export MONETAE_TEST_DATABASE_URL=postgresql+psycopg://monetae:change-me@127.0.0.1:5433/postgres MONETAE_REQUIRE_DB=1
+export MONETAE_TEST_DATABASE_URL=postgresql+psycopg://monetae:change-me@127.0.0.1:5434/postgres MONETAE_REQUIRE_DB=1
+export MONETAE_DATABASE_URL=$MONETAE_TEST_DATABASE_URL
 uv sync --frozen && uv lock --check
 uv run ruff check . && uv run ruff format --check . && uv run mypy
 uv run pytest -q
@@ -64,5 +68,7 @@ git diff --stat master-dev...HEAD         # solo archivos permitidos
 ```
 
 ## Reglas
+
+**Base de datos propia:** usa el proyecto y el puerto indicados arriba; hay otro worker en paralelo con su propia BD. Una fila anómala nunca aborta la importación: se omite con `review_item` (criterio de T-401b; ver `docs/importers/cashew.md`).
 
 Commits pequeños en inglés (`feat(importer):`, `test(importer):`). Actualiza tu rama con `master-dev` antes de reportar. Sin `Any` ni `# type: ignore` sin razón escrita. **No inventes reglas de negocio**: ante un caso que el ADR no cubre, `orca orchestration ask`. Si el ADR, el contrato o el dominio te parecen inconsistentes con esto, no los cambies: pregunta o anótalo en `worker_done`. Reporta `worker_done` una sola vez.

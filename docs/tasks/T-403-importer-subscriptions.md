@@ -1,6 +1,6 @@
 # T-403 — Importador de Cashew: suscripciones, recurrentes y cuadre final
 
-> **ESTADO: PLANIFICADA — se lanza cuando T-401 esté aceptada e integrada** (Run `run_f5e95406186a`; OK de Adrian al Paso 3, 2026-10-08).
+> **ESTADO: LANZADA el 2026-10-08 (T-401 aceptada e integrada en `master-dev`)** (Run `run_f5e95406186a`; OK de Adrian al Paso 3, 2026-10-08).
 > Agente: **Codex**, modelo `gpt-6.1-sol` esfuerzo `medium` (reglas acotadas; el cuidado está en fechas y en el cuadre de saldos).
 > Depende de: **T-401** integrada. Corre **en paralelo con T-402** (archivos disjuntos; esta tarea posee `runner.py`, `report.py` y `cli.py` a partir de T-401).
 > Alcance acordado (D4-A, D4b-A del 2026-10-08): **no** se hacen las rutas `/imports` (4 operaciones) ni se importan presupuestos, metas ni reglas; quedan listados como «pendiente de Fase 6» y las rutas de subida de archivos, para las Fases 5-6.
@@ -55,9 +55,13 @@ No tocar `loans.py` ni sus pruebas (T-402), la migración, `reader.py`, `mapping
 ## Criterios de aceptación (con salidas en `worker_done`)
 
 ```bash
+# BD PROPIA de esta tarea: otro worker corre en paralelo. NO uses el proyecto ni el puerto por defecto
+# (5433) y NO ejecutes `down` sobre un proyecto que no sea el tuyo.
+export MONETAE_DB_PORT=5435 COMPOSE_PROJECT_NAME=monetae-t403
 cp .env.example .env && docker compose -f infra/docker-compose.yml up -d db
 cd services/api
-export MONETAE_TEST_DATABASE_URL=postgresql+psycopg://monetae:change-me@127.0.0.1:5433/postgres MONETAE_REQUIRE_DB=1
+export MONETAE_TEST_DATABASE_URL=postgresql+psycopg://monetae:change-me@127.0.0.1:5435/postgres MONETAE_REQUIRE_DB=1
+export MONETAE_DATABASE_URL=$MONETAE_TEST_DATABASE_URL
 uv sync --frozen && uv lock --check
 uv run ruff check . && uv run ruff format --check . && uv run mypy
 uv run pytest -q
@@ -67,5 +71,7 @@ git diff --stat master-dev...HEAD         # solo archivos permitidos
 ```
 
 ## Reglas
+
+**Base de datos propia:** usa el proyecto y el puerto indicados arriba; hay otro worker en paralelo con su propia BD. Una fila anómala nunca aborta la importación: se omite con `review_item` (criterio de T-401b; ver `docs/importers/cashew.md`).
 
 Commits pequeños en inglés (`feat(importer):`, `test(importer):`). Actualiza tu rama con `master-dev` antes de reportar. Sin `Any` ni `# type: ignore` sin razón escrita. Dudas que bloqueen (p. ej. la semántica de la fecha de una suscripción en v48) → `orca orchestration ask`; **no inventes reglas de negocio**. Si el contrato, ARCHITECTURE o SPEC te parecen inconsistentes con esto, no los cambies: pregunta o anótalo en `worker_done`. Reporta `worker_done` una sola vez.
