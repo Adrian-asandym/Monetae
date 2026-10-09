@@ -1,0 +1,76 @@
+{
+  "@@locale": "es",
+  "appTitle": "Monetae",
+  "spikeTitle": "Componentes de Monetae",
+  "syntheticData": "Vista de prueba · datos sintéticos",
+  "transactions": "Transacciones",
+  "categoryChart": "Gastos por categoría",
+  "themePreview": "Paleta de colores",
+  "lightTheme": "Tema claro",
+  "darkTheme": "Tema oscuro",
+  "language": "Idioma",
+  "accent": "Color de acento",
+  "blueAccent": "Azul",
+  "greenAccent": "Verde",
+  "purpleAccent": "Morado",
+  "income": "Ingreso",
+  "expense": "Gasto",
+  "scheduled": "Programada",
+  "loanMovement": "Movimiento de préstamo",
+  "sampleAccount": "Efectivo de prueba",
+  "dollarAccount": "Cuenta USD de prueba",
+  "foodCategory": "Alimentación",
+  "workCategory": "Trabajo",
+  "transportCategory": "Transporte",
+  "homeCategory": "Hogar",
+  "sampleLunch": "Almuerzo de ejemplo",
+  "sampleNote": "Nota sintética para revisar el componente.",
+  "sampleWork": "Trabajo de ejemplo",
+  "sampleLoan": "Cobro de préstamo de ejemplo",
+  "sampleUpcoming": "Pago próximo de ejemplo",
+  "sampleTag": "Ejemplo",
+  "emptyChart": "Sin datos",
+  "chartTotal": "Total de ejemplo",
+  "selectionHint": "Selecciona una categoría",
+  "allCategories": "Todas las categorías",
+  "fadePreview": "Entrada animada",
+  "replayAnimation": "Repetir animación",
+  "compact": "Vista compacta",
+  "cardSubtitle": "{category} · {account}",
+  "penAmount": "S/ {amount}",
+  "usdAmount": "US$ {amount}",
+  "percent": "{value} %",
+  "themeCard": "Superficie",
+  "themeBackground": "Fondo",
+  "@cardSubtitle": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      },
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "@penAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "@usdAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "@percent": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  }
+}
