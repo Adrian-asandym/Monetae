@@ -26,3 +26,20 @@ existing card/chart composition. Brand SVGs are Monetae's own assets; the mock
 house illustration is original synthetic artwork. Category catalog icons use
 Flutter Material Icons (Apache-2.0); no Cashew category PNGs were copied.
 flutter_svg is used to render vectors without HTML/DOM or a JavaScript runtime.
+
+T-504 modifications (2026-10-09):
+- budget/lib/pages/homePage/homePageAllSpendingSummary.dart and
+  budget/lib/widgets/transactionsAmountBox.dart → widgets/income_expense_summary.dart
+- budget/lib/widgets/lineGraph.dart and pages/homePage/homePageLineGraph.dart
+  → widgets/cash_flow_chart.dart
+- budget/lib/widgets/{incomeExpenseTabSelector,slidingSelectorIncomeExpense}.dart
+  → widgets/income_expense_selector.dart
+- budget/lib/pages/homePage/{homePageAllSpendingSummary,homePageLineGraph,
+  homePagePieChart}.dart → widgets/report_dashboard.dart (composition)
+- budget/lib/widgets/transactionEntry/transactionEntryTag.dart
+  → colored account labels in widgets/transaction_card.dart
+- budget/lib/colors.dart → presentation/account_color.dart (fallback palette)
+Paths above are under lib/ in Monetae. Components use server ReportTotal values,
+exact localized decimal strings and normalized chart geometry. Original database
+and global preference coupling is removed; charts show period flow rather than
+client-calculated cumulative amounts. No new dependencies or category PNG assets.

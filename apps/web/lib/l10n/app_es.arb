@@ -18,7 +18,7 @@
   "scheduled": "Programada",
   "loanMovement": "Movimiento de préstamo",
   "sampleAccount": "Efectivo de prueba",
-  "dollarAccount": "Cuenta USD de prueba",
+  "dollarAccount": "Cuenta en dólares de prueba",
   "foodCategory": "Alimentación",
   "workCategory": "Trabajo",
   "transportCategory": "Transporte",
@@ -37,8 +37,6 @@
   "replayAnimation": "Repetir animación",
   "compact": "Vista compacta",
   "cardSubtitle": "{category} · {account}",
-  "penAmount": "S/ {amount}",
-  "usdAmount": "US$ {amount}",
   "percent": "{value} %",
   "themeCard": "Superficie",
   "themeBackground": "Fondo",
@@ -48,20 +46,6 @@
         "type": "String"
       },
       "account": {
-        "type": "String"
-      }
-    }
-  },
-  "@penAmount": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "@usdAmount": {
-    "placeholders": {
-      "amount": {
         "type": "String"
       }
     }
@@ -115,15 +99,13 @@
   "unavailableAccount": "Cuenta no disponible",
   "unavailableTag": "Etiqueta no disponible",
   "transfer": "Transferencia",
-  "currencyAmount": "{currency} {amount}",
-  "@currencyAmount": {
-    "placeholders": {
-      "currency": {
-        "type": "String"
-      },
-      "amount": {
-        "type": "String"
-      }
-    }
-  }
+  "home": "Inicio",
+  "cashFlow": "Ingresos y gastos",
+  "categoryDistribution": "Categorías",
+  "uncategorized": "Sin categoría",
+  "emptyReports": "Todavía no hay reportes para este periodo.",
+  "unconvertedNotice": "Algunos movimientos no tienen tasa histórica y quedan fuera de los totales convertidos.",
+  "previousMonth": "Mes anterior",
+  "nextMonth": "Mes siguiente",
+  "periodTotals": "Totales del periodo"
 }

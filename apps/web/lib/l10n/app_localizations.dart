@@ -209,7 +209,7 @@ abstract class AppLocalizations {
   /// No description provided for @dollarAccount.
   ///
   /// In es, this message translates to:
-  /// **'Cuenta USD de prueba'**
+  /// **'Cuenta en dólares de prueba'**
   String get dollarAccount;
 
   /// No description provided for @foodCategory.
@@ -319,18 +319,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'{category} · {account}'**
   String cardSubtitle(String category, String account);
-
-  /// No description provided for @penAmount.
-  ///
-  /// In es, this message translates to:
-  /// **'S/ {amount}'**
-  String penAmount(String amount);
-
-  /// No description provided for @usdAmount.
-  ///
-  /// In es, this message translates to:
-  /// **'US\$ {amount}'**
-  String usdAmount(String amount);
 
   /// No description provided for @percent.
   ///
@@ -560,11 +548,59 @@ abstract class AppLocalizations {
   /// **'Transferencia'**
   String get transfer;
 
-  /// No description provided for @currencyAmount.
+  /// No description provided for @home.
   ///
   /// In es, this message translates to:
-  /// **'{currency} {amount}'**
-  String currencyAmount(String currency, String amount);
+  /// **'Inicio'**
+  String get home;
+
+  /// No description provided for @cashFlow.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresos y gastos'**
+  String get cashFlow;
+
+  /// No description provided for @categoryDistribution.
+  ///
+  /// In es, this message translates to:
+  /// **'Categorías'**
+  String get categoryDistribution;
+
+  /// No description provided for @uncategorized.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin categoría'**
+  String get uncategorized;
+
+  /// No description provided for @emptyReports.
+  ///
+  /// In es, this message translates to:
+  /// **'Todavía no hay reportes para este periodo.'**
+  String get emptyReports;
+
+  /// No description provided for @unconvertedNotice.
+  ///
+  /// In es, this message translates to:
+  /// **'Algunos movimientos no tienen tasa histórica y quedan fuera de los totales convertidos.'**
+  String get unconvertedNotice;
+
+  /// No description provided for @previousMonth.
+  ///
+  /// In es, this message translates to:
+  /// **'Mes anterior'**
+  String get previousMonth;
+
+  /// No description provided for @nextMonth.
+  ///
+  /// In es, this message translates to:
+  /// **'Mes siguiente'**
+  String get nextMonth;
+
+  /// No description provided for @periodTotals.
+  ///
+  /// In es, this message translates to:
+  /// **'Totales del periodo'**
+  String get periodTotals;
 }
 
 class _AppLocalizationsDelegate

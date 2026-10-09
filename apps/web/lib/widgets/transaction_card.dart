@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 
 import '../presentation/component_models.dart';
+import '../presentation/account_color.dart';
 import '../data/api_dtos.dart';
 import '../l10n/app_localizations.dart';
 import 'category_icon.dart';
@@ -112,12 +113,31 @@ class TransactionCard extends StatelessWidget {
                     if (preferences.showAccount)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          model.account?.name ?? l.unavailableAccount,
-                          key: const Key('transaction-account'),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 10, color: colors.muted),
+                        child: Container(
+                          key: const Key('transaction-account-tag'),
+                          decoration: BoxDecoration(
+                            color: accountColor(
+                              model.transaction.accountId,
+                              model.account?.color,
+                            ).withValues(alpha: .25),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4.5,
+                            vertical: 1.05,
+                          ),
+                          child: Text(
+                            model.account?.name ?? l.unavailableAccount,
+                            key: const Key('transaction-account'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: .7,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     if (preferences.showActions)

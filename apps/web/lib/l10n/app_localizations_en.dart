@@ -64,7 +64,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sampleAccount => 'Sample cash account';
 
   @override
-  String get dollarAccount => 'Sample USD account';
+  String get dollarAccount => 'Sample dollar account';
 
   @override
   String get foodCategory => 'Food';
@@ -120,16 +120,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String cardSubtitle(String category, String account) {
     return '$category · $account';
-  }
-
-  @override
-  String penAmount(String amount) {
-    return 'S/ $amount';
-  }
-
-  @override
-  String usdAmount(String amount) {
-    return 'US\$ $amount';
   }
 
   @override
@@ -252,7 +242,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transfer => 'Transfer';
 
   @override
-  String currencyAmount(String currency, String amount) {
-    return '$currency $amount';
-  }
+  String get home => 'Home';
+
+  @override
+  String get cashFlow => 'Income and expenses';
+
+  @override
+  String get categoryDistribution => 'Categories';
+
+  @override
+  String get uncategorized => 'Uncategorized';
+
+  @override
+  String get emptyReports => 'There are no reports for this period yet.';
+
+  @override
+  String get unconvertedNotice =>
+      'Some movements have no historical exchange rate and are excluded from converted totals.';
+
+  @override
+  String get previousMonth => 'Previous month';
+
+  @override
+  String get nextMonth => 'Next month';
+
+  @override
+  String get periodTotals => 'Period totals';
 }

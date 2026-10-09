@@ -1,3 +1,5 @@
+import '../presentation/currency_format.dart';
+
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -71,7 +73,7 @@ AccountDto mockAccount(AppLocalizations l, {bool usd = false}) =>
       'currency': usd ? 'USD' : 'PEN',
       'initial_balance': '0.00',
       'balance': '0.00',
-      'color': '#5F85C2',
+      'color': usd ? '#BA7DBD' : '#5F85C2',
       'icon': 'wallet',
       'sort_order': 0,
       'archived_at': null,
@@ -115,7 +117,7 @@ List<TransactionCardModel> mockCards(
       ),
       category: food,
       account: account,
-      amountLabel: l.penAmount('48.50'),
+      amountLabel: formatCurrency('48.50', 'PEN', l.localeName),
       subtitle: food.name,
       dateKey: '2026-10-09',
       dateLabel: dateLabel,
@@ -137,7 +139,7 @@ List<TransactionCardModel> mockCards(
       ),
       category: work,
       account: account,
-      amountLabel: l.penAmount('250.00'),
+      amountLabel: formatCurrency('250.00', 'PEN', l.localeName),
       subtitle: work.name,
       dateKey: '2026-10-09',
       dateLabel: dateLabel,
@@ -158,7 +160,7 @@ List<TransactionCardModel> mockCards(
       ),
       category: null,
       account: account,
-      amountLabel: l.penAmount('80.00'),
+      amountLabel: formatCurrency('80.00', 'PEN', l.localeName),
       subtitle: l.sampleLoanParty,
       dateKey: '2026-10-09',
       dateLabel: dateLabel,
@@ -183,7 +185,7 @@ List<TransactionCardModel> mockCards(
       ),
       category: home,
       account: usdAccount,
-      amountLabel: l.usdAmount('12.00'),
+      amountLabel: formatCurrency('12.00', 'USD', l.localeName),
       subtitle: home.name,
       dateKey: '2026-10-10',
       dateLabel: DateFormat.yMMMMEEEEd(l.localeName)
@@ -209,7 +211,7 @@ List<CategorySlice> mockSlices(
     label: l.foodCategory,
     weight: .5,
     percentLabel: l.percent('50'),
-    amountLabel: l.penAmount('150.00'),
+    amountLabel: formatCurrency('150.00', 'PEN', l.localeName),
     color: const Color(0xFFCA995A),
     icon: const CategoryIconSource.base('restaurant'),
   ),
@@ -218,7 +220,7 @@ List<CategorySlice> mockSlices(
     label: l.transportCategory,
     weight: .3,
     percentLabel: l.percent('30'),
-    amountLabel: l.penAmount('90.00'),
+    amountLabel: formatCurrency('90.00', 'PEN', l.localeName),
     color: const Color(0xFF5F85C2),
     icon: const CategoryIconSource.base('transport'),
   ),
@@ -227,7 +229,7 @@ List<CategorySlice> mockSlices(
     label: l.homeCategory,
     weight: .2,
     percentLabel: l.percent('20'),
-    amountLabel: l.penAmount('60.00'),
+    amountLabel: formatCurrency('60.00', 'PEN', l.localeName),
     color: const Color(0xFFBA7DBD),
     icon: CategoryIconSource.resolve(
       'custom:$mockCustomIconId',
