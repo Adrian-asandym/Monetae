@@ -1,6 +1,6 @@
 # T-508 — API: cuenta por defecto, nº de transacciones por cuenta y neto acumulado (contrato 0.5.0)
 
-> **ESTADO: LANZADA el 2026-10-09** (Run `run_c2cebe1745b9`; SPEC v0.5, contrato 0.5.0, disposición de Inicio de Adrian en `docs/ui/home-layout.md`). Corre **en paralelo con T-507** (UI; archivos disjuntos).
+> **ESTADO: ACEPTADA e integrada en `master-dev` el 2026-10-09** (verificada por el coordinador: 1032 pruebas, contrato en verde). Autorizados durante la tarea: `api/routers/accounts.py` (pasar `transaction_count`) y **una sola línea** de `api/security.py` (`profile()` delega las preferencias en `AuthService`). (Run `run_c2cebe1745b9`; SPEC v0.5, contrato 0.5.0, disposición de Inicio de Adrian en `docs/ui/home-layout.md`). Corre **en paralelo con T-507** (UI; archivos disjuntos).
 > Agente: **Codex**, modelo `gpt-6.1-sol` esfuerzo `medium`.
 
 ## Contexto
