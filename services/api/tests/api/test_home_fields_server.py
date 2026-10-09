@@ -8,12 +8,13 @@ from time import monotonic, sleep
 from uuid import uuid4
 
 import httpx
-from sqlalchemy import Engine
+from sqlalchemy import Engine, delete
 from sqlalchemy.orm import Session
 
 from api.conftest import PASSWORD
 from monetae.config import Settings
-from monetae.db.models import Account
+from monetae.db.models import Account, Category, LoginAttempt, User
+from monetae.db.models import Session as LoginSession
 from monetae.services.auth import AuthService, SystemClock
 
 
@@ -26,6 +27,7 @@ def test_login_then_immediate_home_requests_with_uvicorn(
     with Session(db_engine) as db:
         user = AuthService(db, settings, SystemClock()).create_user(email, PASSWORD)
         db.add(Account(user_id=user.id, name="Probe account", type="cash", currency="PEN"))
+        user_id = user.id
         db.commit()
     with socket.socket() as port_socket:
         port_socket.bind(("127.0.0.1", 0))
@@ -100,3 +102,12 @@ def test_login_then_immediate_home_requests_with_uvicorn(
             process.wait(timeout=5)
         if process.stdout is not None:
             process.stdout.close()
+        # TCP requests commit outside db_session's savepoint. Remove this probe's
+        # fixtures, especially attempts using SystemClock, before FakeClock tests.
+        with Session(db_engine) as db:
+            db.execute(delete(LoginAttempt).where(LoginAttempt.email_lower == email))
+            db.execute(delete(LoginSession).where(LoginSession.user_id == user_id))
+            db.execute(delete(Account).where(Account.user_id == user_id))
+            db.execute(delete(Category).where(Category.user_id == user_id))
+            db.execute(delete(User).where(User.id == user_id))
+            db.commit()
