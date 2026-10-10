@@ -53,6 +53,7 @@ Backend: **58 de 89 rutas** aprox. (presupuestos y metas añadidos), 10 migracio
 
 | Fecha | Decisión |
 |---|---|
+| 2026-10-10 (noche) | Por la demora de Antigravity en T-512, Adrian pide **suspenderlo y pasar la UI a Codex** (esfuerzo según la tarea). T-513 (4 detalles de Inicio) lanzada con Codex `gpt-6.1-sol` high. La terminal de Antigravity no se puede liberar desde Orca (externa): Adrian la cierra. |
 | 2026-10-10 (noche) | «**OK**» al plan de T-512 (9 componentes, valores calibrados del código de Cashew; corrección del coordinador: tarjeta de cuenta = `widgets/walletEntry.dart`). |
 | 2026-10-10 (noche) | **S1:** capturas en `reference/cashew-inicio-ui/1.png…6.png` (ignoradas por git). **S2:** la skill manda sobre preferencias anteriores de UI. **S3-A:** `display_name` (contrato 0.6.0, SPEC v0.6, RF-50). **S4:** hacer en la UI los cálculos «X/día para N días» que muestra la skill (solo presentación). **S5-A:** DM Sans. **S6:** Antigravity Pro (Adrian da permiso y fija el modelo). D12 sigue sin confirmar. |
 | 2026-10-10 (noche) | Adrian añade la skill **`.claude/skills/cashew-inicio-ui/SKILL.md`** (fidelidad de Inicio con Cashew; versionada en `11c82bf`) y pide seguirla: Antigravity (modelo Pro) si el esfuerzo es alto, Codex si no; avisar antes de usar Antigravity. La skill **sustituye** dos preferencias anteriores: fondo oscuro **neutro** (antes azul) y formato de montos **«100,46 S/.»** (antes «S/ 1,234.50»). |
@@ -91,7 +92,7 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 - B: usar **etiquetas** (`tags`) para marcar qué pertenece a cada presupuesto o meta. *Contra:* duplica la pertenencia que ya calcula el servidor (categorías del presupuesto, selección de la meta) y obliga a etiquetar a mano.
 - *Pendiente:* confirmación de Adrian.
 
-**R2 · Revisión de Inicio fiel a Cashew (T-512) por Adrian** en `http://localhost:8080` (usuario `revision-g7@example.test`, nombre «Adrian Sandy»; pila de revisión actualizada a `2903271`, BD `0011`). Sus observaciones + 4 detalles conocidos (ver `docs/tasks/T-512-ui-home-cashew-parity.md`) → una sola tarea de ajuste T-513. Antigravity conserva su terminal (`term_912b96eb…`) para reutilizarla.
+**R2 · Revisión de Inicio fiel a Cashew (T-512) por Adrian** en `http://localhost:8080` (usuario `revision-g7@example.test`, nombre «Adrian Sandy»; pila de revisión actualizada a `2903271`, BD `0011`). Sus observaciones + 4 detalles conocidos (ver `docs/tasks/T-512-ui-home-cashew-parity.md`) → una sola tarea de ajuste T-513. Las observaciones de Adrian irán en una tarea Codex posterior a T-513.
 
 **S1–S6 · Plan de la skill `cashew-inicio-ui` (propuesto 2026-10-10, pendiente de Adrian):**
 - **S1 capturas:** faltan las 6 de `references/`. Contienen datos reales → guardarlas en `reference/cashew-inicio/` (ignorada por git), **no** en `.claude/` (repositorio público).
