@@ -267,7 +267,7 @@ void main() {
       final api = ApiClient(
         client: MockClient((request) async {
           if (expired) return session.problem(401);
-          if (request.url.path == '/api/v1/users/me') {
+          if (request.url.path == "/api/v1/users/me") {
             return session.ok({
               ...session.profile(),
               'preferences': {'home_widgets': <String>[], 'theme': 'light'},
@@ -295,6 +295,9 @@ void main() {
       expect(find.byType(CumulativeCashFlowChart), findsOneWidget);
       expect(queries.every((query) => query['report_currency'] == 'USD'), true);
       final previous = DateTime.parse(queries.first['date_from']!);
+      await tester.ensureVisible(find.byKey(const Key('category-pages')));
+      await tester.drag(find.byKey(const Key('category-pages')), const Offset(-500, 0), warnIfMissed: false);
+      await tester.pumpAndSettle();
       await tester.ensureVisible(find.byTooltip(l.previousMonth));
       await tester.tap(find.byTooltip(l.previousMonth));
       await tester.pumpAndSettle();
@@ -358,7 +361,7 @@ void main() {
     (tester) async {
       final api = ApiClient(
         client: MockClient((request) async {
-          if (request.url.path == '/api/v1/users/me') {
+          if (request.url.path == "/api/v1/users/me") {
             return session.ok(session.profile());
           }
           if (request.url.path == '/api/v1/auth/logout') {

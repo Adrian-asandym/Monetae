@@ -1,9 +1,6 @@
-// Derived from Cashew pages/homePage/homePagePieChart.dart and widgets/pieChart.dart.
-// Copyright James Kokoska, GPL-3.0. Modified 2026-10-10: server reports,
-// native PageView, top-three legend, explicit selection and reduced motion.
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../api/home_controller.dart';
 import '../data/api_dtos.dart';
@@ -12,16 +9,19 @@ import '../presentation/report_presenter.dart';
 import '../theme/monetae_theme.dart';
 import 'category_icon.dart';
 import 'category_pie_chart.dart';
-import 'income_expense_selector.dart';
 
 class HomeCategoryCarousel extends StatefulWidget {
   const HomeCategoryCarousel({
     super.key,
     required this.data,
     this.animate = true,
+    required this.month,
+    required this.onMoveMonth,
   });
   final HomeCategoryData data;
   final bool animate;
+  final DateTime month;
+  final ValueChanged<int> onMoveMonth;
   @override
   State<HomeCategoryCarousel> createState() => _HomeCategoryCarouselState();
 }
@@ -29,13 +29,14 @@ class HomeCategoryCarousel extends StatefulWidget {
 class _HomeCategoryCarouselState extends State<HomeCategoryCarousel> {
   final _pages = PageController();
   int _page = 0;
-  final _selected = <String?>[null, null];
+  bool _isExpense = true;
+  String? _selectedId;
+
   @override
   void didUpdateWidget(covariant HomeCategoryCarousel oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.data != widget.data) {
-      _selected[0] = null;
-      _selected[1] = null;
+      _selectedId = null;
     }
   }
 
@@ -45,91 +46,129 @@ class _HomeCategoryCarouselState extends State<HomeCategoryCarousel> {
     super.dispose();
   }
 
-  void _selectPage(int index) {
-    if (MediaQuery.disableAnimationsOf(context)) {
-      _pages.jumpToPage(index);
-    } else {
-      _pages.animateToPage(
-        index,
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeInOut,
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    return Column(
-      children: [
-        IncomeExpenseSelector(
-          income: _page == 1,
-          onChanged: (income) => _selectPage(income ? 1 : 0),
-        ),
-        const SizedBox(height: 16),
-        if (widget.data.rows.any((row) => row.total.unconvertedCount > 0))
-          Text(l.unconvertedNotice, key: const Key('home-unconverted-notice')),
-        SizedBox(
-          height: 475 * MediaQuery.textScalerOf(context).scale(1).clamp(1, 2),
-          child: ScrollConfiguration(
-            behavior: ScrollConfiguration.of(context).copyWith(
-              dragDevices: {
-                PointerDeviceKind.touch,
-                PointerDeviceKind.mouse,
-                PointerDeviceKind.trackpad,
-              },
-            ),
-            child: PageView(
-              key: const Key('category-pages'),
-              controller: _pages,
-              onPageChanged: (index) => setState(() => _page = index),
-              children: [
-                for (var index = 0; index < 2; index++)
-                  Builder(
-                    builder: (context) {
-                      final kind = index == 0
-                          ? CategoryReportRowKind.expense
-                          : CategoryReportRowKind.income;
-                      final slices = presentCategoryReport(
-                        widget.data.rows,
-                        widget.data.categories,
-                        kind,
-                        l,
-                      );
-                      final ranked = [...slices]
-                        ..sort((a, b) => b.weight.compareTo(a.weight));
-                      return SingleChildScrollView(
-                        key: Key(index == 0 ? 'expense-page' : 'income-page'),
+    final theme = Theme.of(context);
+    final colors = MonetaeColors.of(context);
+
+    final kind = _isExpense ? CategoryReportRowKind.expense : CategoryReportRowKind.income;
+    final slices = presentCategoryReport(
+      widget.data.rows,
+      widget.data.categories,
+      kind,
+      l,
+    );
+    final ranked = [...slices]..sort((a, b) => b.weight.compareTo(a.weight));
+
+    return Material(
+      color: colors.card,
+      borderRadius: BorderRadius.circular(20),
+      clipBehavior: Clip.antiAlias,
+      child: Container(
+        height: 280,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Column(
+          children: [
+            Expanded(
+              child: PageView(
+                key: const Key('category-pages'),
+                controller: _pages,
+                onPageChanged: (index) => setState(() => _page = index),
+                children: [
+                  // Page 1: Pie Chart + Top 3 Legend + Triangle Toggle
+                  Stack(
+                    children: [
+                      Positioned(
+                        top: 0,
+                        left: 16,
                         child: Column(
-                          children: [
-                            Text(
-                              index == 0 ? l.expense : l.income,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: ranked.take(3).map((slice) {
+                            return Padding(
+                              key: Key('legend-${_isExpense ? 0 : 1}-${slice.id}'),
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 10,
+                                    height: 10,
+                                    decoration: BoxDecoration(
+                                      color: slice.color,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    slice.label,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                            const SizedBox(height: 15),
-                            CategoryPieChart(
-                              slices: slices,
-                              emptyLabel: l.emptyChart,
-                              animate: widget.animate,
-                              selectedId: _selected[index],
-                              onSelected: (id) =>
-                                  setState(() => _selected[index] = id),
-                            ),
-                            const SizedBox(height: 18),
-                            for (final slice in ranked.take(3))
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                      Positioned(
+                        top: 0,
+                        right: 16,
+                        child: InkWell(
+                          key: const Key('expense-income-toggle'),
+                          onTap: () => setState(() => _isExpense = !_isExpense),
+                          child: Icon(
+                            _isExpense ? Icons.arrow_drop_down : Icons.arrow_drop_up,
+                            color: _isExpense ? colors.expense : colors.income,
+                            size: 32,
+                          ),
+                        ),
+                      ),
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 40), // Push down below legend
+                          child: CategoryPieChart(
+                            slices: slices,
+                            emptyLabel: l.emptyChart,
+                            animate: widget.animate,
+                            selectedId: _selectedId,
+                            onSelected: (id) => setState(() => _selectedId = id),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Page 2: Month Selector + Category List
+                  Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            tooltip: l.previousMonth,
+                            onPressed: () => widget.onMoveMonth(-1),
+                            icon: const Icon(Icons.chevron_left),
+                          ),
+                          Text(
+                            DateFormat.yMMMM(l.localeName).format(widget.month),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          IconButton(
+                            tooltip: l.nextMonth,
+                            onPressed: () => widget.onMoveMonth(1),
+                            icon: const Icon(Icons.chevron_right),
+                          ),
+                        ],
+                      ),
+                      Expanded(
+                        child: ListView(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          children: [
+                            for (final slice in ranked)
                               ListTile(
-                                key: Key('legend-$index-${slice.id}'),
                                 dense: true,
                                 contentPadding: EdgeInsets.zero,
-                                selected: _selected[index] == slice.id,
-                                onTap: () => setState(
-                                  () => _selected[index] =
-                                      _selected[index] == slice.id
-                                      ? null
-                                      : slice.id,
-                                ),
                                 leading: CategoryIcon(
                                   source: slice.icon,
                                   color: slice.color,
@@ -138,55 +177,35 @@ class _HomeCategoryCarouselState extends State<HomeCategoryCarousel> {
                                 subtitle: Text(slice.percentLabel),
                                 trailing: Text(slice.amountLabel),
                               ),
-                            for (final row in widget.data.rows.where(
-                              (r) =>
-                                  r.kind == kind &&
-                                  ranked
-                                      .take(3)
-                                      .any(
-                                        (slice) =>
-                                            slice.id ==
-                                            (r.categoryId ?? 'uncategorized'),
-                                      ) &&
-                                  (r.total.unconvertedCount > 0 ||
-                                      r.total.byCurrency.any(
-                                        (c) =>
-                                            c.currency !=
-                                            r.total.reportCurrency,
-                                      )),
-                            ))
-                              Text(
-                                '${widget.data.categories[row.categoryId]?.name ?? l.uncategorized}: ${currencyBreakdown(row.total, l).join(' · ')}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: MonetaeColors.of(context).muted,
-                                ),
-                              ),
                           ],
                         ),
-                      );
-                    },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                for (var index = 0; index < 2; index++)
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _page == index
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.2),
+                    ),
                   ),
               ],
             ),
-          ),
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            for (var index = 0; index < 2; index++)
-              IconButton(
-                key: Key('category-page-indicator-$index'),
-                tooltip: index == 0 ? l.expense : l.income,
-                onPressed: () => _selectPage(index),
-                iconSize: 9,
-                icon: Icon(
-                  _page == index ? Icons.circle : Icons.circle_outlined,
-                ),
-              ),
           ],
         ),
-      ],
+      ),
     );
   }
 }

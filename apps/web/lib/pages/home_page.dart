@@ -3,7 +3,6 @@
 // Copyright James Kokoska, GPL-3.0. Modified 2026-10-10: independent API blocks,
 // persisted preferences, server cumulative chart and Monetae navigation.
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../api/home_controller.dart';
 import '../l10n/app_localizations.dart';
@@ -117,31 +116,7 @@ class _HomePageState extends State<HomePage> {
       'categories': HomeBlockView(
         block: _home.categories,
         title: l.categoryDistribution,
-        builder: (data) => Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  tooltip: l.previousMonth,
-                  onPressed: () => _home.moveMonth(-1),
-                  icon: const Icon(Icons.chevron_left),
-                ),
-                Flexible(
-                  child: Text(
-                    DateFormat.yMMMM(l.localeName).format(_home.month),
-                  ),
-                ),
-                IconButton(
-                  tooltip: l.nextMonth,
-                  onPressed: () => _home.moveMonth(1),
-                  icon: const Icon(Icons.chevron_right),
-                ),
-              ],
-            ),
-            HomeCategoryCarousel(data: data, animate: widget.animate),
-          ],
-        ),
+        builder: (data) => HomeCategoryCarousel(data: data, animate: widget.animate, month: _home.month, onMoveMonth: _home.moveMonth),
       ),
       'cash_flow': HomeBlockView(
         block: _home.flow,

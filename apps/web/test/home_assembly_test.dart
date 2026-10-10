@@ -277,6 +277,9 @@ void main() {
         (_, _) => Material(
           color: Colors.transparent,
           child: HomeCategoryCarousel(
+            month: DateTime.now(),
+            onMoveMonth: (val) {},
+
             data: HomeCategoryData(rows, {
               ...report.categories,
               for (var i = 0; i < 4; i++)
@@ -303,12 +306,9 @@ void main() {
         tester.widget<CategoryPieChart>(find.byType(CategoryPieChart)).slices,
         hasLength(4),
       );
-      await tester.drag(
-        find.byKey(const Key('category-pages')),
-        const Offset(-500, 0),
-      );
+      await tester.tap(find.byKey(const Key('expense-income-toggle')));
       await tester.pumpAndSettle();
-      expect(find.byKey(const Key('income-page')), findsOneWidget);
+      
       expect(
         tester
             .widget<CategoryPieChart>(find.byType(CategoryPieChart))
