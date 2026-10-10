@@ -12,12 +12,13 @@ from uuid import UUID
 
 from argon2 import PasswordHasher
 from argon2.exceptions import VerificationError
+from pydantic import TypeAdapter
 from sqlalchemy import delete, func, select, text, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session as DbSession
 from sqlalchemy.orm import object_session
 
-from monetae.api.schemas.auth import UserPreferences
+from monetae.api.schemas.auth import DisplayName, UserPreferences
 from monetae.config import Settings
 from monetae.db.models import Account, Category, LoginAttempt, Session, User
 from monetae.domain.passwords import (
@@ -78,10 +79,13 @@ class AuthService:
         locale: str = "es",
         interest_income_name: str = "Intereses (ingreso)",
         interest_expense_name: str = "Intereses (gasto)",
+        display_name: str | None = None,
     ) -> User:
+        display_name = TypeAdapter(DisplayName | None).validate_python(display_name, strict=True)
         validate_password(password)
         user = User(
             email=email.lower(),
+            display_name=display_name,
             password_hash=self.hasher.hash(password),
             base_currency=base_currency,
             report_currency=base_currency,

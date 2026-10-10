@@ -167,6 +167,7 @@ def main(argv: list[str] | None = None) -> int:
     commands = parser.add_subparsers(dest="command", required=True)
     create = commands.add_parser("create-user", allow_abbrev=False)
     create.add_argument("--email", required=True)
+    create.add_argument("--display-name")
     create.add_argument("--base-currency", default="PEN")
     create.add_argument("--locale", choices=["es", "en"], default="es")
     create.add_argument("--password-stdin", action="store_true")
@@ -193,7 +194,7 @@ def main(argv: list[str] | None = None) -> int:
         config = Settings()
         with create_session_factory(config)() as db:
             AuthService(db, config, SystemClock()).create_user(
-                email, password, currency, args.locale
+                email, password, currency, args.locale, display_name=args.display_name
             )
             db.commit()
     except ValidationError:

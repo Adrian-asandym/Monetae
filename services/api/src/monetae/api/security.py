@@ -78,6 +78,7 @@ def profile(user: User) -> CurrentUser:
         {
             "id": user.id,
             "email": user.email,
+            "display_name": user.display_name,
             "preferences": AuthService.preferences_for(user),
             "pin_configured": user.pin_hash is not None,
             "locked": False,

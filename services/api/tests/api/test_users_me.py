@@ -175,3 +175,66 @@ def test_strict_patch(client: TestClient, changes: dict[str, object]) -> None:
         client.patch("/api/v1/users/me", json=changes, headers=csrf_headers(client)).status_code
         == 422
     )
+
+
+def test_display_name_roundtrip_and_isolation(
+    client: TestClient, application: FastAPI, db_session: Session, auth_users: tuple[User, User]
+) -> None:
+    first, second = auth_users
+    first.preferences = {"theme": "dark", "home_widgets": ["accounts"]}
+    db_session.commit()
+    login(client)
+    initial = client.get("/api/v1/users/me").json()
+    assert initial["display_name"] is None
+    preferences = initial["preferences"]
+    for name in ["  Synthetic User  ", "  " + "á" * 60 + "  "]:
+        response = client.patch(
+            "/api/v1/users/me", json={"display_name": name}, headers=csrf_headers(client)
+        )
+        assert response.status_code == 200
+        assert response.json()["display_name"] == name.strip()
+        assert response.json()["preferences"] == preferences
+        assert client.get("/api/v1/users/me").json()["display_name"] == name.strip()
+        db_session.refresh(first)
+        assert first.display_name == name.strip()
+    response = client.patch("/api/v1/users/me", json={"locale": "en"}, headers=csrf_headers(client))
+    assert response.json()["display_name"] == "á" * 60
+    with TestClient(application, base_url="https://testserver") as other:
+        login(other, "second@example.test")
+        assert other.get("/api/v1/users/me").json()["display_name"] is None
+        response = other.patch(
+            "/api/v1/users/me", json={"display_name": "Second"}, headers=csrf_headers(other)
+        )
+        assert response.status_code == 200
+    assert client.get("/api/v1/users/me").json()["display_name"] == "á" * 60
+    response = client.patch(
+        "/api/v1/users/me", json={"display_name": None}, headers=csrf_headers(client)
+    )
+    assert response.status_code == 200
+    assert response.json()["display_name"] is None
+    assert response.json()["preferences"] == preferences
+    assert client.get("/api/v1/users/me").json()["display_name"] is None
+    db_session.refresh(first)
+    db_session.refresh(second)
+    assert first.display_name is None
+    assert second.display_name == "Second"
+
+
+@pytest.mark.parametrize("name", ["", "   ", "a" * 61, "  " + "a" * 61 + "  ", 1, True, [], {}])
+def test_invalid_display_name_patch_is_atomic(
+    client: TestClient, db_session: Session, auth_users: tuple[User, User], name: object
+) -> None:
+    first, _ = auth_users
+    first.display_name = "Original"
+    db_session.commit()
+    login(client)
+    before = client.get("/api/v1/users/me").json()
+    response = client.patch(
+        "/api/v1/users/me",
+        json={"display_name": name, "locale": "en", "preferences": {"theme": "dark"}},
+        headers=csrf_headers(client),
+    )
+    assert response.status_code == 422
+    assert client.get("/api/v1/users/me").json() == before
+    db_session.refresh(first)
+    assert first.display_name == "Original"
