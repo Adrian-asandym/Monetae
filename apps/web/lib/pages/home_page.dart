@@ -129,12 +129,8 @@ class _HomePageState extends State<HomePage> {
       'categories': HomeBlockView(
         block: _home.categories,
         title: l.categoryDistribution,
-        builder: (data) => HomeCategoryCarousel(
-          data: data,
-          animate: widget.animate,
-          month: _home.month,
-          onMoveMonth: _home.moveMonth,
-        ),
+        builder: (data) =>
+            HomeCategoryCarousel(data: data, animate: widget.animate),
       ),
       'cash_flow': HomeBlockView(
         block: _home.flow,

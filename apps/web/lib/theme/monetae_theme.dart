@@ -132,4 +132,23 @@ abstract final class HomeTokens {
   static const addIconSize = 22.0;
   static const addLabelSize = 14.0;
   static const addLabelGap = 2.0;
+  static const categoryCardHeight = 280.0;
+  static const categoryPadding = 16.0;
+  static const categoryPieSize = 208.0;
+  static const emptyRingOpacity = .15;
+  static const categoryPieFraction = .65;
+  static const categoryPieTop = 12.0;
+  static const categoryLegendFraction = .30;
+  static const categoryTriangleSize = 32.0;
+  static const legendGap = 4.0;
+  static const legendDotTop = 3.0;
+  static const legendDotSize = 10.0;
+  static const legendDotGap = 8.0;
+  static const legendFontSize = 12.0;
+  static const pageDotGap = 8.0;
+  static const pageDotSize = 8.0;
+  static const pageDotSpacing = 4.0;
+  static const activeDotOpacity = .60;
+  static const inactiveDotOpacity = .20;
+  static const pageSwitchMilliseconds = 250;
 }

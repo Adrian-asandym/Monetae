@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:monetae_web/data/mock_budgets_goals.dart';
+import 'package:monetae_web/api/home_controller.dart';
+import 'package:monetae_web/data/api_dtos.dart';
+import 'package:monetae_web/data/mock_reports.dart';
+import 'package:monetae_web/widgets/home_category_carousel.dart';
+import 'package:monetae_web/widgets/home_category_details.dart';
+import 'package:monetae_web/widgets/category_pie_chart.dart';
 import 'package:monetae_web/l10n/app_localizations.dart';
 import 'package:monetae_web/pages/app_shell.dart';
 import 'package:monetae_web/theme/monetae_theme.dart';
@@ -62,6 +68,84 @@ void main() {
       );
       await golden(tester, 'home_$mode');
     });
+    for (final emptyIncome in [false, true]) {
+      testWidgets(
+        'same pie page for both kinds; empty income=$emptyIncome $mode',
+        (tester) async {
+          await mountMobile(tester, brightness, (_, l) {
+            final report = mockReports(l);
+            return Scaffold(
+              body: Padding(
+                padding: const EdgeInsets.all(13),
+                child: HomeCategoryCarousel(
+                  animate: false,
+                  data: HomeCategoryData([
+                    for (final row in report.rows)
+                      if (!emptyIncome ||
+                          row.kind != CategoryReportRowKind.income)
+                        row,
+                  ], report.categories),
+                ),
+              ),
+            );
+          });
+          expect(
+            tester
+                .widget<HomeCategoryPiePage>(find.byType(HomeCategoryPiePage))
+                .kind,
+            CategoryReportRowKind.expense,
+          );
+          expect(find.byType(HomeCategoryDetails), findsNothing);
+          expect(find.byIcon(Icons.chevron_left), findsNothing);
+          expect(find.byIcon(Icons.arrow_drop_down), findsOneWidget);
+          if (!emptyIncome) await golden(tester, 'pie_expense_$mode');
+          await tester.drag(
+            find.byKey(const Key('category-pages')),
+            const Offset(-350, 0),
+          );
+          await tester.pumpAndSettle();
+          expect(
+            tester
+                .widget<HomeCategoryPiePage>(find.byType(HomeCategoryPiePage))
+                .kind,
+            CategoryReportRowKind.income,
+          );
+          expect(find.byIcon(Icons.arrow_drop_up), findsOneWidget);
+          final pie = tester.widget<CategoryPieChart>(
+            find.byType(CategoryPieChart),
+          );
+          expect(pie.slices, emptyIncome ? isEmpty : hasLength(1));
+          if (emptyIncome) expect(find.text('Sin datos'), findsOneWidget);
+          await golden(
+            tester,
+            'pie_${emptyIncome ? 'empty_income' : 'income'}_$mode',
+          );
+          final active =
+              tester
+                      .widget<Container>(
+                        find.byKey(const Key('category-dot-1')),
+                      )
+                      .decoration!
+                  as BoxDecoration;
+          final inactive =
+              tester
+                      .widget<Container>(
+                        find.byKey(const Key('category-dot-0')),
+                      )
+                      .decoration!
+                  as BoxDecoration;
+          expect(active.color!.a, greaterThan(inactive.color!.a));
+          await tester.tap(find.byKey(const Key('category-toggle-income')));
+          await tester.pumpAndSettle();
+          expect(
+            tester
+                .widget<HomeCategoryPiePage>(find.byType(HomeCategoryPiePage))
+                .kind,
+            CategoryReportRowKind.expense,
+          );
+        },
+      );
+    }
     for (final empty in [false, true]) {
       testWidgets('add cards end both carousels; empty=$empty $mode', (
         tester,

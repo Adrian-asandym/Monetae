@@ -513,8 +513,6 @@ void main() {
         (_, _) => Material(
           color: Colors.transparent,
           child: HomeCategoryCarousel(
-            month: DateTime.now(),
-            onMoveMonth: (val) {},
 
             data: HomeCategoryData(rows, {
               ...report.categories,
@@ -542,7 +540,7 @@ void main() {
         tester.widget<CategoryPieChart>(find.byType(CategoryPieChart)).slices,
         hasLength(4),
       );
-      await tester.tap(find.byKey(const Key('expense-income-toggle')));
+      await tester.tap(find.byKey(const Key('category-toggle-expense')));
       await tester.pumpAndSettle();
 
       expect(
