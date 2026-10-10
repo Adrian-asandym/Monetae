@@ -15,9 +15,8 @@ from monetae.db.models import User
 
 # All dynamic values (including date_trunc's unit) are bound parameters.
 # Daily preaggregation avoids repeating the historical rate lookup per transaction.
-AGGREGATE_SQL = text("""
-WITH entries AS (
-    SELECT t.occurred_at, t.currency, t.kind,
+ENTRY_SQL = """
+    SELECT t.id AS transaction_id, t.occurred_at, t.currency, t.kind,
            CASE WHEN :categories THEN t.category_id ELSE NULL::uuid END AS category_id,
            abs(t.amount) AS amount, t.fx_rate_to_base
     FROM transactions t
@@ -26,7 +25,7 @@ WITH entries AS (
       AND t.occurred_at >= :start_at AND t.occurred_at < :end_at
       AND (CAST(:account_id AS uuid) IS NULL OR t.account_id = :account_id)
     UNION ALL
-    SELECT m.occurred_at, t.currency,
+    SELECT t.id AS transaction_id, m.occurred_at, t.currency,
            CASE WHEN l.direction = 'lent' THEN 'income' ELSE 'expense' END,
            CASE WHEN :categories THEN c.id ELSE NULL::uuid END,
            m.interest_part * coalesce(m.fx_rate_applied, 1), t.fx_rate_to_base
@@ -42,7 +41,13 @@ WITH entries AS (
       AND m.occurred_at >= :start_at AND m.occurred_at < :end_at
       AND (CAST(:account_id AS uuid) IS NULL OR t.account_id = :account_id)
       AND (CAST(:person_id AS uuid) IS NULL OR l.person_id = :person_id)
-), daily AS (
+
+"""
+
+AGGREGATE_SQL = text(
+    "WITH entries AS ("
+    + ENTRY_SQL
+    + """), daily AS (
     SELECT (occurred_at AT TIME ZONE :timezone)::date AS day,
            category_id, kind, currency, sum(amount) AS amount,
            sum(amount * fx_rate_to_base) AS base_amount, count(*) AS entry_count
@@ -68,7 +73,8 @@ SELECT CASE WHEN CAST(:unit AS text) IS NULL THEN CAST(:start_on AS date)
 FROM daily JOIN rates ON rates.day = daily.day
 GROUP BY bucket, category_id, kind, currency
 ORDER BY bucket, category_id, kind, currency
-""")
+"""
+)
 
 
 @dataclass(frozen=True)
