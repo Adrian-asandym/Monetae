@@ -1,6 +1,6 @@
 # T-510 — UI: formulario de nueva transacción (gasto/ingreso) fiel a Cashew
 
-> **ESTADO: POR LANZAR** (Run `run_c2cebe1745b9`; OK de Adrian «P1-A»; SPEC v0.5, contrato 0.5.0). Va **después de T-509** (integrada en `master-dev`, `a6cc347`).
+> **ESTADO: ACEPTADA e integrada en `master-dev` el 2026-10-10** (`17e9024`; 178 pruebas UI; sonda real por nginx: `POST /transactions` con CSRF e idempotencia, tasa sin 6 decimales → 422). Corregida durante la tarea: tasas con exactamente 6 decimales. (Run `run_c2cebe1745b9`; OK de Adrian «P1-A»; SPEC v0.5, contrato 0.5.0). Va **después de T-509** (integrada en `master-dev`, `a6cc347`).
 > Agente: **Codex**, modelo `gpt-6.1-sol`, esfuerzo `high`.
 
 ## Contexto

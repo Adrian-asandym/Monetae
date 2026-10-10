@@ -717,6 +717,8 @@ al completar la verificación; no se toca la pila `monetae-review`.
 - `Budget.color`, `Goal.color` y `Goal.icon` (y en sus `Create`/`Update`): color de la tarjeta y la barra de progreso, e ícono del objetivo, como en Cashew. Su API se implementa en la Fase 6.
 Los tres primeros están implementados en T-508. Regenerar el cliente de la UI desde `openapi.json` 0.5.0.
 
+**Claves de `preferences.home_widgets` (fijadas en T-509, 2026-10-10):** `accounts`, `goals`, `budgets`, `categories`, `cash_flow`, `transactions`. El saludo y el botón «+» son fijos y no figuran. Lista vacía = orden por defecto de `docs/ui/home-layout.md` con todo visible; lista no vacía = orden de los bloques visibles (los omitidos se ocultan); claves desconocidas se ignoran (si no queda ninguna válida, orden por defecto). El servidor solo exige unicidad.
+
 ## Presupuestos (T-601)
 
 `/budgets` implementa creación, listado por cursor, consulta, edición parcial y borrado

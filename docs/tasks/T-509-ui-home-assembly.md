@@ -1,6 +1,6 @@
 # T-509 — UI: ensamblado de Inicio y barra de navegación de 4 botones
 
-> **ESTADO: LANZADA el 2026-10-10** (Run `run_c2cebe1745b9`; OK de Adrian «P1-A»; SPEC v0.5, contrato 0.5.0). Corre **en paralelo con T-601** (API de presupuestos; archivos disjuntos).
+> **ESTADO: ACEPTADA e integrada en `master-dev` el 2026-10-10** (`a6cc347`; verificada por el coordinador: 146 pruebas UI, goldens revisados). Claves de `home_widgets` fijadas por el coordinador vía `ask` (ver `docs/api/README.md` §0.5.0). (Run `run_c2cebe1745b9`; OK de Adrian «P1-A»; SPEC v0.5, contrato 0.5.0). Corre **en paralelo con T-601** (API de presupuestos; archivos disjuntos).
 > Agente: **Codex**, modelo `gpt-6.1-sol`, esfuerzo `high` (ensamblado con fidelidad visual a Cashew).
 
 ## Contexto

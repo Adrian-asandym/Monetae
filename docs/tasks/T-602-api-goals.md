@@ -1,6 +1,6 @@
 # T-602 — API: metas (RF-31, RF-32) con progreso calculado
 
-> **ESTADO: LANZADA el 2026-10-10** (Run `run_c2cebe1745b9`; OK de Adrian «P1-A»; SPEC v0.5, contrato 0.5.0). Va **después de T-601** (integrada en `master-dev`, `b20bc45`), porque también añade una migración. Corre en paralelo con T-510 (UI; archivos disjuntos).
+> **ESTADO: ACEPTADA e integrada en `master-dev` el 2026-10-10** (`e0b8366`; 1149 pruebas; sonda real: progreso con signo). (Run `run_c2cebe1745b9`; OK de Adrian «P1-A»; SPEC v0.5, contrato 0.5.0). Va **después de T-601** (integrada en `master-dev`, `b20bc45`), porque también añade una migración. Corre en paralelo con T-510 (UI; archivos disjuntos).
 > Agente: **Codex**, modelo `gpt-6.1-sol`, esfuerzo `medium` (mismo patrón que T-601).
 
 ## Contexto

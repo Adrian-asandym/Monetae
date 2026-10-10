@@ -8,11 +8,11 @@
 
 | | |
 |---|---|
-| **Última actualización** | **2026-10-09, ~19:40 (America/Lima)** — cierre de sesión («Continuaremos en otro momento») |
-| **`origin`** | `origin/main` = `origin/master-dev` = **`1736d7a`** (Fases 0–4, T-405, Fase 5 hasta T-504/T-506; SPEC v0.4 publicada). |
-| **`main`** | `1736d7a`. |
-| **`master-dev`** | **`9444819` + el commit de este cierre (`git log -1`)**, por delante de `main`: SPEC v0.5 + contrato 0.5.0 + `docs/ui/home-layout.md`, T-507 y T-508. **Sin publicar.** |
-| **Gate abierto** | Ninguno. **G6 `gate_70e14ac5abc1` resuelto (A) el 2026-10-10**: `main` = `master-dev` = `origin` = `8b8688e`. Resueltos hoy: G1 `gate_1e81cf0fd994`, G2 `gate_10f2135dac21`, G3 `gate_abde30232929`, G4 `gate_a079e8e6d920`, G5 `gate_600e9631a8a2`. |
+| **Última actualización** | **2026-10-10 (America/Lima)** — sesión de trabajo en curso: G6 publicado; T-509, T-510, T-601 y T-602 integradas; G7 propuesto |
+| **`origin`** | `origin/main` = `origin/master-dev` = **`8b8688e`** (hasta T-508, SPEC v0.5; G6). |
+| **`main`** | `8b8688e`. |
+| **`master-dev`** | `e0b8366` (merge de T-602) **+ commits de documentación posteriores (`git log -1`)**, por delante de `main`: T-509, T-510, T-601 (migración `0009`), T-602 (migración `0010`). **Sin publicar.** |
+| **Gate abierto** | **G7** (publicar T-509/T-510/T-601/T-602): **propuesto, pendiente de Adrian** (id en §7). G6 `gate_70e14ac5abc1` resuelto (A) el 2026-10-10. |
 | **SPEC / ARCHITECTURE / contrato** | SPEC **v0.5** · `docs/ARCHITECTURE.md` v0.3 · `docs/api/openapi.json` **0.5.0** (89 paths, 131 operaciones; validado con `check_openapi.py`). |
 
 ## 2. Fase actual
@@ -23,7 +23,7 @@
 | 🔄 **En curso** | (2026-10-10) **G6 publicado** (`8b8688e`). **Integradas en `master-dev` (sin publicar):** T-509 Inicio + barra de 4 botones (`a6cc347`; 146 pruebas UI) y T-601 API de presupuestos (`b20bc45`; migración `0009`; 1106 pruebas), ambas verificadas por el coordinador. **Workers Codex `gpt-6.1-sol`:** T-510 formulario de transacción `task_39dfa64bea7f` (`ctx_2104349444cb`, high, worktree `Monetae-codex-T-510-ui-add-transaction`) ∥ T-602 API de metas `task_752b79134036` (`ctx_b2cabec011a6`, medium, worktree `Monetae-codex-T-602-api-goals`, BD `monetae-t602`:5463). Después: gate G7 (publicar) y revisión de Inicio por Adrian con datos reales. Claves de `home_widgets` fijadas en T-509: `accounts, goals, budgets, categories, cash_flow, transactions` (vacía = orden por defecto; omitidas = ocultas). |
 | ⏳ **Pendiente** | **G6** (publicar) · **T-509** ensamblado de Inicio según `docs/ui/home-layout.md` + barra de 4 botones + botón «+» · **T-510** formulario de nueva transacción · **API de presupuestos y metas (Fase 6)** para revisar Inicio con datos reales · resto de la Fase 5 (12–17 tareas estimadas por el informe T-504) · Fase 6 (íconos SVG API RF-46, adjuntos, presupuestos, metas, notificaciones, login Google, PIN/WebAuthn, proveedor de tipo de cambio) · Fase 7 · importación real definitiva (D9-A: cuando haya base persistente y pantallas) · despliegue VPS → V2 → V3 → V4. |
 
-Backend: **46 de 89 rutas = 73 de 131 operaciones**, 8 migraciones (cabeza **`0008`**), **1032 pruebas**. UI `apps/web`: **116 pruebas** (64 goldens claro/oscuro). Detalle en el Anexo A.
+Backend: **58 de 89 rutas** aprox. (presupuestos y metas añadidos), 10 migraciones (cabeza **`0010`**), **1149 pruebas**. UI `apps/web`: **178 pruebas**. Detalle en el Anexo A (sin actualizar para T-601/T-602).
 
 ## 3. Trabajo hecho en esta sesión (2026-10-09)
 
@@ -76,43 +76,36 @@ Backend: **46 de 89 rutas = 73 de 131 operaciones**, 8 migraciones (cabeza **`00
 
 Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
-**G6 · Publicar en `main`** (`gate_70e14ac5abc1`): SPEC v0.5 + contrato 0.5.0 + `docs/ui/home-layout.md`, T-507 y T-508, todo verificado e integrado.
-- **A (recomendada): aprobar el merge y el push** tras repetir la auditoría. *Razón:* respaldo remoto de trabajo verificado.
-- B: esperar a T-509.
+**G7 · Publicar en `main`** T-509 (Inicio + barra de 4 botones), T-510 (formulario de transacción), T-601 (API de presupuestos, `0009`) y T-602 (API de metas, `0010`). Todo verificado por el coordinador (pruebas completas en su máquina, sonda HTTP real por nginx) y con auditoría de seguridad limpia.
+- **A (recomendada): aprobar merge y push** (sin `--force`). *Razón:* respaldo remoto de trabajo verificado.
+- B: esperar a la revisión visual de Adrian en la pila de revisión.
 
-**P1 · Orden de lo siguiente** (propuesto a Adrian el 2026-10-09, aún sin su OK):
-- **A (recomendada):**
-  1. **T-509** ensamblado de Inicio + barra de 4 botones + «+»;
-  2. **T-510** formulario de nueva transacción con la cuenta por defecto;
-  3. **API de presupuestos y metas (Fase 6)**;
-  4. revisión de Inicio por Adrian con datos reales.
-  *Razón:* Adrian quiere revisar posiciones y fidelidad con todo integrado.
-- B: hacer primero la API de presupuestos y metas. *Contra:* Inicio sigue sin armarse.
+**R1 · Revisión de Inicio por Adrian** con datos reales en `http://localhost:8080` (usuario sintético `revision-g7@example.test`; contraseña dada en el chat, **no** versionada). Datos sintéticos de octubre 2026: 3 cuentas (Efectivo por defecto), 4 categorías, 13 transacciones, 2 presupuestos (uno excedido), 2 metas (una completada). Adrian dice qué ajustar de posiciones y fidelidad → tareas T-511+.
 
-**D7 · Para más adelante:** ADR-005 sincronización Android (antes de V4) · orden de categorías · credenciales OAuth de Google Cloud y proveedor de tipo de cambio (Fase 6) · proxy del VPS para la IP real en el límite de login (`ARCHITECTURE.md` §10.10) · corregir el principal de un desembolso sin dinero sin crear efectivo (hoy solo con `adjustment`).
+**D12 · Historial de presupuestos y metas (`/reports/budgets`, `/reports/goals`, RF-30)**: el contrato devuelve `BudgetPage`/`GoalPage` sin campos de periodo, ambiguo para un historial por periodos.
+- **A (recomendada): contrato 0.6.0 con un esquema `BudgetPeriodReport` (`budget_id`, `period_start`, `period_end`, `spent_amount`, `remaining_amount`, `report_total`)** y `/reports/goals` igual a `GET /goals` con filtro de fechas. *Razón:* no reutiliza `start_on`/`end_on` con otro significado.
+- B: reinterpretar `start_on`/`end_on` de `Budget` como límites del periodo en ese endpoint. *Contra:* mismo campo, dos significados.
 
-*Resueltas en esta sesión:* G1–G5, L1, X1, X2, D9, D10, D11 (ver §4).
+**D7 · Para más adelante:** ADR-005 sincronización Android (antes de V4) · orden de categorías · credenciales OAuth de Google Cloud y proveedor de tipo de cambio (Fase 6) · proxy del VPS (`ARCHITECTURE.md` §10.10) · corregir el principal de un desembolso sin dinero sin crear efectivo · UI para crear/editar presupuestos y metas (hoy solo por API).
+
+*Resueltas el 2026-10-10:* G6-A, P1-A (ver §4).
 
 ## 6. Siguiente paso concreto
 
-**Al reanudar:** Adrian responde **G6** y **P1** (basta la letra). Con «A»:
+1. **Adrian responde G7 y D12** (basta la letra) y revisa Inicio (R1) en la pila de revisión.
+2. **G7 = A:** repetir auditoría, `gate-resolve`, `git merge --ff-only master-dev` en `../Monetae`, push sin `--force` (Anexo B).
+3. **Con lo que diga Adrian en R1:** tareas de ajuste visual (Codex `gpt-6.1-sol` high, `apps/web`).
+4. **Siguientes de la Fase 5/6** (propuesta): T-511 pantallas de crear/editar presupuesto y meta (UI) · T-603 historial de presupuestos (según D12) · pestaña Transacciones con filtros. Cada una con spec releída contra el contrato (dos errores de spec atrapados por workers hoy: tasa con 6 decimales y caso «sin convertir»).
 
-| Paso | Qué | Agente / modelo / esfuerzo | Rama | Cómo lo verifico |
-|---|---|---|---|---|
-| 1 | G6: auditoría, `gate-resolve gate_70e14ac5abc1`, ff de `main`, push sin `--force`, marcar `task_6ff18605f937` `completed` | coordinador | — | `git ls-remote origin` |
-| 2 | **T-509** Inicio según `docs/ui/home-layout.md` (saludo; cuentas con saldo, nº de transacciones, color y **selección de cuenta por defecto** resaltada; objetivos; presupuestos; circular de gastos con top-3 y **deslizar** a ingresos; línea **acumulada** con `cumulative_net`; 25 últimas transacciones; botón «+» cuadrado) + barra **Inicio/Transacciones/Presupuestos/Más** + carril visible de la barra de presupuesto en oscuro (nota de T-507). Spec por escribir: **releer contra el código y Cashew** (`homePage*.dart`, `bottomNavBar.dart`) | Codex `gpt-6.1-sol` · high | `codex/T-509-ui-home-assembly` | `dart analyze`, `flutter test` + goldens claro/oscuro, `flutter build web`; prueba real con la pila de revisión |
-| 3 | **T-510** formulario de nueva transacción (fiel a `addTransactionPage` de Cashew; propone la cuenta por defecto) | Codex `gpt-6.1-sol` · high | `codex/T-510-ui-add-transaction` (después de T-509; comparten `main.dart`) | ídem + `POST /transactions` real con CSRF |
-| 4 | **API de presupuestos y metas (Fase 6)**, incluido `color`/`icon` del contrato 0.5.0; en paralelo con T-509 si los archivos no se solapan (backend vs `apps/web`) | Codex `gpt-6.1-sol` · high | `codex/T-6xx-api-budgets-goals` | `ruff`, `mypy`, `pytest` con PostgreSQL, `alembic` (migración `0009`), sonda real |
-
-**Antes de lanzar:** `orca skills get orchestration --full`, `orca status --json`, `docker version`, `git worktree list`, disco ≥ 3 GB y puertos libres. Codex muestra el aviso «Update available» al lanzar: enviar *Esc* y reintentar (Anexo C). Usar `check --ack <delivery>` tras procesar cada entrega.
+**Antes de lanzar:** `orca skills get orchestration --full`, `orca status --json`, `docker version`, `git worktree list`, disco ≥ 3 GB y puertos libres. Codex muestra «Update available» en cada lanzamiento: enviar *Esc* y reintentar con `--retry-of` (Anexo C).
 
 ## 7. Estado del Run, de los worktrees y de los agentes abiertos
 
-**Run de la Fase 5: `run_c2cebe1745b9`.** Tareas `completed`: T-501 `task_5df2d0fe6f4d`, T-502 `task_fd5d51af5bd1`, T-503 `task_23b103463ac4`, T-504 `task_2cb692365da5` (+T-504b `task_0d2f31697cba`), T-505 `task_98c4de4ea74a`, T-506 `task_46d3c202cc60`, T-507 `task_e8282e2fc9df`, T-508 `task_6ff18605f937` (puede figurar `blocked` por el gate G6; marcar `completed` al resolverlo). **Ningún worker vivo** (sin procesos de Codex; `worker-list` solo muestra registros liberados). Run de la Fase 4: `run_f5e95406186a` (todo `completed`). Anteriores: `run_63b520544a30` (F3), `run_70f5f187fe16` (F2), `run_2cddcd14320c` (F1), `run_bef8ecfc67a7` (F0). El CLI no cierra Runs; no usar `orchestration reset`.
+**Run de la Fase 5: `run_c2cebe1745b9`.** Tareas `completed`: T-501…T-508 (ver historial en git) y, el 2026-10-10, T-509 `task_faa87dcb2f99`, T-510 `task_39dfa64bea7f`, T-601 `task_61442c37cf55`, T-602 `task_752b79134036` (puede figurar `blocked` por el gate G7). **Ningún worker vivo** (todas las terminales liberadas). Runs anteriores: `run_f5e95406186a` (F4), `run_63b520544a30` (F3), `run_70f5f187fe16` (F2), `run_2cddcd14320c` (F1), `run_bef8ecfc67a7` (F0). El CLI no cierra Runs; no usar `orchestration reset`.
 
-**Worktrees:** solo `Monetae` → `main` y `Monetae-master-dev` → `master-dev` (Adrian borró los de Codex). Sin ramas `codex/*`. Sin `.env` sueltos.
+**Worktrees:** `Monetae` → `main`, `Monetae-master-dev` → `master-dev` y los 4 de Codex ya fusionados (`Monetae-codex-T-509-ui-home-assembly`, `…-T-510-ui-add-transaction`, `…-T-601-api-budgets`, `…-T-602-api-goals`; ramas `codex-T-5xx/6xx-…`, sin `build/`, `.dart_tool/` ni `.venv/`). **Adrian puede borrarlos** (sus commits están en `master-dev`).
 
-**Contenedores:** ninguno en marcha. Queda el **volumen** `monetae-review_postgres_data` (usuario sintético `adrian-review@example.test` + datos de la fixture; la contraseña se dio a Adrian en el chat y **no** se versiona). Para relanzar la pila de revisión desde `Monetae-master-dev`: `cd apps/web && flutter build web --release && cd ../.. && cp .env.example .env && sed -i 's/^MONETAE_COOKIE_SECURE=true$/MONETAE_COOKIE_SECURE=false/' .env && COMPOSE_PROJECT_NAME=monetae-review docker compose -f infra/docker-compose.yml up -d --build db api web` (y `alembic upgrade head` en `api`). Bajar con `down` (o `down -v` para borrar sus datos) y `rm -f .env`.
+**Contenedores:** **pila de revisión `monetae-review` EN MARCHA** desde `Monetae-master-dev` (db 5433, api 8000, web `http://localhost:8080`; BD en `0010`; `.env` temporal con `MONETAE_COOKIE_SECURE=false` en `Monetae-master-dev`, ignorado por git). Usuarios sintéticos: `adrian-review@example.test` (fixture ene–feb 2026) y `revision-g7@example.test` (octubre 2026, con presupuestos y metas); contraseñas solo en el chat. Bajar: `COMPOSE_PROJECT_NAME=monetae-review docker compose -f infra/docker-compose.yml down` (o `down -v` para borrar datos) y `rm -f .env`. Relanzar: ver el comando de la versión anterior de este archivo (build web + compose up + `alembic upgrade head` en `api`).
 
 **Paneles de Orca abiertos:** el del coordinador y `lupuna` (otro proyecto, no se toca). Ningún panel de Codex.
 
@@ -122,6 +115,7 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 - **Importación real:** el `apply` nunca se ha ejecutado (solo `--dry-run` sobre copias, cuadre exacto); espera a D9-A. El importador es **solo inserción**. Préstamos con principal supuesto (L1-A) aparecen `settled` hasta corregirlos con `adjustment` (el `PUT` del desembolso crea efectivo).
 - **UI:** Inicio aún no está ensamblado según la disposición de Adrian; presupuestos y metas solo con datos sintéticos hasta su API (Fase 6). `intl` no trae el formato peruano: está fijado a mano en `currency_format.dart` («S/ 1,234.50» en español). El favicon sigue el modo del **sistema/navegador**, no el tema de la app.
 - **Íconos de Cashew:** sus 277 PNG de categoría tienen licencia dudosa; **no** copiarlos (SPEC RF-46).
+- **Presupuestos y metas en moneda distinta de la base:** toda conversión pasa por la base (PEN). Un presupuesto o meta en USD con gastos en USD muestra 0.00 hasta que exista una tasa PEN→USD en `exchange_rates` (proveedor en la Fase 6 o tasa manual).
 - **Reportes:** sin proveedor de tipo de cambio (Fase 6), con moneda de reporte ≠ base todo cae en `unconverted_count` salvo tasas insertadas a mano en `exchange_rates`.
 - **Sin auditoría de seguridad externa** (Fase 7). La BD admite un `income` negativo por SQL directo (`ARCHITECTURE.md` §10.12). Límite de login detrás de proxy (§10.10). `501 google_login_not_available` fuera del contrato (§10.11).
 - **Disco:** ≈ 3,1 GB libres en `/` (20 GB). Flutter + Docker lo consumen rápido: borrar artefactos (`build/`, `.dart_tool/`, `.venv/`) de worktrees ya fusionados.

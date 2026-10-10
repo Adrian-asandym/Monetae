@@ -1,6 +1,6 @@
 # T-601 — API: presupuestos (RF-28, RF-29) con su periodo en curso
 
-> **ESTADO: LANZADA el 2026-10-10** (Run `run_c2cebe1745b9`; OK de Adrian «P1-A»; SPEC v0.5, contrato 0.5.0). Corre **en paralelo con T-509** (UI; archivos disjuntos). T-602 (metas) va **después** de esta, porque también añade una migración.
+> **ESTADO: ACEPTADA e integrada en `master-dev` el 2026-10-10** (`b20bc45`; 1106 pruebas; sonda real: gasto del periodo exacto). (Run `run_c2cebe1745b9`; OK de Adrian «P1-A»; SPEC v0.5, contrato 0.5.0). Corre **en paralelo con T-509** (UI; archivos disjuntos). T-602 (metas) va **después** de esta, porque también añade una migración.
 > Agente: **Codex**, modelo `gpt-6.1-sol`, esfuerzo `high` (dominio nuevo con periodos y conversión).
 
 ## Contexto
