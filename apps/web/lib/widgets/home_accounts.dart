@@ -1,15 +1,10 @@
-// Derived from Cashew pages/homePage/{homePageWalletList,homePageWalletSwitcher}.dart
-// and widgets/walletEntry.dart. Copyright James Kokoska, GPL-3.0.
-// Modified 2026-10-10: API balances/counts, controlled default-account selection.
 import 'package:flutter/material.dart';
 
 import '../data/api_dtos.dart';
 import '../l10n/app_localizations.dart';
 import '../presentation/account_color.dart';
-import '../presentation/category_icon_source.dart';
 import '../presentation/currency_format.dart';
 import '../theme/monetae_theme.dart';
-import 'category_icon.dart';
 
 class HomeAccounts extends StatelessWidget {
   const HomeAccounts({
@@ -26,71 +21,150 @@ class HomeAccounts extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     if (accounts.isEmpty) return Text(l.emptyAccounts);
-    return Column(
-      children: [
-        for (final account in accounts)
-          Builder(
-            builder: (context) {
-              final color = accountColor(account.id, account.color);
-              final selected = account.id == selectedId;
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 3),
-                child: Semantics(
-                  selected: selected,
-                  button: true,
-                  child: Material(
-                    key: Key('account-${account.id}'),
-                    color: selected
-                        ? pastel(color, Theme.of(context).brightness, .45)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(15),
-                    child: ListTile(
-                      selected: selected,
-                      selectedColor: Theme.of(context).colorScheme.onSurface,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      onTap: onSelected == null
-                          ? null
-                          : () => onSelected!(account.id),
-                      leading: CategoryIcon(
-                        source: CategoryIconSource.resolve(account.icon),
-                        color: color,
-                      ),
-                      title: Text(
-                        account.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      subtitle: Text(
-                        l.accountTransactionCount(account.transactionCount),
-                      ),
-                      trailing: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            formatCurrency(
-                              account.balance,
-                              account.currency,
-                              l.localeName,
-                            ),
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          if (selected)
-                            Text(
-                              l.defaultAccount,
-                              style: const TextStyle(fontSize: 10),
-                            ),
-                        ],
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 13.0),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        clipBehavior: Clip.none,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final account in accounts)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: _WalletEntry(
+                  account: account,
+                  selected: account.id == selectedId,
+                  onSelected: onSelected,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WalletEntry extends StatelessWidget {
+  const _WalletEntry({
+    required this.account,
+    required this.selected,
+    required this.onSelected,
+  });
+  final AccountDto account;
+  final bool selected;
+  final ValueChanged<String>? onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final color = accountColor(account.id, account.color);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    final double amount = double.tryParse(account.balance) ?? 0.0;
+    Color amountColor = Theme.of(context).colorScheme.onSurface;
+    if (amount > 0) {
+      amountColor = isDark ? const Color(0xFF62CA77) : const Color(0xFF59A849);
+    } else if (amount < 0) {
+      amountColor = isDark ? const Color(0xFFDA7272) : const Color(0xFFCA5A5A);
+    }
+
+    return Semantics(
+      selected: selected,
+      button: true,
+      child: Material(
+        key: Key('account-${account.id}'),
+        color: Theme.of(context).cardTheme.color,
+        borderRadius: BorderRadius.circular(15),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onSelected == null ? null : () => onSelected!(account.id),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 450),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(
+                width: 2,
+                color: selected ? color.withOpacity(0.7) : Colors.transparent,
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned(
+                    right: -11,
+                    top: -5,
+                    child: Container(
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.7),
+                        borderRadius: BorderRadius.circular(100),
                       ),
                     ),
                   ),
-                ),
-              );
-            },
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 17),
+                        child: Text(
+                          account.name,
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (amount != 0)
+                            Icon(
+                              amount > 0
+                                  ? Icons.arrow_drop_up_rounded
+                                  : Icons.arrow_drop_down_rounded,
+                              color: amountColor,
+                              size: 24,
+                            ),
+                          Text(
+                            formatCurrency(
+                              amount.toStringAsFixed(2), // We format with 2 decimals
+                              account.currency,
+                              l.localeName,
+                            ),
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: amountColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        l.accountTransactionCount(account.transactionCount),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.65),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
-      ],
+        ),
+      ),
     );
   }
 }

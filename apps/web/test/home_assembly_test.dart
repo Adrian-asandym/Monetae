@@ -214,7 +214,10 @@ void main() {
         f.patch = Completer<http.Response>();
         await mountHome(tester, f, height: 600);
         final id = f.accounts.last.id;
-        await tester.tap(find.byKey(Key('account-$id')));
+        final target = find.byKey(Key('account-$id'));
+        await tester.ensureVisible(target);
+        await tester.pumpAndSettle();
+        await tester.tap(target);
         await tester.pump();
         expect(
           tester.widget<HomeAccounts>(find.byType(HomeAccounts)).selectedId,

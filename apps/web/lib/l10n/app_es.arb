@@ -207,7 +207,7 @@
   "comingSoon": "Próximamente",
   "theme": "Tema",
   "systemTheme": "Tema del sistema",
-  "accountTransactionCount": "{count} transacciones",
+  "accountTransactionCount": "{count, plural, =1{1 transacción} other{{count} transacciones}}",
   "@accountTransactionCount": {
     "placeholders": {
       "count": {
