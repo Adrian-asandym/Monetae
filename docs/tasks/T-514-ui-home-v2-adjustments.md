@@ -1,6 +1,6 @@
 # T-514 — UI: 4 ajustes de Inicio (v2) fieles a Cashew
 
-> **ESTADO: LANZADA el 2026-10-10** (Run `run_c2cebe1745b9`; instrucciones de Adrian del 2026-10-10).
+> **ESTADO: ACEPTADA e integrada en `master-dev` el 2026-10-10** (217 pruebas UI y goldens con texto verificados por el coordinador; skill actualizada por el coordinador). (Run `run_c2cebe1745b9`; instrucciones de Adrian del 2026-10-10).
 > Agente: **Codex**, modelo `gpt-6.1-sol`, esfuerzo `high`.
 
 ## Fuente

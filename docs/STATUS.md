@@ -95,6 +95,10 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
 **R2 · Revisión de Inicio fiel a Cashew (T-512) por Adrian** en `http://localhost:8080` (usuario `revision-g7@example.test`, nombre «Adrian Sandy»; pila de revisión actualizada con T-513, BD `0011`). Los 4 detalles conocidos ya están corregidos en T-513; sus observaciones → siguiente tarea Codex. Las observaciones de Adrian irán en una tarea Codex posterior a T-513.
 
+**F1 · Pantallas que faltan para conectar Inicio** (detectadas en T-514): formulario de **crear objetivo**, formulario de **crear presupuesto**, **detalle de categorías** (lista + selector de mes) y **reordenar Inicio** (botón «Editar»). Hoy son TODO.
+- **A (recomendada): una tarea Codex por pantalla**, empezando por los formularios de objetivo y presupuesto (la API ya existe), fieles a `addObjectivePage.dart` / `addBudgetPage.dart` de Cashew.
+- B: esperar a terminar la revisión visual de Inicio.
+
 **S1–S6 · Plan de la skill `cashew-inicio-ui` (propuesto 2026-10-10, pendiente de Adrian):**
 - **S1 capturas:** faltan las 6 de `references/`. Contienen datos reales → guardarlas en `reference/cashew-inicio/` (ignorada por git), **no** en `.claude/` (repositorio público).
 - **S2 confirmar** que la skill reemplaza el fondo azul y el formato «S/ 1,234.50» (recomendado: sí, la skill manda).
