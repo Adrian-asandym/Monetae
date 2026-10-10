@@ -787,6 +787,78 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Total convertido: {amount}'**
   String convertedTotal(String amount);
+
+  /// No description provided for @more.
+  ///
+  /// In es, this message translates to:
+  /// **'Más'**
+  String get more;
+
+  /// No description provided for @accounts.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuentas'**
+  String get accounts;
+
+  /// No description provided for @emptyAccounts.
+  ///
+  /// In es, this message translates to:
+  /// **'Todavía no hay cuentas.'**
+  String get emptyAccounts;
+
+  /// No description provided for @defaultAccount.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuenta por defecto'**
+  String get defaultAccount;
+
+  /// No description provided for @homeGreeting.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Hola!'**
+  String get homeGreeting;
+
+  /// No description provided for @latestTransactions.
+  ///
+  /// In es, this message translates to:
+  /// **'Últimas transacciones'**
+  String get latestTransactions;
+
+  /// No description provided for @cumulativeCashFlow.
+  ///
+  /// In es, this message translates to:
+  /// **'Evolución acumulada'**
+  String get cumulativeCashFlow;
+
+  /// No description provided for @addTransaction.
+  ///
+  /// In es, this message translates to:
+  /// **'Añadir transacción'**
+  String get addTransaction;
+
+  /// No description provided for @comingSoon.
+  ///
+  /// In es, this message translates to:
+  /// **'Próximamente'**
+  String get comingSoon;
+
+  /// No description provided for @theme.
+  ///
+  /// In es, this message translates to:
+  /// **'Tema'**
+  String get theme;
+
+  /// No description provided for @systemTheme.
+  ///
+  /// In es, this message translates to:
+  /// **'Tema del sistema'**
+  String get systemTheme;
+
+  /// No description provided for @accountTransactionCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} transacciones'**
+  String accountTransactionCount(int count);
 }
 
 class _AppLocalizationsDelegate

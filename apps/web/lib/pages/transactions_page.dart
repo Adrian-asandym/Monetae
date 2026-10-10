@@ -8,16 +8,17 @@ import '../session/session_controller.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/transaction_card_list.dart';
 import '../widgets/transaction_card_settings.dart';
-import 'home_page.dart';
 
 class TransactionsPage extends StatefulWidget {
   const TransactionsPage({
     super.key,
     required this.session,
     required this.onDemo,
+    this.onHome,
   });
   final SessionController session;
   final VoidCallback onDemo;
+  final VoidCallback? onHome;
   @override
   State<TransactionsPage> createState() => _TransactionsPageState();
 }
@@ -82,14 +83,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
           IconButton(
             tooltip: l.home,
             icon: const Icon(Icons.home_outlined),
-            onPressed: () => Navigator.of(context).push<void>(
-              MaterialPageRoute(
-                builder: (_) => HomePage(
-                  api: widget.session.api,
-                  reportCurrency: profile.reportCurrency,
-                ),
-              ),
-            ),
+            onPressed: widget.onHome,
           ),
           IconButton(
             tooltip: l.refresh,

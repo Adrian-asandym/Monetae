@@ -373,4 +373,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String convertedTotal(String amount) {
     return 'Converted total: $amount';
   }
+
+  @override
+  String get more => 'More';
+
+  @override
+  String get accounts => 'Accounts';
+
+  @override
+  String get emptyAccounts => 'No accounts yet.';
+
+  @override
+  String get defaultAccount => 'Default account';
+
+  @override
+  String get homeGreeting => 'Hello!';
+
+  @override
+  String get latestTransactions => 'Latest transactions';
+
+  @override
+  String get cumulativeCashFlow => 'Cumulative cash flow';
+
+  @override
+  String get addTransaction => 'Add transaction';
+
+  @override
+  String get comingSoon => 'Coming soon';
+
+  @override
+  String get theme => 'Theme';
+
+  @override
+  String get systemTheme => 'System theme';
+
+  @override
+  String accountTransactionCount(int count) {
+    return '$count transactions';
+  }
 }

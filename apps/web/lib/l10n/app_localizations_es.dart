@@ -375,4 +375,42 @@ class AppLocalizationsEs extends AppLocalizations {
   String convertedTotal(String amount) {
     return 'Total convertido: $amount';
   }
+
+  @override
+  String get more => 'Más';
+
+  @override
+  String get accounts => 'Cuentas';
+
+  @override
+  String get emptyAccounts => 'Todavía no hay cuentas.';
+
+  @override
+  String get defaultAccount => 'Cuenta por defecto';
+
+  @override
+  String get homeGreeting => '¡Hola!';
+
+  @override
+  String get latestTransactions => 'Últimas transacciones';
+
+  @override
+  String get cumulativeCashFlow => 'Evolución acumulada';
+
+  @override
+  String get addTransaction => 'Añadir transacción';
+
+  @override
+  String get comingSoon => 'Próximamente';
+
+  @override
+  String get theme => 'Tema';
+
+  @override
+  String get systemTheme => 'Tema del sistema';
+
+  @override
+  String accountTransactionCount(int count) {
+    return '$count transacciones';
+  }
 }

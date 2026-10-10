@@ -30,7 +30,7 @@ final class TransactionFeed {
     } while (cursor != null);
   }
 
-  Future<void> load() async {
+  Future<void> load({int limit = 50}) async {
     await Future.wait([
       _catalog(
         (cursor) async {
@@ -57,7 +57,7 @@ final class TransactionFeed {
         (item) => item.id,
       ),
     ]);
-    await loadMore();
+    await loadMore(limit: limit);
   }
 
   final _missing = <String>{};
@@ -76,8 +76,8 @@ final class TransactionFeed {
     }
   }
 
-  Future<void> loadMore() async {
-    final page = await api.transactions(cursor: nextCursor);
+  Future<void> loadMore({int limit = 50}) async {
+    final page = await api.transactions(cursor: nextCursor, limit: limit);
     for (final item in page.items) {
       await _resolve(item.accountId, accounts, api.account);
       final categoryId = item.categoryId;
