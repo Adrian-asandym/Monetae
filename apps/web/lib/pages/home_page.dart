@@ -15,6 +15,7 @@ import '../widgets/cumulative_cash_flow_chart.dart';
 import '../widgets/home_accounts.dart';
 import '../widgets/home_block_view.dart';
 import '../widgets/home_category_carousel.dart';
+import '../widgets/home_greeting.dart';
 import '../widgets/transaction_card_list.dart';
 
 const defaultHomeWidgets = [
@@ -160,18 +161,6 @@ class _HomePageState extends State<HomePage> {
       ),
     };
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l.home),
-        actions: [
-          IconButton(
-            tooltip: l.refresh,
-            onPressed: _home.load,
-            icon: const Icon(Icons.refresh),
-          ),
-          const BrandLogo(size: 36),
-          const SizedBox(width: 13),
-        ],
-      ),
       body: SingleChildScrollView(
         key: const Key('home-scroll'),
         padding: const EdgeInsets.fromLTRB(13, 13, 13, 96),
@@ -181,13 +170,29 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  l.homeGreeting,
-                  key: const Key('home-greeting'),
-                  style: const TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: HomeGreeting(
+                        now: _today,
+                        displayName: null, // Will be replaced in future tasks
+                      ),
+                    ),
+                    PopupMenuButton<String>(
+                      tooltip: l.more,
+                      onSelected: (value) {
+                        if (value == 'refresh') _home.load();
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem(value: 'refresh', child: Text(l.refresh)),
+                        const PopupMenuItem(
+                          value: 'brand',
+                          child: Center(child: BrandLogo(size: 64)),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 20),
                 if (session.error != null)

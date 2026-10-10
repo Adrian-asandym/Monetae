@@ -818,6 +818,24 @@ abstract class AppLocalizations {
   /// **'¡Hola!'**
   String get homeGreeting;
 
+  /// No description provided for @goodMorning.
+  ///
+  /// In es, this message translates to:
+  /// **'Buenos días'**
+  String get goodMorning;
+
+  /// No description provided for @goodAfternoon.
+  ///
+  /// In es, this message translates to:
+  /// **'Buenas tardes'**
+  String get goodAfternoon;
+
+  /// No description provided for @goodEvening.
+  ///
+  /// In es, this message translates to:
+  /// **'Buenas noches'**
+  String get goodEvening;
+
   /// No description provided for @latestTransactions.
   ///
   /// In es, this message translates to:

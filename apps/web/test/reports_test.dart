@@ -304,7 +304,11 @@ void main() {
       );
       expect(queries.length, 4);
       expired = true;
-      await tester.tap(find.byTooltip(l.refresh));
+      await tester.ensureVisible(find.byType(PopupMenuButton<String>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(PopupMenuButton<String>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(l.refresh).last);
       await tester.pumpAndSettle();
       expect(find.byType(LoginPage), findsOneWidget);
       expect(find.byType(HomePage), findsNothing);
