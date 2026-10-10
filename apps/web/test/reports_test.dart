@@ -14,6 +14,8 @@ import 'package:monetae_web/data/mock_reports.dart';
 import 'package:monetae_web/l10n/app_localizations_es.dart';
 import 'package:monetae_web/l10n/app_localizations.dart';
 import 'package:monetae_web/pages/home_page.dart';
+import 'package:monetae_web/pages/report_demo_page.dart';
+import 'package:monetae_web/widgets/cumulative_cash_flow_chart.dart';
 import 'package:monetae_web/main.dart';
 import 'package:monetae_web/pages/login_page.dart';
 
@@ -165,7 +167,7 @@ void main() {
           await harness.mount(
             tester,
             Brightness.light,
-            (_, _) => HomePage(api: api),
+            (_, _) => ReportDemoPage(api: api),
           );
           await tester.pumpAndSettle();
           expect(find.byKey(const Key('empty-reports')), findsOneWidget);
@@ -257,7 +259,7 @@ void main() {
     },
   );
   testWidgets(
-    'authenticated start shows reports; month refresh and expiry clear private routes',
+    'authenticated home refreshes both report blocks and expiry clears routes',
     (tester) async {
       final queries = <Map<String, String>>[];
       var expired = false;
@@ -266,39 +268,46 @@ void main() {
         client: MockClient((request) async {
           if (expired) return session.problem(401);
           if (request.url.path == '/api/v1/users/me') {
-            return session.ok(session.profile());
+            return session.ok({
+              ...session.profile(),
+              'preferences': {'home_widgets': <String>[], 'theme': 'light'},
+            });
           }
-          if (request.url.path == '/api/v1/categories') {
-            return page(data.categories.values.map((c) => c.toJson()).toList());
-          }
-          queries.add(request.url.queryParameters);
           if (request.url.path == '/api/v1/reports/cash-flow') {
-            return page(
-              request.url.queryParameters['period'] == 'monthly'
-                  ? [data.summary!.toJson()]
-                  : data.flow.map((row) => row.toJson()).toList(),
-            );
+            queries.add(request.url.queryParameters);
+            return page(data.flow.map((row) => row.toJson()).toList());
           }
-          return page(data.rows.map((row) => row.toJson()).toList());
+          if (request.url.path == '/api/v1/reports/categories') {
+            queries.add(request.url.queryParameters);
+            return page(data.rows.map((row) => row.toJson()).toList());
+          }
+          if (request.url.path == '/api/v1/budgets' ||
+              request.url.path == '/api/v1/goals') {
+            return session.problem(404);
+          }
+          return session.catalogs(request);
         }),
       );
       addTearDown(api.close);
       await tester.pumpWidget(MonetaeApp(api: api));
       await tester.pumpAndSettle();
       expect(find.byType(HomePage), findsOneWidget);
-      expect(find.byType(IncomeExpenseSummary), findsOneWidget);
+      expect(find.byType(CumulativeCashFlowChart), findsOneWidget);
       expect(queries.every((query) => query['report_currency'] == 'USD'), true);
       final previous = DateTime.parse(queries.first['date_from']!);
+      await tester.ensureVisible(find.byTooltip(l.previousMonth));
       await tester.tap(find.byTooltip(l.previousMonth));
       await tester.pumpAndSettle();
-      final changed = DateTime.parse(queries.last['date_from']!);
-      expect(changed, DateTime(previous.year, previous.month - 1));
-      expect(queries.length, 6);
+      expect(
+        DateTime.parse(queries.last['date_from']!),
+        DateTime(previous.year, previous.month - 1),
+      );
+      expect(queries.length, 4);
       expired = true;
       await tester.tap(find.byTooltip(l.refresh));
       await tester.pumpAndSettle();
       expect(find.byType(LoginPage), findsOneWidget);
-      expect(find.byType(ReportDashboard), findsNothing);
+      expect(find.byType(HomePage), findsNothing);
       expect(tester.takeException(), isNull);
     },
   );
@@ -328,7 +337,7 @@ void main() {
       await harness.mount(
         tester,
         Brightness.light,
-        (_, _) => HomePage(api: api),
+        (_, _) => ReportDemoPage(api: api),
       );
       await tester.pumpAndSettle();
       expect(find.text(l.connectionError), findsOneWidget);
@@ -357,9 +366,11 @@ void main() {
       addTearDown(api.close);
       await tester.pumpWidget(MonetaeApp(api: api));
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip(l.signOut));
+      await tester.tap(find.byKey(const Key('nav-3')));
       await tester.pumpAndSettle();
-      expect(find.byType(HomePage), findsOneWidget);
+      await tester.tap(find.byKey(const Key('sign-out')));
+      await tester.pumpAndSettle();
+      expect(find.byType(HomePage, skipOffstage: false), findsOneWidget);
       expect(find.byKey(const Key('session-error')), findsOneWidget);
       expect(find.text(l.connectionError), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -403,7 +414,7 @@ void main() {
     await tester.tap(find.byKey(const Key('home-theme-switch')));
     await tester.pumpAndSettle();
     expect(
-      Theme.of(tester.element(find.byType(HomePage))).brightness,
+      Theme.of(tester.element(find.byType(ReportDemoPage))).brightness,
       Brightness.dark,
     );
     expect(find.byType(ReportDashboard), findsOneWidget);
@@ -545,7 +556,7 @@ void main() {
       await harness.mount(
         tester,
         brightness,
-        (_, _) => const HomePage(),
+        (_, _) => const ReportDemoPage(),
         captureSize: const Size(760, 1150),
         viewSize: const Size(900, 1250),
       );

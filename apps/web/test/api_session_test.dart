@@ -279,8 +279,8 @@ void main() {
     addTearDown(api.close);
     await tester.pumpWidget(MonetaeApp(api: api));
     await tester.pumpAndSettle();
-    if (find.byKey(const Key('home-transactions')).evaluate().isNotEmpty) {
-      await tester.tap(find.byKey(const Key('home-transactions')));
+    if (find.byKey(const Key('nav-1')).evaluate().isNotEmpty) {
+      await tester.tap(find.byKey(const Key('nav-1')));
       await tester.pumpAndSettle();
     }
     await tester.pumpAndSettle();
@@ -306,8 +306,8 @@ void main() {
       addTearDown(api.close);
       await tester.pumpWidget(MonetaeApp(api: api));
       await tester.pumpAndSettle();
-      if (find.byKey(const Key('home-transactions')).evaluate().isNotEmpty) {
-        await tester.tap(find.byKey(const Key('home-transactions')));
+      if (find.byKey(const Key('nav-1')).evaluate().isNotEmpty) {
+        await tester.tap(find.byKey(const Key('nav-1')));
         await tester.pumpAndSettle();
       }
       await tester.pumpAndSettle();
@@ -480,8 +480,8 @@ void main() {
     addTearDown(api.close);
     await tester.pumpWidget(MonetaeApp(api: api));
     await tester.pumpAndSettle();
-    if (find.byKey(const Key('home-transactions')).evaluate().isNotEmpty) {
-      await tester.tap(find.byKey(const Key('home-transactions')));
+    if (find.byKey(const Key('nav-1')).evaluate().isNotEmpty) {
+      await tester.tap(find.byKey(const Key('nav-1')));
       await tester.pumpAndSettle();
     }
     await tester.pumpAndSettle();
@@ -493,8 +493,8 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     await tester.pumpWidget(MonetaeApp(api: api));
     await tester.pumpAndSettle();
-    if (find.byKey(const Key('home-transactions')).evaluate().isNotEmpty) {
-      await tester.tap(find.byKey(const Key('home-transactions')));
+    if (find.byKey(const Key('nav-1')).evaluate().isNotEmpty) {
+      await tester.tap(find.byKey(const Key('nav-1')));
       await tester.pumpAndSettle();
     }
     await tester.pumpAndSettle();
@@ -625,8 +625,8 @@ void main() {
     addTearDown(api.close);
     await tester.pumpWidget(MonetaeApp(api: api));
     await tester.pumpAndSettle();
-    if (find.byKey(const Key('home-transactions')).evaluate().isNotEmpty) {
-      await tester.tap(find.byKey(const Key('home-transactions')));
+    if (find.byKey(const Key('nav-1')).evaluate().isNotEmpty) {
+      await tester.tap(find.byKey(const Key('nav-1')));
       await tester.pumpAndSettle();
     }
     await tester.pumpAndSettle();
