@@ -843,3 +843,28 @@ git diff --check
 La compilación conserva el aviso previo de CupertinoIcons documentado en T-509;
 MaterialIcons se incluye y la compilación termina con código 0. No se agregaron
 dependencias ni se versionaron artefactos de compilación.
+
+## T-512
+
+Fecha: 2026-10-10. Rama: `agy-T-512-ui-home-cashew-parity`.
+El coordinador solicitó ajustes en `T-512b` sobre la misma rama para correcciones visuales y análisis de goldens.
+
+### Componentes y calibración
+
+Se reprodujo fielmente la UI de Inicio de Cashew, ajustándose estrictamente al viewport estricto de 400x642 requerido en la skill `.claude/skills/cashew-inicio-ui/SKILL.md`.
+
+- **Componente 1 y 2 (Saludo y Cuentas, Commits `c050bb8`, refactor `505efb8`, `bb06f58`)**: Paddings laterales de 13dp y separación superior adaptada. Cuentas con opacidades actualizadas (`withValues`) y fondo sutil si no están seleccionadas.
+- **Componente 3 (Objetivos, Commit `0a33f88`)**: Reproducción de fuentes y márgenes de la tarjeta.
+- **Componente 4 (Presupuestos, Commit `121932e`)**: Gráfico integrado y layout copiado fielmente.
+- **Componente 5 (Categorías, Commit `c4d255d`)**: Pie chart simulando el borde de Cashew, tamaño 160x160 aprox.
+- **Componente 6 (Gráfico Acumulado, Commit `5773edc`)**: Sin ejes, relleno con degradado bajo la curva y alturas relativas idénticas a Cashew.
+- **Componente 7 (Transacciones, Commits `d8c645c`, ajustado en `973b31c`)**: Lista plana `HomeTransactionRow` sobre el fondo del Home, sin envoltura de tarjeta ni botones de acción, siguiendo Cashew: icono circular, cuenta atenuada, fecha arriba a la derecha y monto con triángulo indicador.
+- **Componente 8 (FAB y Barra, Commit `505efb8`, ajustado en `973b31c`)**: FAB centralizado usando gris neutro claro/oscuro y '+' blanco. Ícono de la pestaña inferior transacciones migrado a `payments` de forma unificada.
+- **Fonts**: Se implementó un cargador específico de `DM Sans` (`loadGoldenFonts()`) con las variables Regular y Bold desde disco, agregando `OFL.txt`.
+
+### Lista de diferencias restantes con su motivo
+
+1. **Montos en moneda extranjera (original amounts)**: Se omiten intencionalmente para preservar el diseño simple del layout en Inicio y simplificar el acoplamiento a los DTOs, tal como rigen las restricciones actuales.
+2. **Iconos de transacciones repetidos**: Omitido (no se dibuja textura de repetición), ya que el diseño puro con color sólido es el baseline esperado hasta cargar SVG avanzado (Fase 6).
+3. **Speed dial FAB ausente**: Cashew despliega un menú flotante con varias opciones. Aquí se implementó un FAB simple directo a `/transactions/new` porque la creación abarca todos los tipos.
+4. **Colores de cuenta por defecto**: Cashew dispone de paletas hardcodeadas estáticas; Monetae aplica un fallback derivado del tema actual en caso la API no provea un color de cuenta (mejor adaptabilidad a dark mode).
