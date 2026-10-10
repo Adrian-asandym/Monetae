@@ -92,7 +92,7 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 - B: usar **etiquetas** (`tags`) para marcar qué pertenece a cada presupuesto o meta. *Contra:* duplica la pertenencia que ya calcula el servidor (categorías del presupuesto, selección de la meta) y obliga a etiquetar a mano.
 - *Pendiente:* confirmación de Adrian.
 
-**R2 · Revisión de Inicio fiel a Cashew (T-512) por Adrian** en `http://localhost:8080` (usuario `revision-g7@example.test`, nombre «Adrian Sandy»; pila de revisión actualizada a `2903271`, BD `0011`). Sus observaciones + 4 detalles conocidos (ver `docs/tasks/T-512-ui-home-cashew-parity.md`) → una sola tarea de ajuste T-513. Las observaciones de Adrian irán en una tarea Codex posterior a T-513.
+**R2 · Revisión de Inicio fiel a Cashew (T-512) por Adrian** en `http://localhost:8080` (usuario `revision-g7@example.test`, nombre «Adrian Sandy»; pila de revisión actualizada con T-513, BD `0011`). Los 4 detalles conocidos ya están corregidos en T-513; sus observaciones → siguiente tarea Codex. Las observaciones de Adrian irán en una tarea Codex posterior a T-513.
 
 **S1–S6 · Plan de la skill `cashew-inicio-ui` (propuesto 2026-10-10, pendiente de Adrian):**
 - **S1 capturas:** faltan las 6 de `references/`. Contienen datos reales → guardarlas en `reference/cashew-inicio/` (ignorada por git), **no** en `.claude/` (repositorio público).

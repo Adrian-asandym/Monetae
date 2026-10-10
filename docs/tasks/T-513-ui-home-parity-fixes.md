@@ -1,6 +1,6 @@
 # T-513 — UI: ajustes finales de Inicio (seguimiento de T-512)
 
-> **ESTADO: LANZADA el 2026-10-10** (Run `run_c2cebe1745b9`). Adrian pidió **pasar el trabajo de UI de Antigravity a Codex** por la demora y las entregas fallidas de T-512.
+> **ESTADO: ACEPTADA e integrada en `master-dev` el 2026-10-10** (192 pruebas UI y goldens con texto verificados por el coordinador; zona horaria acotada a America/Lima por decisión del coordinador). (Run `run_c2cebe1745b9`). Adrian pidió **pasar el trabajo de UI de Antigravity a Codex** por la demora y las entregas fallidas de T-512.
 > Agente: **Codex**, modelo `gpt-6.1-sol`, esfuerzo `high`.
 
 ## Contexto
