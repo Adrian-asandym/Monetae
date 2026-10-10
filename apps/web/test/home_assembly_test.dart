@@ -25,7 +25,7 @@ import 'package:monetae_web/widgets/category_pie_chart.dart';
 import 'package:monetae_web/widgets/cumulative_cash_flow_chart.dart';
 import 'package:monetae_web/widgets/home_accounts.dart';
 import 'package:monetae_web/widgets/home_category_carousel.dart';
-import 'package:monetae_web/widgets/transaction_card.dart';
+import 'package:monetae_web/widgets/home_transaction_row.dart';
 
 import 'api_session_test.dart' as fixtures;
 import 'components_test.dart' as harness;
@@ -180,7 +180,7 @@ void main() {
           .toList();
       expect(transactions, hasLength(1));
       expect(transactions.single.url.queryParameters, {'limit': '25'});
-      expect(find.byType(TransactionCard), findsOneWidget);
+      expect(find.byType(HomeTransactionRow), findsOneWidget);
       expect(find.text(l.accountTransactionCount(35)), findsOneWidget);
       expect(find.text(l.syntheticData), findsNothing);
       expect(tester.takeException(), isNull);
@@ -362,7 +362,7 @@ void main() {
         expect(find.text(l.emptyBudgets), findsOneWidget);
         expect(find.text(l.emptyGoals), findsOneWidget);
         expect(find.text(l.connectionError), findsNothing);
-        expect(find.byType(TransactionCard), findsOneWidget);
+        expect(find.byType(HomeTransactionRow), findsOneWidget);
       },
     );
   }
@@ -374,7 +374,7 @@ void main() {
       f.statuses['/api/v1/budgets'] = 500;
       await mountHome(tester, f);
       expect(find.text(l.connectionError), findsOneWidget);
-      expect(find.byType(TransactionCard), findsOneWidget);
+      expect(find.byType(HomeTransactionRow), findsOneWidget);
       final before = f.requests.length;
       f.statuses.clear();
       await tester.tap(find.text(l.retry));
@@ -402,7 +402,7 @@ void main() {
       );
       await tester.pump(const Duration(seconds: 1));
       expect(find.byType(HomeAccounts), findsOneWidget);
-      expect(find.byType(TransactionCard), findsOneWidget);
+      expect(find.byType(HomeTransactionRow), findsOneWidget);
       expect(
         find.descendant(
           of: find.byKey(const Key('home-block-goals')),
