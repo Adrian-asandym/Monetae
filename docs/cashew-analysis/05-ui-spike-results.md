@@ -937,3 +937,51 @@ Se incorporó por avance rápido `master-dev` (`41aa4fd`, solo documentación),
 se eliminaron los artefactos `test/failures/` de la primera ejecución y `build/`
 tras verificar la compilación, y el árbol de trabajo queda limpio después del
 commit de T-513. No quedan decisiones pendientes dentro de esta tarea.
+
+## T-514 — Cuatro ajustes de Inicio v2
+
+**Base:** `master-dev` `cfee760`. Solo presentación, sin dependencias nuevas ni cambios de modelos, DTO o API. Referencias visuales v2 inspeccionadas en su ubicación ignorada, solo lectura; no se copiaron capturas ni valores reales. No se accedió a respaldos ni se utilizó la pila de Adrian en `:8080`.
+
+**1. Tarjeta añadir.** `pages/addButton.dart` de Cashew define fondo transparente, borde **1,5 dp**, icono **22 dp**, etiqueta **14 dp** y separación **2 dp**. `pages/homePage/homePageObjectives.dart` y `homePageBudgets.dart` añaden ese botón **después** de las tarjetas, ajustan su alto al carrusel y usan anchos de escritorio **400/500 dp**; el estado vacío mide **160 dp**. Monetae conserva el radio **20 dp** de sus tarjetas (el AddButton original tiene 15), el ancho móvil **95 %** y separaciones **13 dp**, con tokens en el tema y alto compartido calculado por Flutter. El borde usa gris al 35 %; las etiquetas singular «Objetivo»/«Presupuesto» tienen i18n es/en. **No existen formularios de creación de objetivos ni presupuestos**: ambos handlers de Inicio quedan vacíos con TODO, como pide T-514; no se inventa navegación.
+
+Se añaden pruebas de posición final, dimensiones iguales, acción de callback y estado vacío, y goldens claro/oscuro de ambos carruseles e Inicio a **400×642**, con datos sintéticos y DM Sans cargada para texto visible.
+
+**2. Dos páginas del circular.** Un único `HomeCategoryPiePage`, parametrizado por `CategoryReportRowKind`, muestra gastos en la página 1 e ingresos en la 2. Leyenda de las tres categorías principales arriba a la izquierda, textos de hasta dos líneas en el color del tema, triángulo rojo/verde arriba a la derecha, dona con iconos y puntos neutros de paginación. Deslizar o tocar el triángulo cambia de página. Se mantiene el alto **280 dp**, radio **20 dp**, margen interno **16 dp**, área de dona **208 dp** (deja espacio para los iconos sin recortarlos), puntos **8 dp**, tomando como referencia `pages/homePage/homePagePieChart.dart` y `widgets/pieChart.dart` de Cashew y calibrando la posición a 400×642. El ingreso vacío conserva el anillo y la distribución.
+
+**No existe pantalla de detalle de categorías**: el selector de mes y la lista anterior se conservaron en `HomeCategoryDetails`, sin ningún punto de conexión desde Inicio; `HomeController.moveMonth` sigue disponible. Se conservan los íconos vectoriales propios y DM Sans, en vez de los PNG y la fuente comercial de Cashew. Goldens de gastos, ingresos y sin ingresos en ambos temas; pruebas de deslizar, triángulo, tipo parametrizado y puntos activos.
+
+**3. Eje Y y tarjeta del gráfico de línea.** La geometría se separó en `CashFlowAxis` para probar literalmente el rango. Cashew `widgets/lineGraph.dart`: `getMinPoint`/`getMaxPoint` parten de cero cuando no se suministra `amountBefore`, amplía un rango constante sumando **1** al máximo, calcula intervalo móvil **(máximo − mínimo) / 4**, extiende los extremos cero **±0,000001** y dibuja referencia horizontal en cero. Se reproducen esas reglas y las áreas positivas/negativas con corte en cero (`belowBarData`/`aboveBarData`); se conserva la normalización de coordenadas y el tooltip con cadenas exactas del servidor. Las cuatro marcas son **max, max−i, max−2i, max−3i**, dentro de la tarjeta y alineadas con sus líneas punteadas; la marca inferior no se etiqueta. Etiquetas enteras, símbolo y agrupación según es/en, color del texto al **50 %**. Se conserva la cuadrícula **2 dp**, patrón **[2,8]**, y la línea principal pasa a **2 dp**.
+
+**Aclaración del coordinador por `orca orchestration ask`:** «0 sin etiqueta» aplica al extremo inferior de series positivas. En series mixtas cero puede ser etiqueta interior, y en series solo negativas es el máximo etiquetado; siempre hay cuatro marcas equiespaciadas y una referencia en cero. Pruebas unitarias cubren positivos, mixtos, simétricos, solo negativos y ceros. Goldens cubren positivos, mixtos, solo negativos y ceros en ambos temas.
+
+El contenedor reproduce `pages/budgetPage.dart` (tarjeta del gráfico) y `widgets/lineGraph.dart`: altura móvil del área **175 dp**, margen superior **18 dp**, inferior **12 dp**, derecho **7 dp**. Se mantiene el radio coherente de Monetae de **20 dp** (Cashew define 15 dp), fondo del token `card` para distinguirla del fondo de Inicio y **30 dp** para fechas. Las etiquetas se posicionan por la fracción exacta del rango; así la cuadrícula no queda desfasada por los intervalos anclados en cero de `fl_chart`.
+
+**4. Botón Editar.** Se sustituye el menú ⋮ por `HomeEditButton`: **114×45 dp**, radio **14 dp**, lápiz **22 dp**, espacio icono/texto **8 dp**, texto **14 dp**, fondo neutro del token de tarjeta. Las medidas se calibraron con `v2-04-editar.png` y la petición de Adrian: el código público `pages/homePage/homePage.dart` todavía usa el IconButton ⋮, por lo que no permite copiar la píldora de su variante personalizada. El handler de Inicio queda vacío con **TODO de reordenamiento**; una prueba verifica que tocarlo no provoca peticiones ni navegación. Se retiran el logo grande y «Actualizar» del menú; la lógica de `HomeController.load`, la carga inicial, la recarga tras crear una transacción y los reintentos de bloques siguen en sus ubicaciones originales.
+
+**Propuesta de recarga futura:** gesto *pull-to-refresh* envolviendo el scroll de Inicio con `RefreshIndicator` y llamando al mismo `HomeController.load`. Es solo una propuesta; no se añade interfaz ni se reubica la lógica en T-514. Goldens del saludo con la píldora e Inicio en claro y oscuro, a 400×642.
+
+**Verificación final (salidas reales; suite completa sin actualizar goldens):**
+
+```text
+dart analyze
+Analyzing web...
+No issues found!
+
+flutter test --reporter expanded
+00:30 +217: All tests passed!
+
+flutter build web --release
+Wasm dry run succeeded.
+Compiling lib/main.dart for the Web... 98.4s
+✓ Built build/web
+
+grep -rE "drift|firebase|appStateSettings|package:budget/" apps/web/lib
+(sin coincidencias; limpio)
+
+git diff --check
+(sin errores)
+```
+
+El build emitió un aviso no bloqueante de fuente `packages/cupertino_icons/CupertinoIcons`; terminó con código 0. Se abrieron y revisaron los **22 PNG nuevos** (Inicio y todos los componentes tocados, ambos temas): texto visible de DM Sans, iconos de la dona sin recortes y fechas del eje X dentro de la tarjeta. También se actualizaron los goldens existentes afectados. Las pruebas nuevas suman **25** sobre las 192 de la base, con solo datos sintéticos.
+
+Se elimina `apps/web/build/` después de compilar; no hay `test/failures/` ni scripts temporales en el repositorio. La rama se actualiza mediante rebase con `master-dev` **`c03e168`** (solo documentación), conservando **cuatro commits, uno por ajuste**, con sus goldens versionados en cada commit. `git status --short` queda vacío al terminar. No quedan decisiones pendientes para T-514; añadir, Editar y la futura pantalla de detalle permanecen como los TODO explícitos de la tarea.

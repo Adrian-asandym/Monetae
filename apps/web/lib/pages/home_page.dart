@@ -8,7 +8,7 @@ import '../api/home_controller.dart';
 import '../l10n/app_localizations.dart';
 import '../presentation/transaction_presenter.dart';
 import '../session/session_controller.dart';
-import '../widgets/brand_logo.dart';
+import '../widgets/home_edit_button.dart';
 import '../widgets/budget_goal_lists.dart';
 import '../widgets/cumulative_cash_flow_chart.dart';
 import '../widgets/home_accounts.dart';
@@ -108,22 +108,29 @@ class _HomePageState extends State<HomePage> {
       'goals': HomeBlockView(
         block: _home.goals,
         title: l.goals,
-        builder: (goals) => GoalCardList(goals: goals),
+        builder: (goals) => GoalCardList(
+          goals: goals,
+          onCreate: () {
+            // TODO(T-514): connect when the goal creation form exists.
+          },
+        ),
       ),
       'budgets': HomeBlockView(
         block: _home.budgets,
         title: l.budgets,
-        builder: (budgets) => BudgetCardList(budgets: budgets, today: _today),
+        builder: (budgets) => BudgetCardList(
+          budgets: budgets,
+          today: _today,
+          onCreate: () {
+            // TODO(T-514): connect when the budget creation form exists.
+          },
+        ),
       ),
       'categories': HomeBlockView(
         block: _home.categories,
         title: l.categoryDistribution,
-        builder: (data) => HomeCategoryCarousel(
-          data: data,
-          animate: widget.animate,
-          month: _home.month,
-          onMoveMonth: _home.moveMonth,
-        ),
+        builder: (data) =>
+            HomeCategoryCarousel(data: data, animate: widget.animate),
       ),
       'cash_flow': HomeBlockView(
         block: _home.flow,
@@ -167,18 +174,10 @@ class _HomePageState extends State<HomePage> {
                         displayName: profile.displayName,
                       ),
                     ),
-                    PopupMenuButton<String>(
-                      tooltip: l.more,
-                      onSelected: (value) {
-                        if (value == 'refresh') _home.load();
+                    HomeEditButton(
+                      onPressed: () {
+                        // TODO(T-514): connect Home component reordering UI.
                       },
-                      itemBuilder: (context) => [
-                        PopupMenuItem(value: 'refresh', child: Text(l.refresh)),
-                        const PopupMenuItem(
-                          value: 'brand',
-                          child: Center(child: BrandLogo(size: 64)),
-                        ),
-                      ],
                     ),
                   ],
                 ),

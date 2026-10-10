@@ -278,5 +278,8 @@
     }
   },
   "goalReached": "Objetivo logrado",
-  "goalOverdue": "Objetivo atrasado"
+  "goalOverdue": "Objetivo atrasado",
+  "addGoalLabel": "Objetivo",
+  "addBudgetLabel": "Presupuesto",
+  "editHome": "Editar"
 }

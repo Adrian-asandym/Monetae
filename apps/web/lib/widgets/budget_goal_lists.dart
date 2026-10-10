@@ -7,6 +7,7 @@ import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../data/api_dtos.dart';
 import '../l10n/app_localizations.dart';
@@ -34,9 +35,9 @@ class BudgetCardList extends StatelessWidget {
     final l = AppLocalizations.of(context);
     return _CardStrip(
       axis: axis,
-      desktopWidth: 500,
+      desktopWidth: HomeTokens.budgetDesktopWidth,
       emptyLabel: l.emptyBudgets,
-      createLabel: l.createBudget,
+      createLabel: l.addBudgetLabel,
       onCreate: onCreate,
       cards: [
         for (final budget in budgets)
@@ -73,9 +74,9 @@ class GoalCardList extends StatelessWidget {
     final l = AppLocalizations.of(context);
     return _CardStrip(
       axis: axis,
-      desktopWidth: 400,
+      desktopWidth: HomeTokens.goalDesktopWidth,
       emptyLabel: l.emptyGoals,
-      createLabel: l.createGoal,
+      createLabel: l.addGoalLabel,
       onCreate: onCreate,
       cards: [
         for (final goal in goals)
@@ -141,10 +142,15 @@ class _CardStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (cards.isEmpty) return _empty(context, empty: true);
+    if (axis == Axis.vertical && cards.isEmpty) {
+      return _empty(context, empty: true);
+    }
     final items = [
       ...cards,
-      if (onCreate != null) _empty(context, empty: false),
+      if (axis == Axis.horizontal)
+        HomeAddCard(label: createLabel, onTap: onCreate)
+      else if (onCreate != null)
+        _empty(context, empty: false),
     ];
     if (axis == Axis.vertical) {
       return Column(
@@ -159,9 +165,9 @@ class _CardStrip extends StatelessWidget {
     }
     return LayoutBuilder(
       builder: (context, constraints) {
-        final width = constraints.maxWidth >= 650
+        final width = constraints.maxWidth >= HomeTokens.desktopBreakpoint
             ? desktopWidth
-            : constraints.maxWidth * .95;
+            : constraints.maxWidth * HomeTokens.mobileCardFraction;
         return ScrollConfiguration(
           behavior: ScrollConfiguration.of(context).copyWith(
             dragDevices: {
@@ -172,12 +178,19 @@ class _CardStrip extends StatelessWidget {
           ),
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: _EqualHeightRow(
               children: [
                 for (var i = 0; i < items.length; i++) ...[
-                  if (i > 0) const SizedBox(width: 13),
-                  SizedBox(width: width, child: items[i]),
+                  if (i > 0) const SizedBox(width: HomeTokens.carouselGap),
+                  SizedBox(
+                    width: width,
+                    child: cards.isEmpty
+                        ? SizedBox(
+                            height: HomeTokens.emptyCardHeight,
+                            child: items[i],
+                          )
+                        : items[i],
+                  ),
                 ],
               ],
             ),
@@ -185,5 +198,87 @@ class _CardStrip extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+/// Cashew pages/addButton.dart: transparent list-plus card, placed last.
+class HomeAddCard extends StatelessWidget {
+  const HomeAddCard({super.key, required this.label, this.onTap});
+  final String label;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = MonetaeColors.of(context);
+    final radius = BorderRadius.circular(HomeTokens.cardRadius);
+    return Material(
+      color: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: radius,
+        side: BorderSide(
+          width: HomeTokens.addBorderWidth,
+          color: Theme.of(context).colorScheme.onSurface
+              .withValues(alpha: HomeTokens.addBorderOpacity),
+        ),
+      ),
+      child: InkWell(
+        borderRadius: radius,
+        onTap: onTap,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.format_list_bulleted_add,
+              size: HomeTokens.addIconSize,
+              color: colors.muted,
+            ),
+            const SizedBox(height: HomeTokens.addLabelGap),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: HomeTokens.addLabelSize,
+                color: colors.muted,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Lay out real card content first, then match every tile to the tallest card.
+/// Unlike IntrinsicHeight this supports the progress bar's LayoutBuilder.
+class _EqualHeightRow extends MultiChildRenderObjectWidget {
+  const _EqualHeightRow({required super.children});
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _EqualHeightFlex(Directionality.of(context));
+
+  @override
+  void updateRenderObject(BuildContext context, _EqualHeightFlex renderObject) {
+    renderObject.textDirection = Directionality.of(context);
+  }
+}
+
+class _EqualHeightFlex extends RenderFlex {
+  _EqualHeightFlex(TextDirection textDirection)
+    : super(
+        direction: Axis.horizontal,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        textDirection: textDirection,
+      );
+
+  @override
+  void performLayout() {
+    super.performLayout();
+    var child = firstChild;
+    while (child != null) {
+      child.layout(
+        BoxConstraints.tightFor(width: child.size.width, height: size.height),
+      );
+      child = childAfter(child);
+    }
   }
 }

@@ -44,8 +44,8 @@ class CategoryPieChart extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: theme.colorScheme.secondaryContainer.withValues(
-                  alpha: .3,
+                color: MonetaeColors.of(context).muted.withValues(
+                  alpha: HomeTokens.emptyRingOpacity,
                 ),
               ),
             )

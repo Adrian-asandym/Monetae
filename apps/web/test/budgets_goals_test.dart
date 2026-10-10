@@ -154,15 +154,9 @@ void main() {
 
           expect(find.textContaining('Total convertido'), findsNothing);
         } else if (index == 1) {
-          expect(
-            find.text(r'20 $ restante de 500 $'),
-            findsOneWidget,
-          );
+          expect(find.text(r'20 $ restante de 500 $'), findsOneWidget);
         } else {
-          expect(
-            find.text('240 S/. excedido de 1.200 S/.'),
-            findsOneWidget,
-          );
+          expect(find.text('240 S/. excedido de 1.200 S/.'), findsOneWidget);
           expect(find.text('120%'), findsOneWidget);
         }
         expect(tester.takeException(), isNull);
@@ -189,9 +183,7 @@ void main() {
         expect(find.byKey(const Key('today-marker')), findsNothing);
         expect(
           find.text(
-            index == 0
-                ? '1.234,50 S/. / 2.469 S/.'
-                : r'1.800 $ / 1.800 $',
+            index == 0 ? '1.234,50 S/. / 2.469 S/.' : r'1.800 $ / 1.800 $',
           ),
           findsOneWidget,
         );
@@ -237,7 +229,11 @@ void main() {
             await tester.pumpAndSettle();
             if (empty) {
               expect(
-                find.text(budgets ? l.emptyBudgets : l.emptyGoals),
+                find.text(
+                  axis == Axis.horizontal
+                      ? (budgets ? l.addBudgetLabel : l.addGoalLabel)
+                      : (budgets ? l.emptyBudgets : l.emptyGoals),
+                ),
                 findsOneWidget,
               );
             }
@@ -349,12 +345,12 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text(l.sampleFoodBudget));
     await tester.drag(
-      find.byType(SingleChildScrollView),
+      find.byType(SingleChildScrollView).first,
       const Offset(-340, 0),
     );
     await tester.pumpAndSettle();
     await tester.tap(find.text(l.sampleTravelBudget));
-    await tester.tap(find.text(l.createGoal));
+    await tester.tap(find.text(l.addGoalLabel));
     expect(selections, 2);
     expect(creations, 1);
     expect(tester.takeException(), isNull);

@@ -259,7 +259,7 @@ void main() {
     },
   );
   testWidgets(
-    'authenticated home refreshes both report blocks and expiry clears routes',
+    'Home reloads report blocks after transaction creation and expiry clears routes',
     (tester) async {
       final queries = <Map<String, String>>[];
       var expired = false;
@@ -294,7 +294,10 @@ void main() {
       expect(find.byType(HomePage), findsOneWidget);
       expect(find.byType(CumulativeCashFlowChart), findsOneWidget);
       expect(queries.every((query) => query['report_currency'] == 'USD'), true);
-      final previous = DateTime.parse(queries.first['date_from']!);
+      final homeSession = tester
+          .widget<HomePage>(find.byType(HomePage))
+          .session;
+      final initialQueries = [...queries];
       await tester.ensureVisible(find.byKey(const Key('category-pages')));
       await tester.drag(
         find.byKey(const Key('category-pages')),
@@ -302,21 +305,20 @@ void main() {
         warnIfMissed: false,
       );
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.byTooltip(l.previousMonth));
-      await tester.tap(find.byTooltip(l.previousMonth));
+      // Switching to income is presentation only: no month change or reload.
+      expect(queries, initialQueries);
+      expect(find.byTooltip(l.previousMonth), findsNothing);
+      expect(find.byType(PopupMenuButton<String>), findsNothing);
+      homeSession.transactionCreated();
       await tester.pumpAndSettle();
+      expect(queries.length, initialQueries.length * 2);
       expect(
-        DateTime.parse(queries.last['date_from']!),
-        DateTime(previous.year, previous.month - 1),
+        queries.skip(initialQueries.length).map((q) => q['date_from']).toSet(),
+        initialQueries.map((q) => q['date_from']).toSet(),
       );
-      // Month navigation reloads categories and chart, not transaction-day nets.
-      expect(queries.length, 5);
       expired = true;
-      await tester.ensureVisible(find.byType(PopupMenuButton<String>));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byType(PopupMenuButton<String>));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text(l.refresh).last);
+      // Exercise the retained reload entry point, with no refresh button.
+      homeSession.transactionCreated();
       await tester.pumpAndSettle();
       expect(find.byType(LoginPage), findsOneWidget);
       expect(find.byType(HomePage), findsNothing);
