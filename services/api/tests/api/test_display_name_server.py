@@ -8,11 +8,13 @@ from time import monotonic, sleep
 from uuid import uuid4
 
 import httpx
-from sqlalchemy import Engine
+from sqlalchemy import Engine, delete
 from sqlalchemy.orm import Session
 
 from api.conftest import PASSWORD
 from monetae.config import Settings
+from monetae.db.models import Category, LoginAttempt, User
+from monetae.db.models import Session as LoginSession
 from monetae.services.auth import AuthService, SystemClock
 
 
@@ -23,7 +25,7 @@ def test_display_name_patch_then_immediate_get_with_uvicorn(
     settings = Settings(environment="test", database_url=database_url, cookie_secure=False)
     email = f"display-name-probe-{uuid4().hex}@example.test"
     with Session(db_engine) as db:
-        AuthService(db, settings, SystemClock()).create_user(email, PASSWORD)
+        user_id = AuthService(db, settings, SystemClock()).create_user(email, PASSWORD).id
         db.commit()
     with socket.socket() as port_socket:
         port_socket.bind(("127.0.0.1", 0))
@@ -102,3 +104,11 @@ def test_display_name_patch_then_immediate_get_with_uvicorn(
             process.wait(timeout=5)
         if process.stdout is not None:
             process.stdout.close()
+        # This probe commits real HTTP requests; remove its synthetic user so later
+        # tests (including the global login-attempt purge) remain isolated.
+        with Session(db_engine) as db:
+            db.execute(delete(LoginSession).where(LoginSession.user_id == user_id))
+            db.execute(delete(Category).where(Category.user_id == user_id))
+            db.execute(delete(LoginAttempt).where(LoginAttempt.email_lower == email))
+            db.execute(delete(User).where(User.id == user_id))
+            db.commit()
