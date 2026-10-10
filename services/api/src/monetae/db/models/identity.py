@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import CHAR, CheckConstraint, DateTime, Index, LargeBinary, Text, func, text
+from sqlalchemy import CHAR, CheckConstraint, DateTime, Index, LargeBinary, String, Text, func, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -32,6 +32,7 @@ class User(TimestampMixin, SoftDeleteMixin, Base):
     )
 
     email: Mapped[str] = mapped_column(Text)
+    display_name: Mapped[str | None] = mapped_column(String(60))
     password_hash: Mapped[str | None] = mapped_column(Text)
     google_sub: Mapped[str | None] = mapped_column(Text)
     timezone: Mapped[str] = mapped_column(Text, server_default=text("'America/Lima'"))

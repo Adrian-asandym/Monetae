@@ -34,6 +34,8 @@ def test_cli_stdin_duplicates_and_categories(
         "create-user",
         "--email",
         "cli@example.test",
+        "--display-name",
+        "  Synthetic User  ",
         "--base-currency",
         "USD",
         "--locale",
@@ -54,6 +56,7 @@ def test_cli_stdin_duplicates_and_categories(
     with Session(db_engine) as db:
         user = db.scalar(select(User).where(User.email == "cli@example.test"))
         assert user is not None and user.report_currency == user.base_currency == "USD"
+        assert user.display_name == "Synthetic User"
         rows = db.scalars(select(Category).where(Category.user_id == user.id)).all()
         assert {row.system_key for row in rows} == {"interest_income", "interest_expense"}
         assert all(row.is_system for row in rows)
@@ -75,3 +78,37 @@ def test_cli_rejects_password_argument() -> None:
         text=True,
     )
     assert result.returncode == 2
+
+
+@pytest.mark.parametrize("name", [None, "  " + "á" * 60 + "  ", "", "   ", "a" * 61])
+def test_cli_display_name_validation(
+    database_url: str, db_engine: Engine, cli_user: None, name: str | None
+) -> None:
+    args = [
+        sys.executable,
+        "-m",
+        "monetae.cli",
+        "create-user",
+        "--email",
+        "cli@example.test",
+        "--password-stdin",
+    ]
+    if name is not None:
+        args.extend(["--display-name", name])
+    result = subprocess.run(
+        args,
+        input="synthetic-password-123\n",
+        text=True,
+        capture_output=True,
+        env={**os.environ, "MONETAE_DATABASE_URL": database_url},
+    )
+    valid = name is None or 1 <= len(name.strip()) <= 60
+    assert result.returncode == (0 if valid else 1)
+    with Session(db_engine) as db:
+        user = db.scalar(select(User).where(User.email == "cli@example.test"))
+        if valid:
+            assert user is not None
+            assert user.display_name == (name.strip() if name is not None else None)
+        else:
+            assert user is None
+            assert "Invalid user configuration" in result.stderr

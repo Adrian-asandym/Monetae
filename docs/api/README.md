@@ -783,4 +783,4 @@ Origin. `/reports/goals` queda fuera de T-602.
 
 ## Cambios del contrato 0.6.0 (SPEC v0.6)
 
-- `CurrentUser.display_name` (obligatorio en la respuesta, `string` de 1–60 caracteres o `null`) y `UserUpdate.display_name` (opcional en `PATCH /users/me`). El servidor recorta espacios; vacío tras recortar → 422; `null` borra el nombre. Implementación: T-603.
+- `CurrentUser.display_name` (obligatorio en la respuesta, `string` de 1–60 caracteres o `null`) y `UserUpdate.display_name` (opcional en `PATCH /users/me`). El servidor recorta espacios; vacío tras recortar → 422; `null` borra el nombre. Implementado en T-603.
