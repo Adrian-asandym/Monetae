@@ -72,6 +72,8 @@ def assert_schema(engine: Engine) -> None:
         "budgets",
         "budget_categories",
         "budget_transactions",
+        "goals",
+        "goal_transactions",
         "alembic_version",
     }
     attempts = {c["name"]: c for c in inspector.get_columns("login_attempts")}
