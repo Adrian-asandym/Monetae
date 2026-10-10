@@ -7,6 +7,7 @@ from monetae.api.routers.auth import ERROR_RESPONSES
 from monetae.api.routers.auth import router as auth_router
 from monetae.api.routers.budgets import router as budgets_router
 from monetae.api.routers.categories import router as categories_router
+from monetae.api.routers.goals import router as goals_router
 from monetae.api.routers.health import router as health_router
 from monetae.api.routers.loans import loan_exception_handler
 from monetae.api.routers.loans import router as loans_router
@@ -51,6 +52,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(subscriptions_router)
     application.include_router(reports_router)
     application.include_router(budgets_router)
+    application.include_router(goals_router)
     application.add_exception_handler(LoanError, loan_exception_handler)
     return application
 

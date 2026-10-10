@@ -3,6 +3,7 @@
 from monetae.db.models.budgets import Budget, BudgetCategory, BudgetTransaction
 from monetae.db.models.catalog import Account, Category, Person, Tag
 from monetae.db.models.exchange_rates import ExchangeRate
+from monetae.db.models.goals import Goal, GoalTransaction
 from monetae.db.models.identity import Session, User
 from monetae.db.models.imports import ImportReviewItem, ImportRun
 from monetae.db.models.ledger import IdempotencyKey, Transaction, TransactionTag
@@ -11,6 +12,8 @@ from monetae.db.models.recurring import RecurringRule, Subscription
 from monetae.db.models.security import LoginAttempt
 
 __all__ = [
+    "Goal",
+    "GoalTransaction",
     "Budget",
     "BudgetCategory",
     "BudgetTransaction",
