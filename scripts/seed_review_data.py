@@ -30,7 +30,9 @@ def main() -> int:
         def ok(response: httpx.Response, code: int) -> dict:
             if response.status_code != code:
                 request = response.request
-                sys.exit(f"{request.method} {request.url} -> {response.status_code}: {response.text[:300]}")
+                sys.exit(
+                    f"{request.method} {request.url} -> {response.status_code}: {response.text[:300]}"
+                )
             return response.json() if response.content else {}
 
         ok(client.get("/api/v1/health"), 200)
