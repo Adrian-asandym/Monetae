@@ -3,10 +3,25 @@ from typing import Annotated, Literal
 from uuid import UUID
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    ConfigDict,
+    Field,
+    SecretStr,
+    field_validator,
+    model_validator,
+)
 
 Currency = Annotated[str, Field(pattern=r"^[A-Z]{3}$")]
 Email = Annotated[str, Field(pattern=r"^[^\s@]+@[^\s@]+\.[^\s@]+$", max_length=320)]
+
+
+def trim_display_name(value: object) -> object:
+    return value.strip() if isinstance(value, str) else value
+
+
+DisplayName = Annotated[str, Field(min_length=1, max_length=60), BeforeValidator(trim_display_name)]
 
 
 class StrictModel(BaseModel):
@@ -70,6 +85,7 @@ class UserPreferences(StrictModel):
 class CurrentUser(StrictModel):
     id: UUID
     email: Email
+    display_name: DisplayName | None
     preferences: UserPreferences
     pin_configured: bool
     locked: bool
@@ -84,6 +100,7 @@ class CurrentUser(StrictModel):
 class UserUpdate(StrictModel):
     model_config = ConfigDict(strict=True, extra="forbid", json_schema_extra={"minProperties": 1})
 
+    display_name: DisplayName | None = None
     timezone: str = "America/Lima"
     base_currency: Currency = Field(default="PEN", json_schema_extra={"readOnly": True})
     locale: Literal["es", "en"] = "es"
@@ -105,7 +122,7 @@ class UserUpdate(StrictModel):
     def nonempty_patch(self) -> "UserUpdate":
         if not self.model_fields_set:
             raise ValueError("At least one property is required.")
-        for name in self.model_fields_set - {"lock_after_minutes"}:
+        for name in self.model_fields_set - {"lock_after_minutes", "display_name"}:
             if getattr(self, name) is None:
                 raise ValueError(f"{name} cannot be null.")
         return self

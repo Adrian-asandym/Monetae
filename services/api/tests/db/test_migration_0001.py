@@ -7,6 +7,7 @@ from .conftest import migration_config
 TABLE_COLUMNS = {
     "users": {
         "email",
+        "display_name",
         "password_hash",
         "google_sub",
         "timezone",
