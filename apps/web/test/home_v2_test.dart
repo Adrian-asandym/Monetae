@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:monetae_web/widgets/cumulative_cash_flow_chart.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:monetae_web/data/mock_budgets_goals.dart';
 import 'package:monetae_web/api/home_controller.dart';
@@ -68,6 +70,79 @@ void main() {
       );
       await golden(tester, 'home_$mode');
     });
+    for (final (name, amounts, labels) in [
+      (
+        'positive',
+        ['1200', '900', '500', '300'],
+        ['1.200 S/.', '900 S/.', '600 S/.', '300 S/.'],
+      ),
+      (
+        'signed',
+        ['1200', '-400', '500', '0'],
+        ['1.200 S/.', '800 S/.', '400 S/.', '0 S/.'],
+      ),
+      (
+        'negative',
+        ['-800', '-600', '-400', '-500'],
+        ['0 S/.', '-200 S/.', '-400 S/.', '-600 S/.'],
+      ),
+      ('zero', ['0', '0', '0', '0'], ['1 S/.', '1 S/.', '1 S/.', '0 S/.']),
+    ]) {
+      testWidgets(
+        'line card four aligned labels and zero reference: $name $mode',
+        (tester) async {
+          final rows = [
+            for (var i = 0; i < amounts.length; i++)
+              syntheticFlow('2026-10-0${i + 1}', '0', '0', '0', amounts[i]),
+          ];
+          await mountMobile(
+            tester,
+            brightness,
+            (_, _) => Scaffold(
+              body: Padding(
+                padding: const EdgeInsets.all(13),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: CumulativeCashFlowChart(rows: rows, animate: false),
+                ),
+              ),
+            ),
+          );
+          final chart = tester.widget<LineChart>(find.byType(LineChart));
+          expect(chart.data.extraLinesData.horizontalLines, hasLength(5));
+          expect(chart.data.extraLinesData.horizontalLines.last.y, 0);
+          final bar = chart.data.lineBarsData.single;
+          expect(bar.aboveBarData.show, name == 'signed' || name == 'negative');
+          expect(bar.aboveBarData.applyCutOffY, true);
+          expect(bar.aboveBarData.cutOffY, 0);
+          expect(bar.belowBarData.applyCutOffY, true);
+          expect(bar.belowBarData.cutOffY, 0);
+          final labelsY = <double>[];
+          for (var i = 0; i < 4; i++) {
+            final label = find.byKey(Key('cash-flow-y-$i'));
+            expect(tester.widget<Text>(label).data, labels[i]);
+            labelsY.add(tester.getCenter(label).dy);
+          }
+          final gap = labelsY[1] - labelsY[0];
+          expect(labelsY[2] - labelsY[1], closeTo(gap, .01));
+          expect(labelsY[3] - labelsY[2], closeTo(gap, .01));
+          final card = tester.widget<Material>(
+            find.byKey(const Key('cash-flow-card')),
+          );
+          expect(
+            card.color,
+            MonetaeColors.of(
+              tester.element(find.byType(CumulativeCashFlowChart)),
+            ).card,
+          );
+          expect(
+            card.borderRadius,
+            BorderRadius.circular(HomeTokens.cardRadius),
+          );
+          await golden(tester, 'line_${name}_$mode');
+        },
+      );
+    }
     for (final emptyIncome in [false, true]) {
       testWidgets(
         'same pie page for both kinds; empty income=$emptyIncome $mode',

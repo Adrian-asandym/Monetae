@@ -151,4 +151,27 @@ abstract final class HomeTokens {
   static const activeDotOpacity = .60;
   static const inactiveDotOpacity = .20;
   static const pageSwitchMilliseconds = 250;
+  static const linePlotHeight = 175.0;
+  static const lineBottomTitleHeight = 30.0;
+  static const lineLabelHeight = 18.0;
+  static const lineChartHeight =
+      linePlotHeight + lineBottomTitleHeight + lineLabelHeight / 2;
+  static const lineAxisWidth = 64.0;
+  static const lineAxisGap = 8.0;
+  static const lineLeftPadding = 12.0;
+  static const lineTopPadding = 18.0;
+  static const lineRightPadding = 7.0;
+  static const lineBottomPadding = 12.0;
+  static const lineDateGap = 8.0;
+  static const lineFontSize = 12.0;
+  static const lineLabelOpacity = .5;
+  static const lineGridOpacity = .12;
+  static const lineZeroOpacity = .24;
+  static const lineGridWidth = 2.0;
+  static const lineZeroWidth = 1.0;
+  static const lineStrokeWidth = 2.0;
+  static const lineGridDashes = [2, 8];
+  static const lineZeroEpsilon = .000001;
+  static const lineTooltipRadius = 8.0;
+  static const lineAnimationMilliseconds = 1500;
 }
