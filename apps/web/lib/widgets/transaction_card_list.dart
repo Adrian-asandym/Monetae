@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/api_dtos.dart';
 import '../presentation/component_models.dart';
 import 'transaction_card.dart';
+import 'home_transaction_row.dart';
 import '../presentation/currency_format.dart';
 import '../theme/monetae_theme.dart';
 import '../l10n/app_localizations.dart';
@@ -17,6 +18,7 @@ class TransactionCardList extends StatelessWidget {
     this.compact = false,
     this.tintCategoryIcons = false,
     this.dailyFlow,
+    this.isHome = false,
     this.onEdit,
     this.onDuplicate,
     this.onDelete,
@@ -26,6 +28,7 @@ class TransactionCardList extends StatelessWidget {
   final bool compact;
   final bool tintCategoryIcons;
   final List<CashFlowRowDto>? dailyFlow;
+  final bool isHome;
   final ValueChanged<TransactionCardModel>? onEdit;
   final ValueChanged<TransactionCardModel>? onDuplicate;
   final ValueChanged<TransactionCardModel>? onDelete;
@@ -88,7 +91,10 @@ class TransactionCardList extends StatelessWidget {
           ),
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
-          child: TransactionCard(
+          child: isHome ? HomeTransactionRow(
+            model: models[i],
+            tintCategoryIcon: tintCategoryIcons,
+          ) : TransactionCard(
             model: models[i],
             preferences: preferences,
             compact: compact,

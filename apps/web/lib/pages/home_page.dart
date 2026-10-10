@@ -133,6 +133,7 @@ class _HomePageState extends State<HomePage> {
                 models: presentTransactions(feed, l),
                 preferences: profile.preferences.transactionCard,
                 dailyFlow: _home.dailyFlow.data,
+                isHome: true,
               ),
       ),
     };
@@ -197,7 +198,7 @@ class _HomePageState extends State<HomePage> {
         key: const Key('add-transaction'),
         heroTag: 'home-add-transaction',
         tooltip: l.addTransaction,
-        backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+        backgroundColor: Theme.of(context).brightness == Brightness.light ? Colors.grey.shade300 : Colors.grey.shade700,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         onPressed: () => Navigator.of(context).pushNamed('/transactions/new'),
