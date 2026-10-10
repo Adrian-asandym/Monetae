@@ -752,3 +752,29 @@ borra lógicamente los retirados y restaura los que regresan. Se permite guardar
 con `scope = all`; afecta el cálculo al pasar a `selected`. Las modificaciones de un mismo
 presupuesto se serializan mediante bloqueo de su fila. El borrado del presupuesto conserva
 las transacciones. El historial `/reports/budgets` y las metas quedan para tareas posteriores.
+
+## Metas (T-602)
+
+`/goals` implementa CRUD con paginación por cursor, edición parcial y borrado
+lógico. `color` admite hexadecimal de seis dígitos o `null`; `icon` conserva el
+texto del catálogo o `custom:<uuid>` sin verificar la existencia de un SVG.
+
+El progreso considera exclusivamente las transacciones enlazadas, publicadas y
+no borradas, sin límite de fecha. Una meta `save` suma sus importes con signo
+(ingreso positivo, gasto negativo, transferencias según cada pata); una meta
+`spend` invierte ese signo, por lo que un reembolso resta. El progreso puede ser
+negativo. Las programadas y los vínculos borrados no cuentan.
+
+`report_total` convierte a `goal.currency` con la tasa fija de cada transacción
+hacia la moneda base y, cuando corresponde, la tasa histórica base→reporte del
+día de la transacción o anterior. Sin esa tasa histórica, conserva el importe
+con signo en `by_currency`, excluye la transacción del total convertido y aumenta
+`unconverted_count`. `progress_amount` coincide con `report_total.report_amount`.
+
+`PUT /goals/{id}/transactions` sustituye atómicamente la selección (hasta 200
+UUID propios, no borrados y sin duplicados). Quitar un vínculo lo borra
+lógicamente; volver a seleccionarlo restaura el mismo vínculo. Una transacción
+ajena o borrada responde 404 sin cambios. Una transacción de préstamo responde
+422 `loan_transaction_not_allowed` sin cambios; ingresos, gastos y transferencias
+sí se permiten. Todas las rutas exigen sesión y las mutaciones comprueban CSRF y
+Origin. `/reports/goals` queda fuera de T-602.

@@ -32,6 +32,7 @@ from monetae.api.schemas.categories import (
     CategoryUpdate,
 )
 from monetae.api.schemas.common import ArchiveRequest
+from monetae.api.schemas.goals import Goal, GoalCreate, GoalPage, GoalUpdate
 from monetae.api.schemas.loans import (
     AdjustmentRequest,
     DisbursementRequest,
@@ -110,12 +111,16 @@ def test_mounted_operations_security_responses_and_csrf() -> None:
                     for p in operation["parameters"]
                 )
             count += 1
-    assert count == 79
+    assert count == 85
 
 
 def test_schema_properties_mirror_contract() -> None:
     schemas = json.loads(CONTRACT.read_text())["components"]["schemas"]
     models: list[type[BaseModel]] = [
+        Goal,
+        GoalCreate,
+        GoalUpdate,
+        GoalPage,
         Budget,
         BudgetCreate,
         BudgetUpdate,
