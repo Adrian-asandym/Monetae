@@ -20,6 +20,28 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _index = 0;
   final _visited = <int>{0};
+  late int _transactionRevision;
+
+  @override
+  void initState() {
+    super.initState();
+    _transactionRevision = widget.session.transactionRevision;
+    widget.session.addListener(_sessionChanged);
+  }
+
+  void _sessionChanged() {
+    if (_transactionRevision != widget.session.transactionRevision) {
+      _transactionRevision = widget.session.transactionRevision;
+      _select(0);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.session.removeListener(_sessionChanged);
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final session = widget.session;

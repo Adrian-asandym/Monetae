@@ -413,4 +413,62 @@ class AppLocalizationsEs extends AppLocalizations {
   String accountTransactionCount(int count) {
     return '$count transacciones';
   }
+
+  @override
+  String get transactionAmount => 'Importe';
+
+  @override
+  String get transactionCategory => 'Categoría (opcional)';
+
+  @override
+  String get transactionAccount => 'Cuenta';
+
+  @override
+  String get transactionTitle => 'Título (opcional)';
+
+  @override
+  String get transactionNote => 'Nota (opcional)';
+
+  @override
+  String get transactionPosted => 'Publicada';
+
+  @override
+  String get transactionScheduled => 'Programada · fecha futura';
+
+  @override
+  String get limaTimezone => 'Hora de Lima · UTC−5';
+
+  @override
+  String get exchangeRate => 'Tipo de cambio manual';
+
+  @override
+  String manualRateHint(String fromSymbol, String baseSymbol) {
+    return 'Por 1 $fromSymbol, ¿cuánto en $baseSymbol?';
+  }
+
+  @override
+  String get positiveAmountRequired =>
+      'Escribe un importe mayor que 0 (hasta 2 decimales).';
+
+  @override
+  String get accountRequired => 'Elige una cuenta activa.';
+
+  @override
+  String get positiveRateRequired =>
+      'Escribe una tasa mayor que 0 (hasta 6 decimales).';
+
+  @override
+  String get saveTransaction => 'Guardar transacción';
+
+  @override
+  String get savingTransaction => 'Guardando…';
+
+  @override
+  String get transactionSaved => 'Transacción guardada';
+
+  @override
+  String get deleteDigit => 'Borrar dígito; mantén pulsado para borrar todo';
+
+  @override
+  String get decimalPoint => 'Punto decimal';
 }

@@ -13,6 +13,13 @@ final class SessionController extends ChangeNotifier {
   bool loading = true;
   bool busy = false;
   bool saving = false;
+  int transactionRevision = 0;
+
+  void transactionCreated() {
+    transactionRevision++;
+    _notify();
+  }
+
   int _revision = 0;
   bool _disposed = false;
 

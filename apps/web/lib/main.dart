@@ -80,7 +80,13 @@ class _MonetaeAppState extends State<MonetaeApp> {
       darkTheme: monetaeTheme(brightness: Brightness.dark, accent: accent),
       themeMode: mode,
       routes: {
-        '/transactions/new': (_) => const NewTransactionPage(),
+        '/transactions/new': (_) => _session.user == null
+            ? LoginPage(
+                onLogin: _session.login,
+                busy: _session.busy,
+                error: _session.error,
+              )
+            : NewTransactionPage(session: _session),
         '/demo/home': (_) => const DemoApp(showHome: true),
         '/demo/budgets-goals': (_) => const DemoApp(showBudgetsGoals: true),
         '/demo': (context) => Scaffold(

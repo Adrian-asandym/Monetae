@@ -211,5 +211,33 @@
         "type": "int"
       }
     }
+  },
+  "transactionAmount": "Importe",
+  "transactionCategory": "Categoría (opcional)",
+  "transactionAccount": "Cuenta",
+  "transactionTitle": "Título (opcional)",
+  "transactionNote": "Nota (opcional)",
+  "transactionPosted": "Publicada",
+  "transactionScheduled": "Programada · fecha futura",
+  "limaTimezone": "Hora de Lima · UTC−5",
+  "exchangeRate": "Tipo de cambio manual",
+  "manualRateHint": "Por 1 {fromSymbol}, ¿cuánto en {baseSymbol}?",
+  "positiveAmountRequired": "Escribe un importe mayor que 0 (hasta 2 decimales).",
+  "accountRequired": "Elige una cuenta activa.",
+  "positiveRateRequired": "Escribe una tasa mayor que 0 (hasta 6 decimales).",
+  "saveTransaction": "Guardar transacción",
+  "savingTransaction": "Guardando…",
+  "transactionSaved": "Transacción guardada",
+  "deleteDigit": "Borrar dígito; mantén pulsado para borrar todo",
+  "decimalPoint": "Punto decimal",
+  "@manualRateHint": {
+    "placeholders": {
+      "fromSymbol": {
+        "type": "String"
+      },
+      "baseSymbol": {
+        "type": "String"
+      }
+    }
   }
 }

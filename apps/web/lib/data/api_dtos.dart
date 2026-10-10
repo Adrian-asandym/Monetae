@@ -510,6 +510,147 @@ final class TransactionDto {
   };
 }
 
+enum TransactionCreateKind { income, expense }
+
+enum TransactionCreateStatus { posted, scheduled }
+
+enum TransactionCreateFxRateSource { manual, auto }
+
+final class TransactionCreateDto {
+  const TransactionCreateDto({
+    required this.accountId,
+    this.categoryId,
+    required this.kind,
+    required this.amount,
+    required this.currency,
+    required this.occurredAt,
+    required this.status,
+    required this.title,
+    this.note,
+    required this.fxRateToBase,
+    required this.fxRateSource,
+    this.tagIds,
+  });
+
+  final String accountId;
+  final String? categoryId;
+  final TransactionCreateKind kind;
+  final String amount;
+  final String currency;
+  final String occurredAt;
+  final TransactionCreateStatus status;
+  final String title;
+  final String? note;
+  final String fxRateToBase;
+  final TransactionCreateFxRateSource fxRateSource;
+  final List<String>? tagIds;
+
+  factory TransactionCreateDto.fromJson(Map<String, Object?> json) {
+    _keys(
+      json,
+      {
+        'account_id',
+        'category_id',
+        'kind',
+        'amount',
+        'currency',
+        'occurred_at',
+        'status',
+        'title',
+        'note',
+        'fx_rate_to_base',
+        'fx_rate_source',
+        'tag_ids',
+      },
+      {
+        'account_id',
+        'amount',
+        'currency',
+        'fx_rate_source',
+        'fx_rate_to_base',
+        'kind',
+        'occurred_at',
+        'status',
+        'title',
+      },
+      {
+        'account_id',
+        'kind',
+        'amount',
+        'currency',
+        'occurred_at',
+        'status',
+        'title',
+        'fx_rate_to_base',
+        'fx_rate_source',
+        'tag_ids',
+      },
+    );
+    return TransactionCreateDto(
+      accountId: _value<String>(json['account_id'], 'account_id', false)!,
+      categoryId: _value<String>(json['category_id'], 'category_id', true),
+      kind: _enum(json['kind'], 'kind', <String, TransactionCreateKind>{
+        'income': TransactionCreateKind.income,
+        'expense': TransactionCreateKind.expense,
+      }, false)!,
+      amount: _value<String>(json['amount'], 'amount', false)!,
+      currency: _value<String>(json['currency'], 'currency', false)!,
+      occurredAt: _value<String>(json['occurred_at'], 'occurred_at', false)!,
+      status: _enum(json['status'], 'status', <String, TransactionCreateStatus>{
+        'posted': TransactionCreateStatus.posted,
+        'scheduled': TransactionCreateStatus.scheduled,
+      }, false)!,
+      title: _value<String>(json['title'], 'title', false)!,
+      note: _value<String>(json['note'], 'note', true),
+      fxRateToBase: _value<String>(
+        json['fx_rate_to_base'],
+        'fx_rate_to_base',
+        false,
+      )!,
+      fxRateSource: _enum(
+        json['fx_rate_source'],
+        'fx_rate_source',
+        <String, TransactionCreateFxRateSource>{
+          'manual': TransactionCreateFxRateSource.manual,
+          'auto': TransactionCreateFxRateSource.auto,
+        },
+        false,
+      )!,
+      tagIds: json['tag_ids'] == null
+          ? null
+          : List<String>.unmodifiable(
+              (json['tag_ids'] as List<Object?>).map(
+                (value) => value as String,
+              ),
+            ),
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'account_id': accountId,
+    if (categoryId != null) 'category_id': categoryId,
+    'kind': {
+      TransactionCreateKind.income: 'income',
+      TransactionCreateKind.expense: 'expense',
+    }[kind],
+    'amount': amount,
+    'currency': currency,
+    'occurred_at': occurredAt,
+    'status': {
+      TransactionCreateStatus.posted: 'posted',
+      TransactionCreateStatus.scheduled: 'scheduled',
+    }[status],
+    'title': title,
+    if (note != null) 'note': note,
+    'fx_rate_to_base': fxRateToBase,
+    'fx_rate_source': {
+      TransactionCreateFxRateSource.manual: 'manual',
+      TransactionCreateFxRateSource.auto: 'auto',
+    }[fxRateSource],
+    if (tagIds != null) 'tag_ids': tagIds,
+  };
+}
+
 enum UserIconContentType { imageSvgXml }
 
 final class UserIconDto {

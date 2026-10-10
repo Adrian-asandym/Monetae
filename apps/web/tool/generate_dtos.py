@@ -10,7 +10,7 @@ from pathlib import Path
 root = Path(__file__).resolve().parents[3]
 contract = json.loads((root / 'docs/api/openapi.json').read_text())
 schemas = contract['components']['schemas']
-names = ['Account', 'Category', 'Transaction', 'UserIcon', 'TransactionCardPreferences',
+names = ['Account', 'Category', 'Transaction', 'TransactionCreate', 'UserIcon', 'TransactionCardPreferences',
          'Tag', 'UserPreferences', 'CurrentUser', 'PasswordLogin', 'AuthenticatedSession',
          'ActionResult', 'UserUpdate', 'FieldError', 'OverpaymentOption', 'Problem',
          'AccountPage', 'CategoryPage', 'TransactionPage', 'TagPage',

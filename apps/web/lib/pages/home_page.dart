@@ -50,9 +50,11 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late final HomeController _home;
   late final DateTime _today;
+  late int _transactionRevision;
   @override
   void initState() {
     super.initState();
+    _transactionRevision = widget.session.transactionRevision;
     _today =
         widget.today ??
         DateTime.now().toUtc().subtract(const Duration(hours: 5));
@@ -69,6 +71,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _changed() {
+    if (_transactionRevision != widget.session.transactionRevision) {
+      _transactionRevision = widget.session.transactionRevision;
+      _home.load();
+    }
     if (mounted) setState(() {});
   }
 
@@ -208,6 +214,7 @@ class _HomePageState extends State<HomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         key: const Key('add-transaction'),
+        heroTag: 'home-add-transaction',
         tooltip: l.addTransaction,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         onPressed: () => Navigator.of(context).pushNamed('/transactions/new'),

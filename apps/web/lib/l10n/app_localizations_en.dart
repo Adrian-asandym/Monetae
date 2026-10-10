@@ -411,4 +411,62 @@ class AppLocalizationsEn extends AppLocalizations {
   String accountTransactionCount(int count) {
     return '$count transactions';
   }
+
+  @override
+  String get transactionAmount => 'Amount';
+
+  @override
+  String get transactionCategory => 'Category (optional)';
+
+  @override
+  String get transactionAccount => 'Account';
+
+  @override
+  String get transactionTitle => 'Title (optional)';
+
+  @override
+  String get transactionNote => 'Note (optional)';
+
+  @override
+  String get transactionPosted => 'Posted';
+
+  @override
+  String get transactionScheduled => 'Scheduled · future date';
+
+  @override
+  String get limaTimezone => 'Lima time · UTC−5';
+
+  @override
+  String get exchangeRate => 'Manual exchange rate';
+
+  @override
+  String manualRateHint(String fromSymbol, String baseSymbol) {
+    return 'For 1 $fromSymbol, how much in $baseSymbol?';
+  }
+
+  @override
+  String get positiveAmountRequired =>
+      'Enter an amount greater than 0 (up to 2 decimals).';
+
+  @override
+  String get accountRequired => 'Choose an active account.';
+
+  @override
+  String get positiveRateRequired =>
+      'Enter a rate greater than 0 (up to 6 decimals).';
+
+  @override
+  String get saveTransaction => 'Save transaction';
+
+  @override
+  String get savingTransaction => 'Saving…';
+
+  @override
+  String get transactionSaved => 'Transaction saved';
+
+  @override
+  String get deleteDigit => 'Delete digit; hold to clear all';
+
+  @override
+  String get decimalPoint => 'Decimal point';
 }

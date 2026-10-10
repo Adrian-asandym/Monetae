@@ -27,15 +27,21 @@ class _TransactionsPageState extends State<TransactionsPage> {
   late TransactionFeed _feed;
   bool _loading = true;
   ApiException? _error;
+  late int _transactionRevision;
   @override
   void initState() {
     super.initState();
+    _transactionRevision = widget.session.transactionRevision;
     widget.session.addListener(_sessionChanged);
     _feed = TransactionFeed(widget.session.api);
     _load(refresh: true);
   }
 
   void _sessionChanged() {
+    if (_transactionRevision != widget.session.transactionRevision) {
+      _transactionRevision = widget.session.transactionRevision;
+      _load(refresh: true);
+    }
     if (mounted) setState(() {});
   }
 
@@ -73,6 +79,14 @@ class _TransactionsPageState extends State<TransactionsPage> {
     if (profile == null) return const SizedBox.shrink();
     final error = _error ?? widget.session.error;
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        key: const Key('transactions-add'),
+        heroTag: 'transactions-add-transaction',
+        tooltip: l.addTransaction,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        onPressed: () => Navigator.of(context).pushNamed('/transactions/new'),
+        child: const Icon(Icons.add_rounded, size: 32),
+      ),
       appBar: AppBar(
         leading: const Padding(
           padding: EdgeInsets.all(8),
