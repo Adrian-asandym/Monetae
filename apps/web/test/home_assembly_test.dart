@@ -13,6 +13,12 @@ import 'package:monetae_web/data/mock_data.dart';
 import 'package:monetae_web/data/mock_budgets_goals.dart';
 import 'package:monetae_web/data/mock_reports.dart';
 import 'package:monetae_web/l10n/app_localizations_es.dart';
+import 'package:monetae_web/l10n/app_localizations.dart';
+import 'package:monetae_web/l10n/app_localizations_en.dart';
+import 'package:monetae_web/theme/monetae_theme.dart';
+import 'package:monetae_web/api/report_query.dart';
+import 'package:monetae_web/widgets/transaction_card_list.dart';
+import 'package:monetae_web/pages/transactions_page.dart';
 import 'package:monetae_web/main.dart';
 import 'package:monetae_web/pages/app_shell.dart';
 import 'package:monetae_web/pages/budgets_page.dart';
@@ -63,6 +69,11 @@ class HomeFixture {
   Completer<http.Response>? patch;
   final delayed = <String, Completer<http.Response>>{};
   List<Map<String, Object?>>? latest;
+  List<CashFlowRowDto>? transactionFlow = [
+    syntheticFlow('2026-10-08', '0.00', '12.34', '-12.34', '0.00'),
+  ];
+  int? transactionFlowStatus;
+  Completer<http.Response>? transactionFlowPending;
   final flow = [
     syntheticFlow('2026-10-01', '999.00', '10.00', '989.00', '100.00'),
     syntheticFlow('2026-10-02', '0.00', '40.00', '-40.00', '60.00'),
@@ -91,6 +102,19 @@ class HomeFixture {
     final path = request.url.path;
     if (delayed[path] case final Completer<http.Response> pending) {
       return pending.future;
+    }
+    if (path == '/api/v1/reports/cash-flow' &&
+        request.url.queryParameters['date_from'] != '2026-10-01') {
+      if (transactionFlowPending != null) return transactionFlowPending!.future;
+      if (transactionFlowStatus != null) {
+        return fixtures.problem(transactionFlowStatus!);
+      }
+      if (transactionFlow != null) {
+        return fixtures.ok({
+          'items': transactionFlow!.map((r) => r.toJson()).toList(),
+          'next_cursor': null,
+        });
+      }
     }
     if (request.method == 'PATCH') {
       if (patch != null) return patch!.future;
@@ -163,6 +187,218 @@ void main() {
       'accounts',
     ]);
   });
+  testWidgets('home pill uses localized text and selects Transactions tab', (
+    tester,
+  ) async {
+    expect(AppLocalizationsEn().viewAllTransactions, 'View all transactions');
+    final f = HomeFixture(widgets: ['transactions']);
+    addTearDown(f.close);
+    await mountHome(tester, f, height: 700, shell: true);
+    final button = find.widgetWithText(
+      TextButton,
+      'Ver todas las transacciones',
+    );
+    expect(button, findsOneWidget);
+    expect(
+      tester.widget<TextButton>(button).style!.shape!.resolve({}),
+      isA<StadiumBorder>(),
+    );
+    await tester.tap(button);
+    await tester.pumpAndSettle();
+    expect(find.byType(TransactionsPage), findsOneWidget);
+    expect(tester.widget<AppNavigation>(find.byType(AppNavigation)).index, 1);
+    expect(find.byType(TransactionCardList).evaluate().length, greaterThan(0));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('home dates omit current year and use Lima across UTC New Year', (
+    tester,
+  ) async {
+    final f = HomeFixture(widgets: ['transactions']);
+    addTearDown(f.close);
+    f.latest = [
+      {...fixtures.transaction(), 'occurred_at': '2026-10-08T15:00:00Z'},
+      {
+        ...fixtures.transaction(id: 'old'),
+        'occurred_at': '2026-01-01T03:00:00Z',
+      },
+    ];
+    await mountHome(tester, f);
+    expect(find.text('jueves, 8 de octubre'), findsOneWidget);
+    expect(find.text('miércoles, 31 de diciembre de 2025'), findsOneWidget);
+    expect(find.byKey(const ValueKey('date-2025-12-31')), findsOneWidget);
+  });
+
+  testWidgets('day totals use server net and report currency across months', (
+    tester,
+  ) async {
+    final f = HomeFixture(widgets: ['transactions']);
+    addTearDown(f.close);
+    f.latest = [
+      {
+        ...fixtures.transaction(),
+        'occurred_at': '2026-10-09T03:00:00Z',
+        'amount': '987.65',
+      },
+      {
+        ...fixtures.transaction(id: 'older'),
+        'occurred_at': '2026-09-30T15:00:00Z',
+      },
+    ];
+    f.transactionFlow = [
+      CashFlowRowDto.fromJson({
+        ...syntheticFlow('2026-10-08', '700', '300', '-12.34', '999').toJson(),
+        'net': {
+          'by_currency': <Object?>[],
+          'report_currency': 'USD',
+          'report_amount': '-12.34',
+          'unconverted_count': 0,
+        },
+      }),
+      syntheticFlow('2026-09-30', '0', '0', '0.00', '0'),
+    ];
+    f.profile = {...f.profile, 'report_currency': 'USD'};
+    f.session.user = CurrentUserDto.fromJson(f.profile);
+    await mountHome(tester, f);
+    final total = tester.widget<Text>(
+      find.byKey(const ValueKey('day-net-2026-10-08')),
+    );
+    expect(total.data, '-12,34 \$');
+    expect(
+      total.style!.color,
+      MonetaeColors.of(tester.element(find.byType(HomePage))).muted,
+    );
+    expect(find.text('0 S/.'), findsOneWidget);
+    final query = f.requests
+        .singleWhere(
+          (r) =>
+              r.url.path == '/api/v1/reports/cash-flow' &&
+              r.url.queryParameters['date_from'] == '2026-09-30',
+        )
+        .url
+        .queryParameters;
+    expect(query, {
+      'limit': '100',
+      'period': 'daily',
+      'date_from': '2026-09-30',
+      'date_to': '2026-10-08',
+      'report_currency': 'USD',
+    });
+  });
+
+  testWidgets('late day report updates header without delaying transactions', (
+    tester,
+  ) async {
+    final f = HomeFixture(widgets: ['transactions']);
+    addTearDown(f.close);
+    final pending = Completer<http.Response>();
+    f.transactionFlowPending = pending;
+    await mountHome(tester, f);
+    expect(find.byType(HomeTransactionRow), findsOneWidget);
+    expect(find.byKey(const ValueKey('day-net-2026-10-08')), findsNothing);
+    pending.complete(
+      fixtures.ok({
+        'items': [
+          syntheticFlow('2026-10-08', '0', '0', '456.78', '0').toJson(),
+        ],
+        'next_cursor': null,
+      }),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('456,78 S/.'), findsOneWidget);
+  });
+
+  testWidgets(
+    'failed day report leaves dates, transactions and accounts visible',
+    (tester) async {
+      final f = HomeFixture(widgets: ['transactions', 'accounts']);
+      addTearDown(f.close);
+      f.transactionFlowStatus = 500;
+      await mountHome(tester, f);
+      expect(find.byKey(const ValueKey('date-2026-10-08')), findsOneWidget);
+      expect(find.byKey(const ValueKey('day-net-2026-10-08')), findsNothing);
+      expect(find.byType(HomeTransactionRow), findsOneWidget);
+      expect(find.byType(HomeAccounts), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('failed refresh hides the previous total', (tester) async {
+    final f = HomeFixture(widgets: ['transactions']);
+    addTearDown(f.close);
+    await mountHome(tester, f);
+    expect(find.text('-12,34 S/.'), findsOneWidget);
+    f.transactionFlowStatus = 500;
+    f.session.transactionCreated();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('day-net-2026-10-08')), findsNothing);
+    expect(find.byType(HomeTransactionRow), findsOneWidget);
+  });
+
+  testWidgets('new feed ignores a late daily report for the old range', (
+    tester,
+  ) async {
+    final f = HomeFixture(widgets: ['transactions']);
+    addTearDown(f.close);
+    final pending = Completer<http.Response>();
+    f.transactionFlowPending = pending;
+    await mountHome(tester, f);
+    f.transactionFlowPending = null;
+    f.latest = [
+      {...fixtures.transaction(), 'occurred_at': '2026-10-07T15:00:00Z'},
+    ];
+    f.transactionFlow = [syntheticFlow('2026-10-07', '0', '0', '24.56', '0')];
+    f.session.transactionCreated();
+    await tester.pumpAndSettle();
+    expect(find.text('24,56 S/.'), findsOneWidget);
+    pending.complete(
+      fixtures.ok({
+        'items': [
+          syntheticFlow('2026-10-08', '0', '0', '-999.00', '0').toJson(),
+        ],
+        'next_cursor': null,
+      }),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('24,56 S/.'), findsOneWidget);
+    expect(find.text('-999 S/.'), findsNothing);
+  });
+
+  test(
+    'day report paginates and is independent of chart month changes',
+    () async {
+      final queries = <Map<String, String>>[];
+      final f = HomeFixture();
+      addTearDown(f.close);
+      final api = ApiClient(
+        client: MockClient((request) async {
+          if (request.url.path == '/api/v1/reports/cash-flow' &&
+              request.url.queryParameters['date_from'] == '2026-10-08') {
+            queries.add(request.url.queryParameters);
+            return fixtures.ok({
+              'items': [
+                syntheticFlow('2026-10-08', '0', '0', '-1.00', '0').toJson(),
+              ],
+              'next_cursor': request.url.queryParameters['cursor'] == null
+                  ? 'next'
+                  : null,
+            });
+          }
+          return f.handle(request);
+        }),
+      );
+      addTearDown(api.close);
+      final home = HomeController(api, month: DateTime(2026, 10));
+      addTearDown(home.dispose);
+      await home.load();
+      expect(home.dailyFlow.data, hasLength(2));
+      expect(queries.last['cursor'], 'next');
+      expect(queries.first['period'], ReportPeriod.daily.name);
+      await home.moveMonth(-1);
+      expect(queries, hasLength(2));
+    },
+  );
+
   testWidgets(
     'exact default order, latest page limit, server order and no real-home mocks',
     (tester) async {
@@ -308,7 +544,7 @@ void main() {
       );
       await tester.tap(find.byKey(const Key('expense-income-toggle')));
       await tester.pumpAndSettle();
-      
+
       expect(
         tester
             .widget<CategoryPieChart>(find.byType(CategoryPieChart))
@@ -570,6 +806,50 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+  for (final brightness in Brightness.values) {
+    testWidgets('home transactions mobile ${brightness.name} golden', (
+      tester,
+    ) async {
+      final f = HomeFixture(widgets: ['transactions']);
+      addTearDown(f.close);
+      f.latest = [
+        fixtures.transaction(),
+        {
+          ...fixtures.transaction(id: 'old'),
+          'occurred_at': '2025-12-31T15:00:00Z',
+        },
+      ];
+      f.transactionFlow = [
+        syntheticFlow('2026-10-08', '0', '0', '-12.34', '0'),
+        syntheticFlow('2025-12-31', '0', '0', '24.56', '0'),
+      ];
+      tester.view.physicalSize = const Size(400, 642);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: monetaeTheme(brightness: brightness),
+          locale: const Locale('es'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: RepaintBoundary(
+            key: const Key('capture'),
+            child: HomePage(session: f.session, today: today, animate: false),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await expectLater(
+        find.byKey(const Key('capture')),
+        matchesGoldenFile(
+          'goldens/home_transactions_mobile_${brightness.name}.png',
+        ),
+      );
+    });
+  }
+
   for (final brightness in Brightness.values) {
     for (final empty in [false, true]) {
       testWidgets(

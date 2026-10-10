@@ -19,6 +19,7 @@ class TransactionCardList extends StatelessWidget {
     this.tintCategoryIcons = false,
     this.dailyFlow,
     this.isHome = false,
+    this.onViewTransactions,
     this.onEdit,
     this.onDuplicate,
     this.onDelete,
@@ -29,6 +30,7 @@ class TransactionCardList extends StatelessWidget {
   final bool tintCategoryIcons;
   final List<CashFlowRowDto>? dailyFlow;
   final bool isHome;
+  final VoidCallback? onViewTransactions;
   final ValueChanged<TransactionCardModel>? onEdit;
   final ValueChanged<TransactionCardModel>? onDuplicate;
   final ValueChanged<TransactionCardModel>? onDelete;
@@ -50,81 +52,82 @@ class TransactionCardList extends StatelessWidget {
                     models[i].dateLabel,
                     key: ValueKey('date-${models[i].dateKey}'),
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: isHome ? FontWeight.normal : FontWeight.bold,
+                      color: isHome ? MonetaeColors.of(context).muted : null,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 if (dailyFlow != null)
-                  Builder(
-                    builder: (context) {
-                      final net = dailyFlow!.firstWhere(
-                        (r) => r.startOn.startsWith(models[i].dateKey),
-                        orElse: () => const CashFlowRowDto(
-                          startOn: '',
-                          endOn: '',
-                          income: ReportTotalDto(byCurrency: [], reportCurrency: 'PEN', reportAmount: '0.00', unconvertedCount: 0),
-                          expense: ReportTotalDto(byCurrency: [], reportCurrency: 'PEN', reportAmount: '0.00', unconvertedCount: 0),
-                          net: ReportTotalDto(byCurrency: [], reportCurrency: 'PEN', reportAmount: '0.00', unconvertedCount: 0),
-                          cumulativeNet: ReportTotalDto(byCurrency: [], reportCurrency: 'PEN', reportAmount: '0.00', unconvertedCount: 0),
-                        ),
-                      );
-                      if (net.startOn.isEmpty) return const SizedBox.shrink();
-                      return Text(
+                  for (final row in dailyFlow!)
+                    if (row.startOn == models[i].dateKey)
+                      Text(
                         formatCurrency(
-                          net.net.reportAmount,
-                          net.net.reportCurrency,
+                          row.net.reportAmount,
+                          row.net.reportCurrency,
                           AppLocalizations.of(context).localeName,
                         ),
-                        style: TextStyle(
-                          color: net.net.reportAmount.startsWith('-')
-                              ? MonetaeColors.of(context).expense
-                              : MonetaeColors.of(context).income,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      );
-                    },
-                  ),
+                        key: ValueKey('day-net-${models[i].dateKey}'),
+                        style: Theme.of(context).textTheme.labelLarge
+                            ?.copyWith(color: MonetaeColors.of(context).muted),
+                      ),
               ],
             ),
           ),
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
-          child: isHome ? HomeTransactionRow(
-            model: models[i],
-            tintCategoryIcon: tintCategoryIcons,
-          ) : TransactionCard(
-            model: models[i],
-            preferences: preferences,
-            compact: compact,
-            tintCategoryIcon: tintCategoryIcons,
-            onEdit: onEdit == null ? null : () => onEdit!(models[i]),
-            onDuplicate: onDuplicate == null
-                ? null
-                : () => onDuplicate!(models[i]),
-            onDelete: onDelete == null ? null : () => onDelete!(models[i]),
-          ),
+          child: isHome
+              ? HomeTransactionRow(
+                  model: models[i],
+                  tintCategoryIcon: tintCategoryIcons,
+                )
+              : TransactionCard(
+                  model: models[i],
+                  preferences: preferences,
+                  compact: compact,
+                  tintCategoryIcon: tintCategoryIcons,
+                  onEdit: onEdit == null ? null : () => onEdit!(models[i]),
+                  onDuplicate: onDuplicate == null
+                      ? null
+                      : () => onDuplicate!(models[i]),
+                  onDelete: onDelete == null
+                      ? null
+                      : () => onDelete!(models[i]),
+                ),
         ),
       ],
       if (models.isNotEmpty)
-      Padding(
-        padding: const EdgeInsets.only(top: 16),
-        child: Center(
-          child: TextButton(
-            onPressed: () => Navigator.of(context).pushNamed('/transactions'),
-            style: TextButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-              shape: const StadiumBorder(),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: Text(
-              AppLocalizations.of(context).transactions,
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+        Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: Center(
+            child: TextButton(
+              onPressed:
+                  onViewTransactions ??
+                  () => Navigator.of(context).pushNamed('/transactions'),
+              style: TextButton.styleFrom(
+                minimumSize: isHome ? const Size(0, 44) : null,
+                backgroundColor: isHome
+                    ? MonetaeColors.of(context).card
+                    : Theme.of(context).colorScheme.surfaceContainerHighest,
+                shape: const StadiumBorder(),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+              child: Text(
+                isHome
+                    ? AppLocalizations.of(context).viewAllTransactions
+                    : AppLocalizations.of(context).transactions,
+                style: TextStyle(
+                  color: isHome
+                      ? MonetaeColors.of(context).muted
+                      : Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
             ),
           ),
         ),
-      ),
     ],
   );
 }

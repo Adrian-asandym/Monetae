@@ -401,6 +401,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get goodEvening => 'Buenas noches';
 
   @override
+  String get viewAllTransactions => 'Ver todas las transacciones';
+
+  @override
   String get latestTransactions => 'Últimas transacciones';
 
   @override

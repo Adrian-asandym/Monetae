@@ -836,6 +836,12 @@ abstract class AppLocalizations {
   /// **'Buenas noches'**
   String get goodEvening;
 
+  /// No description provided for @viewAllTransactions.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver todas las transacciones'**
+  String get viewAllTransactions;
+
   /// No description provided for @latestTransactions.
   ///
   /// In es, this message translates to:

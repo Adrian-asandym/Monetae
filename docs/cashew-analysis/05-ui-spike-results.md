@@ -868,3 +868,72 @@ Se reprodujo fielmente la UI de Inicio de Cashew, ajustándose estrictamente al 
 2. **Iconos de transacciones repetidos**: Omitido (no se dibuja textura de repetición), ya que el diseño puro con color sólido es el baseline esperado hasta cargar SVG avanzado (Fase 6).
 3. **Speed dial FAB ausente**: Cashew despliega un menú flotante con varias opciones. Aquí se implementó un FAB simple directo a `/transactions/new` porque la creación abarca todos los tipos.
 4. **Colores de cuenta por defecto**: Cashew dispone de paletas hardcodeadas estáticas; Monetae aplica un fallback derivado del tema actual en caso la API no provea un color de cuenta (mejor adaptabilidad a dark mode).
+
+## T-513 — ajustes finales de Inicio
+
+Fecha: 2026-10-10. Rama: `codex-T-513-ui-home-parity-fixes`.
+Se aplican exclusivamente los cuatro ajustes de la tarea, siguiendo la skill
+`cashew-inicio-ui` y las referencias de transacciones de Cashew en solo lectura.
+
+- La píldora de Inicio dice **«Ver todas las transacciones»** (es/en), usa los
+  colores compartidos `card` y `muted` y una altura mínima de 44 dp. En el shell
+  selecciona la pestaña Transacciones mediante un callback; no apila otra página.
+- Los encabezados omiten el año si coincide con el año actual de Inicio y lo
+  conservan para otros años. La misma conversión de calendario se usa para
+  agrupar transacciones y para delimitar el reporte.
+- `HomeController` pide `/reports/cash-flow` con `period=daily`, moneda de reporte
+  y fechas mínima/máxima **inclusivas** de las 25 transacciones mostradas, aunque
+  abarquen varios meses. Consume todas las páginas y muestra exclusivamente
+  `net.report_amount` y `net.report_currency`, sin sumar importes en la UI.
+  El estado se escucha y libera como los demás bloques; una respuesta tardía
+  actualiza los encabezados. Una carga pendiente o fallida oculta el total,
+  incluidos los datos de una carga anterior, y conserva la lista. Cambiar el
+  mes del gráfico no vuelve a pedir estos netos; recargar transacciones sí.
+- Presupuestos y objetivos comparten `dailyAmount`: división exacta de `Decimal`
+  conservando su cociente racional hasta redondear los centavos medio-arriba.
+  `1265,50 / 23` produce **55,02** y `2,01 / 2 = 1,005` produce **1,01**;
+  no hay aritmética monetaria con `double`.
+
+Las pruebas cubren texto e intención de navegación, fechas en el año actual y
+anterior (incluido el cambio de año UTC/Lima), netos deliberadamente distintos
+al importe de las transacciones, moneda del reporte, paginación, respuesta
+retardada, error inicial, error tras recargar y respuesta obsoleta. Se verifican
+los dos redondeos tanto en presupuestos como en objetivos.
+
+Se regeneran diez goldens afectados de Inicio y presupuestos y se añaden dos
+capturas de la lista de Inicio a **400×642**, claro y oscuro, con fecha antigua,
+netos y píldora. Los PNG de Inicio se abrieron y revisaron: **DM Sans muestra
+texto legible, no rectángulos**. Código, pruebas y referencias se versionan
+juntos; todas las cifras de las pruebas y capturas son sintéticas.
+
+**Limitaciones conservadas:** el coordinador aprobó explícitamente acotar esta
+tarea a **America/Lima (UTC−05, sin horario de verano)**; otras zonas IANA quedan
+para otra tarea. Las demás diferencias anotadas en T-512 quedan fuera del
+alcance; también permanece el bajo contraste del texto diario del presupuesto
+en tema claro, observado al revisar su golden. No se levantó una pila de
+servidores: la revisión visual de estos ajustes usa los goldens Flutter, sin
+intervenir en la pila de revisión de Adrian.
+
+Verificación final (sin actualizar goldens en la ejecución completa):
+
+```text
+dart analyze
+Analyzing web...
+No issues found!
+
+flutter test --reporter expanded
+00:28 +192: All tests passed!
+
+flutter build web --release
+Wasm dry run succeeded.
+Compiling lib/main.dart for the Web... 94.2s
+✓ Built build/web
+
+grep -rE "drift|firebase|appStateSettings|package:budget/" apps/web/lib
+(sin coincidencias; limpio)
+```
+
+Se incorporó por avance rápido `master-dev` (`41aa4fd`, solo documentación),
+se eliminaron los artefactos `test/failures/` de la primera ejecución y `build/`
+tras verificar la compilación, y el árbol de trabajo queda limpio después del
+commit de T-513. No quedan decisiones pendientes dentro de esta tarea.

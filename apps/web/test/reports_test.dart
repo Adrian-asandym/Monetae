@@ -296,7 +296,11 @@ void main() {
       expect(queries.every((query) => query['report_currency'] == 'USD'), true);
       final previous = DateTime.parse(queries.first['date_from']!);
       await tester.ensureVisible(find.byKey(const Key('category-pages')));
-      await tester.drag(find.byKey(const Key('category-pages')), const Offset(-500, 0), warnIfMissed: false);
+      await tester.drag(
+        find.byKey(const Key('category-pages')),
+        const Offset(-500, 0),
+        warnIfMissed: false,
+      );
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.byTooltip(l.previousMonth));
       await tester.tap(find.byTooltip(l.previousMonth));
@@ -305,7 +309,8 @@ void main() {
         DateTime.parse(queries.last['date_from']!),
         DateTime(previous.year, previous.month - 1),
       );
-      expect(queries.length, 6);
+      // Month navigation reloads categories and chart, not transaction-day nets.
+      expect(queries.length, 5);
       expired = true;
       await tester.ensureVisible(find.byType(PopupMenuButton<String>));
       await tester.pumpAndSettle();
