@@ -17,6 +17,14 @@ from monetae.api.schemas.auth import (
     UserPreferences,
     UserUpdate,
 )
+from monetae.api.schemas.budgets import (
+    Budget,
+    BudgetCategoryLimit,
+    BudgetCreate,
+    BudgetPage,
+    BudgetUpdate,
+    TransactionAssignment,
+)
 from monetae.api.schemas.categories import (
     Category,
     CategoryCreate,
@@ -102,12 +110,18 @@ def test_mounted_operations_security_responses_and_csrf() -> None:
                     for p in operation["parameters"]
                 )
             count += 1
-    assert count == 73
+    assert count == 79
 
 
 def test_schema_properties_mirror_contract() -> None:
     schemas = json.loads(CONTRACT.read_text())["components"]["schemas"]
     models: list[type[BaseModel]] = [
+        Budget,
+        BudgetCreate,
+        BudgetUpdate,
+        BudgetCategoryLimit,
+        BudgetPage,
+        TransactionAssignment,
         CashFlowRow,
         CashFlowRowPage,
         CategoryReportRow,

@@ -1,5 +1,6 @@
 """Importar este módulo registra todos los modelos en Base.metadata."""
 
+from monetae.db.models.budgets import Budget, BudgetCategory, BudgetTransaction
 from monetae.db.models.catalog import Account, Category, Person, Tag
 from monetae.db.models.exchange_rates import ExchangeRate
 from monetae.db.models.identity import Session, User
@@ -10,6 +11,9 @@ from monetae.db.models.recurring import RecurringRule, Subscription
 from monetae.db.models.security import LoginAttempt
 
 __all__ = [
+    "Budget",
+    "BudgetCategory",
+    "BudgetTransaction",
     "ExchangeRate",
     "ImportRun",
     "ImportReviewItem",

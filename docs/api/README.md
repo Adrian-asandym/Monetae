@@ -716,3 +716,39 @@ al completar la verificación; no se toca la pila `monetae-review`.
 - `CashFlowRow.cumulative_net` (RF-38): neto acumulado desde el inicio del rango hasta el final de la fila, para el gráfico de líneas acumulado de Cashew.
 - `Budget.color`, `Goal.color` y `Goal.icon` (y en sus `Create`/`Update`): color de la tarjeta y la barra de progreso, e ícono del objetivo, como en Cashew. Su API se implementa en la Fase 6.
 Los tres primeros están implementados en T-508. Regenerar el cliente de la UI desde `openapi.json` 0.5.0.
+
+## Presupuestos (T-601)
+
+`/budgets` implementa creación, listado por cursor, consulta, edición parcial y borrado
+lógico; `/budgets/{id}/transactions` sustituye la selección de transacciones. Todas las
+rutas requieren sesión; las escrituras validan Origin y CSRF. Las referencias del cuerpo
+ajenas, borradas o inexistentes responden 404, conforme a transacciones; las listas con
+ids repetidos y los datos inválidos responden 422. No se acepta `user_id` del cliente.
+
+Los ciclos parten de `start_on`: diarios de un día, semanales de siete y mensuales del
+día ancla al anterior al siguiente ancla. Los meses cortos usan su último día, sin perder
+el ancla original (31 de enero → 28/29 de febrero → 31 de marzo). `custom` define un único
+periodo inclusivo y exige `end_on >= start_on`. En recurrentes, `end_on` recorta el último
+ciclo; no hay ciclos posteriores. Se devuelve el gasto del ciclo que contiene hoy en la
+zona del usuario, o el primero/último si hoy cae antes/después de la vigencia.
+
+El gasto reutiliza la clasificación de reportes: gastos publicados y no borrados más
+interés efectivamente pagado de préstamos `borrowed`, dentro del ciclo por fecha local.
+Capital, transferencias, ingresos y programadas no aportan gasto. `category_limits` vacío
+incluye todas las categorías; con elementos incluye solo las categorías indicadas. Sus
+límites se conservan, sin calcular avance por categoría. `scope = selected` añade el filtro
+por vínculos activos; un pago de préstamo seleccionado aporta únicamente su interés.
+
+`report_total` convierte a la moneda del presupuesto usando `fx_rate_to_base` y la tasa
+histórica base→reporte del día o anterior, según las reglas de reportes. Sin tasa, el gasto
+permanece en `by_currency` y suma `unconverted_count`, pero se excluye del total convertido.
+`spent_amount = report_total.report_amount`; `remaining_amount = amount − spent_amount`
+puede ser negativo. El listado usa orden ascendente `(created_at, id)` y calcula toda la
+página con tres consultas de datos, independientemente del número de presupuestos.
+
+`PATCH` conserva los campos omitidos; si incluye `category_limits`, reemplaza toda la
+lista. La asignación admite hasta 200 ids únicos, valida todos antes de cambiar vínculos,
+borra lógicamente los retirados y restaura los que regresan. Se permite guardar la selección
+con `scope = all`; afecta el cálculo al pasar a `selected`. Las modificaciones de un mismo
+presupuesto se serializan mediante bloqueo de su fila. El borrado del presupuesto conserva
+las transacciones. El historial `/reports/budgets` y las metas quedan para tareas posteriores.

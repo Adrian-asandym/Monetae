@@ -22,6 +22,7 @@ def test_exchange_rates_roundtrip(database_url: str, db_engine: Engine) -> None:
         "created_at",
         "updated_at",
     }
+    command.upgrade(config, "head")
     command.check(config)
     command.downgrade(config, "0007")
     assert "exchange_rates" not in inspect(db_engine).get_table_names()
