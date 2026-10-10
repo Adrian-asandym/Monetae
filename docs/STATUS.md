@@ -53,6 +53,7 @@ Backend: **58 de 89 rutas** aprox. (presupuestos y metas añadidos), 10 migracio
 
 | Fecha | Decisión |
 |---|---|
+| 2026-10-10 (tarde) | **G7-B:** no publicar aún; esperar a su revisión visual de Inicio (el gate `gate_ecde8d19a53a` queda abierto). **D12:** prefiere **no** crear un historial aparte: reutilizar la lista de transacciones **filtrada** por presupuesto o meta. El coordinador reformula D12 en §5 y pide confirmación. Pregunta si la UI ya está lo bastante cerca de producción para dar indicaciones sobre Inicio. |
 | 2026-10-10 | Reanudación: STATUS contrastado con git y Orca (coincide); Docker volvió a estar accesible tras reactivarlo Adrian. «**OK para continuar**» al plan propuesto = **G6-A** (publicar) y **P1-A** (T-509 Inicio ∥ T-601 API presupuestos → T-602 API metas → T-510 formulario de transacción). |
 | 2026-10-09 (noche) | **Cierre de sesión** («Continuaremos en otro momento»). Adrian **eliminó los worktrees de Codex** de la Fase 5. G6 queda como propuesta sin resolver. |
 | 2026-10-09 (noche) | «**OK**» a **G5** (publicar T-504/T-506) y **T-507**. El diseño «sigue bien, como prueba». Adrian describe la **disposición de Cashew** que quiere (detalle en `docs/ui/home-layout.md`): barra inferior de 4 botones (Inicio, Transacciones, Presupuestos, Más) y, en Inicio, de arriba abajo: saludo, cuentas (nombre, saldo, nº de transacciones, color y **cuenta por defecto elegible desde Inicio**, resaltada con su color), objetivos, presupuestos (color y barra), circular de gastos con leyenda de las 3 categorías con más gasto y **deslizar a la izquierda** para ingresos, gráfico de líneas que **sube con ingresos y baja con gastos**, las **25 últimas transacciones** y un botón cuadrado «+» destacado para crear transacción. Esperará a que estén todas las integraciones para revisar posiciones y fidelidad. |
@@ -82,9 +83,10 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
 **R1 · Revisión de Inicio por Adrian** con datos reales en `http://localhost:8080` (usuario sintético `revision-g7@example.test`; contraseña dada en el chat, **no** versionada). Datos sintéticos de octubre 2026: 3 cuentas (Efectivo por defecto), 4 categorías, 13 transacciones, 2 presupuestos (uno excedido), 2 metas (una completada). Adrian dice qué ajustar de posiciones y fidelidad → tareas T-511+.
 
-**D12 · Historial de presupuestos y metas (`/reports/budgets`, `/reports/goals`, RF-30)**: el contrato devuelve `BudgetPage`/`GoalPage` sin campos de periodo, ambiguo para un historial por periodos.
-- **A (recomendada): contrato 0.6.0 con un esquema `BudgetPeriodReport` (`budget_id`, `period_start`, `period_end`, `spent_amount`, `remaining_amount`, `report_total`)** y `/reports/goals` igual a `GET /goals` con filtro de fechas. *Razón:* no reutiliza `start_on`/`end_on` con otro significado.
-- B: reinterpretar `start_on`/`end_on` de `Budget` como límites del periodo en ese endpoint. *Contra:* mismo campo, dos significados.
+**D12 · Historial de presupuestos y metas (RF-30) — reformulada tras la respuesta de Adrian (2026-10-10).** Adrian no quiere un historial aparte, sino la **misma lista de transacciones filtrada** por presupuesto o meta.
+- **A (recomendada, idea de Adrian):** filtros nuevos en `GET /transactions`: `budget_id` (+ fecha del periodo; el servidor decide qué transacciones cuentan con las mismas reglas que `spent_amount`) y `goal_id` (las enlazadas). La pantalla de un presupuesto muestra su barra del periodo y debajo esa lista, con flechas ◀ ▶ para ir a periodos anteriores (como Cashew); `GET /budgets/{id}?on=<fecha>` da el total de ese periodo. Contrato 0.6.0 pequeño, sin esquemas nuevos.
+- B: usar **etiquetas** (`tags`) para marcar qué pertenece a cada presupuesto o meta. *Contra:* duplica la pertenencia que ya calcula el servidor (categorías del presupuesto, selección de la meta) y obliga a etiquetar a mano.
+- *Pendiente:* confirmación de Adrian.
 
 **D7 · Para más adelante:** ADR-005 sincronización Android (antes de V4) · orden de categorías · credenciales OAuth de Google Cloud y proveedor de tipo de cambio (Fase 6) · proxy del VPS (`ARCHITECTURE.md` §10.10) · corregir el principal de un desembolso sin dinero sin crear efectivo · UI para crear/editar presupuestos y metas (hoy solo por API).
 
