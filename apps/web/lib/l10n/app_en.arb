@@ -280,5 +280,6 @@
   "goalReached": "Goal reached",
   "goalOverdue": "Goal overdue",
   "addGoalLabel": "Goal",
-  "addBudgetLabel": "Budget"
+  "addBudgetLabel": "Budget",
+  "editHome": "Edit"
 }

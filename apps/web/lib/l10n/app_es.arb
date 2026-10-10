@@ -280,5 +280,6 @@
   "goalReached": "Objetivo logrado",
   "goalOverdue": "Objetivo atrasado",
   "addGoalLabel": "Objetivo",
-  "addBudgetLabel": "Presupuesto"
+  "addBudgetLabel": "Presupuesto",
+  "editHome": "Editar"
 }

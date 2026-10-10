@@ -1033,6 +1033,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Presupuesto'**
   String get addBudgetLabel;
+
+  /// No description provided for @editHome.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar'**
+  String get editHome;
 }
 
 class _AppLocalizationsDelegate

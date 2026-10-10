@@ -14,6 +14,11 @@ import 'package:monetae_web/pages/app_shell.dart';
 import 'package:monetae_web/theme/monetae_theme.dart';
 import 'package:monetae_web/widgets/budget_goal_lists.dart';
 import 'package:monetae_web/widgets/goal_card.dart';
+import 'package:monetae_web/widgets/home_edit_button.dart';
+import 'package:monetae_web/widgets/home_greeting.dart';
+import 'package:monetae_web/widgets/brand_logo.dart';
+import 'package:monetae_web/pages/home_page.dart';
+import 'package:monetae_web/l10n/app_localizations_en.dart';
 import 'package:monetae_web/widgets/budget_card.dart';
 
 import 'components_test.dart' as harness;
@@ -62,6 +67,8 @@ void main() {
     final mode = brightness.name;
     testWidgets('Home v2 at 400x642 $mode', (tester) async {
       final f = home.HomeFixture();
+      f.profile['display_name'] = 'Luna Vega';
+      f.session.user = CurrentUserDto.fromJson(f.profile);
       addTearDown(f.close);
       await mountMobile(
         tester,
@@ -69,6 +76,67 @@ void main() {
         (_, _) => AppShell(session: f.session, today: home.today),
       );
       await golden(tester, 'home_$mode');
+    });
+    testWidgets('Edit pill dimensions, localization and TODO action $mode', (
+      tester,
+    ) async {
+      expect(AppLocalizationsEn().editHome, 'Edit');
+      var taps = 0;
+      await mountMobile(
+        tester,
+        brightness,
+        (_, _) => Scaffold(
+          body: Padding(
+            padding: const EdgeInsets.all(13),
+            child: Column(
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: HomeGreeting(
+                        now: DateTime(2026, 10, 10, 9),
+                        displayName: 'Luna Vega',
+                      ),
+                    ),
+                    HomeEditButton(onPressed: () => taps++),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      expect(tester.getSize(find.byType(HomeEditButton)), const Size(114, 45));
+      final button = tester.widget<TextButton>(
+        find.byKey(const Key('edit-home')),
+      );
+      expect(
+        (button.style!.shape!.resolve({})! as RoundedRectangleBorder)
+            .borderRadius,
+        BorderRadius.circular(14),
+      );
+      expect(find.byIcon(Icons.edit_rounded), findsOneWidget);
+      await tester.tap(find.text('Editar'));
+      expect(taps, 1);
+      await tester.pumpAndSettle();
+      await golden(tester, 'edit_$mode');
+
+      final f = home.HomeFixture(widgets: ['accounts']);
+      addTearDown(f.close);
+      await mountMobile(
+        tester,
+        brightness,
+        (_, _) =>
+            HomePage(session: f.session, today: home.today, animate: false),
+      );
+      final requests = f.requests.length;
+      await tester.tap(find.byKey(const Key('edit-home')));
+      await tester.pumpAndSettle();
+      expect(f.requests.length, requests);
+      expect(find.byType(PopupMenuButton<String>), findsNothing);
+      expect(find.byType(BrandLogo), findsNothing);
+      expect(find.text('Actualizar'), findsNothing);
     });
     for (final (name, amounts, labels) in [
       (

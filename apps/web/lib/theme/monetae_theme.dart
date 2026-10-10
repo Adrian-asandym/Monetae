@@ -174,4 +174,11 @@ abstract final class HomeTokens {
   static const lineZeroEpsilon = .000001;
   static const lineTooltipRadius = 8.0;
   static const lineAnimationMilliseconds = 1500;
+  static const editWidth = 114.0;
+  static const editHeight = 45.0;
+  static const editRadius = 14.0;
+  static const editPadding = 12.0;
+  static const editIconSize = 22.0;
+  static const editGap = 8.0;
+  static const editFontSize = 14.0;
 }

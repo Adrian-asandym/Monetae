@@ -532,4 +532,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addBudgetLabel => 'Budget';
+
+  @override
+  String get editHome => 'Edit';
 }
