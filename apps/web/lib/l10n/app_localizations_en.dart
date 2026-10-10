@@ -399,6 +399,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get goodEvening => 'Good evening';
 
   @override
+  String get viewAllTransactions => 'View all transactions';
+
+  @override
   String get latestTransactions => 'Latest transactions';
 
   @override

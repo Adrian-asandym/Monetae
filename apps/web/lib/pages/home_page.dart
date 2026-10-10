@@ -39,10 +39,12 @@ class HomePage extends StatefulWidget {
     required this.session,
     this.today,
     this.animate = true,
+    this.onViewTransactions,
   });
   final SessionController session;
   final DateTime? today;
   final bool animate;
+  final VoidCallback? onViewTransactions;
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -116,7 +118,12 @@ class _HomePageState extends State<HomePage> {
       'categories': HomeBlockView(
         block: _home.categories,
         title: l.categoryDistribution,
-        builder: (data) => HomeCategoryCarousel(data: data, animate: widget.animate, month: _home.month, onMoveMonth: _home.moveMonth),
+        builder: (data) => HomeCategoryCarousel(
+          data: data,
+          animate: widget.animate,
+          month: _home.month,
+          onMoveMonth: _home.moveMonth,
+        ),
       ),
       'cash_flow': HomeBlockView(
         block: _home.flow,
@@ -130,9 +137,13 @@ class _HomePageState extends State<HomePage> {
         builder: (feed) => feed.transactions.isEmpty
             ? Text(l.emptyTransactions)
             : TransactionCardList(
-                models: presentTransactions(feed, l),
+                models: presentTransactions(feed, l, homeToday: _today),
                 preferences: profile.preferences.transactionCard,
-                dailyFlow: _home.dailyFlow.data,
+                dailyFlow:
+                    _home.dailyFlow.loading || _home.dailyFlow.error != null
+                    ? null
+                    : _home.dailyFlow.data,
+                onViewTransactions: widget.onViewTransactions,
                 isHome: true,
               ),
       ),
@@ -198,7 +209,9 @@ class _HomePageState extends State<HomePage> {
         key: const Key('add-transaction'),
         heroTag: 'home-add-transaction',
         tooltip: l.addTransaction,
-        backgroundColor: Theme.of(context).brightness == Brightness.light ? Colors.grey.shade300 : Colors.grey.shade700,
+        backgroundColor: Theme.of(context).brightness == Brightness.light
+            ? Colors.grey.shade300
+            : Colors.grey.shade700,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         onPressed: () => Navigator.of(context).pushNamed('/transactions/new'),

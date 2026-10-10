@@ -46,7 +46,11 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) {
     final session = widget.session;
     final pages = <Widget>[
-      HomePage(session: session, today: widget.today),
+      HomePage(
+        session: session,
+        today: widget.today,
+        onViewTransactions: () => _select(1),
+      ),
       TransactionsPage(
         session: session,
         onDemo: () => Navigator.of(context).pushNamed('/demo'),

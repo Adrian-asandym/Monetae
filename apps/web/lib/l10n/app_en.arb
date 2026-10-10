@@ -201,6 +201,7 @@
   "goodMorning": "Good morning",
   "goodAfternoon": "Good afternoon",
   "goodEvening": "Good evening",
+  "viewAllTransactions": "View all transactions",
   "latestTransactions": "Latest transactions",
   "cumulativeCashFlow": "Cumulative cash flow",
   "addTransaction": "Add transaction",

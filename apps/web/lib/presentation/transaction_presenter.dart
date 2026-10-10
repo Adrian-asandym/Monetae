@@ -18,21 +18,25 @@ Color presentationColor(
   return Color(0xFF000000 | int.parse(value.substring(1), radix: 16));
 }
 
+/// America/Lima uses UTC-05 without DST, independent of the device timezone.
+DateTime transactionCalendarDate(String occurredAt) =>
+    DateTime.parse(occurredAt).toUtc().subtract(const Duration(hours: 5));
+
 List<TransactionCardModel> presentTransactions(
   TransactionFeed feed,
-  AppLocalizations l,
-) => [for (final item in feed.transactions) _present(item, feed, l)];
+  AppLocalizations l, {
+  DateTime? homeToday,
+}) => [
+  for (final item in feed.transactions) _present(item, feed, l, homeToday),
+];
 
 TransactionCardModel _present(
   TransactionDto item,
   TransactionFeed feed,
   AppLocalizations l,
+  DateTime? homeToday,
 ) {
-  // America/Lima uses UTC-05 without DST. Use UTC calendar fields, independent
-  // of the browser/device timezone, including around midnight.
-  final date = DateTime.parse(item.occurredAt)
-      .toUtc()
-      .subtract(const Duration(hours: 5));
+  final date = transactionCalendarDate(item.occurredAt);
   final category = feed.categories[item.categoryId];
   final label = switch (item.kind) {
     TransactionKind.income => l.income,
@@ -53,7 +57,11 @@ TransactionCardModel _present(
     amountLabel: amount,
     subtitle: category?.name ?? label,
     dateKey: DateFormat('yyyy-MM-dd').format(date),
-    dateLabel: DateFormat.yMMMMEEEEd(l.localeName).format(date),
+    dateLabel:
+        (homeToday != null && date.year == homeToday.year
+                ? DateFormat.MMMMEEEEd(l.localeName)
+                : DateFormat.yMMMMEEEEd(l.localeName))
+            .format(date),
     timeLabel: DateFormat.Hm(l.localeName).format(date),
     icon: CategoryIconSource.resolve(category?.icon ?? item.kind.name),
     categoryColor: presentationColor(category?.color),

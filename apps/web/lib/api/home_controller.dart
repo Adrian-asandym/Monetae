@@ -5,6 +5,7 @@ import '../data/api_dtos.dart';
 import 'api_client.dart';
 import 'report_query.dart';
 import 'transaction_feed.dart';
+import '../presentation/transaction_presenter.dart';
 
 /// Independent request state; a late response cannot replace a newer refresh.
 final class HomeBlock<T> extends ChangeNotifier {
@@ -112,20 +113,27 @@ final class HomeController {
         for (final item in catalogs) item.id: item,
       });
     });
-    dailyFlow = HomeBlock(
-      () => loadPages((cursor) async {
+    dailyFlow = HomeBlock(() async {
+      final dates =
+          transactions.data?.transactions
+              .map((item) => transactionCalendarDate(item.occurredAt))
+              .toList() ??
+          [];
+      if (dates.isEmpty || transactions.error != null) return [];
+      dates.sort();
+      return loadPages((cursor) async {
         final page = await api.cashFlow(
           query: ReportQuery(
             period: ReportPeriod.daily,
             reportCurrency: reportCurrency,
-            dateFrom: month.toIso8601String(),
-            dateTo: DateTime(month.year, month.month + 1).toIso8601String(),
+            dateFrom: DateFormat('yyyy-MM-dd').format(dates.first),
+            dateTo: DateFormat('yyyy-MM-dd').format(dates.last),
           ),
           cursor: cursor,
         );
         return (page.items, page.nextCursor);
-      }),
-    );
+      });
+    });
     flow = HomeBlock(
       () => loadPages((cursor) async {
         final page = await api.cashFlow(
@@ -146,8 +154,12 @@ final class HomeController {
       await feed.load(limit: 25);
       return feed;
     });
+    transactions.addListener(() {
+      if (!transactions.loading) _dailyFlowLoad = dailyFlow.load();
+    });
   }
 
+  Future<void> _dailyFlowLoad = Future.value();
   final ApiClient api;
   final String? reportCurrency;
   DateTime month;
@@ -172,6 +184,7 @@ final class HomeController {
     budgets,
     categories,
     flow,
+    dailyFlow,
     transactions,
   ];
   Future<void> load() => Future.wait([
@@ -180,12 +193,16 @@ final class HomeController {
     budgets.load(),
     categories.load(),
     flow.load(),
-    dailyFlow.load(),
-    transactions.load(),
+    _loadTransactions(),
   ]);
+  Future<void> _loadTransactions() async {
+    await transactions.load();
+    await _dailyFlowLoad;
+  }
+
   Future<void> moveMonth(int delta) async {
     month = DateTime(month.year, month.month + delta);
-    await Future.wait([categories.load(), flow.load(), dailyFlow.load()]);
+    await Future.wait([categories.load(), flow.load()]);
   }
 
   void dispose() {
