@@ -1,6 +1,6 @@
 # T-512 — UI: Inicio móvil fiel a Cashew según la skill `cashew-inicio-ui`
 
-> **ESTADO: LANZADA el 2026-10-10** (Run `run_c2cebe1745b9`; decisiones S1–S6 de Adrian; SPEC v0.6, contrato 0.6.0). Corre **en paralelo con T-603** (API `display_name`; archivos disjuntos).
+> **ESTADO: ACEPTADA e integrada en `master-dev` el 2026-10-10** (`2903271`; 179 pruebas UI; seguimiento T-512b por goldens sin texto, avisos de `analyze` y desviaciones; el coordinador versionó los goldens regenerados). **Detalles pendientes para la tarea de ajuste tras la revisión de Adrian:** botón final «Ver todas las transacciones» (hoy «Transacciones»); fecha del día sin año en el año en curso; total neto del día a la derecha del encabezado; redondeo de «X/día» a medio-arriba (hoy hacia arriba: 55,03 en vez de 55,02). (Run `run_c2cebe1745b9`; decisiones S1–S6 de Adrian; SPEC v0.6, contrato 0.6.0). Corre **en paralelo con T-603** (API `display_name`; archivos disjuntos).
 > Agente: **Antigravity**, modelo **Pro** (lo fija Adrian en el panel), esfuerzo alto.
 
 ## La guía manda

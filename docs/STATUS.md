@@ -91,6 +91,8 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 - B: usar **etiquetas** (`tags`) para marcar qué pertenece a cada presupuesto o meta. *Contra:* duplica la pertenencia que ya calcula el servidor (categorías del presupuesto, selección de la meta) y obliga a etiquetar a mano.
 - *Pendiente:* confirmación de Adrian.
 
+**R2 · Revisión de Inicio fiel a Cashew (T-512) por Adrian** en `http://localhost:8080` (usuario `revision-g7@example.test`, nombre «Adrian Sandy»; pila de revisión actualizada a `2903271`, BD `0011`). Sus observaciones + 4 detalles conocidos (ver `docs/tasks/T-512-ui-home-cashew-parity.md`) → una sola tarea de ajuste T-513. Antigravity conserva su terminal (`term_912b96eb…`) para reutilizarla.
+
 **S1–S6 · Plan de la skill `cashew-inicio-ui` (propuesto 2026-10-10, pendiente de Adrian):**
 - **S1 capturas:** faltan las 6 de `references/`. Contienen datos reales → guardarlas en `reference/cashew-inicio/` (ignorada por git), **no** en `.claude/` (repositorio público).
 - **S2 confirmar** que la skill reemplaza el fondo azul y el formato «S/ 1,234.50» (recomendado: sí, la skill manda).
