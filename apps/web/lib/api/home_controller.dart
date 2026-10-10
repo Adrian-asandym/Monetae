@@ -112,6 +112,20 @@ final class HomeController {
         for (final item in catalogs) item.id: item,
       });
     });
+    dailyFlow = HomeBlock(
+      () => loadPages((cursor) async {
+        final page = await api.cashFlow(
+          query: ReportQuery(
+            period: ReportPeriod.daily,
+            reportCurrency: reportCurrency,
+            dateFrom: month.toIso8601String(),
+            dateTo: DateTime(month.year, month.month + 1).toIso8601String(),
+          ),
+          cursor: cursor,
+        );
+        return (page.items, page.nextCursor);
+      }),
+    );
     flow = HomeBlock(
       () => loadPages((cursor) async {
         final page = await api.cashFlow(
@@ -142,6 +156,7 @@ final class HomeController {
   late final HomeBlock<List<BudgetDto>> budgets;
   late final HomeBlock<HomeCategoryData> categories;
   late final HomeBlock<List<CashFlowRowDto>> flow;
+  late final HomeBlock<List<CashFlowRowDto>> dailyFlow;
   late final HomeBlock<TransactionFeed> transactions;
 
   ReportQuery get query => ReportQuery(
@@ -165,11 +180,12 @@ final class HomeController {
     budgets.load(),
     categories.load(),
     flow.load(),
+    dailyFlow.load(),
     transactions.load(),
   ]);
   Future<void> moveMonth(int delta) async {
     month = DateTime(month.year, month.month + delta);
-    await Future.wait([categories.load(), flow.load()]);
+    await Future.wait([categories.load(), flow.load(), dailyFlow.load()]);
   }
 
   void dispose() {

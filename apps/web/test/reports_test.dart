@@ -305,7 +305,7 @@ void main() {
         DateTime.parse(queries.last['date_from']!),
         DateTime(previous.year, previous.month - 1),
       );
-      expect(queries.length, 4);
+      expect(queries.length, 6);
       expired = true;
       await tester.ensureVisible(find.byType(PopupMenuButton<String>));
       await tester.pumpAndSettle();

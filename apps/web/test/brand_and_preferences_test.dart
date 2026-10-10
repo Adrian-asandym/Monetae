@@ -167,6 +167,8 @@ void main() {
             onDuplicate: (_) => duplicated++,
             onDelete: (_) => deleted++,
           ),
+          captureSize: const Size(600, 800),
+          viewSize: const Size(800, 1000),
         );
         await tester.pumpAndSettle();
         expect(

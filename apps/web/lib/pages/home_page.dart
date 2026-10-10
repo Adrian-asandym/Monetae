@@ -132,6 +132,7 @@ class _HomePageState extends State<HomePage> {
             : TransactionCardList(
                 models: presentTransactions(feed, l),
                 preferences: profile.preferences.transactionCard,
+                dailyFlow: _home.dailyFlow.data,
               ),
       ),
     };

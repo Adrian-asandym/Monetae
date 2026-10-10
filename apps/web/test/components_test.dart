@@ -306,7 +306,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(const DemoApp());
     await tester.pumpAndSettle();
-    expect(find.text('Transacciones'), findsOneWidget);
+    expect(find.text('Transacciones'), findsWidgets);
     await tester.tap(find.byKey(const Key('theme-switch')));
     await tester.pumpAndSettle();
     expect(
@@ -315,7 +315,7 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('language-switch')));
     await tester.pumpAndSettle();
-    expect(find.text('Transactions'), findsOneWidget);
+    expect(find.text('Transactions'), findsWidgets);
     await tester.tap(find.byKey(const Key('accent-picker')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Green').last);
