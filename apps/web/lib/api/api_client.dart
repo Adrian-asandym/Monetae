@@ -60,10 +60,12 @@ final class ApiClient {
     String path, {
     Map<String, String>? query,
     Map<String, Object?>? body,
+    String? idempotencyKey,
   }) async {
     final revision = _sessionRevision;
     final uri = Uri(path: '/api/v1/$path', queryParameters: query);
     final headers = <String, String>{'Accept': 'application/json'};
+    if (idempotencyKey != null) headers['Idempotency-Key'] = idempotencyKey;
     if (method != 'GET') {
       final csrf = csrfFromCookies(_cookies());
       if (csrf != null) headers['X-CSRF-Token'] = csrf;
@@ -113,6 +115,18 @@ final class ApiClient {
 
   Future<CurrentUserDto> currentUser() async =>
       CurrentUserDto.fromJson(await _request('GET', 'users/me'));
+
+  Future<TransactionDto> createTransaction(
+    TransactionCreateDto transaction, {
+    required String idempotencyKey,
+  }) async => TransactionDto.fromJson(
+    await _request(
+      'POST',
+      'transactions',
+      body: transaction.toJson(),
+      idempotencyKey: idempotencyKey,
+    ),
+  );
 
   Future<AuthenticatedSessionDto> login(String email, String password) async {
     final result = AuthenticatedSessionDto.fromJson(

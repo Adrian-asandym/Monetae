@@ -211,5 +211,33 @@
         "type": "int"
       }
     }
+  },
+  "transactionAmount": "Amount",
+  "transactionCategory": "Category (optional)",
+  "transactionAccount": "Account",
+  "transactionTitle": "Title (optional)",
+  "transactionNote": "Note (optional)",
+  "transactionPosted": "Posted",
+  "transactionScheduled": "Scheduled · future date",
+  "limaTimezone": "Lima time · UTC−5",
+  "exchangeRate": "Manual exchange rate",
+  "manualRateHint": "For 1 {fromSymbol}, how much in {baseSymbol}?",
+  "positiveAmountRequired": "Enter an amount greater than 0 (up to 2 decimals).",
+  "accountRequired": "Choose an active account.",
+  "positiveRateRequired": "Enter a rate greater than 0 (up to 6 decimals).",
+  "saveTransaction": "Save transaction",
+  "savingTransaction": "Saving…",
+  "transactionSaved": "Transaction saved",
+  "deleteDigit": "Delete digit; hold to clear all",
+  "decimalPoint": "Decimal point",
+  "@manualRateHint": {
+    "placeholders": {
+      "fromSymbol": {
+        "type": "String"
+      },
+      "baseSymbol": {
+        "type": "String"
+      }
+    }
   }
 }

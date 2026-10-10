@@ -497,7 +497,7 @@ void main() {
     );
   });
   testWidgets(
-    'four tabs navigate; + opens only the T-510 placeholder; wide shell uses rail',
+    'four tabs navigate; + opens the transaction form; wide shell uses rail',
     (tester) async {
       final f = HomeFixture();
       addTearDown(f.close);
@@ -507,7 +507,7 @@ void main() {
       await tester.tap(find.byKey(const Key('add-transaction')));
       await tester.pumpAndSettle();
       expect(find.byType(NewTransactionPage), findsOneWidget);
-      expect(find.text(l.comingSoon), findsOneWidget);
+      expect(find.byKey(const Key('transaction-amount')), findsOneWidget);
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('nav-2')));

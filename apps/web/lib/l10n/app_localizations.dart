@@ -859,6 +859,114 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'{count} transacciones'**
   String accountTransactionCount(int count);
+
+  /// No description provided for @transactionAmount.
+  ///
+  /// In es, this message translates to:
+  /// **'Importe'**
+  String get transactionAmount;
+
+  /// No description provided for @transactionCategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Categoría (opcional)'**
+  String get transactionCategory;
+
+  /// No description provided for @transactionAccount.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuenta'**
+  String get transactionAccount;
+
+  /// No description provided for @transactionTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Título (opcional)'**
+  String get transactionTitle;
+
+  /// No description provided for @transactionNote.
+  ///
+  /// In es, this message translates to:
+  /// **'Nota (opcional)'**
+  String get transactionNote;
+
+  /// No description provided for @transactionPosted.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicada'**
+  String get transactionPosted;
+
+  /// No description provided for @transactionScheduled.
+  ///
+  /// In es, this message translates to:
+  /// **'Programada · fecha futura'**
+  String get transactionScheduled;
+
+  /// No description provided for @limaTimezone.
+  ///
+  /// In es, this message translates to:
+  /// **'Hora de Lima · UTC−5'**
+  String get limaTimezone;
+
+  /// No description provided for @exchangeRate.
+  ///
+  /// In es, this message translates to:
+  /// **'Tipo de cambio manual'**
+  String get exchangeRate;
+
+  /// No description provided for @manualRateHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Por 1 {fromSymbol}, ¿cuánto en {baseSymbol}?'**
+  String manualRateHint(String fromSymbol, String baseSymbol);
+
+  /// No description provided for @positiveAmountRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Escribe un importe mayor que 0 (hasta 2 decimales).'**
+  String get positiveAmountRequired;
+
+  /// No description provided for @accountRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige una cuenta activa.'**
+  String get accountRequired;
+
+  /// No description provided for @positiveRateRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Escribe una tasa mayor que 0 (hasta 6 decimales).'**
+  String get positiveRateRequired;
+
+  /// No description provided for @saveTransaction.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar transacción'**
+  String get saveTransaction;
+
+  /// No description provided for @savingTransaction.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardando…'**
+  String get savingTransaction;
+
+  /// No description provided for @transactionSaved.
+  ///
+  /// In es, this message translates to:
+  /// **'Transacción guardada'**
+  String get transactionSaved;
+
+  /// No description provided for @deleteDigit.
+  ///
+  /// In es, this message translates to:
+  /// **'Borrar dígito; mantén pulsado para borrar todo'**
+  String get deleteDigit;
+
+  /// No description provided for @decimalPoint.
+  ///
+  /// In es, this message translates to:
+  /// **'Punto decimal'**
+  String get decimalPoint;
 }
 
 class _AppLocalizationsDelegate
