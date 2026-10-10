@@ -141,6 +141,13 @@ class _HomeCategoryCarouselState extends State<HomeCategoryCarousel> {
                             for (final row in widget.data.rows.where(
                               (r) =>
                                   r.kind == kind &&
+                                  ranked
+                                      .take(3)
+                                      .any(
+                                        (slice) =>
+                                            slice.id ==
+                                            (r.categoryId ?? 'uncategorized'),
+                                      ) &&
                                   (r.total.unconvertedCount > 0 ||
                                       r.total.byCurrency.any(
                                         (c) =>

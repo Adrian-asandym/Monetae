@@ -257,7 +257,14 @@ void main() {
             kind: CategoryReportRowKind.expense,
             startOn: '2026-10-01',
             endOn: '2026-10-31',
-            total: syntheticTotal(['10.00', '40.00', '20.00', '30.00'][i]),
+            total: ReportTotalDto(
+              byCurrency: const [
+                CurrencyTotalDto(currency: 'USD', amount: '10.00'),
+              ],
+              reportCurrency: 'PEN',
+              reportAmount: ['10.00', '40.00', '20.00', '30.00'][i],
+              unconvertedCount: 0,
+            ),
           ),
         ...report.rows.where((row) => row.kind == CategoryReportRowKind.income),
       ];
@@ -267,7 +274,15 @@ void main() {
         (_, _) => Material(
           color: Colors.transparent,
           child: HomeCategoryCarousel(
-            data: HomeCategoryData(rows, report.categories),
+            data: HomeCategoryData(rows, {
+              ...report.categories,
+              for (var i = 0; i < 4; i++)
+                'category-$i': CategoryDto.fromJson({
+                  ...mockCategory(l).toJson(),
+                  'id': 'category-$i',
+                  'name': 'Synthetic category $i',
+                }),
+            }),
             animate: false,
           ),
         ),
@@ -280,6 +295,7 @@ void main() {
       );
       expect(legend, findsNWidgets(3));
       expect(find.byKey(const Key('legend-0-category-0')), findsNothing);
+      expect(find.textContaining('Synthetic category 0'), findsNothing);
       expect(
         tester.widget<CategoryPieChart>(find.byType(CategoryPieChart)).slices,
         hasLength(4),
