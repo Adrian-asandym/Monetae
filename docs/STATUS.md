@@ -53,6 +53,7 @@ Backend: **58 de 89 rutas** aprox. (presupuestos y metas añadidos), 10 migracio
 
 | Fecha | Decisión |
 |---|---|
+| 2026-10-10 (noche) | Adrian añade la skill **`.claude/skills/cashew-inicio-ui/SKILL.md`** (fidelidad de Inicio con Cashew; versionada en `11c82bf`) y pide seguirla: Antigravity (modelo Pro) si el esfuerzo es alto, Codex si no; avisar antes de usar Antigravity. La skill **sustituye** dos preferencias anteriores: fondo oscuro **neutro** (antes azul) y formato de montos **«100,46 S/.»** (antes «S/ 1,234.50»). |
 | 2026-10-10 (tarde) | **G7-B:** no publicar aún; esperar a su revisión visual de Inicio (el gate `gate_ecde8d19a53a` queda abierto). **D12:** prefiere **no** crear un historial aparte: reutilizar la lista de transacciones **filtrada** por presupuesto o meta. El coordinador reformula D12 en §5 y pide confirmación. Pregunta si la UI ya está lo bastante cerca de producción para dar indicaciones sobre Inicio. |
 | 2026-10-10 | Reanudación: STATUS contrastado con git y Orca (coincide); Docker volvió a estar accesible tras reactivarlo Adrian. «**OK para continuar**» al plan propuesto = **G6-A** (publicar) y **P1-A** (T-509 Inicio ∥ T-601 API presupuestos → T-602 API metas → T-510 formulario de transacción). |
 | 2026-10-09 (noche) | **Cierre de sesión** («Continuaremos en otro momento»). Adrian **eliminó los worktrees de Codex** de la Fase 5. G6 queda como propuesta sin resolver. |
@@ -87,6 +88,14 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 - **A (recomendada, idea de Adrian):** filtros nuevos en `GET /transactions`: `budget_id` (+ fecha del periodo; el servidor decide qué transacciones cuentan con las mismas reglas que `spent_amount`) y `goal_id` (las enlazadas). La pantalla de un presupuesto muestra su barra del periodo y debajo esa lista, con flechas ◀ ▶ para ir a periodos anteriores (como Cashew); `GET /budgets/{id}?on=<fecha>` da el total de ese periodo. Contrato 0.6.0 pequeño, sin esquemas nuevos.
 - B: usar **etiquetas** (`tags`) para marcar qué pertenece a cada presupuesto o meta. *Contra:* duplica la pertenencia que ya calcula el servidor (categorías del presupuesto, selección de la meta) y obliga a etiquetar a mano.
 - *Pendiente:* confirmación de Adrian.
+
+**S1–S6 · Plan de la skill `cashew-inicio-ui` (propuesto 2026-10-10, pendiente de Adrian):**
+- **S1 capturas:** faltan las 6 de `references/`. Contienen datos reales → guardarlas en `reference/cashew-inicio/` (ignorada por git), **no** en `.claude/` (repositorio público).
+- **S2 confirmar** que la skill reemplaza el fondo azul y el formato «S/ 1,234.50» (recomendado: sí, la skill manda).
+- **S3 nombre en el saludo:** `CurrentUser` no tiene nombre → A (recomendada): `display_name` en `users/me` (contrato 0.6.0, tarea Codex).
+- **S4 «Puedes gastar X/día para N días»** (presupuesto) y **«X/día para N días»** (objetivo): la UI no hace aritmética de dinero → A (recomendada): campos calculados por el servidor (`daily_allowance`, `days_left`) en `Budget` y `Goal` (contrato 0.6.0, misma tarea).
+- **S5 tipografía:** Cashew usa **Avenir LT Std, fuente comercial** (no se puede publicar en un repo público) → A (recomendada): **DM Sans** (OFL, incluida en Cashew) o la alternativa libre más parecida que proponga el worker; B: Inter.
+- **S6 agente:** Antigravity **Pro**, esfuerzo alto (8 componentes iterativos; tiene navegador para comparar a 400×642, que WSL no tiene) → Adrian debe darle permiso en la rama y fijar el modelo.
 
 **D7 · Para más adelante:** ADR-005 sincronización Android (antes de V4) · orden de categorías · credenciales OAuth de Google Cloud y proveedor de tipo de cambio (Fase 6) · proxy del VPS (`ARCHITECTURE.md` §10.10) · corregir el principal de un desembolso sin dinero sin crear efectivo · UI para crear/editar presupuestos y metas (hoy solo por API).
 
