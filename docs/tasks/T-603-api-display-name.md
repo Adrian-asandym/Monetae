@@ -1,6 +1,6 @@
 # T-603 — API: `display_name` del usuario (contrato 0.6.0, RF-50)
 
-> **ESTADO: LANZADA el 2026-10-10** (Run `run_c2cebe1745b9`; S3-A de Adrian; SPEC v0.6, contrato 0.6.0). Corre **en paralelo con T-512** (UI de Inicio; archivos disjuntos).
+> **ESTADO: ACEPTADA e integrada en `master-dev` el 2026-10-10** (1164 pruebas verificadas por el coordinador; el coordinador añadió la limpieza del usuario de la sonda, que dejaba un intento de login y rompía `test_ip_limit_and_purge` según el orden). (Run `run_c2cebe1745b9`; S3-A de Adrian; SPEC v0.6, contrato 0.6.0). Corre **en paralelo con T-512** (UI de Inicio; archivos disjuntos).
 > Agente: **Codex**, modelo `gpt-6.1-sol`, esfuerzo `medium`.
 
 ## Contexto
