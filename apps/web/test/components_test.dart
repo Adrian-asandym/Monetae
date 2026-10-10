@@ -104,14 +104,14 @@ void main() {
       expect(
         colors.income,
         brightness == Brightness.light
-            ? const Color(0xFF59A849)
-            : const Color(0xFF62CA77),
+            ? const Color(0xFF4CAF50)
+            : const Color(0xFF4CAF50),
       );
       final alternative = monetaeTheme(
         brightness: brightness,
         accent: Colors.green,
       );
-      expect(alternative.extension<MonetaeColors>()!.card, isNot(colors.card));
+      expect(alternative.extension<MonetaeColors>()!.card, colors.card);
       expect(colors.copyWith(income: Colors.blue).income, Colors.blue);
       expect(colors.lerp(colors, .5).expense, colors.expense);
       await expectLater(
@@ -136,8 +136,8 @@ void main() {
           ],
         ),
       );
-      expect(find.text('S/ 48.50'), findsOneWidget);
-      expect(find.text('US\$ 12.00'), findsOneWidget);
+      expect(find.text('48,50 S/.'), findsOneWidget);
+      expect(find.text(r'12 $'), findsOneWidget);
       expect(find.text('Movimiento de préstamo'), findsOneWidget);
       await tester.tap(find.byType(TransactionCard).first);
       expect(taps, 1);

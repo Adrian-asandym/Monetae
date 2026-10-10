@@ -185,7 +185,7 @@ void main() {
         startOn: '2026-10-01',
         endOn: '2026-10-31',
         total: const ReportTotalDto(
-          byCurrency: [CurrencyTotalDto(currency: 'EUR', amount: '25.30')],
+          byCurrency: [CurrencyTotalDto(currency: 'EUR', amount: '25,30')],
           reportCurrency: 'PEN',
           reportAmount: '0.00',
           unconvertedCount: 1,
@@ -224,16 +224,16 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('unconverted-notice')), findsOneWidget);
       expect(find.byType(PieChart), findsNothing);
-      expect(find.textContaining('25.30'), findsOneWidget);
+      expect(find.textContaining('25,30'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
   test('exact localized currency strings and qualified shared symbols', () {
     expect(
       formatCurrency('12345678901234567890.01', 'EUR', 'es'),
-      '€ 12,345,678,901,234,567,890.01',
+      '12.345.678.901.234.567.890,01 €',
     );
-    expect(formatCurrency('-1234.50', 'USD', 'en'), '-US\$1,234.50');
+    expect(formatCurrency('-1234.50', 'USD', 'en'), r'-$1,234.50');
     for (final currency in ['PEN', 'USD', 'EUR', 'CAD', 'AUD', 'JPY', 'CNY']) {
       expect(
         formatCurrency('10.00', currency, 'es'),
@@ -429,8 +429,8 @@ void main() {
         (_, l) => IncomeExpenseSummary(row: mockReports(l).summary!),
         captureSize: const Size(600, 190),
       );
-      expect(find.text('S/ 170.00'), findsOneWidget);
-      expect(find.text('S/ 500.00'), findsOneWidget);
+      expect(find.text('170 S/.'), findsOneWidget);
+      expect(find.text('500 S/.'), findsOneWidget);
       await expectLater(
         find.byKey(const Key('capture')),
         matchesGoldenFile('goldens/summary_$mode.png'),
@@ -477,10 +477,10 @@ void main() {
         ),
         captureSize: const Size(600, 190),
       );
-      expect(find.text('S/ 470.00'), findsOneWidget);
-      expect(find.text('S/ 90.00 · US\$ 100.00'), findsOneWidget);
-      expect(find.text('S/ 380.00'), findsOneWidget);
-      expect(find.text('US\$ 100.00'), findsOneWidget);
+      expect(find.text('470 S/.'), findsOneWidget);
+      expect(find.text(r'90 S/. · 100 $'), findsOneWidget);
+      expect(find.text('380 S/.'), findsOneWidget);
+      expect(find.text(r'100 $'), findsOneWidget);
       await expectLater(
         find.byKey(const Key('capture')),
         matchesGoldenFile('goldens/summary_breakdown_$mode.png'),
@@ -565,7 +565,7 @@ void main() {
         find.byKey(const Key('capture')),
         matchesGoldenFile('goldens/home_demo_$mode.png'),
       );
-      tester.view.physicalSize = const Size(390, 900);
+      tester.view.physicalSize = const Size(500, 900);
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
     });

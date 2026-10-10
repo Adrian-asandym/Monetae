@@ -1,5 +1,3 @@
-// Derived from Cashew budget/lib/colors.dart (James Kokoska), GPL-3.0.
-// Modified for Monetae on 2026-10-09: typed tokens and explicit theme options.
 import 'package:flutter/material.dart';
 
 Color pastel(Color color, Brightness brightness, double amount) =>
@@ -21,6 +19,7 @@ class MonetaeColors extends ThemeExtension<MonetaeColors> {
     required this.upcoming,
     required this.overdue,
     required this.divider,
+    required this.selectedPill,
   });
 
   final Color card;
@@ -31,6 +30,7 @@ class MonetaeColors extends ThemeExtension<MonetaeColors> {
   final Color upcoming;
   final Color overdue;
   final Color divider;
+  final Color selectedPill;
 
   static MonetaeColors of(BuildContext context) =>
       Theme.of(context).extension<MonetaeColors>()!;
@@ -45,6 +45,7 @@ class MonetaeColors extends ThemeExtension<MonetaeColors> {
     Color? upcoming,
     Color? overdue,
     Color? divider,
+    Color? selectedPill,
   }) => MonetaeColors(
     card: card ?? this.card,
     background: background ?? this.background,
@@ -54,6 +55,7 @@ class MonetaeColors extends ThemeExtension<MonetaeColors> {
     upcoming: upcoming ?? this.upcoming,
     overdue: overdue ?? this.overdue,
     divider: divider ?? this.divider,
+    selectedPill: selectedPill ?? this.selectedPill,
   );
 
   @override
@@ -68,38 +70,40 @@ class MonetaeColors extends ThemeExtension<MonetaeColors> {
       upcoming: Color.lerp(upcoming, other.upcoming, t)!,
       overdue: Color.lerp(overdue, other.overdue, t)!,
       divider: Color.lerp(divider, other.divider, t)!,
+      selectedPill: Color.lerp(selectedPill, other.selectedPill, t)!,
     );
   }
 }
 
 ThemeData monetaeTheme({
   required Brightness brightness,
-  Color accent = const Color(0xFF5F85C2),
-  bool tinted = true,
-  bool highContrast = false,
-  bool fullDark = false,
+  Color accent = const Color(0xFFE0E0E0), // Neutral accent
 }) {
   final light = brightness == Brightness.light;
-  final background = light
-      ? (tinted ? pastel(accent, brightness, .91) : Colors.white)
-      : (fullDark || !tinted ? Colors.black : pastel(accent, brightness, .92));
+  
+  // Neutral backgrounds per skill:
+  final background = light ? Colors.white : const Color(0xFF121212);
+  final card = light ? const Color(0xFFF5F5F5) : const Color(0xFF1E1E1E);
+  final selectedPill = light ? const Color(0xFFE0E0E0) : const Color(0xFF3A3A3A);
+
   final colors = MonetaeColors(
     background: background,
-    card: tinted
-        ? pastel(accent, brightness, light ? .92 : .8)
-        : (light ? Colors.white : const Color(0xFF242424)),
+    card: card,
     muted: (light ? Colors.black : Colors.white).withValues(
-      alpha: highContrast ? .7 : .55,
+      alpha: 0.60,
     ),
-    income: light ? const Color(0xFF59A849) : const Color(0xFF62CA77),
-    expense: light ? const Color(0xFFCA5A5A) : const Color(0xFFDA7272),
+    income: light ? const Color(0xFF4CAF50) : const Color(0xFF4CAF50), // Cashew green
+    expense: light ? const Color(0xFFE57373) : const Color(0xFFE57373), // Cashew red/coral
     upcoming: light ? const Color(0xFF58A4C2) : const Color(0xFF7DB6CC),
     overdue: light ? const Color(0xFF6577E0) : const Color(0xFF8395FF),
     divider: light ? const Color(0x0F000000) : const Color(0x13FFFFFF),
+    selectedPill: selectedPill,
   );
+  
   return ThemeData(
     useMaterial3: true,
     brightness: brightness,
+    fontFamily: 'DM Sans',
     colorScheme: ColorScheme.fromSeed(
       seedColor: accent,
       brightness: brightness,

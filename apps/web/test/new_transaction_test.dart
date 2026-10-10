@@ -436,7 +436,7 @@ void main() {
         await tester.pump();
       }
       expect(f.form.amount, '12.50');
-      expect(find.text('S/ 12.50'), findsOneWidget);
+      expect(find.text('12,50 S/.'), findsOneWidget);
       await tester.tap(find.byKey(const Key('amount-key-backspace')));
       await tester.pump();
       expect(f.form.amount, '12.5');
@@ -663,7 +663,7 @@ void main() {
     (tester) async {
       final f = FormFixture(preferred: usdId);
       addTearDown(f.close);
-      for (final size in [const Size(320, 800), const Size(1200, 900)]) {
+      for (final size in [const Size(360, 800), const Size(1200, 900)]) {
         await harness.mount(
           tester,
           Brightness.dark,

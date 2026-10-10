@@ -99,3 +99,4 @@ and a visible posted/scheduled state adapt the form to Monetae's contract.
 Categories use the T-502 Material/SVG renderer, never Cashew's PNG catalog.
 Optional titles stay empty; no title suggestions, tags, attachments, transfers,
 loans, recurrent rules or automatic exchange rate are introduced here.
+\nDM Sans Font\n------------\nCopyright 2014-2021 The DM Sans Project Authors (https://github.com/googlefonts/dm-sans)\nLicensed under the SIL Open Font License, Version 1.1.

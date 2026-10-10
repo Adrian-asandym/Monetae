@@ -345,7 +345,7 @@ void main() {
           ),
         ],
       );
-      expect(tooltip.single!.text, contains('-S/ 90.00'));
+      expect(tooltip.single!.text, contains('-90 S/.'));
     },
   );
   for (final status in [404, 501]) {

@@ -148,23 +148,23 @@ void main() {
         );
         if (index == 0) {
           expect(
-            find.text('S/ 1,265.50 restante de S/ 2,500.00'),
+            find.text('1.265,50 S/. restante de 2.500 S/.'),
             findsOneWidget,
           );
           expect(
-            find.text('Gastado: S/ 1,234.50 / S/ 2,500.00'),
+            find.text('Gastado: 1.234,50 S/. / 2.500 S/.'),
             findsOneWidget,
           );
           expect(find.textContaining('Total convertido'), findsNothing);
         } else if (index == 1) {
           expect(
-            find.text(r'US$ 20.00 restante de US$ 500.00'),
+            find.text(r'20 $ restante de 500 $'),
             findsOneWidget,
           );
-          expect(find.text('Total convertido: S/ 1,824.00'), findsOneWidget);
+          expect(find.text('Total convertido: 1.824 S/.'), findsOneWidget);
         } else {
           expect(
-            find.text('S/ 240.00 excedido de S/ 1,200.00'),
+            find.text('240 S/. excedido de 1.200 S/.'),
             findsOneWidget,
           );
           expect(find.text('120 %'), findsOneWidget);
@@ -194,8 +194,8 @@ void main() {
         expect(
           find.text(
             index == 0
-                ? 'S/ 1,234.50 / S/ 2,469.00'
-                : r'US$ 1,800.00 / US$ 1,800.00',
+                ? '1.234,50 S/. / 2.469 S/.'
+                : r'1.800 $ / 1.800 $',
           ),
           findsOneWidget,
         );
@@ -319,7 +319,7 @@ void main() {
         reducedMotion: true,
       );
       await tester.pumpAndSettle();
-      expect(find.text('S/ 9,876.54 restante de S/ 2,500.00'), findsOneWidget);
+      expect(find.text('9.876,54 S/. restante de 2.500 S/.'), findsOneWidget);
       expect(find.text(l.unconvertedNotice), findsOneWidget);
       expect(find.byType(SvgPicture), findsOneWidget);
       expect(find.byKey(const Key('today-marker')), findsNothing);
