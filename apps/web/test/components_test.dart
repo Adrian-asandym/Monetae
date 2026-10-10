@@ -89,6 +89,11 @@ void loadGoldenFonts() {
     final loader = FontLoader('MaterialIcons');
     loader.addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
     await loader.load();
+
+    final dmSans = FontLoader('DM Sans');
+    dmSans.addFont(Future.value(ByteData.sublistView(await File('assets/fonts/DMSans-Regular.ttf').readAsBytes())));
+    dmSans.addFont(Future.value(ByteData.sublistView(await File('assets/fonts/DMSans-Bold.ttf').readAsBytes())));
+    await dmSans.load();
   });
 }
 

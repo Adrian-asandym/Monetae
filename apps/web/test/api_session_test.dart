@@ -39,6 +39,7 @@ const none = TransactionCardPreferencesDto(
 
 Map<String, Object?> profile({TransactionCardPreferencesDto card = all}) => {
   'id': '00000000-0000-4000-8000-000000000999',
+  'display_name': null,
   'email': 'sample@example.test',
   'preferences': {
     'theme': 'dark',

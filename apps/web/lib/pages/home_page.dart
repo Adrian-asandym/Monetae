@@ -152,7 +152,7 @@ class _HomePageState extends State<HomePage> {
                     Expanded(
                       child: HomeGreeting(
                         now: _today,
-                        displayName: null, // Will be replaced in future tasks
+                        displayName: profile.displayName,
                       ),
                     ),
                     PopupMenuButton<String>(
@@ -197,7 +197,9 @@ class _HomePageState extends State<HomePage> {
         key: const Key('add-transaction'),
         heroTag: 'home-add-transaction',
         tooltip: l.addTransaction,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         onPressed: () => Navigator.of(context).pushNamed('/transactions/new'),
         child: const Icon(Icons.add_rounded, size: 32),
       ),

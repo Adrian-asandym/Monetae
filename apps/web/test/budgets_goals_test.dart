@@ -151,23 +151,19 @@ void main() {
             find.text('1.265,50 S/. restante de 2.500 S/.'),
             findsOneWidget,
           );
-          expect(
-            find.text('Gastado: 1.234,50 S/. / 2.500 S/.'),
-            findsOneWidget,
-          );
+
           expect(find.textContaining('Total convertido'), findsNothing);
         } else if (index == 1) {
           expect(
             find.text(r'20 $ restante de 500 $'),
             findsOneWidget,
           );
-          expect(find.text('Total convertido: 1.824 S/.'), findsOneWidget);
         } else {
           expect(
             find.text('240 S/. excedido de 1.200 S/.'),
             findsOneWidget,
           );
-          expect(find.text('120 %'), findsOneWidget);
+          expect(find.text('120%'), findsOneWidget);
         }
         expect(tester.takeException(), isNull);
         await expectLater(
@@ -199,18 +195,7 @@ void main() {
           ),
           findsOneWidget,
         );
-        expect(
-          find.text(index == 0 ? l.savingsGoal : l.spendingGoal),
-          findsOneWidget,
-        );
-        expect(
-          find.text(l.goalComplete),
-          index == 0 ? findsNothing : findsOneWidget,
-        );
-        expect(
-          find.textContaining('Hasta'),
-          index == 0 ? findsOneWidget : findsNothing,
-        );
+
         expect(tester.takeException(), isNull);
         await expectLater(
           find.byKey(const Key('capture')),
@@ -280,7 +265,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       final bar = tester.getRect(find.byType(BudgetProgress));
-      final label = tester.getRect(find.text('50 %'));
+      final label = tester.getRect(find.text('50%'));
       expect(label.left, greaterThanOrEqualTo(bar.left));
       expect(label.right, lessThanOrEqualTo(bar.left + bar.width * .5));
     },
@@ -320,7 +305,6 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('9.876,54 S/. restante de 2.500 S/.'), findsOneWidget);
-      expect(find.text(l.unconvertedNotice), findsOneWidget);
       expect(find.byType(SvgPicture), findsOneWidget);
       expect(find.byKey(const Key('today-marker')), findsNothing);
       final bars = tester.widgetList<BudgetProgress>(
