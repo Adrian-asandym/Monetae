@@ -37,7 +37,7 @@
   "replayAnimation": "Repetir animación",
   "compact": "Vista compacta",
   "cardSubtitle": "{category} · {account}",
-  "percent": "{value} %",
+  "percent": "{value}%",
   "themeCard": "Superficie",
   "themeBackground": "Fondo",
   "@cardSubtitle": {
@@ -242,5 +242,40 @@
         "type": "String"
       }
     }
-  }
+  },
+  "budgetCanSpendPerDay": "Puedes gastar {amount}/día para {days, plural, =1{1 día más} other{{days} días más}}",
+  "@budgetCanSpendPerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "budgetMustSavePerDay": "Tienes que ahorrar {amount}/día para {days, plural, =1{1 día más} other{{days} días más}}",
+  "@budgetMustSavePerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "goalPerDay": "{amount}/día para {days, plural, =1{1 día} other{{days} días}}",
+  "@goalPerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "goalReached": "Objetivo logrado",
+  "goalOverdue": "Objetivo atrasado"
 }

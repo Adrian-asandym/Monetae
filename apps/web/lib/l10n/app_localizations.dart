@@ -323,7 +323,7 @@ abstract class AppLocalizations {
   /// No description provided for @percent.
   ///
   /// In es, this message translates to:
-  /// **'{value} %'**
+  /// **'{value}%'**
   String percent(String value);
 
   /// No description provided for @themeCard.
@@ -875,7 +875,7 @@ abstract class AppLocalizations {
   /// No description provided for @accountTransactionCount.
   ///
   /// In es, this message translates to:
-  /// **'{count} transacciones'**
+  /// **'{count, plural, =1{1 transacción} other{{count} transacciones}}'**
   String accountTransactionCount(int count);
 
   /// No description provided for @transactionAmount.
@@ -985,6 +985,36 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Punto decimal'**
   String get decimalPoint;
+
+  /// No description provided for @budgetCanSpendPerDay.
+  ///
+  /// In es, this message translates to:
+  /// **'Puedes gastar {amount}/día para {days, plural, =1{1 día más} other{{days} días más}}'**
+  String budgetCanSpendPerDay(String amount, int days);
+
+  /// No description provided for @budgetMustSavePerDay.
+  ///
+  /// In es, this message translates to:
+  /// **'Tienes que ahorrar {amount}/día para {days, plural, =1{1 día más} other{{days} días más}}'**
+  String budgetMustSavePerDay(String amount, int days);
+
+  /// No description provided for @goalPerDay.
+  ///
+  /// In es, this message translates to:
+  /// **'{amount}/día para {days, plural, =1{1 día} other{{days} días}}'**
+  String goalPerDay(String amount, int days);
+
+  /// No description provided for @goalReached.
+  ///
+  /// In es, this message translates to:
+  /// **'Objetivo logrado'**
+  String get goalReached;
+
+  /// No description provided for @goalOverdue.
+  ///
+  /// In es, this message translates to:
+  /// **'Objetivo atrasado'**
+  String get goalOverdue;
 }
 
 class _AppLocalizationsDelegate

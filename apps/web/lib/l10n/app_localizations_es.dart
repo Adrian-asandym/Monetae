@@ -124,7 +124,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String percent(String value) {
-    return '$value %';
+    return '$value%';
   }
 
   @override
@@ -420,7 +420,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String accountTransactionCount(int count) {
-    return '$count transacciones';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count transacciones',
+      one: '1 transacción',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -480,4 +486,43 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get decimalPoint => 'Punto decimal';
+
+  @override
+  String budgetCanSpendPerDay(String amount, int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days días más',
+      one: '1 día más',
+    );
+    return 'Puedes gastar $amount/día para $_temp0';
+  }
+
+  @override
+  String budgetMustSavePerDay(String amount, int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days días más',
+      one: '1 día más',
+    );
+    return 'Tienes que ahorrar $amount/día para $_temp0';
+  }
+
+  @override
+  String goalPerDay(String amount, int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days días',
+      one: '1 día',
+    );
+    return '$amount/día para $_temp0';
+  }
+
+  @override
+  String get goalReached => 'Objetivo logrado';
+
+  @override
+  String get goalOverdue => 'Objetivo atrasado';
 }
