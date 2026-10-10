@@ -12,7 +12,7 @@
 | **`origin`** | `origin/main` = `origin/master-dev` = **`1736d7a`** (Fases 0–4, T-405, Fase 5 hasta T-504/T-506; SPEC v0.4 publicada). |
 | **`main`** | `1736d7a`. |
 | **`master-dev`** | **`9444819` + el commit de este cierre (`git log -1`)**, por delante de `main`: SPEC v0.5 + contrato 0.5.0 + `docs/ui/home-layout.md`, T-507 y T-508. **Sin publicar.** |
-| **Gate abierto** | **G6 `gate_70e14ac5abc1`** (publicar lo anterior): **propuesta sin resolver**, pendiente de Adrian. Resueltos hoy: G1 `gate_1e81cf0fd994`, G2 `gate_10f2135dac21`, G3 `gate_abde30232929`, G4 `gate_a079e8e6d920`, G5 `gate_600e9631a8a2`. |
+| **Gate abierto** | Ninguno. **G6 `gate_70e14ac5abc1` resuelto (A) el 2026-10-10**: `main` = `master-dev` = `origin` = `8b8688e`. Resueltos hoy: G1 `gate_1e81cf0fd994`, G2 `gate_10f2135dac21`, G3 `gate_abde30232929`, G4 `gate_a079e8e6d920`, G5 `gate_600e9631a8a2`. |
 | **SPEC / ARCHITECTURE / contrato** | SPEC **v0.5** · `docs/ARCHITECTURE.md` v0.3 · `docs/api/openapi.json` **0.5.0** (89 paths, 131 operaciones; validado con `check_openapi.py`). |
 
 ## 2. Fase actual
@@ -20,7 +20,7 @@
 | Estado | Contenido |
 |---|---|
 | ✅ **Completo** | Fases 0–4 (importador de Cashew + T-405). **Fase 5 (UI Flutter Web), primera parte:** T-501 spike, T-502 marca/tarjeta/íconos, T-503 cliente HTTP + sesión + nginx, T-504(+b) gráficas, T-505/T-506/T-508 API (preferencias, reportes, campos de Inicio), T-507 tarjetas de presupuestos y objetivos. |
-| 🔄 **En curso** | Nada ejecutándose. Ningún worker vivo. |
+| 🔄 **En curso** | (2026-10-10) **G6 publicado** (`8b8688e`). Workers Codex `gpt-6.1-sol` high: **T-509** `task_faa87dcb2f99` (`ctx_55b07b2dcf30`, worktree `Monetae-codex-T-509-ui-home-assembly`, rama `codex-T-509-ui-home-assembly`) ∥ **T-601** API de presupuestos `task_61442c37cf55` (`ctx_b88bdb7ea7b6`, worktree `Monetae-codex-T-601-api-budgets`, BD `monetae-t601`:5461). Después: T-602 (metas) y T-510 (formulario). |
 | ⏳ **Pendiente** | **G6** (publicar) · **T-509** ensamblado de Inicio según `docs/ui/home-layout.md` + barra de 4 botones + botón «+» · **T-510** formulario de nueva transacción · **API de presupuestos y metas (Fase 6)** para revisar Inicio con datos reales · resto de la Fase 5 (12–17 tareas estimadas por el informe T-504) · Fase 6 (íconos SVG API RF-46, adjuntos, presupuestos, metas, notificaciones, login Google, PIN/WebAuthn, proveedor de tipo de cambio) · Fase 7 · importación real definitiva (D9-A: cuando haya base persistente y pantallas) · despliegue VPS → V2 → V3 → V4. |
 
 Backend: **46 de 89 rutas = 73 de 131 operaciones**, 8 migraciones (cabeza **`0008`**), **1032 pruebas**. UI `apps/web`: **116 pruebas** (64 goldens claro/oscuro). Detalle en el Anexo A.
