@@ -67,7 +67,7 @@ No tocar `openapi.json`, `docs/SPEC.md`, `apps/`, `infra/`, el importador ni otr
   - `spend` con dos gastos y un reembolso da la suma cambiada de signo;
   - las programadas, las borradas y los vínculos borrados no cuentan;
   - el progreso puede ser negativo;
-  - un gasto en USD sin tasa en una meta en PEN da `unconverted_count = 1`.
+  - conversión: una meta en **USD** sin tasa histórica base→USD deja la transacción en `by_currency`, fuera de `progress_amount`, con `unconverted_count = 1`; una meta en PEN con un gasto en USD convierte con el `fx_rate_to_base` de la transacción; una meta en USD con tasa base→USD convierte (corregido el 2026-10-10 tras la pregunta del worker).
 - **Asignación:**
   - un préstamo da 422 y la selección queda intacta;
   - sustitución, restauración y borrado de vínculos;
