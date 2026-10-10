@@ -526,4 +526,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get goalOverdue => 'Goal overdue';
+
+  @override
+  String get addGoalLabel => 'Goal';
+
+  @override
+  String get addBudgetLabel => 'Budget';
 }

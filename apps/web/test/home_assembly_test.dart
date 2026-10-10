@@ -595,8 +595,8 @@ void main() {
         addTearDown(f.close);
         f.statuses.addAll({'/api/v1/budgets': status, '/api/v1/goals': status});
         await mountHome(tester, f);
-        expect(find.text(l.emptyBudgets), findsOneWidget);
-        expect(find.text(l.emptyGoals), findsOneWidget);
+        expect(find.text(l.addBudgetLabel), findsOneWidget);
+        expect(find.text(l.addGoalLabel), findsOneWidget);
         expect(find.text(l.connectionError), findsNothing);
         expect(find.byType(HomeTransactionRow), findsOneWidget);
       },
@@ -650,7 +650,7 @@ void main() {
         fixtures.ok({'items': <Object?>[], 'next_cursor': null}),
       );
       await tester.pumpAndSettle();
-      expect(find.text(l.emptyGoals), findsOneWidget);
+      expect(find.text(l.addGoalLabel), findsOneWidget);
     },
   );
   test('latest feed requests one page of 25 and preserves the complete server sequence', () async {

@@ -80,26 +80,30 @@ ThemeData monetaeTheme({
   Color accent = const Color(0xFFE0E0E0), // Neutral accent
 }) {
   final light = brightness == Brightness.light;
-  
+
   // Neutral backgrounds per skill:
   final background = light ? Colors.white : const Color(0xFF121212);
   final card = light ? const Color(0xFFF5F5F5) : const Color(0xFF1E1E1E);
-  final selectedPill = light ? const Color(0xFFE0E0E0) : const Color(0xFF3A3A3A);
+  final selectedPill = light
+      ? const Color(0xFFE0E0E0)
+      : const Color(0xFF3A3A3A);
 
   final colors = MonetaeColors(
     background: background,
     card: card,
-    muted: (light ? Colors.black : Colors.white).withValues(
-      alpha: 0.60,
-    ),
-    income: light ? const Color(0xFF4CAF50) : const Color(0xFF4CAF50), // Cashew green
-    expense: light ? const Color(0xFFE57373) : const Color(0xFFE57373), // Cashew red/coral
+    muted: (light ? Colors.black : Colors.white).withValues(alpha: 0.60),
+    income: light
+        ? const Color(0xFF4CAF50)
+        : const Color(0xFF4CAF50), // Cashew green
+    expense: light
+        ? const Color(0xFFE57373)
+        : const Color(0xFFE57373), // Cashew red/coral
     upcoming: light ? const Color(0xFF58A4C2) : const Color(0xFF7DB6CC),
     overdue: light ? const Color(0xFF6577E0) : const Color(0xFF8395FF),
     divider: light ? const Color(0x0F000000) : const Color(0x13FFFFFF),
     selectedPill: selectedPill,
   );
-  
+
   return ThemeData(
     useMaterial3: true,
     brightness: brightness,
@@ -112,4 +116,20 @@ ThemeData monetaeTheme({
     extensions: [colors],
     dividerColor: colors.divider,
   );
+}
+
+/// Presentation tokens calibrated from Cashew's AddButton and Home carousels.
+abstract final class HomeTokens {
+  static const cardRadius = 20.0;
+  static const carouselGap = 13.0;
+  static const goalDesktopWidth = 400.0;
+  static const budgetDesktopWidth = 500.0;
+  static const desktopBreakpoint = 650.0;
+  static const mobileCardFraction = .95;
+  static const emptyCardHeight = 160.0;
+  static const addBorderWidth = 1.5;
+  static const addBorderOpacity = .35;
+  static const addIconSize = 22.0;
+  static const addLabelSize = 14.0;
+  static const addLabelGap = 2.0;
 }

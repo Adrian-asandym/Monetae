@@ -937,3 +937,11 @@ Se incorporó por avance rápido `master-dev` (`41aa4fd`, solo documentación),
 se eliminaron los artefactos `test/failures/` de la primera ejecución y `build/`
 tras verificar la compilación, y el árbol de trabajo queda limpio después del
 commit de T-513. No quedan decisiones pendientes dentro de esta tarea.
+
+## T-514 — Cuatro ajustes de Inicio v2
+
+**Base:** `master-dev` `cfee760`. Solo presentación, sin dependencias nuevas ni cambios de modelos, DTO o API. Referencias visuales v2 inspeccionadas en su ubicación ignorada, solo lectura; no se copiaron capturas ni valores reales. No se accedió a respaldos ni se utilizó la pila de Adrian en `:8080`.
+
+**1. Tarjeta añadir.** `pages/addButton.dart` de Cashew define fondo transparente, borde **1,5 dp**, icono **22 dp**, etiqueta **14 dp** y separación **2 dp**. `pages/homePage/homePageObjectives.dart` y `homePageBudgets.dart` añaden ese botón **después** de las tarjetas, ajustan su alto al carrusel y usan anchos de escritorio **400/500 dp**; el estado vacío mide **160 dp**. Monetae conserva el radio **20 dp** de sus tarjetas (el AddButton original tiene 15), el ancho móvil **95 %** y separaciones **13 dp**, con tokens en el tema y alto compartido calculado por Flutter. El borde usa gris al 35 %; las etiquetas singular «Objetivo»/«Presupuesto» tienen i18n es/en. **No existen formularios de creación de objetivos ni presupuestos**: ambos handlers de Inicio quedan vacíos con TODO, como pide T-514; no se inventa navegación.
+
+Se añaden pruebas de posición final, dimensiones iguales, acción de callback y estado vacío, y goldens claro/oscuro de ambos carruseles e Inicio a **400×642**, con datos sintéticos y DM Sans cargada para texto visible.

@@ -1021,6 +1021,18 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Objetivo atrasado'**
   String get goalOverdue;
+
+  /// No description provided for @addGoalLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Objetivo'**
+  String get addGoalLabel;
+
+  /// No description provided for @addBudgetLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Presupuesto'**
+  String get addBudgetLabel;
 }
 
 class _AppLocalizationsDelegate

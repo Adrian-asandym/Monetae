@@ -108,12 +108,23 @@ class _HomePageState extends State<HomePage> {
       'goals': HomeBlockView(
         block: _home.goals,
         title: l.goals,
-        builder: (goals) => GoalCardList(goals: goals),
+        builder: (goals) => GoalCardList(
+          goals: goals,
+          onCreate: () {
+            // TODO(T-514): connect when the goal creation form exists.
+          },
+        ),
       ),
       'budgets': HomeBlockView(
         block: _home.budgets,
         title: l.budgets,
-        builder: (budgets) => BudgetCardList(budgets: budgets, today: _today),
+        builder: (budgets) => BudgetCardList(
+          budgets: budgets,
+          today: _today,
+          onCreate: () {
+            // TODO(T-514): connect when the budget creation form exists.
+          },
+        ),
       ),
       'categories': HomeBlockView(
         block: _home.categories,
