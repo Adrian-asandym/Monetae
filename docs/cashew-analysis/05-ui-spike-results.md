@@ -709,3 +709,33 @@ real de las API T-601/T-602 y biblioteca SVG de Fase 6; revisión de posiciones,
 scroll y fidelidad por Adrian. El coordinador realiza la sonda con servidor real
 sobre `monetae-review`; este worker no levantó contenedores ni tocó esa pila.
 No se accedió a respaldos reales y no se añadieron dependencias.
+
+Salidas finales sobre el código actualizado con `master-dev` (sin actualizar
+goldens en esta ejecución; **146 pruebas** y **72 referencias**):
+
+```text
+flutter pub get
+Got dependencies!
+
+dart analyze
+Analyzing web...
+No issues found!
+
+flutter test --reporter expanded
+00:31 +146: All tests passed!
+
+flutter build web --release
+Wasm dry run succeeded.
+Compiling lib/main.dart for the Web...                            102.2s
+✓ Built build/web
+
+grep -rE 'drift|firebase|appStateSettings|package:budget/' lib || echo limpio
+limpio
+
+git diff --check
+(sin salida; código 0)
+```
+
+La compilación conserva el aviso previo sobre CupertinoIcons de T-504; incluye
+MaterialIcons y termina correctamente. El diff solo modifica `apps/web/**` y
+esta sección T-509; los artefactos de compilación quedan ignorados.
