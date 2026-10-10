@@ -739,3 +739,107 @@ git diff --check
 La compilación conserva el aviso previo sobre CupertinoIcons de T-504; incluye
 MaterialIcons y termina correctamente. El diff solo modifica `apps/web/**` y
 esta sección T-509; los artefactos de compilación quedan ignorados.
+
+## T-510
+
+Fecha: 2026-10-10. Rama: `codex-T-510-ui-add-transaction`.
+Contrato **0.5.0**; base inicial `228992b`, actualizada con `master-dev` antes
+de entregar. Datos exclusivamente sintéticos; sin acceso a respaldos reales,
+contenedores ni a la pila `monetae-review`.
+
+### Formulario y diferencias frente a Cashew
+
+`/transactions/new` sustituye al marcador y se abre desde «+» en Inicio y en
+Transacciones (Cashew muestra `AddFAB` en ambas desde `navigationFramework`).
+Conserva el selector gasto/ingreso de T-504, el importe destacado con su color,
+el teclado redondeado de `selectAmount` y la rejilla de cuatro columnas con
+iconos y etiquetas de `selectCategory`. Cuenta, título, fecha/hora y nota siguen
+el orden pedido en la tarea. Los campos nativos, los diálogos Material de fecha
+y hora y el botón fijo inferior sustituyen el framework de popups de Cashew;
+la rejilla asegura altura para las etiquetas en pantallas estrechas. No incluye
+el cálculo de expresiones del teclado, las sugerencias de títulos ni la edición
+de categorías. El renderizador Material/SVG y el respaldo de íconos propios
+siguen T-502; la biblioteca de SVG por HTTP queda para Fase 6.
+
+Los catálogos paginados proceden de la API. Se filtran cuentas archivadas/borradas
+y categorías borradas o de otro tipo; se propone `default_account_id` activo o,
+si no existe, la primera cuenta activa en el orden del servidor. La categoría es
+opcional; cambiar gasto/ingreso limpia su selección. Las cuentas conservan su
+color y muestran solo símbolos de moneda. El título vacío se envía como `""`;
+no se inventa una categoría ni un título. Importe, signo y tasa se manipulan como
+texto, incluidos valores por encima de la precisión entera de un flotante.
+La fecha inicial es ahora; los selectores presentan Lima (UTC−5, sin DST) y el
+POST envía UTC, independiente de la zona horaria del navegador. El estado visible
+es `posted` o `scheduled` cuando la fecha es futura.
+
+**Corrección de la spec confirmada por el coordinador mediante `orchestration ask`:**
+el patrón `ExchangeRate` del contrato exige exactamente seis decimales. Se envía
+`"1.000000"` en moneda base y se normaliza la tasa manual sobre el texto (`"3.8"`
+→ `"3.800000"`, quitando ceros iniciales), sin coma flotante. El coordinador corrigió
+la tarea en `master-dev` (`978dec4`). Se exige tasa positiva de hasta seis decimales
+para moneda extranjera; no hay sugerencia automática. El importe se normaliza a
+dos decimales y el gasto añade `-` a su cadena.
+
+### Envío, sesión y pruebas
+
+`TransactionCreateDto` se genera desde OpenAPI. `ApiClient.createTransaction`
+usa la cookie CSRF vigente y una clave UUID v4 creada con `Random.secure()` del
+SDK, sin dependencias nuevas. El mismo intento conserva cuerpo y clave tras un
+409, 5xx o una desconexión; cualquier edición renueva la clave. También conserva
+el estado visible de un reintento si la fecha programada pasa mientras se espera.
+Se valida importe positivo, cuenta y tasa antes de enviar. Durante el envío se
+bloquea el botón, se retira el foco y los textos son de solo lectura.
+
+Un 201 devuelve a Inicio, muestra un aviso traducido y recarga todos sus bloques;
+la pestaña Transacciones montada también se refresca. Si se cierra el formulario
+mientras llega la respuesta, el éxito aún provoca la recarga. Los botones «+»
+tienen identificadores Hero distintos para evitar conflictos con las pestañas
+montadas. Un 422 identificable se muestra junto al campo; los demás usan el
+aviso general. 401 elimina las rutas privadas y vuelve al acceso; 409/5xx ofrecen
+reintento. Todos los textos de la interfaz están en español e inglés por i18n.
+
+Se añaden 32 pruebas, incluidos seis goldens: gasto, ingreso y cuenta extranjera,
+cada uno en claro y oscuro. Cubren preselección y cuentas inactivas, paginación,
+filtrado, POST exactos con signo/tasa/fecha, teclado y precisión, idempotencia y
+rotación de CSRF, doble pulsación, 422/401/409/500, recarga después del 201 y salida
+con envío en vuelo. Se verifican pantallas estrechas y de escritorio. Los goldens
+se revisaron visualmente y no se alteraron las 72 referencias anteriores.
+
+Pendiente fuera de T-510: etiquetas, adjuntos, transferencias, préstamos,
+recurrencias, títulos frecuentes y sugerencia automática de tasa. El coordinador
+realiza la prueba real con CSRF en `monetae-review` y Adrian revisa la fidelidad
+visual. Las fuentes GPL y sus modificaciones constan en los archivos derivados
+y en `apps/web/NOTICE`.
+
+Salidas de verificación sobre la UI final, sin regenerar goldens en la ejecución
+de aceptación (178 pruebas, 78 referencias; solo archivos permitidos):
+
+```text
+flutter pub get
+Got dependencies!
+
+dart analyze
+Analyzing web...
+No issues found!
+
+dart format --output=none --set-exit-if-changed lib test
+Formatted 70 files (0 changed) in 1.27 seconds.
+
+flutter test --reporter expanded
+00:30 +178: All tests passed!
+
+flutter build web --release
+Wasm dry run succeeded.
+Compiling lib/main.dart for the Web...                            110.4s
+✓ Built build/web
+
+grep -rE 'drift|firebase|appStateSettings|package:budget/' apps/web/lib || echo limpio
+limpio
+
+git diff --check
+(sin salida; código 0)
+```
+
+La compilación conserva el aviso previo de CupertinoIcons documentado en T-509;
+MaterialIcons se incluye y la compilación termina con código 0. No se agregaron
+dependencias ni se versionaron artefactos de compilación.
