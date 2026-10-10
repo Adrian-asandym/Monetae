@@ -87,7 +87,7 @@ void loadGoldenFonts() {
     );
     await roboto.load();
     final loader = FontLoader('MaterialIcons');
-    loader.addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
+    loader.addFont(Future.value(ByteData.sublistView(await File('${sdk.path}/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf').readAsBytes())));
     await loader.load();
 
     final dmSans = FontLoader('DM Sans');
