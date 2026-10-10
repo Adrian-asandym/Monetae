@@ -8,43 +8,52 @@
 
 | | |
 |---|---|
-| **Última actualización** | **2026-10-09, tarde (America/Lima)** — Fase 4 publicada (G1) y T-405 (L1-A) integrada en `master-dev`; a la espera del gate G2 para publicarla |
-| **`origin`** | `origin/main` = `origin/master-dev` = **`b0a80ae`** (Fase 4 completa publicada tras G1-A). **No incluye T-405.** |
-| **`main`** | `b0a80ae`. |
-| **`master-dev`** | **`fa06542` (merge de T-405) + los commits de documentación posteriores (`git log -1`)**, sin publicar. |
-| **Gate abierto** | G2 (merge de T-405 a `main` y push): ver el id en §7. **Pendiente de Adrian.** Resuelto: `gate_1e81cf0fd994` (G1-A, 2026-10-09). |
-| **SPEC / ARCHITECTURE / contrato** | SPEC v0.3 · `docs/ARCHITECTURE.md` v0.3 · `docs/api/openapi.json` **0.3.0** (la Fase 4 no cambió el contrato HTTP: el importador es solo línea de comandos). |
+| **Última actualización** | **2026-10-09, ~19:40 (America/Lima)** — cierre de sesión («Continuaremos en otro momento») |
+| **`origin`** | `origin/main` = `origin/master-dev` = **`1736d7a`** (Fases 0–4, T-405, Fase 5 hasta T-504/T-506; SPEC v0.4 publicada). |
+| **`main`** | `1736d7a`. |
+| **`master-dev`** | **`9444819` + el commit de este cierre (`git log -1`)**, por delante de `main`: SPEC v0.5 + contrato 0.5.0 + `docs/ui/home-layout.md`, T-507 y T-508. **Sin publicar.** |
+| **Gate abierto** | **G6 `gate_70e14ac5abc1`** (publicar lo anterior): **propuesta sin resolver**, pendiente de Adrian. Resueltos hoy: G1 `gate_1e81cf0fd994`, G2 `gate_10f2135dac21`, G3 `gate_abde30232929`, G4 `gate_a079e8e6d920`, G5 `gate_600e9631a8a2`. |
+| **SPEC / ARCHITECTURE / contrato** | SPEC **v0.5** · `docs/ARCHITECTURE.md` v0.3 · `docs/api/openapi.json` **0.5.0** (89 paths, 131 operaciones; validado con `check_openapi.py`). |
 
 ## 2. Fase actual
 
 | Estado | Contenido |
 |---|---|
-| ✅ **Completo** | Fases 0–3 y **Fase 4 (importador de Cashew)**, publicadas en `origin/main` (`b0a80ae`). **T-405 (L1-A)** aceptada e integrada en `master-dev` (`fa06542`), aún sin publicar. |
-| 🔄 **En curso** | **Fase 5 (UI Flutter Web).** Publicado hasta `1736d7a` (G5). En `master-dev` **sin publicar**: SPEC v0.5 + contrato 0.5.0 + `docs/ui/home-layout.md`, **T-507** (`818c779`: tarjetas de presupuestos y objetivos con barras de Cashew, datos sintéticos; 116 pruebas UI) y **T-508** (`a616112`: `default_account_id`, `transaction_count`, `cumulative_net`; 1032 pruebas). Contrato en verde. Ningún worker vivo. **Pila de revisión** `monetae-review` actualizada desde `master-dev` (`http://localhost:8080`; demos en `/#/demo/home` y `/#/demo/budgets-goals`). **Propuesto:** gate G6 (publicar) · **T-509** ensamblado de Inicio según `docs/ui/home-layout.md` + barra de 4 botones + botón «+» (incluye el carril visible de la barra de presupuesto en oscuro) · **T-510** formulario de nueva transacción (cuenta por defecto) · luego la **API de presupuestos y metas (Fase 6)** para que Adrian revise Inicio con datos reales. |
-| ⏳ **Pendiente** | **Gate G2** (publicar T-405) · decidir **cuándo** hacer la importación real definitiva (§5, D9) · Fase 5 (UI Flutter; `T-501`) · Fase 6 (incluye presupuestos, metas y reglas de título, hoy listados como «pendiente de Fase 6» por el importador) · Fase 7 · despliegue VPS → V2 → V3 → V4. |
+| ✅ **Completo** | Fases 0–4 (importador de Cashew + T-405). **Fase 5 (UI Flutter Web), primera parte:** T-501 spike, T-502 marca/tarjeta/íconos, T-503 cliente HTTP + sesión + nginx, T-504(+b) gráficas, T-505/T-506/T-508 API (preferencias, reportes, campos de Inicio), T-507 tarjetas de presupuestos y objetivos. |
+| 🔄 **En curso** | Nada ejecutándose. Ningún worker vivo. |
+| ⏳ **Pendiente** | **G6** (publicar) · **T-509** ensamblado de Inicio según `docs/ui/home-layout.md` + barra de 4 botones + botón «+» · **T-510** formulario de nueva transacción · **API de presupuestos y metas (Fase 6)** para revisar Inicio con datos reales · resto de la Fase 5 (12–17 tareas estimadas por el informe T-504) · Fase 6 (íconos SVG API RF-46, adjuntos, presupuestos, metas, notificaciones, login Google, PIN/WebAuthn, proveedor de tipo de cambio) · Fase 7 · importación real definitiva (D9-A: cuando haya base persistente y pantallas) · despliegue VPS → V2 → V3 → V4. |
 
-Backend actual: **44 de 86 rutas = 71 de 127 operaciones**, 7 migraciones (cabeza `0007`), **914 pruebas** con PostgreSQL real, más el comando `python -m monetae.cli import-cashew`. Detalle en el Anexo A.
+Backend: **46 de 89 rutas = 73 de 131 operaciones**, 8 migraciones (cabeza **`0008`**), **1032 pruebas**. UI `apps/web`: **116 pruebas** (64 goldens claro/oscuro). Detalle en el Anexo A.
 
 ## 3. Trabajo hecho en esta sesión (2026-10-09)
 
-- **Reanudación:** estado de `STATUS.md` contrastado con git, Orca, Docker y disco; todo coincidía. Adrian respondió **«todo A»** y borró él mismo los 4 worktrees de la Fase 4 (sus commits siguen en `master-dev`).
-- **G1 resuelto y publicado:** auditoría de seguridad repetida sobre los 35 commits (sin `.env`, claves, `reference/`, ni cifras reales; solo los 3 fixtures sintéticos), `gate_1e81cf0fd994` resuelto, `main` avanzado por fast-forward y push sin `--force` a `b0a80ae`; T-404 marcada `completed`.
-- **T-405 (L1-A):** spec contrastada con `loans.py`, `replay`, el esquema y la API; la contrastación destapó un error de mi recomendación (el `PUT` del desembolso es un movimiento **con dinero**; la corrección sin dinero es un `adjustment`; corregido en ADR-008 adenda, STATUS y docs). Codex `gpt-6.1-sol` medium; aceptada tras verificar yo: `ruff`, `mypy --strict`, **914 pruebas** (898 + 16), `alembic check`, contrato; sonda con `uvicorn` real (importación, reimportación sin cambios, `adjustment` sin mover saldos, `PUT` que sí mueve saldos); y `--dry-run` real sobre una copia (original intacto por hash, copia borrada): los préstamos de largo plazo antes omitidos ahora se crean (con su ítem `principal_assumed`), sus cobros pasan a ser pagos reales y dejan de contar como ingreso, y las transacciones y el cuadre de todas las cuentas quedan idénticos y exactos. *(Las cifras exactas no se versionan: repositorio público; constan en el gate de Orca.)*
-
-### Sesión anterior (2026-10-08 noche)
-
-- **Decisiones de Adrian registradas** y ADR-008 aceptado (J1-A, J2-C, J3-A). **Paso 3 lanzado** con su OK explícito.
-- **T-401 (+T-401b)** migración `0007` (auditoría + identidades externas), lector SQLite de solo lectura, mapeo, ejecutor atómico y CLI. El seguimiento hizo que una fila anómala (importe 0, cuenta huérfana, tipo desconocido) **no aborte** la importación y que mande el **signo del importe**, que es lo que suma Cashew.
-- **T-402 (préstamos)** según ADR-008, con segunda pasada de tasas (`--loan-fx-rates`).
-- **T-403 (+T-403b)** suscripciones y recurrentes, **cuadre atómico** (si algún saldo no cuadra no se guarda nada financiero: código 5; `--allow-balance-diff` lo permite). El seguimiento corrigió un defecto de diseño que la fixture no mostraba: **Cashew guarda cada ocurrencia de una suscripción como una fila encadenada** (`pk::predict::N`), no una sola fila; ahora se agrupan en series.
-- **T-404 (transferencias)**: Cashew empareja las transferencias en **un solo sentido**, no de forma recíproca; se aceptan ambas y cada fila sin emparejar lleva su motivo.
-- **`--dry-run` real** (autorizado por Adrian, sobre una copia fuera del repositorio, original intacto por hash, copia borrada): terminó con código 0 y **el cuadre de todas las cuentas fue exacto**. Reveló los dos defectos anteriores (series y transferencias unidireccionales) y dos casos que requieren decisión (§5).
-- **Infraestructura:** `infra/docker-compose.yml` admite `MONETAE_DB_PORT` y `COMPOSE_PROJECT_NAME` para que dos workers no compartan base de datos (un `down -v` borraría la del otro).
+- **Fase 4 cerrada:** G1 publicado; **T-405 (L1-A)** préstamos de largo plazo sin desembolso; G2 publicado. Corregí una recomendación mía: el principal se corrige con `adjustment`, no con el `PUT` del desembolso.
+- **Fase 5 iniciada:** Run `run_c2cebe1745b9`.
+  - **T-501** spike de desacople: estimación 8–10 tareas, bajo el umbral de 1,5×.
+  - **T-502** marca por modo (favicon e ícono con los SVG de Adrian), tarjeta configurable e íconos SVG en la UI.
+  - **T-503** cliente HTTP tipado, sesión en el mismo origen (servicio `web` nginx en compose) y primera pantalla real.
+  - **T-504 + T-504b** gráficas de ingresos y gastos, etiqueta de cuenta con color y formato peruano «S/ 1,234.50».
+  - **T-505** preferencia `transaction_card`.
+  - **T-506** reportes `cash-flow` y `categories`, más la migración **`0008` `exchange_rates`**, tabla diseñada en la Fase 1 que nunca se había creado.
+  - **T-507** tarjetas de presupuestos y objetivos.
+  - **T-508** `default_account_id`, `transaction_count` y `cumulative_net`.
+- **SPEC v0.4 y v0.5, contrato 0.4.0 y 0.5.0:**
+  - RF-46 íconos SVG propios (saneados);
+  - RF-47 tarjeta configurable;
+  - RF-48 cuenta por defecto;
+  - RF-49 navegación de 4 botones;
+  - disposición de Inicio en `docs/ui/home-layout.md`;
+  - color en presupuestos y metas;
+  - se corrigieron dos textos obsoletos de la SPEC (§2 y §8).
+- **Publicaciones:** G3, G4 y G5, cada una tras una auditoría de seguridad (sin secretos ni datos reales; SVG sin scripts; JPG sin GPS).
+- **Verificación:** cada tarea la verifiqué yo (pruebas completas, sondas con servidor real, goldens revisados). Probé las integraciones T-503 (nginx + CSRF), T-504 con T-506 y T-508 con servidores reales.
+- **Pila de revisión `monetae-review`:** sirvió a Adrian para revisar con datos sintéticos. Está **detenida**; su volumen de datos se conserva (ver §7).
 
 ## 4. Decisiones tomadas por Adrian
 
 | Fecha | Decisión |
 |---|---|
+| 2026-10-09 (noche) | **Cierre de sesión** («Continuaremos en otro momento»). Adrian **eliminó los worktrees de Codex** de la Fase 5. G6 queda como propuesta sin resolver. |
 | 2026-10-09 (noche) | «**OK**» a **G5** (publicar T-504/T-506) y **T-507**. El diseño «sigue bien, como prueba». Adrian describe la **disposición de Cashew** que quiere (detalle en `docs/ui/home-layout.md`): barra inferior de 4 botones (Inicio, Transacciones, Presupuestos, Más) y, en Inicio, de arriba abajo: saludo, cuentas (nombre, saldo, nº de transacciones, color y **cuenta por defecto elegible desde Inicio**, resaltada con su color), objetivos, presupuestos (color y barra), circular de gastos con leyenda de las 3 categorías con más gasto y **deslizar a la izquierda** para ingresos, gráfico de líneas que **sube con ingresos y baja con gastos**, las **25 últimas transacciones** y un botón cuadrado «+» destacado para crear transacción. Esperará a que estén todas las integraciones para revisar posiciones y fidelidad. |
 | 2026-10-09 (noche) | Revisión de T-503 en Chrome: «**OK, me parece bien (como prueba)**». OK a **G4** (publicar), **T-504** (gráficas) ∥ **T-506** (API de reportes) y luego **T-507** (presupuestos y metas). Ajustes pedidos: (1) la **etiqueta de la cuenta** (método de pago) se muestra con **su color** (distinto por cuenta); (2) **sin etiqueta de tipo de moneda**: la moneda se percibe por el **símbolo** del importe (S/, US$, €…), nunca por el código ISO. Van en T-504. |
 | 2026-10-09 (noche) | «**OK, todo A**»: **G3-A** (publicar T-501 e imágenes), **D10-A** (íconos SVG propios en V1: contrato 0.4.0 ya, API en la Fase 6 con adjuntos, SVG saneado; catálogo base abierto, sin copiar los PNG de Cashew), **D11-A** (detalles de la tarjeta de transacción como preferencia en el servidor). Plan: SPEC v0.4 + contrato 0.4.0, luego T-502 (marca + tarjeta configurable) ∥ T-503 (cliente HTTP + sesión), después T-504+. |
@@ -66,147 +75,126 @@ Backend actual: **44 de 86 rutas = 71 de 127 operaciones**, 7 migraciones (cabez
 
 Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
-**G3 · Publicar T-501 y las imágenes en `main` — RESUELTA: A (2026-10-09).** Adrian revisó el diseño y le agrada. **A (recomendada): aprobar merge y push** tras la auditoría de seguridad; B: esperar a T-502. *Nota operativa:* las copias **idénticas** de las imágenes sin versionar en la carpeta de `main` se quitan justo antes del merge (si no, el fast-forward se niega a sobrescribirlas).
+**G6 · Publicar en `main`** (`gate_70e14ac5abc1`): SPEC v0.5 + contrato 0.5.0 + `docs/ui/home-layout.md`, T-507 y T-508, todo verificado e integrado.
+- **A (recomendada): aprobar el merge y el push** tras repetir la auditoría. *Razón:* respaldo remoto de trabajo verificado.
+- B: esperar a T-509.
 
-**D10 · Íconos SVG propios para categorías — RESUELTA: A (2026-10-09).** (SPEC y contrato nuevos; hoy `category.icon` es solo un nombre).
-- **A (recomendada): en V1, con la API en la Fase 6 junto a los adjuntos** (comparten subida y almacenamiento), pero **el contrato 0.4.0 se define ya** para que la UI de la Fase 5 lo prevea: `POST/GET/DELETE /api/v1/icons` (SVG ≤ 64 KB) y `category.icon = "custom:<uuid>"`. **Seguridad (un SVG puede llevar código):** el servidor lo limpia con lista blanca (sin `script`, `foreignObject`, eventos `on*`, enlaces o `url()` externos), guarda solo la versión limpia y la sirve con `Content-Security-Policy: default-src 'none'` y `nosniff`; la UI lo pinta con `flutter_svg`, que no ejecuta scripts. *Razón:* reutiliza la infraestructura de adjuntos y no frena la UI base.
-- B: implementarlo ya, en paralelo a la Fase 5. *Contra:* abre backend y seguridad antes de tener las pantallas base.
-- C: sin subida; solo un catálogo fijo. *Contra:* no es lo pedido.
-- *Catálogo base:* los 277 íconos PNG de Cashew tienen **licencia dudosa** (su README rechaza contribuciones «por licencias y créditos»): **no copiarlos** a este repositorio público sin verificarla. Recomendado: un set abierto (Material Symbols, Apache-2.0) + los SVG de Adrian.
+**P1 · Orden de lo siguiente** (propuesto a Adrian el 2026-10-09, aún sin su OK):
+- **A (recomendada):**
+  1. **T-509** ensamblado de Inicio + barra de 4 botones + «+»;
+  2. **T-510** formulario de nueva transacción con la cuenta por defecto;
+  3. **API de presupuestos y metas (Fase 6)**;
+  4. revisión de Inicio por Adrian con datos reales.
+  *Razón:* Adrian quiere revisar posiciones y fidelidad con todo integrado.
+- B: hacer primero la API de presupuestos y metas. *Contra:* Inicio sigue sin armarse.
 
-**D11 · Personalizar los detalles de la tarjeta de transacción — RESUELTA: A (2026-10-09).** (fecha, hora, nota, etiquetas, cuenta, botones de acción). Cashew ya tiene interruptores sueltos parecidos (`showAccountLabelTagInTransactionEntry`, `showExtraInfoText`…).
-- **A (recomendada): preferencia guardada en el servidor**, `UserPreferences.transaction_card` en el contrato 0.4.0 (viaja entre dispositivos y servirá para Android en V4); por defecto, el aspecto de Cashew.
-- B: solo en el navegador (`localStorage`). *Contra:* se pierde al cambiar de dispositivo.
+**D7 · Para más adelante:** ADR-005 sincronización Android (antes de V4) · orden de categorías · credenciales OAuth de Google Cloud y proveedor de tipo de cambio (Fase 6) · proxy del VPS para la IP real en el límite de login (`ARCHITECTURE.md` §10.10) · corregir el principal de un desembolso sin dinero sin crear efectivo (hoy solo con `adjustment`).
 
-**G2 · Decision gate de T-405: merge `master-dev` → `main` y publicación** (`gate_10f2135dac21`) — **RESUELTA: A (2026-10-09).** T-405 solo toca `importers/cashew/loans.py`, sus pruebas y documentación; sin cambios de contrato, migración ni API. Verificada por el coordinador (914 pruebas, sonda con servidor real, `--dry-run` real con cuadre exacto). La auditoría de seguridad de lo que se publique se repite antes del push.
-- **A (recomendada): aprobar el merge y el push** (sin `--force`). *Razón:* verificación completa y es la forma de tener el respaldo fuera de la máquina.
-- B: aprobar solo el merge local, sin push.
-- C: esperar. *Contra:* nada la bloquea; solo retrasa la copia remota.
-
-**D9 · ¿Cuándo hacer la importación real definitiva (`apply`)? — RESUELTA: A (2026-10-09).** Aún no hay una base persistente (la de Compose se borra con `down -v`; la del VPS llega en el hito de despliegue) y el importador es solo-inserción: si algo sale mal hay que vaciar la base y repetir. Los ítems de revisión (préstamos con principal supuesto, pagos sintetizados, transferencias sin emparejar, personas provisionales…) hoy solo se ven por SQL o API; la UI para revisarlos llega en las Fases 5–6.
-- **A (recomendada): esperar a tener una base persistente y las primeras pantallas de la Fase 5** (o al despliegue); entonces copia → `--dry-run` → `apply`. *Razón:* esperar no pierde nada (el respaldo es una foto fija), evita importar a una base desechable y permite revisar los ítems con la UI.
-- B: importar ya a una base local desechable solo para explorar con la API o SQL. *Contra:* no es la definitiva y hay que borrarla.
-- C: hacer ya la importación definitiva en una base local persistente. *Contra:* sin UI no se pueden corregir los ítems; riesgo de repetir trabajo.
-
-> **Resueltas el 2026-10-09 (Adrian, «todo A»): G1-A, L1-A, X1-A, X2.** Se conservan las opciones como registro.
-
-**G1 · Decision gate de la Fase 4: merge `master-dev` → `main` y publicación — RESUELTA: A.** Auditoría de seguridad de lo que se publica: sin `.env`, claves ni `reference/`; solo los 3 fixtures sintéticos; sin datos del respaldo real.
-- **A (recomendada): aprobar y publicar** (sin `--force`). *Razón:* 898 pruebas, el dry-run real cuadra al céntimo y es la forma de tener respaldo fuera de la máquina.
-- B: esperar a resolver L1 y X1 y publicar todo junto.
-
-**L1 · Préstamos de largo plazo SIN desembolso registrado — RESUELTA: A (T-405).** En el respaldo real los préstamos de largo plazo no tienen su desembolso como transacción enlazada (solo cobros o pagos). Hoy fallan con `MissingDisbursementError`: se importan como transacciones **ordinarias** (el saldo cuadra), pero un cobro de préstamo se cuenta como **ingreso** (justo el problema P1) y el préstamo no aparece.
-- **A (recomendada): crear el préstamo con un desembolso sin dinero** (`transaction_id` nulo, permitido por `ARCHITECTURE.md`/el `CHECK`), con **principal = suma de los pagos vinculados** (queda saldado), fecha justo antes del primer pago, y un ítem de revisión `principal_assumed`; los pagos se importan como pagos reales en sus cuentas. El principal se corrige después con un movimiento `adjustment` sin dinero (**no** con el `PUT` del desembolso: la API lo trata como un movimiento con dinero y crearía una transacción en una cuenta; corregido el 2026-10-09). *Razón:* el préstamo, sus pagos y su historial quedan visibles, el capital no cuenta como ingreso y todo es corregible.
-- B: importar los cobros/pagos como transacciones `kind='loan'` sin préstamo + revisión. *Razón:* no se inventa ningún principal; *contra:* no hay préstamo visible.
-- C: dejarlo como hoy (ordinarias). *Contra:* distorsiona las estadísticas.
-- *Impacto:* tarea corta T-405 (`loans.py`); la importación real definitiva debe esperar a esta decisión porque el importador es solo-inserción.
-
-**X1 · Transferencias entre monedas distintas — RESUELTA: A (después de V1; no hay T-406).** Se importan como un gasto y un ingreso ordinarios (con motivo `currency_mismatch`); Monetae sí soporta transferencias entre monedas.
-- **A (recomendada): dejarlo para después de V1** (son pocas; no hay reportes hasta la Fase 6 y se puede re-vincular entonces).
-- B: implementarlo ahora (T-406): emparejar con la tasa implícita del par. *Contra:* más trabajo y riesgo antes de ver reportes; y el importador es solo-inserción, así que re-importar no corregiría las ya importadas.
-
-**D7 · Para más adelante:** **ADR-005** sincronización Android (antes de V4) · orden de categorías (Fase 5) · credenciales OAuth de Google Cloud y proveedor de tipo de cambio (Fase 6) · proxy del VPS para la IP real en el límite de login (`ARCHITECTURE.md` §10.10) · texto obsoleto en `docs/SPEC.md` §2 y la redacción «cobros futuros» de SPEC §8.1 (tras D2 debería decir «cobros programados sin publicar»), a corregir con el próximo cambio de SPEC aprobado.
+*Resueltas en esta sesión:* G1–G5, L1, X1, X2, D9, D10, D11 (ver §4).
 
 ## 6. Siguiente paso concreto
 
-> **Actualizado 2026-10-09 (tarde):** G2 y D9 resueltos (A). Siguiente: (1) **Adrian revisa en Chrome** la compilación de T-501 (`python3 -I -m http.server 8090 --bind 127.0.0.1 --directory <worktree T-501>/apps/web/build/web`, abrir `http://localhost:8090`; si el worktree ya no existe, `flutter build web --release` en `apps/web`) y dice qué preferencias visuales se conservan; (2) el coordinador escribe las tareas T-502… de la Fase 5 (cliente HTTP tipado y sesión, ensamblado de pantallas, resto del desacople según el informe) y propone el gate para publicar T-501. Lo que sigue más abajo es histórico de G2.
+**Al reanudar:** Adrian responde **G6** y **P1** (basta la letra). Con «A»:
 
-**Primero, Adrian responde G2 y D9 (§5; basta la letra).** Después:
+| Paso | Qué | Agente / modelo / esfuerzo | Rama | Cómo lo verifico |
+|---|---|---|---|---|
+| 1 | G6: auditoría, `gate-resolve gate_70e14ac5abc1`, ff de `main`, push sin `--force`, marcar `task_6ff18605f937` `completed` | coordinador | — | `git ls-remote origin` |
+| 2 | **T-509** Inicio según `docs/ui/home-layout.md` (saludo; cuentas con saldo, nº de transacciones, color y **selección de cuenta por defecto** resaltada; objetivos; presupuestos; circular de gastos con top-3 y **deslizar** a ingresos; línea **acumulada** con `cumulative_net`; 25 últimas transacciones; botón «+» cuadrado) + barra **Inicio/Transacciones/Presupuestos/Más** + carril visible de la barra de presupuesto en oscuro (nota de T-507). Spec por escribir: **releer contra el código y Cashew** (`homePage*.dart`, `bottomNavBar.dart`) | Codex `gpt-6.1-sol` · high | `codex/T-509-ui-home-assembly` | `dart analyze`, `flutter test` + goldens claro/oscuro, `flutter build web`; prueba real con la pila de revisión |
+| 3 | **T-510** formulario de nueva transacción (fiel a `addTransactionPage` de Cashew; propone la cuenta por defecto) | Codex `gpt-6.1-sol` · high | `codex/T-510-ui-add-transaction` (después de T-509; comparten `main.dart`) | ídem + `POST /transactions` real con CSRF |
+| 4 | **API de presupuestos y metas (Fase 6)**, incluido `color`/`icon` del contrato 0.5.0; en paralelo con T-509 si los archivos no se solapan (backend vs `apps/web`) | Codex `gpt-6.1-sol` · high | `codex/T-6xx-api-budgets-goals` | `ruff`, `mypy`, `pytest` con PostgreSQL, `alembic` (migración `0009`), sonda real |
 
-| Si… | Se hace | Quién | Cómo se verifica |
-|---|---|---|---|
-| **G2 = A** | Auditoría de seguridad repetida sobre lo que se publique (`git diff origin/main..master-dev`), `gate-resolve` de `gate_10f2135dac21`, `git merge --ff-only master-dev` en el worktree de `main`, push sin `--force` (comando en el Anexo B) y marcar `task_3206ef52f01d` como `completed` | coordinador | `git ls-remote origin` muestra ambas ramas en la cabeza nueva |
-| **G2 = B / C** | Solo el merge local (B) o nada (C) | coordinador | — |
-
-**Fase 5 (UI Flutter), arranque:** primera tarea `T-501` (spike de desacople de widgets de Cashew, `docs/tasks/T-501-ui-decoupling-spike.md`, ya escrita; **releerla contra el código antes de lanzar**, lección del Anexo C): Codex (modelo medio-alto), rama `codex/T-501-ui-decoupling-spike`. Flutter pide disco (hoy ≈ 3,7 GB libres): antes hay que **quitar el worktree y la rama de T-405** (`Monetae-codex-T-405-importer-longterm-loans`, ya fusionada) con OK de Adrian, que además cierra su panel.
-
-**Importación real definitiva:** según D9 (recomendado esperar a una base persistente y a las primeras pantallas). Procedimiento cuando llegue: copia del respaldo fuera de `reference/backups`, `--dry-run` previo, `apply`, borrar la copia; los ítems `principal_assumed` se corrigen con `adjustment`, no con `PUT`.
-
-**Antes de lanzar cualquier tarea:** `orca skills get orchestration --full` (Orca se actualiza), `orca status --json`, `docker version`, `git worktree list`, disco ≥ 3 GB y el puerto de la BD de la tarea libre.
+**Antes de lanzar:** `orca skills get orchestration --full`, `orca status --json`, `docker version`, `git worktree list`, disco ≥ 3 GB y puertos libres. Codex muestra el aviso «Update available» al lanzar: enviar *Esc* y reintentar (Anexo C). Usar `check --ack <delivery>` tras procesar cada entrega.
 
 ## 7. Estado del Run, de los worktrees y de los agentes abiertos
 
-**Run de la Fase 5: `run_c2cebe1745b9`** (T-501 `task_5df2d0fe6f4d` `completed`; su worktree `Monetae-codex-T-501-ui-decoupling-spike` sigue en disco con `build/web` para la revisión visual, borrable después). G2 `gate_10f2135dac21` resuelto; T-405 publicada (`a87f06b`).
+**Run de la Fase 5: `run_c2cebe1745b9`.** Tareas `completed`: T-501 `task_5df2d0fe6f4d`, T-502 `task_fd5d51af5bd1`, T-503 `task_23b103463ac4`, T-504 `task_2cb692365da5` (+T-504b `task_0d2f31697cba`), T-505 `task_98c4de4ea74a`, T-506 `task_46d3c202cc60`, T-507 `task_e8282e2fc9df`, T-508 `task_6ff18605f937` (puede figurar `blocked` por el gate G6; marcar `completed` al resolverlo). **Ningún worker vivo** (sin procesos de Codex; `worker-list` solo muestra registros liberados). Run de la Fase 4: `run_f5e95406186a` (todo `completed`). Anteriores: `run_63b520544a30` (F3), `run_70f5f187fe16` (F2), `run_2cddcd14320c` (F1), `run_bef8ecfc67a7` (F0). El CLI no cierra Runs; no usar `orchestration reset`.
 
-**Run de la Fase 4: `run_f5e95406186a`.** Tareas completadas: T-401 `task_e32a402a4dec` (+T-401b `task_83ae6f5c2bbc`), T-402 `task_8e0dc0347237`, T-403 `task_9b25b87c9b93` (+T-403b `task_03fd94d8705d`), T-404 `task_9450f697ce8a` y T-405 `task_3206ef52f01d`. **Gate G2 `gate_10f2135dac21` abierto** (cuelga de T-405: puede figurar `blocked`; se marca `completed` al resolverlo). Gate G1 `gate_1e81cf0fd994` resuelto. **Ningún worker vivo**: el de T-405 terminó; su terminal sigue abierta pero inactiva. Run de la Fase 3: `run_63b520544a30`. Runs anteriores: `run_bef8ecfc67a7` (Fase 0), `run_2cddcd14320c` (Fase 1), `run_70f5f187fe16` (Fase 2). El CLI **no cierra Runs**; no usar `orchestration reset`. Al retomar: `orca orchestration run-use --id run_f5e95406186a`.
+**Worktrees:** solo `Monetae` → `main` y `Monetae-master-dev` → `master-dev` (Adrian borró los de Codex). Sin ramas `codex/*`. Sin `.env` sueltos.
 
-**Worktrees:** `Monetae` → `main`, `Monetae-master-dev` → `master-dev` (Adrian borró el de T-405 y su rama el 2026-10-09). Sin `.env` sueltos, sin contenedores ni servidores, sin copias del respaldo real (las de las pruebas se borraron). Disco ≈ 3,7 GB libres.
+**Contenedores:** ninguno en marcha. Queda el **volumen** `monetae-review_postgres_data` (usuario sintético `adrian-review@example.test` + datos de la fixture; la contraseña se dio a Adrian en el chat y **no** se versiona). Para relanzar la pila de revisión desde `Monetae-master-dev`: `cd apps/web && flutter build web --release && cd ../.. && cp .env.example .env && sed -i 's/^MONETAE_COOKIE_SECURE=true$/MONETAE_COOKIE_SECURE=false/' .env && COMPOSE_PROJECT_NAME=monetae-review docker compose -f infra/docker-compose.yml up -d --build db api web` (y `alembic upgrade head` en `api`). Bajar con `down` (o `down -v` para borrar sus datos) y `rm -f .env`.
 
-**Paneles de Orca abiertos:** el del coordinador, `lupuna` (otro proyecto, no se toca) y el de Codex de T-405 (`…Monetae-codex-T-405-importer-longterm-loans`), que Adrian puede cerrar.
+**Paneles de Orca abiertos:** el del coordinador y `lupuna` (otro proyecto, no se toca). Ningún panel de Codex.
 
 ## 8. Limitaciones y riesgos conocidos
 
-- **Docker Desktop depende de la integración con WSL** (distro `AlmaLinux-9`): si tras reiniciar `/usr/bin/docker` apunta a un destino inexistente, hay que reactivar *Settings → Resources → WSL integration* y hacer `wsl --shutdown`.
-- **El `apply` real nunca se ha ejecutado**: solo `--dry-run` sobre copias del respaldo (cuadre exacto). La importación definitiva depende de D9.
-- **Importador (Fase 4):** solo línea de comandos; **solo inserción** (no corrige lo ya importado: por eso conviene resolver L1/X1 antes de la importación real). Presupuestos, metas y reglas de título de Cashew no se importan hasta la Fase 6 (se listan como pendientes). Los 3 hechos que la fixture sintética **ocultó** y solo el respaldo real mostró: series de suscripciones encadenadas, emparejado de transferencias unidireccional y préstamos de largo plazo sin desembolso (resuelto con T-405).
-- **Préstamos con principal supuesto (L1-A):** aparecen `settled` hasta que se corrijan. Si queda capital pendiente se añade un `adjustment` sin dinero. **El `PUT` del desembolso no sirve** para eso: la API lo trata como un movimiento con dinero y crea una transacción en una cuenta (comprobado con servidor real). Decidir en la Fase 5/6 si el contrato debe permitir corregir el principal de un desembolso sin dinero.
-- **Sin auditoría de seguridad externa**; endurecimiento previsto en la Fase 7.
-- La BD admite un `income` con monto negativo si se escribe SQL directo; solo la API garantiza el signo (decidir con el importador; `ARCHITECTURE.md` §10.12).
-- El límite de intentos de login usa `request.client.host`: detrás de un proxy hace falta configuración (§10.10). `501 google_login_not_available` no figura en el contrato congelado (§10.11). `updated_at` se refresca vía ORM/Core, no con SQL crudo (§10.8).
-- `reactivation_suggestions` solo se rellena al **crear** o **publicar** una transacción de gasto; `GET /transactions` no las calcula.
-- Totales de suscripciones: sin proveedor de tipos de cambio (Fase 6) solo se suma la moneda igual a la de reporte; las demás cuentan en `unconverted_count`. La tasa de una suscripción en moneda extranjera es **provisional** (se confirma al publicar cada cobro).
-- `end_on` de `recurring_rules` existe pero no se expone; el CRUD de `/recurring-rules` es de la Fase 6.
-- La clave secreta por defecto es de ejemplo; en `prod` la app se niega a arrancar con ella o con cookies sin `Secure`.
-- **Disco:** ≈ 3,7 GB libres en `/` (20 GB). Vigilar antes de Docker/Flutter.
-- **Repositorio público:** todo push se audita antes. Los datos reales de Adrian solo viven en `reference/backups/` (ignorado por git).
-- La cuota de Claude Pro es limitada: delegar lectura masiva y generación de código.
+- **Docker Desktop depende de la integración con WSL** (distro `AlmaLinux-9`): si `/usr/bin/docker` apunta a un destino inexistente, reactivar *Settings → Resources → WSL integration* y `wsl --shutdown`.
+- **Importación real:** el `apply` nunca se ha ejecutado (solo `--dry-run` sobre copias, cuadre exacto); espera a D9-A. El importador es **solo inserción**. Préstamos con principal supuesto (L1-A) aparecen `settled` hasta corregirlos con `adjustment` (el `PUT` del desembolso crea efectivo).
+- **UI:** Inicio aún no está ensamblado según la disposición de Adrian; presupuestos y metas solo con datos sintéticos hasta su API (Fase 6). `intl` no trae el formato peruano: está fijado a mano en `currency_format.dart` («S/ 1,234.50» en español). El favicon sigue el modo del **sistema/navegador**, no el tema de la app.
+- **Íconos de Cashew:** sus 277 PNG de categoría tienen licencia dudosa; **no** copiarlos (SPEC RF-46).
+- **Reportes:** sin proveedor de tipo de cambio (Fase 6), con moneda de reporte ≠ base todo cae en `unconverted_count` salvo tasas insertadas a mano en `exchange_rates`.
+- **Sin auditoría de seguridad externa** (Fase 7). La BD admite un `income` negativo por SQL directo (`ARCHITECTURE.md` §10.12). Límite de login detrás de proxy (§10.10). `501 google_login_not_available` fuera del contrato (§10.11).
+- **Disco:** ≈ 3,1 GB libres en `/` (20 GB). Flutter + Docker lo consumen rápido: borrar artefactos (`build/`, `.dart_tool/`, `.venv/`) de worktrees ya fusionados.
+- **Repositorio público:** todo push se audita antes; los datos reales solo viven en `reference/backups/` (ignorado).
+- La cuota de Claude Pro es limitada: delegar generación de código; reservar al coordinador specs, revisión e integración.
 
 ## 9. Cómo retomar (comandos exactos)
 
 ```bash
-# 0) Leer: este archivo, AGENTS.md, CLAUDE.md (§10), docs/SPEC.md, ADRs y tareas abiertas. Luego:
+# 0) Leer: este archivo, AGENTS.md, CLAUDE.md (§10), docs/SPEC.md v0.5, docs/ui/home-layout.md, ADRs y tareas. Luego:
 cd /home/artur/propio2/Monetae-master-dev            # worktree de master-dev (main está en ../Monetae)
 git status -sb && git log --oneline -5 && git worktree list
-git -C ../Monetae log --oneline -1 && git rev-parse --short origin/main   # main = master-dev = origin/main = origin/master-dev
+git -C ../Monetae log --oneline -1 && GIT_TERMINAL_PROMPT=0 git -c credential.helper= -c credential.helper='!gh auth git-credential' ls-remote origin refs/heads/main refs/heads/master-dev
 
-# 1) Herramientas (a nivel de usuario; el Python del sistema es 3.9, NO usarlo para el proyecto)
+# 1) Herramientas (el Python del sistema es 3.9: NO usarlo para el proyecto)
 export PATH="$HOME/.local/bin:$HOME/flutter/bin:$PATH"
-uv --version && docker compose version && flutter --version | head -1   # si 'docker' no existe: D0 (Docker Desktop no está integrado con WSL)
-orca status --json | head -5                           # ok: true
-orca orchestration run-use --id run_63b520544a30       # solo para consultar la Fase 3
+uv --version && docker compose version && flutter --version | head -1
+orca status --json | head -5 && orca orchestration run-use --id run_c2cebe1745b9
+orca orchestration gate-list --json | grep -A3 gate_70e14ac5abc1     # G6 pendiente
 
-# 2) Verificar el backend (≈ 5 min; necesita PostgreSQL en Docker)
-cp .env.example .env && docker compose -f infra/docker-compose.yml up -d db
+# 2) Backend (≈ 8 min; BD propia)
+cp .env.example .env && MONETAE_DB_PORT=5433 COMPOSE_PROJECT_NAME=monetae-check docker compose -f infra/docker-compose.yml up -d db
 cd services/api
 export MONETAE_TEST_DATABASE_URL=postgresql+psycopg://monetae:change-me@127.0.0.1:5433/postgres MONETAE_REQUIRE_DB=1
 export MONETAE_DATABASE_URL=$MONETAE_TEST_DATABASE_URL
-uv sync --frozen && uv lock --check
-uv run ruff check . && uv run ruff format --check . && uv run mypy
-uv run pytest -q                                        # esperado: 914 passed
-uv run alembic upgrade head && uv run alembic check     # cabeza: 0007
-cd ../.. && python3 -I scripts/check_openapi.py         # contrato: 86 paths, 127 operaciones
-docker compose -f infra/docker-compose.yml down -v && rm -f .env
+uv sync --frozen && uv lock --check && uv run ruff check . && uv run ruff format --check . && uv run mypy
+uv run pytest -q                                        # esperado: 1032 passed
+uv run alembic upgrade head && uv run alembic check     # cabeza: 0008
+cd ../.. && python3 -I scripts/check_openapi.py         # 89 paths, 131 operaciones
+COMPOSE_PROJECT_NAME=monetae-check docker compose -f infra/docker-compose.yml down -v && rm -f .env
 
-# 2b) Importador (humo sobre COPIA de la fixture, nunca el original):
-#    cp services/api/tests/fixtures/cashew_v48/synthetic_v48.sqlite /tmp/c.sqlite
-#    uv run python -m monetae.cli import-cashew --file /tmp/c.sqlite --user-email yo@example.test --fx-rate USD=3.8 --dry-run
-#    (códigos de salida: 0 ok, 2 uso/ruta prohibida, 3 archivo inválido, 4 error, 5 saldos no cuadran)
-#    Varias BD en paralelo: MONETAE_DB_PORT=<puerto libre> COMPOSE_PROJECT_NAME=<nombre único> docker compose ...
+# 3) UI
+cd apps/web && flutter pub get && dart analyze && flutter test && flutter build web --release   # esperado: 116 pruebas
+grep -rE "drift|firebase|appStateSettings|package:budget/" lib || echo limpio
 
-# 3) Sonda con servidor real (obligatoria para cambios de sesión/transacción; TestClient no basta)
-#    con la BD de (2) levantada: variables MONETAE_DATABASE_URL, MONETAE_SECRET_KEY, MONETAE_COOKIE_SECURE=false;
-#    crear usuario: echo '<clave>' | uv run python -m monetae.cli create-user --email yo@example.test --password-stdin
-#    uv run uvicorn monetae.api.main:app --port 8765   y   httpx: login -> petición inmediata (debe dar 200).
-#    Parar el servidor por PUERTO (ss -ltnp | grep :8765), NUNCA con pkill -f / pgrep -f.
-docker compose -f infra/docker-compose.yml down -v && rm -f .env     # SIEMPRE limpiar
+# 4) Recorrido real web+API por nginx (sin navegador): apps/web/tool/e2e_session.sh (proyecto monetae-t503, puertos 5444/8001/8081)
 ```
 
 ## Anexo A · Qué incluye el backend (verificado sobre la cabeza de `master-dev`)
 
-FastAPI síncrono (ADR-007) en `services/api`: **44 de 86 rutas = 71 de 127 operaciones** (Fase 2: 29 rutas / 48 operaciones; Fase 3: +15 / +23).
+FastAPI síncrono (ADR-007) en `services/api`: **46 de 89 rutas = 73 de 131 operaciones**.
 
-- **Acceso:** login por correo y contraseña (argon2id), sesiones opacas con cookie `HttpOnly`, CSRF firmado con HMAC + comprobación de `Origin`, límite de intentos persistente, `users/me`, cierre de sesión. Usuarios solo por CLI: `python -m monetae.cli create-user`.
-- **Catálogos:** cuentas, categorías (con las 2 de sistema de interés), personas con alias, etiquetas.
-- **Libro mayor:** transacciones (CRUD, filtros, etiquetas, saldos calculados, idempotencia, borrado/restauración lógica), transferencias de dos patas (también entre monedas), lotes atómicos, publicar programadas.
-- **Préstamos (T-301/T-302):** `loans` + `loan_movements` (desembolso, interés, pago, ajuste, condonación); saldo y estado **calculados**, sin «liquidar»; pago primero a interés; exceso con `adjustment` o `income_expense`; cada movimiento afecta a **su** cuenta (también otra moneda); edición/borrado con revalidación de todo el libro (`409 ledger_inconsistent`); borrado lógico atómico; resumen por persona y moneda. 15 operaciones.
-- **Suscripciones (T-303/T-304):** `subscriptions` + `recurring_rules`; archivado reversible (conserva el historial, cancela todas las programadas sin publicar, fuera de listado y totales); reactivación; próxima `scheduled` materializada y avanzada al publicar; totales por moneda; sugerencia de reactivación por título normalizado. 8 operaciones.
-- **Base de datos:** migraciones `0001` identidad y catálogos · `0002` intentos de login · `0003` transacciones · `0004` integridad de transferencias · `0005` préstamos · `0006` suscripciones y reglas. FK **compuestas con `user_id`**: la BD rechaza datos de otro usuario.
-- **Calidad:** 914 pruebas con PostgreSQL real, `ruff`, `mypy --strict`, `alembic check` limpios, cero `type: ignore`.
-- **Importador de Cashew (Fase 4, `python -m monetae.cli import-cashew`):** lee un SQLite de Cashew (v48) **en solo lectura y sobre una copia**; importa cuentas, categorías, etiquetas, transacciones (posted y scheduled), transferencias, préstamos (ADR-008), suscripciones y recurrentes (series); idempotente (solo inserción), `--dry-run`, cuadre de saldos atómico, reporte con ítems de revisión. Documentación: `docs/importers/cashew.md` y `docs/importers/cashew-loans.md`.
-- **No implementado (operaciones del contrato):** usuarios 9 (PIN/bloqueo/WebAuthn), reportes 8, notificaciones 6, metas 6, presupuestos 6, reglas de categoría 5, reglas recurrentes 5, importaciones 4, adjuntos 4, Google OIDC 1, exportaciones 1, sugerencia de tipo de cambio 1.
+- **Acceso:**
+  - login por correo y contraseña (argon2id);
+  - sesiones opacas con cookie `HttpOnly` y CSRF con HMAC + `Origin`;
+  - límite de intentos;
+  - `users/me` con preferencias: tema, acento, widgets, `transaction_card` (RF-47) y `default_account_id` (RF-48).
+  - Usuarios solo por CLI.
+- **Catálogos:** cuentas (con saldo y `transaction_count` calculados), categorías (2 de sistema de interés), personas con alias y etiquetas.
+- **Libro mayor:** transacciones, transferencias (también entre monedas), lotes y programadas.
+- **Préstamos (T-301/T-302):** saldo y estado calculados; interés primero; exceso con `adjustment` o `income_expense`; revalidación del libro.
+- **Suscripciones (T-303/T-304):** archivado reversible y totales por moneda.
+- **Reportes (T-506/T-508):** `cash-flow` (con `cumulative_net`) y `categories`.
+  - **Base caja:** el interés cuenta en la fecha del pago y el capital nunca.
+  - **Multimoneda:** `fx_rate_to_base` + `exchange_rates` del día o anterior, con `unconverted_count`.
+  - **Periodos:** zona horaria del usuario, semanas ISO.
+- **Base de datos:**
+  - Migraciones: `0001` identidad y catálogos, `0002` intentos, `0003` transacciones, `0004` transferencias, `0005` préstamos, `0006` suscripciones, `0007` importador, `0008` `exchange_rates` (tabla global).
+  - FK compuestas con `user_id`.
+- **Importador de Cashew** (`python -m monetae.cli import-cashew`): SQLite v48 en solo lectura sobre una copia; idempotente; `--dry-run`; cuadre atómico; préstamos ADR-008 + L1-A. Documentación en `docs/importers/`.
+- **Calidad:** 1032 pruebas con PostgreSQL real; `ruff`, `mypy --strict` y `alembic check` limpios; cero `type: ignore`.
+- **No implementado (operaciones del contrato):** usuarios 9 (PIN/WebAuthn), reportes 6, notificaciones 6, metas 6, presupuestos 6, reglas de categoría 5, reglas recurrentes 5, importaciones 4, adjuntos 4, íconos 4, Google OIDC 1, exportaciones 1 y sugerencia de tipo de cambio 1.
+
+**UI `apps/web` (Flutter Web):**
+- **Componentes de Cashew desacoplados:** tema, tarjeta, circular, líneas, resumen, selector, presupuestos y objetivos. Cada uno conserva su procedencia y el aviso GPL; `NOTICE` y `LICENSE` vienen de Cashew.
+- **Datos:** DTO generados del contrato y cliente HTTP con CSRF.
+- **Pantallas:** acceso, lista de transacciones e Inicio provisional.
+- **Demos:** `/#/demo/home` y `/#/demo/budgets-goals`.
+- **Textos y marca:** i18n es/en; marca por modo.
+- **Despliegue:** servida por nginx (`infra/web/default.conf`) en el mismo origen que la API.
 
 ## Anexo B · GitHub
 
-`origin` = `https://github.com/Adrian-asandym/Monetae.git` (público). Antes de cada push se verifica el historial (sin `.env`, claves, `reference/`, respaldos; únicos `.sqlite`/`.csv` versionados: los 3 fixtures sintéticos de `services/api/tests/fixtures/cashew_v48/`; sin correos reales). `origin/main` ya contiene la Fase 3 (`b3797b1`). Comando: `GIT_TERMINAL_PROMPT=0 git -c credential.helper= -c credential.helper='!gh auth git-credential' push origin main master-dev` (sin `--force`; `gh` autenticado como `Adrian-asandym`).
+`origin` = `https://github.com/Adrian-asandym/Monetae.git` (público). Antes de cada push se verifica el historial (sin `.env`, claves, `reference/`, respaldos; únicos `.sqlite`/`.csv` versionados: los 3 fixtures sintéticos de `services/api/tests/fixtures/cashew_v48/`; sin correos reales). `origin/main` está en `1736d7a` (G5). Comando: `GIT_TERMINAL_PROMPT=0 git -c credential.helper= -c credential.helper='!gh auth git-credential' push origin main master-dev` (sin `--force`; `gh` autenticado como `Adrian-asandym`).
 
 ## Anexo C · Lecciones operativas (no repetir errores)
 
@@ -222,3 +210,10 @@ FastAPI síncrono (ADR-007) en `services/api`: **44 de 86 rutas = 71 de 127 oper
 - **Orca/Codex:** si `worker-start` falla en `agent_readiness` por el aviso «Update available», enviar *Esc* a la terminal (`orca terminal send --terminal <h> --text $'\x1b'`; nunca «Update now» ni «Skip until next version») y reintentar con `worker-start --task <id> --retry-of <dispatch> --worktree path:<dir> --terminal <h>`. Para un seguimiento en la misma terminal: `worker-start --spec ... --worktree path:<dir> --terminal <h>`.
 - **Shell:** en `--body "..."` no usar acentos graves (el shell los ejecuta); usar comillas simples.
 - **Bases de datos en paralelo:** nunca compartir proyecto/puerto de Compose entre workers; asignar `MONETAE_DB_PORT` y `COMPOSE_PROJECT_NAME` propios.
+- **Orca, entregas:** `check --wait` vuelve a entregar la misma *Delivery* hasta confirmarla con `check --ack <delivery_id>`; tras responder (`reply --id <msg> --run <run>`) o procesar un `worker_done`, confirmar en la siguiente llamada.
+- **`reference/` no existe en los worktrees** (está ignorado): dar a los workers la ruta absoluta `/home/artur/propio2/Monetae/reference/Cashew/budget/` y **prohibir** `reference/backups/` en cada spec de UI.
+- **Revisar las capturas (goldens) yo mismo:** así apareció la regresión del formato de importes («170,00 S/»). `intl` no trae el formato peruano ni con `es_PE`.
+- **Contrato por delante del backend:** al cambiar un esquema ya implementado, `test_contract_subset` falla a propósito hasta integrar la tarea del backend; decirlo en `STATUS` y en la spec.
+- **Adrian deja a veces archivos sin commit en ambas carpetas** (p. ej. imágenes en `img/`): versionarlos en `master-dev` y, antes del ff de `main`, quitar las copias **idénticas** (comprobar hash) de la carpeta de `main`.
+- **Disco:** borrar solo artefactos ignorados (`git check-ignore`) de worktrees fusionados; las carpetas las borra Adrian.
+- **Pila de revisión:** proyecto Compose propio (`monetae-review`), usuario `@example.test`, datos de la **fixture sintética**, contraseña solo en el chat; para servidores locales por HTTP, `MONETAE_COOKIE_SECURE=false` solo en `.env`.
