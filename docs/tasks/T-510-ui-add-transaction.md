@@ -34,8 +34,8 @@ Cashew (solo lectura): `/home/artur/propio2/Monetae/reference/Cashew/budget/lib/
    - **Nota:** opcional.
    - Las etiquetas quedan **fuera** de esta tarea.
 3. **Tipo de cambio:**
-   - Si la moneda de la cuenta es igual a `base_currency`: `fx_rate_to_base = "1"` y `fx_rate_source = "manual"`.
-   - Si es distinta: campo **obligatorio** de tasa (texto decimal de hasta 6 decimales, mayor que 0) con `fx_rate_source = "manual"`. La sugerencia automática no existe aún (Fase 6).
+   - Si la moneda de la cuenta es igual a `base_currency`: `fx_rate_to_base = "1.000000"` y `fx_rate_source = "manual"` (el contrato `ExchangeRate` exige **exactamente 6 decimales**; corregido el 2026-10-10 tras la pregunta del worker).
+   - Si es distinta: campo **obligatorio** de tasa (texto decimal de hasta 6 decimales, mayor que 0, **normalizado a 6 decimales** sobre el texto: «3.8» → `"3.800000"`) con `fx_rate_source = "manual"`. La sugerencia automática no existe aún (Fase 6).
 4. **Estado:** `posted`. Si la fecha elegida es **futura**, `scheduled`, como las «próximas» de Cashew. Que quede visible en el formulario.
 5. **Envío:**
    - Cuerpo exacto de `TransactionCreate`. El **signo** se pone sobre el texto decimal (`"-12.50"` en un gasto); sin aritmética de coma flotante.
@@ -58,7 +58,7 @@ Cashew (solo lectura): `/home/artur/propio2/Monetae/reference/Cashew/budget/lib/
 1. `dart analyze` sin avisos y `flutter test` en verde. Pruebas nuevas:
    - **Goldens claro y oscuro** del formulario en gasto y en ingreso, y con cuenta en moneda extranjera (campo de tasa visible).
    - La cuenta por defecto viene preseleccionada; sin preferencia, se elige la primera activa.
-   - El **cuerpo del `POST`** es exacto: gasto `"-12.50"` e ingreso `"12.50"`; moneda de la cuenta; tasa `"1"` en PEN y la tasa escrita en USD; `scheduled` con fecha futura.
+   - El **cuerpo del `POST`** es exacto: gasto `"-12.50"` e ingreso `"12.50"`; moneda de la cuenta; tasa `"1.000000"` en PEN y la tasa escrita, normalizada a 6 decimales, en USD; `scheduled` con fecha futura.
    - El teclado no produce más de 2 decimales y se trabaja con texto, sin `double`.
    - El reintento reutiliza el `Idempotency-Key` y un cambio en el formulario lo renueva.
    - Doble pulsación = un solo envío.
