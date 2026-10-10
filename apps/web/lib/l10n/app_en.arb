@@ -192,5 +192,24 @@
         "type": "String"
       }
     }
+  },
+  "more": "More",
+  "accounts": "Accounts",
+  "emptyAccounts": "No accounts yet.",
+  "defaultAccount": "Default account",
+  "homeGreeting": "Hello!",
+  "latestTransactions": "Latest transactions",
+  "cumulativeCashFlow": "Cumulative cash flow",
+  "addTransaction": "Add transaction",
+  "comingSoon": "Coming soon",
+  "theme": "Theme",
+  "systemTheme": "System theme",
+  "accountTransactionCount": "{count} transactions",
+  "@accountTransactionCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

@@ -1,176 +1,217 @@
+// Derived from Cashew pages/homePage/homePage.dart, homePageUsername.dart,
+// homeTransactions.dart and widgets/navigationFramework.dart (AddFAB).
+// Copyright James Kokoska, GPL-3.0. Modified 2026-10-10: independent API blocks,
+// persisted preferences, server cumulative chart and Monetae navigation.
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../api/api_client.dart';
-import '../api/report_feed.dart';
-import '../data/mock_reports.dart';
+import '../api/home_controller.dart';
 import '../l10n/app_localizations.dart';
+import '../presentation/transaction_presenter.dart';
+import '../session/session_controller.dart';
 import '../widgets/brand_logo.dart';
-import '../widgets/report_dashboard.dart';
+import '../widgets/budget_goal_lists.dart';
+import '../widgets/cumulative_cash_flow_chart.dart';
+import '../widgets/home_accounts.dart';
+import '../widgets/home_block_view.dart';
+import '../widgets/home_category_carousel.dart';
+import '../widgets/transaction_card_list.dart';
+
+const defaultHomeWidgets = [
+  'accounts',
+  'goals',
+  'budgets',
+  'categories',
+  'cash_flow',
+  'transactions',
+];
+
+List<String> visibleHomeWidgets(List<String>? preference) {
+  final known =
+      preference?.where(defaultHomeWidgets.contains).toSet().toList() ??
+      <String>[];
+  return known.isEmpty ? defaultHomeWidgets : known;
+}
 
 class HomePage extends StatefulWidget {
   const HomePage({
     super.key,
-    this.api,
-    this.reportCurrency,
-    this.onTransactions,
-    this.onDemo,
-    this.onLogout,
-    this.onThemeToggle,
-    this.sessionError,
+    required this.session,
+    this.today,
+    this.animate = true,
   });
-  final ApiException? sessionError;
-  final ApiClient? api;
-  final String? reportCurrency;
-  final VoidCallback? onTransactions;
-  final VoidCallback? onDemo;
-  final VoidCallback? onLogout;
-  final VoidCallback? onThemeToggle;
+  final SessionController session;
+  final DateTime? today;
+  final bool animate;
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  late DateTime _month;
-  ReportFeed? _feed;
-  ApiException? _error;
-  bool _loading = false;
-  int _revision = 0;
+  late final HomeController _home;
+  late final DateTime _today;
   @override
   void initState() {
     super.initState();
-    // Calendar display defaults to Lima; explicit boundaries are sent, never
-    // depend on the browser timezone. The server buckets in the profile zone.
-    final today = DateTime.now().toUtc().subtract(const Duration(hours: 5));
-    _month = widget.api == null
-        ? DateTime(2026, 10)
-        : DateTime(today.year, today.month);
-    if (widget.api != null) _load();
-  }
-
-  Future<void> _load() async {
-    final api = widget.api;
-    if (api == null) return;
-    final revision = ++_revision;
-    setState(() {
-      _loading = true;
-      _error = null;
-      _feed = null;
-    });
-    try {
-      final feed = await ReportFeed.load(
-        api,
-        dateFrom: DateFormat('yyyy-MM-dd').format(_month),
-        dateTo: DateFormat('yyyy-MM-dd')
-            .format(DateTime(_month.year, _month.month + 1, 0)),
-        reportCurrency: widget.reportCurrency,
-      );
-      if (mounted && revision == _revision) setState(() => _feed = feed);
-    } on ApiException catch (e) {
-      if (mounted && revision == _revision) setState(() => _error = e);
-    } on Object {
-      if (mounted && revision == _revision) {
-        setState(() => _error = const ApiException(ApiErrorKind.unavailable));
-      }
+    _today =
+        widget.today ??
+        DateTime.now().toUtc().subtract(const Duration(hours: 5));
+    _home = HomeController(
+      widget.session.api,
+      month: DateTime(_today.year, _today.month),
+      reportCurrency: widget.session.user?.reportCurrency,
+    );
+    widget.session.addListener(_changed);
+    for (final block in _home.blocks) {
+      block.addListener(_changed);
     }
-    if (mounted && revision == _revision) setState(() => _loading = false);
+    _home.load();
   }
 
-  void _move(int delta) {
-    setState(() => _month = DateTime(_month.year, _month.month + delta));
-    _load();
+  void _changed() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    widget.session.removeListener(_changed);
+    _home.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final feed = widget.api == null ? mockReports(l) : _feed;
+    final session = widget.session;
+    final profile = session.user;
+    if (profile == null) return const SizedBox.shrink();
+    final sections = <String, Widget>{
+      'accounts': HomeBlockView(
+        block: _home.accounts,
+        title: l.accounts,
+        builder: (accounts) => HomeAccounts(
+          accounts: accounts,
+          selectedId: session.selectedAccountId,
+          onSelected: session.saving || session.busy
+              ? null
+              : session.updateDefaultAccount,
+        ),
+      ),
+      'goals': HomeBlockView(
+        block: _home.goals,
+        title: l.goals,
+        builder: (goals) => GoalCardList(goals: goals),
+      ),
+      'budgets': HomeBlockView(
+        block: _home.budgets,
+        title: l.budgets,
+        builder: (budgets) => BudgetCardList(budgets: budgets, today: _today),
+      ),
+      'categories': HomeBlockView(
+        block: _home.categories,
+        title: l.categoryDistribution,
+        builder: (data) => Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  tooltip: l.previousMonth,
+                  onPressed: () => _home.moveMonth(-1),
+                  icon: const Icon(Icons.chevron_left),
+                ),
+                Flexible(
+                  child: Text(
+                    DateFormat.yMMMM(l.localeName).format(_home.month),
+                  ),
+                ),
+                IconButton(
+                  tooltip: l.nextMonth,
+                  onPressed: () => _home.moveMonth(1),
+                  icon: const Icon(Icons.chevron_right),
+                ),
+              ],
+            ),
+            HomeCategoryCarousel(data: data, animate: widget.animate),
+          ],
+        ),
+      ),
+      'cash_flow': HomeBlockView(
+        block: _home.flow,
+        title: l.cumulativeCashFlow,
+        builder: (rows) =>
+            CumulativeCashFlowChart(rows: rows, animate: widget.animate),
+      ),
+      'transactions': HomeBlockView(
+        block: _home.transactions,
+        title: l.latestTransactions,
+        builder: (feed) => feed.transactions.isEmpty
+            ? Text(l.emptyTransactions)
+            : TransactionCardList(
+                models: presentTransactions(feed, l),
+                preferences: profile.preferences.transactionCard,
+              ),
+      ),
+    };
     return Scaffold(
       appBar: AppBar(
         title: Text(l.home),
         actions: [
-          if (widget.onTransactions != null)
-            IconButton(
-              key: const Key('home-transactions'),
-              tooltip: l.transactions,
-              onPressed: widget.onTransactions,
-              icon: const Icon(Icons.receipt_long_outlined),
-            ),
-          if (widget.onDemo != null)
-            IconButton(
-              tooltip: l.demo,
-              onPressed: widget.onDemo,
-              icon: const Icon(Icons.widgets_outlined),
-            ),
-          if (widget.onLogout != null)
-            IconButton(
-              tooltip: l.signOut,
-              onPressed: widget.onLogout,
-              icon: const Icon(Icons.logout),
-            ),
-          if (widget.onThemeToggle != null)
-            IconButton(
-              key: const Key('home-theme-switch'),
-              tooltip: Theme.of(context).brightness == Brightness.dark
-                  ? l.lightTheme
-                  : l.darkTheme,
-              onPressed: widget.onThemeToggle,
-              icon: const Icon(Icons.brightness_6_outlined),
-            ),
+          IconButton(
+            tooltip: l.refresh,
+            onPressed: _home.load,
+            icon: const Icon(Icons.refresh),
+          ),
           const BrandLogo(size: 36),
-          if (widget.api != null)
-            IconButton(
-              tooltip: l.refresh,
-              onPressed: _loading ? null : _load,
-              icon: const Icon(Icons.refresh),
-            ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 13),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(13),
+        key: const Key('home-scroll'),
+        padding: const EdgeInsets.fromLTRB(13, 13, 13, 96),
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 760),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (widget.api == null) Text(l.syntheticData),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      tooltip: l.previousMonth,
-                      onPressed: widget.api == null ? null : () => _move(-1),
-                      icon: const Icon(Icons.chevron_left),
-                    ),
-                    Text(
-                      DateFormat.yMMMM(l.localeName).format(_month),
-                      style: const TextStyle(fontSize: 18),
-                    ),
-                    IconButton(
-                      tooltip: l.nextMonth,
-                      onPressed: widget.api == null ? null : () => _move(1),
-                      icon: const Icon(Icons.chevron_right),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 13),
-                if (widget.sessionError != null)
-                  Text(
-                    widget.sessionError!.message(l),
-                    key: const Key('session-error'),
+                Text(
+                  l.homeGreeting,
+                  key: const Key('home-greeting'),
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
                   ),
-                if (_loading) const Center(child: CircularProgressIndicator()),
-                if (_error != null) ...[
-                  Text(_error!.message(l)),
-                  TextButton(onPressed: _load, child: Text(l.retry)),
-                ],
-                if (feed != null) ReportDashboard(feed: feed),
+                ),
+                const SizedBox(height: 20),
+                if (session.error != null)
+                  Text(
+                    session.error!.message(l),
+                    key: const Key('session-error'),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                if (session.saving) Text(l.savingPreferences),
+                for (final key in visibleHomeWidgets(
+                  profile.preferences.homeWidgets,
+                ))
+                  Padding(
+                    key: Key('home-block-$key'),
+                    padding: const EdgeInsets.only(bottom: 13),
+                    child: sections[key],
+                  ),
               ],
             ),
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        key: const Key('add-transaction'),
+        tooltip: l.addTransaction,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        onPressed: () => Navigator.of(context).pushNamed('/transactions/new'),
+        child: const Icon(Icons.add_rounded, size: 32),
       ),
     );
   }

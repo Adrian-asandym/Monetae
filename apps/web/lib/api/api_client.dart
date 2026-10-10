@@ -153,19 +153,41 @@ final class ApiClient {
     ),
   );
 
+  /// Preferences are replaced by the server, so every caller sends all fields.
+  Future<CurrentUserDto> updatePreferences(
+    UserPreferencesDto preferences,
+  ) async => CurrentUserDto.fromJson(
+    await _request(
+      'PATCH',
+      'users/me',
+      body: UserUpdateDto(preferences: preferences).toJson(),
+    ),
+  );
+
+  Future<BudgetPageDto> budgets({String? cursor}) async =>
+      BudgetPageDto.fromJson(
+        await _request('GET', 'budgets', query: _pageQuery(cursor)),
+      );
+
+  Future<GoalPageDto> goals({String? cursor}) async => GoalPageDto.fromJson(
+    await _request('GET', 'goals', query: _pageQuery(cursor)),
+  );
+
   Map<String, String> _pageQuery(String? cursor) => {
     'limit': '50',
     'cursor': ?cursor,
   };
 
-  Future<AccountPageDto> accounts({String? cursor}) async =>
-      AccountPageDto.fromJson(
-        await _request(
-          'GET',
-          'accounts',
-          query: {..._pageQuery(cursor), 'include_archived': 'true'},
-        ),
-      );
+  Future<AccountPageDto> accounts({
+    String? cursor,
+    bool includeArchived = true,
+  }) async => AccountPageDto.fromJson(
+    await _request(
+      'GET',
+      'accounts',
+      query: {..._pageQuery(cursor), 'include_archived': '$includeArchived'},
+    ),
+  );
   Future<CategoryPageDto> categories({String? cursor}) async =>
       CategoryPageDto.fromJson(
         await _request('GET', 'categories', query: _pageQuery(cursor)),
@@ -177,10 +199,16 @@ final class ApiClient {
       query: {..._pageQuery(cursor), 'include_archived': 'true'},
     ),
   );
-  Future<TransactionPageDto> transactions({String? cursor}) async =>
-      TransactionPageDto.fromJson(
-        await _request('GET', 'transactions', query: _pageQuery(cursor)),
-      );
+  Future<TransactionPageDto> transactions({
+    String? cursor,
+    int limit = 50,
+  }) async => TransactionPageDto.fromJson(
+    await _request(
+      'GET',
+      'transactions',
+      query: {..._pageQuery(cursor), 'limit': '$limit'},
+    ),
+  );
   Future<AccountDto> account(String id) async =>
       AccountDto.fromJson(await _request('GET', 'accounts/$id'));
   Future<CategoryDto> category(String id) async =>

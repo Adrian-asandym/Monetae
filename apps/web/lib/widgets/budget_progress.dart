@@ -15,11 +15,13 @@ class BudgetProgress extends StatelessWidget {
     required this.progress,
     required this.color,
     this.today,
+    this.darkTrackAmount = .8,
   });
 
   final DecimalProgress progress;
   final Color color;
   final double? today;
+  final double darkTrackAmount;
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +51,12 @@ class BudgetProgress extends StatelessWidget {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(50),
                       child: ColoredBox(
-                        color: pastel(color, brightness, .8),
+                        key: const Key('budget-progress-track'),
+                        color: pastel(
+                          color,
+                          brightness,
+                          brightness == Brightness.dark ? darkTrackAmount : .8,
+                        ),
                         child: TweenAnimationBuilder<double>(
                           tween: Tween(begin: 0, end: progress.fraction),
                           duration: reduced

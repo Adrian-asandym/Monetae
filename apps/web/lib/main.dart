@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'api/api_client.dart';
 import 'pages/login_page.dart';
 import 'pages/budget_goal_demo_page.dart';
-import 'pages/home_page.dart';
-import 'pages/transactions_page.dart';
+import 'pages/report_demo_page.dart';
+import 'pages/app_shell.dart';
+import 'pages/new_transaction_page.dart';
 import 'presentation/transaction_presenter.dart';
 import 'presentation/currency_format.dart';
 import 'session/session_controller.dart';
@@ -79,6 +80,9 @@ class _MonetaeAppState extends State<MonetaeApp> {
       darkTheme: monetaeTheme(brightness: Brightness.dark, accent: accent),
       themeMode: mode,
       routes: {
+        '/transactions/new': (_) => const NewTransactionPage(),
+        '/demo/home': (_) => const DemoApp(showHome: true),
+        '/demo/budgets-goals': (_) => const DemoApp(showBudgetsGoals: true),
         '/demo': (context) => Scaffold(
           appBar: AppBar(
             title: Text(AppLocalizations.of(context).syntheticData),
@@ -100,21 +104,7 @@ class _MonetaeAppState extends State<MonetaeApp> {
               error: _session.error,
             );
           }
-          return HomePage(
-            api: _api,
-            reportCurrency: user.reportCurrency,
-            sessionError: _session.error,
-            onLogout: _session.busy ? null : _session.logout,
-            onDemo: () => Navigator.of(context).pushNamed('/demo'),
-            onTransactions: () => Navigator.of(context).push<void>(
-              MaterialPageRoute(
-                builder: (_) => TransactionsPage(
-                  session: _session,
-                  onDemo: () => Navigator.of(context).pushNamed('/demo'),
-                ),
-              ),
-            ),
-          );
+          return AppShell(session: _session);
         },
       ),
     );
@@ -164,7 +154,7 @@ class _DemoAppState extends State<DemoApp> {
             ),
           )
         : widget.showHome
-        ? HomePage(onThemeToggle: () => setState(() => _dark = !_dark))
+        ? ReportDemoPage(onThemeToggle: () => setState(() => _dark = !_dark))
         : SpikePage(
             dark: _dark,
             accent: _accent,
@@ -311,7 +301,7 @@ class _SpikePageState extends State<SpikePage> {
                   const SizedBox(height: 20),
                   OutlinedButton.icon(
                     onPressed: () => Navigator.of(context).push<void>(
-                      MaterialPageRoute(builder: (_) => const HomePage()),
+                      MaterialPageRoute(builder: (_) => const ReportDemoPage()),
                     ),
                     icon: const Icon(Icons.home_outlined),
                     label: Text(l.home),

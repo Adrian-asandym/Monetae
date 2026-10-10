@@ -131,6 +131,7 @@ class BudgetCard extends StatelessWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: BudgetProgress(
+                          darkTrackAmount: .45,
                           progress: progress,
                           color: color,
                           today: todayFraction(

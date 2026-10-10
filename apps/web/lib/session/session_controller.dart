@@ -89,20 +89,49 @@ final class SessionController extends ChangeNotifier {
     _notify();
   }
 
+  String? _pendingAccountId;
+  String? get selectedAccountId =>
+      _pendingAccountId ?? user?.preferences.defaultAccountId;
+
+  Future<void> updateDefaultAccount(String id) async {
+    final profile = user;
+    if (profile == null || saving || busy) return;
+    _pendingAccountId = id;
+    await _updatePreferences(
+      profile.preferences.copyWith(defaultAccountId: id),
+    );
+    _pendingAccountId = null;
+    _notify();
+  }
+
+  Future<void> updateTheme(UserPreferencesTheme theme) async {
+    final profile = user;
+    if (profile == null || saving || busy) return;
+    await _updatePreferences(profile.preferences.copyWith(theme: theme));
+  }
+
   Future<void> updateCard(TransactionCardPreferencesDto value) async {
     final profile = user;
-    if (profile == null || saving) return;
+    if (profile == null || saving || busy) return;
+    await _updatePreferences(
+      profile.preferences.copyWith(transactionCard: value),
+    );
+  }
+
+  Future<void> _updatePreferences(UserPreferencesDto preferences) async {
     final revision = _revision;
     saving = true;
     error = null;
     _notify();
     try {
-      final updated = await api.updateCard(profile.preferences, value);
-      if (_revision == revision) user = updated;
+      final updated = await api.updatePreferences(preferences);
+      if (!_disposed && _revision == revision) user = updated;
     } on ApiException catch (e) {
-      error = e;
+      if (_revision == revision) error = e;
     } on Object {
-      error = const ApiException(ApiErrorKind.unavailable);
+      if (_revision == revision) {
+        error = const ApiException(ApiErrorKind.unavailable);
+      }
     }
     saving = false;
     _notify();

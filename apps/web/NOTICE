@@ -63,3 +63,22 @@ local finance queries, global preferences and transaction counters. Labels retai
 exact decimal strings; BigInt quotients supply bounded presentation geometry.
 Liquid/shake effects, pending/shared overlays, navigation and daily allowances
 are omitted. Material icons and original synthetic SVGs follow the T-502 notice.
+
+Modified for Monetae on 2026-10-10 (T-509):
+- pages/homePage/{homePage,homePageUsername,homeTransactions}.dart and
+  widgets/navigationFramework.dart (AddFAB) → lib/pages/home_page.dart,
+  lib/pages/app_shell.dart
+- pages/homePage/{homePageWalletList,homePageWalletSwitcher}.dart and
+  widgets/walletEntry.dart → lib/widgets/home_accounts.dart
+- widgets/{bottomNavBar,navigationSidebar}.dart and struct/navBarIconsData.dart
+  → lib/widgets/app_navigation.dart
+- pages/homePage/homePagePieChart.dart → lib/widgets/home_category_carousel.dart
+- widgets/lineGraph.dart and pages/homePage/homePageLineGraph.dart
+  → lib/widgets/cumulative_cash_flow_chart.dart
+- pages/budgetsListPage.dart → lib/pages/budgets_page.dart
+- previous report composition → lib/pages/report_demo_page.dart (demo routes)
+The navigation uses four fixed destinations, native NavigationBar below 1000
+logical pixels and NavigationRail at wider widths. Server responses replace local
+streams; independent blocks, complete preference updates and cumulative_net
+preserve the server as the source of financial truth. The dark budget track is
+made visible; synthetic data stays in demonstrations and tests.

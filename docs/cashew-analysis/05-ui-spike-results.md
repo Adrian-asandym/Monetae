@@ -644,3 +644,98 @@ peticiones HTTP en esta ruta. README documenta su uso y la API de los componente
 No quedan bloqueos de implementación dentro de T-507. La integración HTTP de
 presupuestos/metas espera a Fase 6 y el ensamblado de Inicio a T-509, con revisión
 visual de Adrian según la regla de fidelidad de SPEC.
+
+## T-509
+
+Fecha: 2026-10-10. Base de despacho: `master-dev` **582d66d**. Contrato **0.5.0**.
+
+### Inicio y navegación
+
+El Inicio autenticado ahora ensambla, en este orden: saludo, cuentas, objetivos,
+presupuestos, circular, evolución acumulada y últimas transacciones. El cuadro
+«+» permanece destacado en la esquina inferior derecha, por encima de la barra,
+y abre `/transactions/new`; esa ruta muestra «Próximamente» hasta T-510.
+`HomePage` consume solo respuestas HTTP tipadas. La anterior composición de
+reportes queda en `ReportDemoPage`, accesible desde las rutas demo; sus fixtures
+no alimentan el Inicio autenticado.
+
+| Bloque | Origen de Cashew (`budget/lib/`) | Adaptación y diferencias |
+|---|---|---|
+| Ensamblado y saludo | `pages/homePage/homePage.dart`, `homePageUsername.dart` | Columna única con ancho máximo de 760 píxeles lógicos, saludo genérico traducido: `CurrentUser` no expone nombre. Sin identidad ni datos inventados. |
+| Cuentas | `homePageWalletList.dart`, `homePageWalletSwitcher.dart`, `widgets/walletEntry.dart` | Filas con nombre, saldo, nº de transacciones e ícono/color; solo cuentas activas. Selección de cuenta por defecto persistida con PATCH completo y CSRF, resaltado provisional y reversión ante fallo. No recalcula saldos ni cambia el ámbito de los reportes al elegir cuenta. |
+| Objetivos y presupuestos | `homePageObjectives.dart`, `homePageBudgets.dart`, `widgets/budgetContainer.dart` | Reutiliza los carruseles T-507. Lee y pagina `/goals` y `/budgets`, conforme a la spec T-509; no las rutas `/reports/*` sugeridas por la nota anterior. Se distinguen el carril y el relleno del presupuesto oscuro; las barras de objetivos conservan su paleta previa. |
+| Circular | `homePagePieChart.dart`, `widgets/pieChart.dart` | `PageView` con gastos primero, ingresos al deslizar a la izquierda, selector accesible e indicador de dos páginas. Circular completo; leyenda limitada a las tres categorías con mayor proporción de cada tipo. Usa el ícono base cuando no están disponibles los SVG personalizados de Fase 6. |
+| Línea | `homePageLineGraph.dart`, `widgets/lineGraph.dart` | Una línea con coordenadas normalizadas y signo de `cumulative_net`; cada valor y tooltip viene del servidor. Admite caídas, valores negativos, cero y periodos sin datos, sin sumar importes. |
+| Historial | `homeTransactions.dart` | Una sola página de `/transactions?limit=25`, en orden del servidor, tarjetas y detalles RF-47 existentes; el listado completo conserva su propia paginación. |
+| Navegación | `widgets/bottomNavBar.dart`, `navigationSidebar.dart`, `navigationFramework.dart`, `struct/navBarIconsData.dart` | Cuatro destinos fijos: Inicio, Transacciones, Presupuestos, Más. Barra Material con etiquetas siempre visibles por debajo de 1000 píxeles lógicos; riel lateral a partir de 1000, como el patrón web de Cashew. Tabs montados al visitarlos y conservados en `IndexedStack`; sin atajos personalizables ni calendario lateral. |
+| «+» | `widgets/navigationFramework.dart` (`AddFAB`) | Botón de proporción cuadrada y esquinas redondeadas, visible mientras se desplaza Inicio; ruta marcadora, sin formulario ni POST. |
+
+Más reúne tema claro/oscuro/sistema, detalles de la tarjeta, cierre de sesión y
+las demos etiquetadas como datos sintéticos. La página Presupuestos usa
+`BudgetCardList` vertical con carga, vacío y reintento. Se conserva la pantalla
+Transacciones existente y su conexión de preferencias.
+
+### Preferencias y estados
+
+Convenio confirmado por el coordinador mediante `orchestration ask`:
+`home_widgets` admite exactamente `accounts`, `goals`, `budgets`, `categories`,
+`cash_flow`, `transactions`. Una lista no vacía fija orden y visibilidad (omitir
+un bloque lo oculta); null, vacía o sin claves reconocidas usa el orden completo.
+Claves desconocidas se ignoran; saludo y «+» son fijos y están fuera de la lista.
+T-509 solo lee esta preferencia. Al cambiar cuenta, tema o tarjeta se conserva
+el objeto completo de preferencias, incluida la cuenta por defecto.
+
+Cada bloque tiene carga/error/reintento propio; un fallo no oculta los bloques
+que ya tienen datos. Solo 404/501 de presupuestos y objetivos se convierten en
+listas vacías sin error visible; 500 mantiene error y reintento. Un 401 de
+cualquier petición retorna al acceso y elimina las rutas privadas. Las respuestas
+antiguas de un refresco no sobrescriben otro más reciente. Los reportes usan
+el mes de presentación de Lima y la moneda de reporte del perfil, y mantienen
+avisos de movimientos sin conversión histórica.
+
+### Validación y pendientes
+
+Se añaden 30 pruebas y ocho goldens: Inicio con datos y vacío, barra de cuatro
+botones y página Presupuestos, cada uno en claro y oscuro. Cinco goldens previos
+de presupuestos oscuros cambian únicamente por el carril visible; los restantes
+se conservan. Se revisaron visualmente capturas representativas de ambos temas.
+Las pruebas verifican orden/ocultación, PATCH completo con CSRF y reversión,
+swipe/top-3, valores acumulados con signo, una página de 25 transacciones en orden,
+carga independiente, 404/501/500/reintento, expiración 401, navegación responsive
+y persistencia del tema conservando la cuenta por defecto.
+
+Pendiente fuera de T-509: formulario de T-510 (usar la cuenta elegida); integración
+real de las API T-601/T-602 y biblioteca SVG de Fase 6; revisión de posiciones,
+scroll y fidelidad por Adrian. El coordinador realiza la sonda con servidor real
+sobre `monetae-review`; este worker no levantó contenedores ni tocó esa pila.
+No se accedió a respaldos reales y no se añadieron dependencias.
+
+Salidas finales sobre el código actualizado con `master-dev` (sin actualizar
+goldens en esta ejecución; **146 pruebas** y **72 referencias**):
+
+```text
+flutter pub get
+Got dependencies!
+
+dart analyze
+Analyzing web...
+No issues found!
+
+flutter test --reporter expanded
+00:31 +146: All tests passed!
+
+flutter build web --release
+Wasm dry run succeeded.
+Compiling lib/main.dart for the Web...                            102.2s
+✓ Built build/web
+
+grep -rE 'drift|firebase|appStateSettings|package:budget/' lib || echo limpio
+limpio
+
+git diff --check
+(sin salida; código 0)
+```
+
+La compilación conserva el aviso previo sobre CupertinoIcons de T-504; incluye
+MaterialIcons y termina correctamente. El diff solo modifica `apps/web/**` y
+esta sección T-509; los artefactos de compilación quedan ignorados.
