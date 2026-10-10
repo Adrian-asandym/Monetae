@@ -12,7 +12,7 @@
 | **`origin`** | `origin/main` = `origin/master-dev` = **`8b8688e`** (hasta T-508, SPEC v0.5; G6). |
 | **`main`** | `8b8688e`. |
 | **`master-dev`** | `e0b8366` (merge de T-602) **+ commits de documentación posteriores (`git log -1`)**, por delante de `main`: T-509, T-510, T-601 (migración `0009`), T-602 (migración `0010`). **Sin publicar.** |
-| **Gate abierto** | **G7** (publicar T-509/T-510/T-601/T-602): **propuesto, pendiente de Adrian** (id en §7). G6 `gate_70e14ac5abc1` resuelto (A) el 2026-10-10. |
+| **Gate abierto** | **G7 `gate_ecde8d19a53a`** (publicar T-509/T-510/T-601/T-602): **propuesto, pendiente de Adrian**. G6 `gate_70e14ac5abc1` resuelto (A) el 2026-10-10. |
 | **SPEC / ARCHITECTURE / contrato** | SPEC **v0.5** · `docs/ARCHITECTURE.md` v0.3 · `docs/api/openapi.json` **0.5.0** (89 paths, 131 operaciones; validado con `check_openapi.py`). |
 
 ## 2. Fase actual
