@@ -780,3 +780,7 @@ ajena o borrada responde 404 sin cambios. Una transacción de préstamo responde
 422 `loan_transaction_not_allowed` sin cambios; ingresos, gastos y transferencias
 sí se permiten. Todas las rutas exigen sesión y las mutaciones comprueban CSRF y
 Origin. `/reports/goals` queda fuera de T-602.
+
+## Cambios del contrato 0.6.0 (SPEC v0.6)
+
+- `CurrentUser.display_name` (obligatorio en la respuesta, `string` de 1–60 caracteres o `null`) y `UserUpdate.display_name` (opcional en `PATCH /users/me`). El servidor recorta espacios; vacío tras recortar → 422; `null` borra el nombre. Implementación: T-603.

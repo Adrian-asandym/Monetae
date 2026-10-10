@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Monetae API",
-    "version": "0.5.0",
+    "version": "0.6.0",
     "description": "Contrato inicial V1 basado en SPEC v0.5, ARCHITECTURE v0.2 y ADR aceptadas 002/003/004/006. Dinero como cadenas decimales; aislamiento por sesión y borrado lógico. Documentación y observaciones en README.md.",
     "license": {
       "name": "GPL-3.0-only",
@@ -11759,6 +11759,19 @@
           },
           "report_currency": {
             "$ref": "#/components/schemas/Currency"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 60
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Nombre para mostrar (saludo de Inicio, RF-50). Se guarda sin espacios al inicio ni al final; una cadena vacía tras recortar se rechaza con 422. null = sin nombre (saludo genérico)."
           }
         },
         "required": [
@@ -11772,7 +11785,8 @@
           "base_currency",
           "locale",
           "lock_after_minutes",
-          "report_currency"
+          "report_currency",
+          "display_name"
         ]
       },
       "PasswordLogin": {
@@ -13855,6 +13869,19 @@
           },
           "preferences": {
             "$ref": "#/components/schemas/UserPreferences"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 60
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Nombre para mostrar (saludo de Inicio, RF-50). Se guarda sin espacios al inicio ni al final; una cadena vacía tras recortar se rechaza con 422. null = sin nombre (saludo genérico)."
           }
         },
         "required": [],

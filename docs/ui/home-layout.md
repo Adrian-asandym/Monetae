@@ -1,5 +1,7 @@
 # Disposición de Inicio y navegación (referencia de Adrian)
 
+> **Desde 2026-10-10 la referencia visual detallada es la skill `.claude/skills/cashew-inicio-ui/SKILL.md`** (capturas en `reference/cashew-inicio-ui/`, ignoradas por git); este archivo conserva el orden de bloques.
+>
 > Fuente: Adrian, 2026-10-09, tras revisar T-503/T-504. Debe ser **fiel a Cashew** (colores, barras de progreso, íconos). Adrian revisará posiciones y fidelidad cuando estén todas las integraciones. Requisitos: SPEC v0.5 (RF-38, RF-48, RF-49).
 
 ## Navegación
