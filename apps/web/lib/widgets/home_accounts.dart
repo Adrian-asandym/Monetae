@@ -86,7 +86,7 @@ class _WalletEntry extends StatelessWidget {
               borderRadius: BorderRadius.circular(15),
               border: Border.all(
                 width: 2,
-                color: selected ? color.withOpacity(0.7) : Colors.transparent,
+                color: selected ? color.withValues(alpha: 0.7) : Colors.transparent,
               ),
             ),
             child: Padding(
@@ -101,7 +101,7 @@ class _WalletEntry extends StatelessWidget {
                       width: 20,
                       height: 20,
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.7),
+                        color: color.withValues(alpha: 0.7),
                         borderRadius: BorderRadius.circular(100),
                       ),
                     ),
@@ -154,7 +154,7 @@ class _WalletEntry extends StatelessWidget {
                           color: Theme.of(context)
                               .colorScheme
                               .onSurface
-                              .withOpacity(0.65),
+                              .withValues(alpha: 0.65),
                         ),
                       ),
                     ],
