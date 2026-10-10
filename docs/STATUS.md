@@ -8,51 +8,38 @@
 
 | | |
 |---|---|
-| **Última actualización** | **2026-10-10 (America/Lima)** — sesión de trabajo en curso: G6 publicado; T-509, T-510, T-601 y T-602 integradas; G7 propuesto |
+| **Última actualización** | **2026-10-10, noche (America/Lima)** — cierre de sesión («Continuamos en otro momento») |
 | **`origin`** | `origin/main` = `origin/master-dev` = **`8b8688e`** (hasta T-508, SPEC v0.5; G6). |
 | **`main`** | `8b8688e`. |
-| **`master-dev`** | `e0b8366` (merge de T-602) **+ commits de documentación posteriores (`git log -1`)**, por delante de `main`: T-509, T-510, T-601 (migración `0009`), T-602 (migración `0010`). **Sin publicar.** |
-| **Gate abierto** | **G7 `gate_ecde8d19a53a`** (publicar T-509/T-510/T-601/T-602): **propuesto, pendiente de Adrian**. G6 `gate_70e14ac5abc1` resuelto (A) el 2026-10-10. |
-| **SPEC / ARCHITECTURE / contrato** | SPEC **v0.5** · `docs/ARCHITECTURE.md` v0.3 · `docs/api/openapi.json` **0.5.0** (89 paths, 131 operaciones; validado con `check_openapi.py`). |
+| **`master-dev`** | **`cfa58b3` + el commit de este cierre (`git log -1`)**, por delante de `main`: T-509, T-510, T-512, T-513, T-514 (UI), T-601, T-602, T-603 (API; migraciones `0009`–`0011`), SPEC v0.6, contrato 0.6.0, skill `cashew-inicio-ui`, `scripts/seed_review_data.py`. **Sin publicar.** |
+| **Gate abierto** | **G7 `gate_ecde8d19a53a`** (publicar en `main`): propuesto; Adrian eligió **B (esperar a su revisión visual)**. Su texto menciona T-509/T-510/T-601/T-602, pero al resolverlo se publicará **todo `master-dev`** tras repetir la auditoría. |
+| **SPEC / ARCHITECTURE / contrato** | SPEC **v0.6** · `docs/ARCHITECTURE.md` v0.3 · `docs/api/openapi.json` **0.6.0** (89 paths, 131 operaciones). |
 
 ## 2. Fase actual
 
 | Estado | Contenido |
 |---|---|
-| ✅ **Completo** | Fases 0–4 (importador de Cashew + T-405). **Fase 5 (UI Flutter Web), primera parte:** T-501 spike, T-502 marca/tarjeta/íconos, T-503 cliente HTTP + sesión + nginx, T-504(+b) gráficas, T-505/T-506/T-508 API (preferencias, reportes, campos de Inicio), T-507 tarjetas de presupuestos y objetivos. |
-| 🔄 **En curso** | (2026-10-10) **G6 publicado** (`8b8688e`). **Integradas en `master-dev` (sin publicar):** T-509 Inicio + barra de 4 botones (`a6cc347`; 146 pruebas UI) y T-601 API de presupuestos (`b20bc45`; migración `0009`; 1106 pruebas), ambas verificadas por el coordinador. **Workers Codex `gpt-6.1-sol`:** T-510 formulario de transacción `task_39dfa64bea7f` (`ctx_2104349444cb`, high, worktree `Monetae-codex-T-510-ui-add-transaction`) ∥ T-602 API de metas `task_752b79134036` (`ctx_b2cabec011a6`, medium, worktree `Monetae-codex-T-602-api-goals`, BD `monetae-t602`:5463). Después: gate G7 (publicar) y revisión de Inicio por Adrian con datos reales. Claves de `home_widgets` fijadas en T-509: `accounts, goals, budgets, categories, cash_flow, transactions` (vacía = orden por defecto; omitidas = ocultas). |
-| ⏳ **Pendiente** | **G6** (publicar) · **T-509** ensamblado de Inicio según `docs/ui/home-layout.md` + barra de 4 botones + botón «+» · **T-510** formulario de nueva transacción · **API de presupuestos y metas (Fase 6)** para revisar Inicio con datos reales · resto de la Fase 5 (12–17 tareas estimadas por el informe T-504) · Fase 6 (íconos SVG API RF-46, adjuntos, presupuestos, metas, notificaciones, login Google, PIN/WebAuthn, proveedor de tipo de cambio) · Fase 7 · importación real definitiva (D9-A: cuando haya base persistente y pantallas) · despliegue VPS → V2 → V3 → V4. |
+| ✅ **Completo** | Fases 0–4. **Fase 5:** T-501…T-510 (UI base, gráficas, cliente, formulario de transacción), T-512/T-513/T-514 (Inicio fiel a Cashew según la skill). **Adelantado de la Fase 6:** API de presupuestos (T-601), metas (T-602) y `display_name` (T-603). |
+| 🔄 **En curso** | Nada ejecutándose. Ningún worker vivo. |
+| ⏳ **Pendiente** | **Revisión visual de Inicio por Adrian** (R2) · **G7** · **F1** (formularios crear objetivo/presupuesto, detalle de categorías, reordenar Inicio) · **D12** (historial de presupuestos/metas = transacciones filtradas) · resto de la Fase 5 (pestañas Transacciones/Presupuestos/Más completas) · Fase 6 (íconos SVG API, adjuntos, notificaciones, Google, PIN/WebAuthn, proveedor de tipo de cambio) · Fase 7 · importación real (D9-A) · VPS → V2–V4. |
 
-Backend: **58 de 89 rutas** aprox. (presupuestos y metas añadidos), 10 migraciones (cabeza **`0010`**), **1149 pruebas**. UI `apps/web`: **178 pruebas**. Detalle en el Anexo A (sin actualizar para T-601/T-602).
+Backend: **58 de 89 rutas** aprox., 11 migraciones (cabeza **`0011`**), **1164 pruebas**. UI `apps/web`: **217 pruebas** (goldens claro/oscuro con DM Sans). Detalle en el Anexo A (sin actualizar para T-601–T-603).
 
-## 3. Trabajo hecho en esta sesión (2026-10-09)
+## 3. Trabajo hecho en esta sesión (2026-10-10)
 
-- **Fase 4 cerrada:** G1 publicado; **T-405 (L1-A)** préstamos de largo plazo sin desembolso; G2 publicado. Corregí una recomendación mía: el principal se corrige con `adjustment`, no con el `PUT` del desembolso.
-- **Fase 5 iniciada:** Run `run_c2cebe1745b9`.
-  - **T-501** spike de desacople: estimación 8–10 tareas, bajo el umbral de 1,5×.
-  - **T-502** marca por modo (favicon e ícono con los SVG de Adrian), tarjeta configurable e íconos SVG en la UI.
-  - **T-503** cliente HTTP tipado, sesión en el mismo origen (servicio `web` nginx en compose) y primera pantalla real.
-  - **T-504 + T-504b** gráficas de ingresos y gastos, etiqueta de cuenta con color y formato peruano «S/ 1,234.50».
-  - **T-505** preferencia `transaction_card`.
-  - **T-506** reportes `cash-flow` y `categories`, más la migración **`0008` `exchange_rates`**, tabla diseñada en la Fase 1 que nunca se había creado.
-  - **T-507** tarjetas de presupuestos y objetivos.
-  - **T-508** `default_account_id`, `transaction_count` y `cumulative_net`.
-- **SPEC v0.4 y v0.5, contrato 0.4.0 y 0.5.0:**
-  - RF-46 íconos SVG propios (saneados);
-  - RF-47 tarjeta configurable;
-  - RF-48 cuenta por defecto;
-  - RF-49 navegación de 4 botones;
-  - disposición de Inicio en `docs/ui/home-layout.md`;
-  - color en presupuestos y metas;
-  - se corrigieron dos textos obsoletos de la SPEC (§2 y §8).
-- **Publicaciones:** G3, G4 y G5, cada una tras una auditoría de seguridad (sin secretos ni datos reales; SVG sin scripts; JPG sin GPS).
-- **Verificación:** cada tarea la verifiqué yo (pruebas completas, sondas con servidor real, goldens revisados). Probé las integraciones T-503 (nginx + CSRF), T-504 con T-506 y T-508 con servidores reales.
-- **Pila de revisión `monetae-review`:** sirvió a Adrian para revisar con datos sintéticos. Está **detenida**; su volumen de datos se conserva (ver §7).
+- **Reanudación:** STATUS coincidía con git y Orca; Docker volvió tras reactivarlo Adrian. **G6 publicado** (`8b8688e`) tras auditoría.
+- **Integrado en `master-dev`** (cada tarea verificada por el coordinador: pruebas completas, goldens, sondas HTTP reales por nginx):
+  - **T-509** Inicio + barra de 4 botones · **T-510** formulario de transacción (decimales exactos, idempotencia, tasas con 6 decimales).
+  - **T-601** API de presupuestos (`0009`, ciclos anclados, gasto = clasificación de reportes) · **T-602** API de metas (`0010`, progreso con signo como Cashew, préstamos rechazados) · **T-603** `display_name` (`0011`; el coordinador corrigió la limpieza de su prueba de servidor, que rompía `test_ip_limit_and_purge`).
+  - **T-512** Inicio fiel a Cashew con la skill (Antigravity Pro; dos entregas fallidas: goldens sin texto, afirmó pruebas verdes con 12 fallos; el coordinador versionó los goldens) · **T-513** 4 detalles (Codex) · **T-514** ajustes v2 de Adrian (tarjeta «añadir», circular de ingresos, eje Y de 4 etiquetas, píldora «Editar»).
+- **Docs:** SPEC v0.6 + contrato 0.6.0 (`display_name`, RF-50); skill `cashew-inicio-ui` versionada y actualizada con v2; `docs/api/README.md` (claves de `home_widgets`, 0.6.0); specs T-509…T-514, T-601…T-603; `scripts/seed_review_data.py` (datos sintéticos por la API).
+- **Workers:** Codex resolvió todas sus tareas; las preguntas atraparon dos errores de spec del coordinador (tasa con 6 decimales; caso «sin convertir»). **Antigravity suspendido** a pedido de Adrian (lento y poco fiable en T-512).
 
 ## 4. Decisiones tomadas por Adrian
 
 | Fecha | Decisión |
 |---|---|
+| 2026-10-10 (noche) | **Cierre de sesión** («Continuamos en otro momento»). Pendientes: revisión visual (R2), G7, F1, D12. Adrian ya borró la mayoría de los worktrees integrados. |
 | 2026-10-10 (noche) | Adrian pide **4 ajustes v2 de Inicio** (tarjeta «añadir» en carruseles, 2.ª página del circular = ingresos, eje Y con 4 etiquetas, ⋮ → botón «Editar») con capturas `reference/cashew-inicio-ui/v2-*.png`, y **actualizar la skill** al terminar. Lanzada **T-514** (Codex `gpt-6.1-sol` high). El coordinador actualizará la skill al integrar. |
 | 2026-10-10 (noche) | Por la demora de Antigravity en T-512, Adrian pide **suspenderlo y pasar la UI a Codex** (esfuerzo según la tarea). T-513 (4 detalles de Inicio) lanzada con Codex `gpt-6.1-sol` high. La terminal de Antigravity no se puede liberar desde Orca (externa): Adrian la cierra. |
 | 2026-10-10 (noche) | «**OK**» al plan de T-512 (9 componentes, valores calibrados del código de Cashew; corrección del coordinador: tarjeta de cuenta = `widgets/walletEntry.dart`). |
@@ -82,65 +69,64 @@ Backend: **58 de 89 rutas** aprox. (presupuestos y metas añadidos), 10 migracio
 
 Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
-**G7 · Publicar en `main`** T-509 (Inicio + barra de 4 botones), T-510 (formulario de transacción), T-601 (API de presupuestos, `0009`) y T-602 (API de metas, `0010`). Todo verificado por el coordinador (pruebas completas en su máquina, sonda HTTP real por nginx) y con auditoría de seguridad limpia.
-- **A (recomendada): aprobar merge y push** (sin `--force`). *Razón:* respaldo remoto de trabajo verificado.
-- B: esperar a la revisión visual de Adrian en la pila de revisión.
+**R2 · Revisión visual de Inicio por Adrian** (lo primero al volver). Inicio ya incluye T-512/T-513/T-514. Relanzar la pila de revisión (§7) y abrir `http://localhost:8080` a 400×642 con `revision-g7@example.test` (nombre «Adrian Sandy»; contraseña dada en el chat, **no** versionada). Sus observaciones → una tarea Codex de ajuste.
 
-**R1 · Revisión de Inicio por Adrian** con datos reales en `http://localhost:8080` (usuario sintético `revision-g7@example.test`; contraseña dada en el chat, **no** versionada). Datos sintéticos de octubre 2026: 3 cuentas (Efectivo por defecto), 4 categorías, 13 transacciones, 2 presupuestos (uno excedido), 2 metas (una completada). Adrian dice qué ajustar de posiciones y fidelidad → tareas T-511+.
+**G7 · Publicar en `main`** (`gate_ecde8d19a53a`; Adrian eligió **B: esperar a su revisión**). Al resolverlo se publica **todo `master-dev`** tras repetir la auditoría de seguridad.
+- **A (recomendada tras R2): aprobar merge y push** sin `--force`. *Razón:* hay mucho trabajo verificado solo en local (8 tareas, 3 migraciones).
+- B: seguir esperando. *Contra:* sin copia remota de ese trabajo.
 
-**D12 · Historial de presupuestos y metas (RF-30) — reformulada tras la respuesta de Adrian (2026-10-10).** Adrian no quiere un historial aparte, sino la **misma lista de transacciones filtrada** por presupuesto o meta.
-- **A (recomendada, idea de Adrian):** filtros nuevos en `GET /transactions`: `budget_id` (+ fecha del periodo; el servidor decide qué transacciones cuentan con las mismas reglas que `spent_amount`) y `goal_id` (las enlazadas). La pantalla de un presupuesto muestra su barra del periodo y debajo esa lista, con flechas ◀ ▶ para ir a periodos anteriores (como Cashew); `GET /budgets/{id}?on=<fecha>` da el total de ese periodo. Contrato 0.6.0 pequeño, sin esquemas nuevos.
-- B: usar **etiquetas** (`tags`) para marcar qué pertenece a cada presupuesto o meta. *Contra:* duplica la pertenencia que ya calcula el servidor (categorías del presupuesto, selección de la meta) y obliga a etiquetar a mano.
-- *Pendiente:* confirmación de Adrian.
-
-**R2 · Revisión de Inicio fiel a Cashew (T-512) por Adrian** en `http://localhost:8080` (usuario `revision-g7@example.test`, nombre «Adrian Sandy»; pila de revisión actualizada con T-513, BD `0011`). Los 4 detalles conocidos ya están corregidos en T-513; sus observaciones → siguiente tarea Codex. Las observaciones de Adrian irán en una tarea Codex posterior a T-513.
-
-**F1 · Pantallas que faltan para conectar Inicio** (detectadas en T-514): formulario de **crear objetivo**, formulario de **crear presupuesto**, **detalle de categorías** (lista + selector de mes) y **reordenar Inicio** (botón «Editar»). Hoy son TODO.
-- **A (recomendada): una tarea Codex por pantalla**, empezando por los formularios de objetivo y presupuesto (la API ya existe), fieles a `addObjectivePage.dart` / `addBudgetPage.dart` de Cashew.
+**F1 · Pantallas que faltan para conectar Inicio** (TODO en T-514): crear **objetivo**, crear **presupuesto**, **detalle de categorías** (lista + selector de mes) y **reordenar Inicio** (píldora «Editar», `preferences.home_widgets`).
+- **A (recomendada): una tarea Codex por pantalla**, empezando por los formularios de objetivo y presupuesto (la API existe), fieles a `addObjectivePage.dart` / `addBudgetPage.dart` de Cashew.
 - B: esperar a terminar la revisión visual de Inicio.
 
-**S1–S6 · Plan de la skill `cashew-inicio-ui` (propuesto 2026-10-10, pendiente de Adrian):**
-- **S1 capturas:** faltan las 6 de `references/`. Contienen datos reales → guardarlas en `reference/cashew-inicio/` (ignorada por git), **no** en `.claude/` (repositorio público).
-- **S2 confirmar** que la skill reemplaza el fondo azul y el formato «S/ 1,234.50» (recomendado: sí, la skill manda).
-- **S3 nombre en el saludo:** `CurrentUser` no tiene nombre → A (recomendada): `display_name` en `users/me` (contrato 0.6.0, tarea Codex).
-- **S4 «Puedes gastar X/día para N días»** (presupuesto) y **«X/día para N días»** (objetivo): la UI no hace aritmética de dinero → A (recomendada): campos calculados por el servidor (`daily_allowance`, `days_left`) en `Budget` y `Goal` (contrato 0.6.0, misma tarea).
-- **S5 tipografía:** Cashew usa **Avenir LT Std, fuente comercial** (no se puede publicar en un repo público) → A (recomendada): **DM Sans** (OFL, incluida en Cashew) o la alternativa libre más parecida que proponga el worker; B: Inter.
-- **S6 agente:** Antigravity **Pro**, esfuerzo alto (8 componentes iterativos; tiene navegador para comparar a 400×642, que WSL no tiene) → Adrian debe darle permiso en la rama y fijar el modelo.
+**D12 · Historial de presupuestos y metas (RF-30)** — Adrian prefiere **la misma lista de transacciones filtrada**, sin historial aparte. *Falta su confirmación de la forma:*
+- **A (recomendada):** filtros `budget_id` (+ fecha del periodo) y `goal_id` en `GET /transactions`, y `GET /budgets/{id}?on=<fecha>` para el total de un periodo; pantalla del presupuesto con su barra y la lista debajo, flechas ◀ ▶ por periodo (como Cashew). Contrato 0.7.0 pequeño.
+- B: usar **etiquetas** para marcar la pertenencia. *Contra:* duplica lo que ya calcula el servidor y obliga a etiquetar a mano.
 
-**D7 · Para más adelante:** ADR-005 sincronización Android (antes de V4) · orden de categorías · credenciales OAuth de Google Cloud y proveedor de tipo de cambio (Fase 6) · proxy del VPS (`ARCHITECTURE.md` §10.10) · corregir el principal de un desembolso sin dinero sin crear efectivo · UI para crear/editar presupuestos y metas (hoy solo por API).
+**D7 · Para más adelante:** ADR-005 sincronización Android (antes de V4) · orden de categorías · OAuth de Google y proveedor de tipo de cambio (Fase 6) · proxy del VPS (`ARCHITECTURE.md` §10.10) · corregir el principal de un desembolso sin dinero sin crear efectivo · zona horaria de la UI distinta de Lima · radio de tarjetas 20 dp (Monetae) vs 15 dp (Cashew), pendiente de que Adrian elija.
 
-*Resueltas el 2026-10-10:* G6-A, P1-A (ver §4).
+*Resueltas el 2026-10-10:* G6-A, P1-A, S1–S6, plan de T-512, G7-B (esperar), paso de Antigravity a Codex (ver §4).
 
 ## 6. Siguiente paso concreto
 
-1. **Adrian responde G7 y D12** (basta la letra) y revisa Inicio (R1) en la pila de revisión.
-2. **G7 = A:** repetir auditoría, `gate-resolve`, `git merge --ff-only master-dev` en `../Monetae`, push sin `--force` (Anexo B).
-3. **Con lo que diga Adrian en R1:** tareas de ajuste visual (Codex `gpt-6.1-sol` high, `apps/web`).
-4. **Siguientes de la Fase 5/6** (propuesta): T-511 pantallas de crear/editar presupuesto y meta (UI) · T-603 historial de presupuestos (según D12) · pestaña Transacciones con filtros. Cada una con spec releída contra el contrato (dos errores de spec atrapados por workers hoy: tasa con 6 decimales y caso «sin convertir»).
+1. **Relanzar la pila de revisión** (§7) y que **Adrian revise Inicio (R2)**; responder **F1**, **D12** y, tras la revisión, **G7**.
+2. **G7 = A:** auditoría (`git diff origin/main..master-dev`: rutas prohibidas, `.env`, `reference/`, secretos, correos, cifras reales), `gate-resolve gate_ecde8d19a53a`, `git merge --ff-only master-dev` en `../Monetae`, push sin `--force` (Anexo B), marcar `task_752b79134036` `completed`.
+3. **Ajustes de R2:** una tarea Codex `gpt-6.1-sol` high en `apps/web`, rama `codex/T-515-…`, verificación `dart analyze` + `flutter test` (goldens con texto versionados) + build web + revisión de goldens por el coordinador.
+4. **F1 = A:** T-516 formulario de objetivo y T-517 formulario de presupuesto (Codex high; `apps/web`; contra la API de T-601/T-602), después detalle de categorías y reordenar Inicio.
+5. **D12 = A:** contrato 0.7.0 + T-604 API de filtros (Codex medium) y pantalla de presupuesto/meta (Codex high).
 
-**Antes de lanzar:** `orca skills get orchestration --full`, `orca status --json`, `docker version`, `git worktree list`, disco ≥ 3 GB y puertos libres. Codex muestra «Update available» en cada lanzamiento: enviar *Esc* y reintentar con `--retry-of` (Anexo C).
+**Antes de lanzar:** `orca skills get orchestration --full`, `orca status --json`, `docker version`, `git worktree list`, disco ≥ 2,5 GB y puertos libres. Codex muestra «Update available» en cada lanzamiento: enviar *Esc* y reintentar con `--retry-of` (Anexo C). **Agentes:** Codex para todo; Antigravity solo como relevo por cuota (memoria y §4).
 
 ## 7. Estado del Run, de los worktrees y de los agentes abiertos
 
-**Run de la Fase 5: `run_c2cebe1745b9`.** Tareas `completed`: T-501…T-508 (ver historial en git) y, el 2026-10-10, T-509 `task_faa87dcb2f99`, T-510 `task_39dfa64bea7f`, T-601 `task_61442c37cf55`, T-602 `task_752b79134036` (puede figurar `blocked` por el gate G7). **Ningún worker vivo** (todas las terminales liberadas). Runs anteriores: `run_f5e95406186a` (F4), `run_63b520544a30` (F3), `run_70f5f187fe16` (F2), `run_2cddcd14320c` (F1), `run_bef8ecfc67a7` (F0). El CLI no cierra Runs; no usar `orchestration reset`.
+**Run de la Fase 5: `run_c2cebe1745b9`.** Todas las tareas `completed` salvo: T-602 `task_752b79134036` **`blocked`** por el gate G7 (normal; marcar `completed` al resolverlo) y T-512b `task_e7ef47b4ca85` `failed` (sustituida por `task_c6324ab6cc3e`, completada). **Ningún worker vivo**; terminales de Codex liberadas. La terminal de Antigravity es externa (Orca no la libera): Adrian la cierra. Runs anteriores: `run_f5e95406186a` (F4), `run_63b520544a30` (F3), `run_70f5f187fe16` (F2), `run_2cddcd14320c` (F1), `run_bef8ecfc67a7` (F0). El CLI no cierra Runs; no usar `orchestration reset`.
 
-**Worktrees:** `Monetae` → `main`, `Monetae-master-dev` → `master-dev` y los 4 de Codex ya fusionados (`Monetae-codex-T-509-ui-home-assembly`, `…-T-510-ui-add-transaction`, `…-T-601-api-budgets`, `…-T-602-api-goals`; ramas `codex-T-5xx/6xx-…`, sin `build/`, `.dart_tool/` ni `.venv/`). **Adrian puede borrarlos** (sus commits están en `master-dev`).
+**Worktrees:** `Monetae` → `main`, `Monetae-master-dev` → `master-dev`, y dos de Codex ya fusionados: `Monetae-codex-T-513-ui-home-parity-fixes` y `Monetae-codex-T-514-ui-home-v2` (**Adrian puede borrarlos**; sus commits están en `master-dev`). Adrian ya borró los demás. Sin `.env` sueltos.
 
-**Contenedores:** **pila de revisión `monetae-review` EN MARCHA** desde `Monetae-master-dev` (db 5433, api 8000, web `http://localhost:8080`; BD en `0010`; `.env` temporal con `MONETAE_COOKIE_SECURE=false` en `Monetae-master-dev`, ignorado por git). Usuarios sintéticos: `adrian-review@example.test` (fixture ene–feb 2026) y `revision-g7@example.test` (octubre 2026, con presupuestos y metas); contraseñas solo en el chat. Bajar: `COMPOSE_PROJECT_NAME=monetae-review docker compose -f infra/docker-compose.yml down` (o `down -v` para borrar datos) y `rm -f .env`. Relanzar: ver el comando de la versión anterior de este archivo (build web + compose up + `alembic upgrade head` en `api`).
+**Contenedores:** **ninguno en marcha.** Se conserva el volumen `monetae-review_postgres_data` (BD en `0011`; usuarios sintéticos `adrian-review@example.test` y `revision-g7@example.test` «Adrian Sandy» con datos de octubre 2026; contraseñas solo en el chat). La pila de prueba que dejó Antigravity (`monetae-t512`) se bajó con su volumen. **Relanzar la pila de revisión** desde `Monetae-master-dev`:
+```bash
+export PATH="$HOME/flutter/bin:$HOME/.local/bin:$PATH"
+(cd apps/web && flutter build web --release)          # build/web ya existe de la última integración; recompilar si hay cambios
+cp .env.example .env && sed -i 's/^MONETAE_COOKIE_SECURE=true$/MONETAE_COOKIE_SECURE=false/' .env
+COMPOSE_PROJECT_NAME=monetae-review docker compose -f infra/docker-compose.yml up -d --build db api web
+COMPOSE_PROJECT_NAME=monetae-review docker compose -f infra/docker-compose.yml exec -T api alembic upgrade head
+# bajar: COMPOSE_PROJECT_NAME=monetae-review docker compose -f infra/docker-compose.yml down && rm -f .env
+```
 
-**Paneles de Orca abiertos:** el del coordinador y `lupuna` (otro proyecto, no se toca). Ningún panel de Codex.
+**Paneles de Orca abiertos:** el del coordinador, `lupuna` (otro proyecto, no se toca) y, si siguen, los de Codex T-513/T-514 y Antigravity T-512 (inactivos: Adrian puede cerrarlos).
 
 ## 8. Limitaciones y riesgos conocidos
 
 - **Docker Desktop depende de la integración con WSL** (distro `AlmaLinux-9`): si `/usr/bin/docker` apunta a un destino inexistente, reactivar *Settings → Resources → WSL integration* y `wsl --shutdown`.
 - **Importación real:** el `apply` nunca se ha ejecutado (solo `--dry-run` sobre copias, cuadre exacto); espera a D9-A. El importador es **solo inserción**. Préstamos con principal supuesto (L1-A) aparecen `settled` hasta corregirlos con `adjustment` (el `PUT` del desembolso crea efectivo).
-- **UI:** Inicio aún no está ensamblado según la disposición de Adrian; presupuestos y metas solo con datos sintéticos hasta su API (Fase 6). `intl` no trae el formato peruano: está fijado a mano en `currency_format.dart` («S/ 1,234.50» en español). El favicon sigue el modo del **sistema/navegador**, no el tema de la app.
+- **UI:** Inicio sigue la skill `cashew-inicio-ui`; sus botones «añadir» y «Editar» y el detalle de categorías son TODO (F1). Formato de montos de Cashew («1.234,50 S/.») fijado a mano en `currency_format.dart`. El favicon sigue el modo del **sistema/navegador**, no el tema de la app. Las transacciones en moneda extranjera muestran solo el original (el contrato no trae el convertido).
+- **Agentes:** Antigravity resultó poco fiable (afirmó pruebas verdes con 12 fallos; ignora mensajes que no son respuestas a su `ask`). Verificar siempre por cuenta propia; preferir Codex.
 - **Íconos de Cashew:** sus 277 PNG de categoría tienen licencia dudosa; **no** copiarlos (SPEC RF-46).
 - **Presupuestos y metas en moneda distinta de la base:** toda conversión pasa por la base (PEN). Un presupuesto o meta en USD con gastos en USD muestra 0.00 hasta que exista una tasa PEN→USD en `exchange_rates` (proveedor en la Fase 6 o tasa manual).
 - **Reportes:** sin proveedor de tipo de cambio (Fase 6), con moneda de reporte ≠ base todo cae en `unconverted_count` salvo tasas insertadas a mano en `exchange_rates`.
 - **Sin auditoría de seguridad externa** (Fase 7). La BD admite un `income` negativo por SQL directo (`ARCHITECTURE.md` §10.12). Límite de login detrás de proxy (§10.10). `501 google_login_not_available` fuera del contrato (§10.11).
 - **Zona horaria en la UI:** la presentación asume America/Lima (UTC−5 fijo) aunque `CurrentUser.timezone` admite cualquier zona IANA. Generalizarlo es una tarea aparte (decidido en T-513, 2026-10-10).
-- **Disco:** ≈ 3,1 GB libres en `/` (20 GB). Flutter + Docker lo consumen rápido: borrar artefactos (`build/`, `.dart_tool/`, `.venv/`) de worktrees ya fusionados.
+- **Disco:** ≈ 2,6 GB libres en `/` (20 GB). Flutter + Docker lo consumen rápido: borrar artefactos (`build/`, `.dart_tool/`, `.venv/`) de worktrees ya fusionados.
 - **Repositorio público:** todo push se audita antes; los datos reales solo viven en `reference/backups/` (ignorado).
 - La cuota de Claude Pro es limitada: delegar generación de código; reservar al coordinador specs, revisión e integración.
 
@@ -164,13 +150,13 @@ cd services/api
 export MONETAE_TEST_DATABASE_URL=postgresql+psycopg://monetae:change-me@127.0.0.1:5433/postgres MONETAE_REQUIRE_DB=1
 export MONETAE_DATABASE_URL=$MONETAE_TEST_DATABASE_URL
 uv sync --frozen && uv lock --check && uv run ruff check . && uv run ruff format --check . && uv run mypy
-uv run pytest -q                                        # esperado: 1032 passed
-uv run alembic upgrade head && uv run alembic check     # cabeza: 0008
+uv run pytest -q                                        # esperado: 1164 passed
+uv run alembic upgrade head && uv run alembic check     # cabeza: 0011
 cd ../.. && python3 -I scripts/check_openapi.py         # 89 paths, 131 operaciones
 COMPOSE_PROJECT_NAME=monetae-check docker compose -f infra/docker-compose.yml down -v && rm -f .env
 
 # 3) UI
-cd apps/web && flutter pub get && dart analyze && flutter test && flutter build web --release   # esperado: 116 pruebas
+cd apps/web && flutter pub get && dart analyze && flutter test && flutter build web --release   # esperado: 217 pruebas
 grep -rE "drift|firebase|appStateSettings|package:budget/" lib || echo limpio
 
 # 4) Recorrido real web+API por nginx (sin navegador): apps/web/tool/e2e_session.sh (proyecto monetae-t503, puertos 5444/8001/8081)
