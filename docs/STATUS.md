@@ -53,6 +53,7 @@ Backend: **58 de 89 rutas** aprox. (presupuestos y metas añadidos), 10 migracio
 
 | Fecha | Decisión |
 |---|---|
+| 2026-10-10 (noche) | Adrian pide **4 ajustes v2 de Inicio** (tarjeta «añadir» en carruseles, 2.ª página del circular = ingresos, eje Y con 4 etiquetas, ⋮ → botón «Editar») con capturas `reference/cashew-inicio-ui/v2-*.png`, y **actualizar la skill** al terminar. Lanzada **T-514** (Codex `gpt-6.1-sol` high). El coordinador actualizará la skill al integrar. |
 | 2026-10-10 (noche) | Por la demora de Antigravity en T-512, Adrian pide **suspenderlo y pasar la UI a Codex** (esfuerzo según la tarea). T-513 (4 detalles de Inicio) lanzada con Codex `gpt-6.1-sol` high. La terminal de Antigravity no se puede liberar desde Orca (externa): Adrian la cierra. |
 | 2026-10-10 (noche) | «**OK**» al plan de T-512 (9 componentes, valores calibrados del código de Cashew; corrección del coordinador: tarjeta de cuenta = `widgets/walletEntry.dart`). |
 | 2026-10-10 (noche) | **S1:** capturas en `reference/cashew-inicio-ui/1.png…6.png` (ignoradas por git). **S2:** la skill manda sobre preferencias anteriores de UI. **S3-A:** `display_name` (contrato 0.6.0, SPEC v0.6, RF-50). **S4:** hacer en la UI los cálculos «X/día para N días» que muestra la skill (solo presentación). **S5-A:** DM Sans. **S6:** Antigravity Pro (Adrian da permiso y fija el modelo). D12 sigue sin confirmar. |
