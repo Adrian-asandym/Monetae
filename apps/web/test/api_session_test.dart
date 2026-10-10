@@ -39,6 +39,7 @@ const none = TransactionCardPreferencesDto(
 
 Map<String, Object?> profile({TransactionCardPreferencesDto card = all}) => {
   'id': '00000000-0000-4000-8000-000000000999',
+  'display_name': null,
   'email': 'sample@example.test',
   'preferences': {
     'theme': 'dark',
@@ -367,7 +368,7 @@ void main() {
     final models = presentTransactions(feed, l);
     expect(models.map((m) => m.dateKey), ['2026-10-08', '2026-10-07']);
     expect(models.first.timeLabel, '22:30');
-    expect(models.last.amountLabel, contains('9,999,999,999,999,999.99'));
+    expect(models.last.amountLabel, contains('9.999.999.999.999.999,99'));
     expect(models.first.icon.materialIcon, Icons.category_rounded);
     expect(models.first.tags, ['Etiqueta sintética']);
   });

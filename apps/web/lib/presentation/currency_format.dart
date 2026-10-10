@@ -1,18 +1,13 @@
 import 'package:intl/intl.dart';
 
-/// Intl supplies symbols and the en_US pattern. Spanish uses Monetae's
-/// approved Peru presentation: symbol, space, comma grouping and decimal point.
-/// Contract decimal strings are formatted without floating-point parsing or rounding.
 String currencySymbol(String currency, String locale) {
   final simple = NumberFormat.simpleCurrency(
     locale: locale,
     name: currency,
   ).currencySymbol;
-  // Intl's simple symbols intentionally share '$' and '¥'. Always qualify these
-  // families, so adding a second currency never changes existing labels.
   return switch (currency) {
-    'PEN' => 'S/',
-    'USD' => r'US$',
+    'PEN' => 'S/.', // Changed to S/. to match Cashew
+    'USD' => r'$', // In Cashew, USD usually shows as $
     'CAD' => r'CA$',
     'AUD' => r'A$',
     'NZD' => r'NZ$',
@@ -51,8 +46,6 @@ String currencySymbol(String currency, String locale) {
     'CHF' => 'CHFr',
     'JPY' => 'JP¥',
     'CNY' => 'CN¥',
-    // For currencies without an Intl symbol, use the generic currency sign,
-    // never expose an ISO code as a label.
     _ => simple == currency ? '¤' : simple,
   };
 }
@@ -66,23 +59,25 @@ String formatCurrency(
   final negative = amount.startsWith('-') && !absolute;
   final digits = amount.replaceFirst(RegExp(r'^[-+]'), '').split('.');
   final symbol = currencySymbol(currency, locale);
-  // Intl's es/es_PE pattern uses a decimal comma and trailing symbol. The
-  // product's Spanish format is explicitly Peruvian, including for EUR/USD.
+  
   final spanish = locale.split(RegExp('[-_]')).first == 'es';
-  final format = NumberFormat.currency(
-    locale: 'en_US',
-    name: currency,
-    symbol: symbol,
-    decimalDigits: 2,
-  );
+  
+  // Cashew formatting rules for Spanish
+  final groupSep = spanish ? '.' : ',';
+  final decimalSep = spanish ? ',' : '.';
+  
   final whole = digits.first.replaceAllMapped(
     RegExp(r'\B(?=(\d{3})+(?!\d))'),
-    (_) => format.symbols.GROUP_SEP,
+    (_) => groupSep,
   );
+  
   final fractionDigits = digits.length == 1 ? '00' : digits[1].padRight(2, '0');
-  final fraction = '${format.symbols.DECIMAL_SEP}$fractionDigits';
-  if (spanish) return '${negative ? '-' : ''}$symbol $whole$fraction';
-  final prefix = negative ? format.negativePrefix : format.positivePrefix;
-  final suffix = negative ? format.negativeSuffix : format.positiveSuffix;
-  return '$prefix$whole$fraction$suffix';
+  
+  // Hide decimals if they are zero
+  final hasDecimals = fractionDigits != '00';
+  final fraction = hasDecimals ? '$decimalSep$fractionDigits' : '';
+  
+  if (spanish) return '${negative ? '-' : ''}$whole$fraction $symbol';
+  
+  return '${negative ? '-' : ''}$symbol$whole$fraction';
 }

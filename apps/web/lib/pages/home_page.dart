@@ -3,7 +3,6 @@
 // Copyright James Kokoska, GPL-3.0. Modified 2026-10-10: independent API blocks,
 // persisted preferences, server cumulative chart and Monetae navigation.
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../api/home_controller.dart';
 import '../l10n/app_localizations.dart';
@@ -15,6 +14,7 @@ import '../widgets/cumulative_cash_flow_chart.dart';
 import '../widgets/home_accounts.dart';
 import '../widgets/home_block_view.dart';
 import '../widgets/home_category_carousel.dart';
+import '../widgets/home_greeting.dart';
 import '../widgets/transaction_card_list.dart';
 
 const defaultHomeWidgets = [
@@ -116,31 +116,7 @@ class _HomePageState extends State<HomePage> {
       'categories': HomeBlockView(
         block: _home.categories,
         title: l.categoryDistribution,
-        builder: (data) => Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  tooltip: l.previousMonth,
-                  onPressed: () => _home.moveMonth(-1),
-                  icon: const Icon(Icons.chevron_left),
-                ),
-                Flexible(
-                  child: Text(
-                    DateFormat.yMMMM(l.localeName).format(_home.month),
-                  ),
-                ),
-                IconButton(
-                  tooltip: l.nextMonth,
-                  onPressed: () => _home.moveMonth(1),
-                  icon: const Icon(Icons.chevron_right),
-                ),
-              ],
-            ),
-            HomeCategoryCarousel(data: data, animate: widget.animate),
-          ],
-        ),
+        builder: (data) => HomeCategoryCarousel(data: data, animate: widget.animate, month: _home.month, onMoveMonth: _home.moveMonth),
       ),
       'cash_flow': HomeBlockView(
         block: _home.flow,
@@ -156,22 +132,12 @@ class _HomePageState extends State<HomePage> {
             : TransactionCardList(
                 models: presentTransactions(feed, l),
                 preferences: profile.preferences.transactionCard,
+                dailyFlow: _home.dailyFlow.data,
+                isHome: true,
               ),
       ),
     };
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l.home),
-        actions: [
-          IconButton(
-            tooltip: l.refresh,
-            onPressed: _home.load,
-            icon: const Icon(Icons.refresh),
-          ),
-          const BrandLogo(size: 36),
-          const SizedBox(width: 13),
-        ],
-      ),
       body: SingleChildScrollView(
         key: const Key('home-scroll'),
         padding: const EdgeInsets.fromLTRB(13, 13, 13, 96),
@@ -181,13 +147,29 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  l.homeGreeting,
-                  key: const Key('home-greeting'),
-                  style: const TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: HomeGreeting(
+                        now: _today,
+                        displayName: profile.displayName,
+                      ),
+                    ),
+                    PopupMenuButton<String>(
+                      tooltip: l.more,
+                      onSelected: (value) {
+                        if (value == 'refresh') _home.load();
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem(value: 'refresh', child: Text(l.refresh)),
+                        const PopupMenuItem(
+                          value: 'brand',
+                          child: Center(child: BrandLogo(size: 64)),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 20),
                 if (session.error != null)
@@ -216,7 +198,9 @@ class _HomePageState extends State<HomePage> {
         key: const Key('add-transaction'),
         heroTag: 'home-add-transaction',
         tooltip: l.addTransaction,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        backgroundColor: Theme.of(context).brightness == Brightness.light ? Colors.grey.shade300 : Colors.grey.shade700,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         onPressed: () => Navigator.of(context).pushNamed('/transactions/new'),
         child: const Icon(Icons.add_rounded, size: 32),
       ),

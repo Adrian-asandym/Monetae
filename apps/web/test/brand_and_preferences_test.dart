@@ -136,9 +136,9 @@ void main() {
         final colors = MonetaeColors.of(tester.element(find.byType(BrandLogo)));
         expect(
           colors.background,
-          pastel(const Color(0xFF5F85C2), brightness, .92),
+          const Color(0xFF121212),
         );
-        expect(colors.card, pastel(const Color(0xFF5F85C2), brightness, .8));
+        expect(colors.card, const Color(0xFF1E1E1E));
       }
       await expectLater(
         find.byKey(const Key('capture')),
@@ -167,6 +167,8 @@ void main() {
             onDuplicate: (_) => duplicated++,
             onDelete: (_) => deleted++,
           ),
+          captureSize: const Size(600, 800),
+          viewSize: const Size(800, 1000),
         );
         await tester.pumpAndSettle();
         expect(

@@ -22,14 +22,15 @@ class AppNavigation extends StatelessWidget {
     final labels = [l.home, l.transactions, l.budgets, l.more];
     const icons = [
       Icons.home_rounded,
-      Icons.receipt_long_rounded,
+      Icons.payments_rounded,
       Icons.donut_small_rounded,
       Icons.more_horiz_rounded,
     ];
     if (rail) {
       return NavigationRail(
         key: const Key('navigation-rail'),
-        backgroundColor: MonetaeColors.of(context).card,
+        backgroundColor: MonetaeColors.of(context).background,
+        indicatorColor: Theme.of(context).colorScheme.surfaceContainerHighest,
         selectedIndex: index,
         onDestinationSelected: onChanged,
         labelType: NavigationRailLabelType.all,
@@ -44,7 +45,8 @@ class AppNavigation extends StatelessWidget {
     }
     return NavigationBarTheme(
       data: NavigationBarThemeData(
-        backgroundColor: MonetaeColors.of(context).card,
+        backgroundColor: MonetaeColors.of(context).background,
+        indicatorColor: Theme.of(context).colorScheme.surfaceContainerHighest,
         surfaceTintColor: Colors.transparent,
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => TextStyle(

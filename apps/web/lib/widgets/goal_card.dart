@@ -9,12 +9,12 @@ import 'package:intl/intl.dart';
 
 import '../data/api_dtos.dart';
 import '../l10n/app_localizations.dart';
+import '../presentation/budget_calculations.dart';
 import '../presentation/category_icon_source.dart';
 import '../presentation/currency_format.dart';
 import '../presentation/decimal_progress.dart';
 import '../presentation/transaction_presenter.dart';
 import '../theme/monetae_theme.dart';
-import 'budget_goal_report_total.dart';
 import 'budget_progress.dart';
 import 'category_icon.dart';
 
@@ -46,6 +46,7 @@ class GoalCard extends StatelessWidget {
     );
     String money(String value) =>
         formatCurrency(value, goal.currency, l.localeName);
+        
     return Material(
       color: colors.card,
       borderRadius: BorderRadius.circular(20),
@@ -53,12 +54,13 @@ class GoalCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsetsDirectional.fromSTEB(30, 18, 20, 23),
+          padding: const EdgeInsetsDirectional.fromSTEB(20, 18, 20, 23),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Column(
@@ -67,24 +69,20 @@ class GoalCard extends StatelessWidget {
                         Text(
                           goal.name,
                           style: const TextStyle(
-                            fontSize: 24,
+                            fontSize: 22,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        Text(
-                          goal.kind == GoalKind.save
-                              ? l.savingsGoal
-                              : l.spendingGoal,
-                          style: TextStyle(fontSize: 15, color: colors.muted),
+                        Builder(
+                          builder: (context) {
+                            final perDay = goalPerDayLabel(l, goal, DateTime.now());
+                            if (perDay == null) return const SizedBox.shrink();
+                            return Text(
+                              perDay,
+                              style: TextStyle(fontSize: 14, color: colors.muted),
+                            );
+                          },
                         ),
-                        if (goal.dueOn != null)
-                          Text(
-                            l.goalDue(
-                              DateFormat.yMMMd(l.localeName)
-                                  .format(DateTime.parse(goal.dueOn!)),
-                            ),
-                            style: TextStyle(fontSize: 15, color: colors.muted),
-                          ),
                       ],
                     ),
                   ),
@@ -108,7 +106,7 @@ class GoalCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Text.rich(
                 TextSpan(
                   children: [
@@ -116,7 +114,7 @@ class GoalCard extends StatelessWidget {
                     TextSpan(
                       text: l.goalAmounts('', money(goal.targetAmount)),
                       style: TextStyle(
-                        fontSize: 15,
+                        fontSize: 14,
                         fontWeight: FontWeight.normal,
                         color: colors.muted,
                       ),
@@ -124,23 +122,29 @@ class GoalCard extends StatelessWidget {
                   ],
                 ),
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 26,
                   fontWeight: FontWeight.bold,
-                  color: progress.reachedTarget
-                      ? colors.income
-                      : theme.colorScheme.onSurface,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
-              if (progress.reachedTarget)
-                Text(
-                  l.goalComplete,
-                  style: TextStyle(fontSize: 12, color: colors.income),
-                ),
-              const SizedBox(height: 8),
-              BudgetProgress(progress: progress, color: color),
-              BudgetGoalReportTotal(
-                total: goal.reportTotal,
-                currency: goal.currency,
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Text(
+                    DateFormat.MMMd(l.localeName).format(DateTime.parse(goal.createdAt)),
+                    style: TextStyle(fontSize: 13, color: colors.muted),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: BudgetProgress(progress: progress, color: color),
+                  ),
+                  const SizedBox(width: 8),
+                  if (goal.dueOn != null)
+                    Text(
+                      DateFormat.MMMd(l.localeName).format(DateTime.parse(goal.dueOn!)),
+                      style: TextStyle(fontSize: 13, color: colors.muted),
+                    ),
+                ],
               ),
             ],
           ),

@@ -390,6 +390,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeGreeting => 'Hello!';
 
   @override
+  String get goodMorning => 'Good morning';
+
+  @override
+  String get goodAfternoon => 'Good afternoon';
+
+  @override
+  String get goodEvening => 'Good evening';
+
+  @override
   String get latestTransactions => 'Latest transactions';
 
   @override
@@ -409,7 +418,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String accountTransactionCount(int count) {
-    return '$count transactions';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count transactions',
+      one: '1 transaction',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -469,4 +484,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get decimalPoint => 'Decimal point';
+
+  @override
+  String budgetCanSpendPerDay(String amount, int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days more days',
+      one: '1 more day',
+    );
+    return 'You can spend $amount/day for $_temp0';
+  }
+
+  @override
+  String budgetMustSavePerDay(String amount, int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days more days',
+      one: '1 more day',
+    );
+    return 'You need to save $amount/day for $_temp0';
+  }
+
+  @override
+  String goalPerDay(String amount, int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days',
+      one: '1 day',
+    );
+    return '$amount/day for $_temp0';
+  }
+
+  @override
+  String get goalReached => 'Goal reached';
+
+  @override
+  String get goalOverdue => 'Goal overdue';
 }

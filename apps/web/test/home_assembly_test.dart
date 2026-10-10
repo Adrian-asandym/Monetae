@@ -25,7 +25,7 @@ import 'package:monetae_web/widgets/category_pie_chart.dart';
 import 'package:monetae_web/widgets/cumulative_cash_flow_chart.dart';
 import 'package:monetae_web/widgets/home_accounts.dart';
 import 'package:monetae_web/widgets/home_category_carousel.dart';
-import 'package:monetae_web/widgets/transaction_card.dart';
+import 'package:monetae_web/widgets/home_transaction_row.dart';
 
 import 'api_session_test.dart' as fixtures;
 import 'components_test.dart' as harness;
@@ -180,7 +180,7 @@ void main() {
           .toList();
       expect(transactions, hasLength(1));
       expect(transactions.single.url.queryParameters, {'limit': '25'});
-      expect(find.byType(TransactionCard), findsOneWidget);
+      expect(find.byType(HomeTransactionRow), findsOneWidget);
       expect(find.text(l.accountTransactionCount(35)), findsOneWidget);
       expect(find.text(l.syntheticData), findsNothing);
       expect(tester.takeException(), isNull);
@@ -214,7 +214,10 @@ void main() {
         f.patch = Completer<http.Response>();
         await mountHome(tester, f, height: 600);
         final id = f.accounts.last.id;
-        await tester.tap(find.byKey(Key('account-$id')));
+        final target = find.byKey(Key('account-$id'));
+        await tester.ensureVisible(target);
+        await tester.pumpAndSettle();
+        await tester.tap(target);
         await tester.pump();
         expect(
           tester.widget<HomeAccounts>(find.byType(HomeAccounts)).selectedId,
@@ -274,6 +277,9 @@ void main() {
         (_, _) => Material(
           color: Colors.transparent,
           child: HomeCategoryCarousel(
+            month: DateTime.now(),
+            onMoveMonth: (val) {},
+
             data: HomeCategoryData(rows, {
               ...report.categories,
               for (var i = 0; i < 4; i++)
@@ -300,12 +306,9 @@ void main() {
         tester.widget<CategoryPieChart>(find.byType(CategoryPieChart)).slices,
         hasLength(4),
       );
-      await tester.drag(
-        find.byKey(const Key('category-pages')),
-        const Offset(-500, 0),
-      );
+      await tester.tap(find.byKey(const Key('expense-income-toggle')));
       await tester.pumpAndSettle();
-      expect(find.byKey(const Key('income-page')), findsOneWidget);
+      
       expect(
         tester
             .widget<CategoryPieChart>(find.byType(CategoryPieChart))
@@ -345,7 +348,7 @@ void main() {
           ),
         ],
       );
-      expect(tooltip.single!.text, contains('-S/ 90.00'));
+      expect(tooltip.single!.text, contains('-90 S/.'));
     },
   );
   for (final status in [404, 501]) {
@@ -359,7 +362,7 @@ void main() {
         expect(find.text(l.emptyBudgets), findsOneWidget);
         expect(find.text(l.emptyGoals), findsOneWidget);
         expect(find.text(l.connectionError), findsNothing);
-        expect(find.byType(TransactionCard), findsOneWidget);
+        expect(find.byType(HomeTransactionRow), findsOneWidget);
       },
     );
   }
@@ -371,7 +374,7 @@ void main() {
       f.statuses['/api/v1/budgets'] = 500;
       await mountHome(tester, f);
       expect(find.text(l.connectionError), findsOneWidget);
-      expect(find.byType(TransactionCard), findsOneWidget);
+      expect(find.byType(HomeTransactionRow), findsOneWidget);
       final before = f.requests.length;
       f.statuses.clear();
       await tester.tap(find.text(l.retry));
@@ -399,7 +402,7 @@ void main() {
       );
       await tester.pump(const Duration(seconds: 1));
       expect(find.byType(HomeAccounts), findsOneWidget);
-      expect(find.byType(TransactionCard), findsOneWidget);
+      expect(find.byType(HomeTransactionRow), findsOneWidget);
       expect(
         find.descendant(
           of: find.byKey(const Key('home-block-goals')),

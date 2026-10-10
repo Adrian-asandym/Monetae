@@ -198,13 +198,16 @@
   "emptyAccounts": "No accounts yet.",
   "defaultAccount": "Default account",
   "homeGreeting": "Hello!",
+  "goodMorning": "Good morning",
+  "goodAfternoon": "Good afternoon",
+  "goodEvening": "Good evening",
   "latestTransactions": "Latest transactions",
   "cumulativeCashFlow": "Cumulative cash flow",
   "addTransaction": "Add transaction",
   "comingSoon": "Coming soon",
   "theme": "Theme",
   "systemTheme": "System theme",
-  "accountTransactionCount": "{count} transactions",
+  "accountTransactionCount": "{count, plural, =1{1 transaction} other{{count} transactions}}",
   "@accountTransactionCount": {
     "placeholders": {
       "count": {
@@ -239,5 +242,40 @@
         "type": "String"
       }
     }
-  }
+  },
+  "budgetCanSpendPerDay": "You can spend {amount}/day for {days, plural, =1{1 more day} other{{days} more days}}",
+  "@budgetCanSpendPerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "budgetMustSavePerDay": "You need to save {amount}/day for {days, plural, =1{1 more day} other{{days} more days}}",
+  "@budgetMustSavePerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "goalPerDay": "{amount}/day for {days, plural, =1{1 day} other{{days} days}}",
+  "@goalPerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "goalReached": "Goal reached",
+  "goalOverdue": "Goal overdue"
 }

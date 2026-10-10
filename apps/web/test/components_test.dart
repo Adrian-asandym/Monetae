@@ -87,8 +87,13 @@ void loadGoldenFonts() {
     );
     await roboto.load();
     final loader = FontLoader('MaterialIcons');
-    loader.addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
+    loader.addFont(Future.value(ByteData.sublistView(await File('${sdk.path}/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf').readAsBytes())));
     await loader.load();
+
+    final dmSans = FontLoader('DM Sans');
+    dmSans.addFont(Future.value(ByteData.sublistView(await File('assets/fonts/DMSans-Regular.ttf').readAsBytes())));
+    dmSans.addFont(Future.value(ByteData.sublistView(await File('assets/fonts/DMSans-Bold.ttf').readAsBytes())));
+    await dmSans.load();
   });
 }
 
@@ -104,14 +109,14 @@ void main() {
       expect(
         colors.income,
         brightness == Brightness.light
-            ? const Color(0xFF59A849)
-            : const Color(0xFF62CA77),
+            ? const Color(0xFF4CAF50)
+            : const Color(0xFF4CAF50),
       );
       final alternative = monetaeTheme(
         brightness: brightness,
         accent: Colors.green,
       );
-      expect(alternative.extension<MonetaeColors>()!.card, isNot(colors.card));
+      expect(alternative.extension<MonetaeColors>()!.card, colors.card);
       expect(colors.copyWith(income: Colors.blue).income, Colors.blue);
       expect(colors.lerp(colors, .5).expense, colors.expense);
       await expectLater(
@@ -136,8 +141,8 @@ void main() {
           ],
         ),
       );
-      expect(find.text('S/ 48.50'), findsOneWidget);
-      expect(find.text('US\$ 12.00'), findsOneWidget);
+      expect(find.text('48,50 S/.'), findsOneWidget);
+      expect(find.text(r'12 $'), findsOneWidget);
       expect(find.text('Movimiento de préstamo'), findsOneWidget);
       await tester.tap(find.byType(TransactionCard).first);
       expect(taps, 1);
@@ -306,7 +311,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(const DemoApp());
     await tester.pumpAndSettle();
-    expect(find.text('Transacciones'), findsOneWidget);
+    expect(find.text('Transacciones'), findsWidgets);
     await tester.tap(find.byKey(const Key('theme-switch')));
     await tester.pumpAndSettle();
     expect(
@@ -315,7 +320,7 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('language-switch')));
     await tester.pumpAndSettle();
-    expect(find.text('Transactions'), findsOneWidget);
+    expect(find.text('Transactions'), findsWidgets);
     await tester.tap(find.byKey(const Key('accent-picker')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Green').last);

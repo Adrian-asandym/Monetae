@@ -40,7 +40,7 @@ class CumulativeCashFlowChart extends StatelessWidget {
     ];
     final low = coordinates.reduce(math.min);
     final high = coordinates.reduce(math.max);
-    final color = Theme.of(context).colorScheme.primary;
+    final color = Theme.of(context).colorScheme.onSurface;
     final muted = MonetaeColors.of(context).muted;
     final intervalX = math.max(1.0, ((rows.length - 1) / 4).ceilToDouble());
     String amount(int index) => formatCurrency(
@@ -144,13 +144,13 @@ class CumulativeCashFlowChart extends StatelessWidget {
                     tooltipRoundedRadius: 8,
                     fitInsideHorizontally: true,
                     fitInsideVertically: true,
-                    getTooltipColor: (_) => MonetaeColors.of(context).card,
+                    getTooltipColor: (_) => color.withValues(alpha: 0.7),
                     getTooltipItems: (spots) => [
                       for (final spot in spots)
                         LineTooltipItem(
                           '${DateFormat.MMMd(l.localeName).format(DateTime.parse(rows[spot.x.toInt()].startOn))}\n${amount(spot.x.toInt())}',
-                          TextStyle(
-                            color: color,
+                          const TextStyle(
+                            color: Colors.white,
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
