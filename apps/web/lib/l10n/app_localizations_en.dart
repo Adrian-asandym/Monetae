@@ -535,4 +535,67 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editHome => 'Edit';
+
+  @override
+  String get formTransfer => 'Transfer';
+
+  @override
+  String get formTypeDefault => 'Default';
+
+  @override
+  String get formTypeUpcoming => 'Upcoming';
+
+  @override
+  String get formTypeSubscription => 'Subscription';
+
+  @override
+  String get formTypeRepetitive => 'Repetitive';
+
+  @override
+  String get formTypeLend => 'Lend';
+
+  @override
+  String get formTypeBorrow => 'Borrow';
+
+  @override
+  String get formTypeInfo => 'Transaction types';
+
+  @override
+  String get formAllAccounts => 'All accounts';
+
+  @override
+  String get formNoBudget => 'No budget';
+
+  @override
+  String get formNoGoal => 'No goal';
+
+  @override
+  String get formNoLoan => 'No loan';
+
+  @override
+  String get formCreateBudget => 'Create budget';
+
+  @override
+  String get formCreateGoal => 'Create goal';
+
+  @override
+  String get formTitleHint => 'Title';
+
+  @override
+  String get formNotesHint => 'Notes';
+
+  @override
+  String get formAddAttachment => 'Add an attachment';
+
+  @override
+  String get formMoreOptions => 'More options';
+
+  @override
+  String get formSelectCategory => 'Select a category';
+
+  @override
+  String get formMenu => 'More actions';
+
+  @override
+  String get formEditTitle => 'Edit transaction';
 }

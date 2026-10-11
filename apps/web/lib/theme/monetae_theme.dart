@@ -182,3 +182,141 @@ abstract final class HomeTokens {
   static const editGap = 8.0;
   static const editFontSize = 14.0;
 }
+
+/// Transaction form colors sampled from Cashew web (dark, 400×642 at 1.25×)
+/// in reference captures 11–19; light values mirror Cashew's light palette.
+@immutable
+class TransactionFormColors {
+  const TransactionFormColors._({
+    required this.header,
+    required this.tabIdle,
+    required this.emptyCategory,
+    required this.dateBox,
+    required this.dateIcon,
+    required this.timeBox,
+    required this.field,
+    required this.fieldDivider,
+    required this.chipSelected,
+    required this.chipBorder,
+    required this.pill,
+    required this.card,
+    required this.sheet,
+    required this.keypad,
+    required this.action,
+    required this.sheetAction,
+    required this.onAction,
+  });
+
+  final Color header;
+  final Color tabIdle;
+  final Color emptyCategory;
+  final Color dateBox;
+  final Color dateIcon;
+  final Color timeBox;
+  final Color field;
+  final Color fieldDivider;
+  final Color chipSelected;
+  final Color chipBorder;
+  final Color pill;
+  final Color card;
+  final Color sheet;
+  final Color keypad;
+  final Color action;
+  final Color sheetAction;
+  final Color onAction;
+
+  static const _dark = TransactionFormColors._(
+    header: Color(0xFF33383A),
+    tabIdle: Color(0xFF242729),
+    emptyCategory: Color(0xFF242424),
+    dateBox: Color(0xFF181818),
+    dateIcon: Color(0xFF424242),
+    timeBox: Color(0xFF242424),
+    field: Color(0xFF424242),
+    fieldDivider: Color(0xFF4E4E4E),
+    chipSelected: Color(0xFF424242),
+    chipBorder: Color(0xFF646464),
+    pill: Color(0xFF1F2021),
+    card: Color(0xFF323232),
+    sheet: Color(0xFF2E2E2E),
+    keypad: Color(0xFF424242),
+    action: Color(0xFF7B8C94),
+    sheetAction: Color(0xFF96A2A8),
+    onAction: Color(0xFF000000),
+  );
+
+  static const _light = TransactionFormColors._(
+    header: Color(0xFFDDE3E6),
+    tabIdle: Color(0xFFEEF1F2),
+    emptyCategory: Color(0xFFE0E0E0),
+    dateBox: Color(0xFFF2F2F2),
+    dateIcon: Color(0xFFDDDDDD),
+    timeBox: Color(0xFFE6E6E6),
+    field: Color(0xFFEBEBEB),
+    fieldDivider: Color(0xFFD6D6D6),
+    chipSelected: Color(0xFFD5D5D5),
+    chipBorder: Color(0xFFB5B5B5),
+    pill: Color(0xFFEDEFF0),
+    card: Color(0xFFEBEBEB),
+    sheet: Color(0xFFF7F7F7),
+    keypad: Color(0xFFEBEBEB),
+    action: Color(0xFFB0BEC5),
+    sheetAction: Color(0xFFB0BEC5),
+    onAction: Color(0xFF000000),
+  );
+
+  static TransactionFormColors of(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? _dark : _light;
+}
+
+/// Transaction form sizes in dp, calibrated from Cashew addTransactionPage,
+/// selectChips, selectAmount and captures 11–19 (1 dp = 1.25 px).
+abstract final class TransactionFormTokens {
+  static const maxWidth = 560.0;
+  static const sidePadding = 20.0;
+  static const titleSize = 20.0;
+  static const tabHeight = 50.0;
+  static const tabFontSize = 16.0;
+  static const headerHeight = 136.0;
+  static const categorySquare = 80.0;
+  static const categoryRadius = 15.0;
+  static const categoryIconSize = 44.0;
+  static const amountFontSize = 36.0;
+  static const dateHeight = 53.0;
+  static const dateRadius = 15.0;
+  static const dateIconBox = 35.0;
+  static const dateFontSize = 24.0;
+  static const timeFontSize = 20.0;
+  static const timeBoxWidth = 30.0;
+  static const timeBoxRadius = 6.0;
+  static const captionSize = 12.0;
+  static const chipHeight = 30.0;
+  static const chipRadius = 8.0;
+  static const chipBorder = 1.5;
+  static const chipFontSize = 15.0;
+  static const chipGap = 10.0;
+  static const chipPadding = 12.0;
+  static const rowGap = 15.0;
+  static const fieldHeight = 38.0;
+  static const fieldRadius = 14.0;
+  static const fieldFontSize = 16.0;
+  static const notesHeight = 87.0;
+  static const attachmentHeight = 41.0;
+  static const pillRadius = 12.0;
+  static const pillHeight = 38.0;
+  static const pillFontSize = 15.0;
+  static const actionHeight = 50.0;
+  static const actionRadius = 28.0;
+  static const actionFontSize = 17.0;
+  static const sheetRadius = 28.0;
+  static const sheetPadding = 16.0;
+  static const sheetTitleSize = 26.0;
+  static const sheetButtonHeight = 40.0;
+  static const sheetButtonRadius = 20.0;
+  static const sheetFieldGap = 20.0;
+  static const keypadRowHeight = 57.0;
+  static const keypadRadius = 24.0;
+  static const keypadFontSize = 30.0;
+  static const optionCardHeight = 53.0;
+  static const optionCardRadius = 16.0;
+}

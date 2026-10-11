@@ -857,7 +857,7 @@ abstract class AppLocalizations {
   /// No description provided for @addTransaction.
   ///
   /// In es, this message translates to:
-  /// **'Añadir transacción'**
+  /// **'Agregar transacción'**
   String get addTransaction;
 
   /// No description provided for @comingSoon.
@@ -1039,6 +1039,132 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Editar'**
   String get editHome;
+
+  /// No description provided for @formTransfer.
+  ///
+  /// In es, this message translates to:
+  /// **'Transferir'**
+  String get formTransfer;
+
+  /// No description provided for @formTypeDefault.
+  ///
+  /// In es, this message translates to:
+  /// **'Predeterminado'**
+  String get formTypeDefault;
+
+  /// No description provided for @formTypeUpcoming.
+  ///
+  /// In es, this message translates to:
+  /// **'Próximamente'**
+  String get formTypeUpcoming;
+
+  /// No description provided for @formTypeSubscription.
+  ///
+  /// In es, this message translates to:
+  /// **'Suscripción'**
+  String get formTypeSubscription;
+
+  /// No description provided for @formTypeRepetitive.
+  ///
+  /// In es, this message translates to:
+  /// **'Repetitivo'**
+  String get formTypeRepetitive;
+
+  /// No description provided for @formTypeLend.
+  ///
+  /// In es, this message translates to:
+  /// **'Prestar'**
+  String get formTypeLend;
+
+  /// No description provided for @formTypeBorrow.
+  ///
+  /// In es, this message translates to:
+  /// **'Deuda'**
+  String get formTypeBorrow;
+
+  /// No description provided for @formTypeInfo.
+  ///
+  /// In es, this message translates to:
+  /// **'Tipos de transacción'**
+  String get formTypeInfo;
+
+  /// No description provided for @formAllAccounts.
+  ///
+  /// In es, this message translates to:
+  /// **'Todas las cuentas'**
+  String get formAllAccounts;
+
+  /// No description provided for @formNoBudget.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin presupuesto'**
+  String get formNoBudget;
+
+  /// No description provided for @formNoGoal.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin objetivo'**
+  String get formNoGoal;
+
+  /// No description provided for @formNoLoan.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin préstamo'**
+  String get formNoLoan;
+
+  /// No description provided for @formCreateBudget.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear presupuesto'**
+  String get formCreateBudget;
+
+  /// No description provided for @formCreateGoal.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear objetivo'**
+  String get formCreateGoal;
+
+  /// No description provided for @formTitleHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Título'**
+  String get formTitleHint;
+
+  /// No description provided for @formNotesHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Notas'**
+  String get formNotesHint;
+
+  /// No description provided for @formAddAttachment.
+  ///
+  /// In es, this message translates to:
+  /// **'Añadir un adjunto'**
+  String get formAddAttachment;
+
+  /// No description provided for @formMoreOptions.
+  ///
+  /// In es, this message translates to:
+  /// **'Más opciones'**
+  String get formMoreOptions;
+
+  /// No description provided for @formSelectCategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Selecciona una categoría'**
+  String get formSelectCategory;
+
+  /// No description provided for @formMenu.
+  ///
+  /// In es, this message translates to:
+  /// **'Más acciones'**
+  String get formMenu;
+
+  /// No description provided for @formEditTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar transacción'**
+  String get formEditTitle;
 }
 
 class _AppLocalizationsDelegate

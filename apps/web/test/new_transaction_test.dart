@@ -164,8 +164,22 @@ Future<void> mountForm(
 }
 
 Future<void> fillAmount(WidgetTester tester, String text) async {
-  await tester.enterText(find.byKey(const Key('transaction-amount')), text);
-  await tester.pump();
+  await tester.tap(find.byKey(const Key('form-amount')));
+  await tester.pumpAndSettle();
+  for (final key in text.split('')) {
+    await tester.tap(find.byKey(Key('amount-key-$key')));
+    await tester.pump();
+  }
+  await tester.tap(find.byKey(const Key('amount-sheet-done')));
+  await tester.pumpAndSettle();
+}
+
+/// The bottom action asks for a category first; null picks "Sin categoría".
+Future<void> chooseCategory(WidgetTester tester, [String? id]) async {
+  await tester.tap(find.byKey(const Key('form-category-button')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(Key('form-category-${id ?? 'none'}')));
+  await tester.pumpAndSettle();
 }
 
 void main() {
@@ -425,43 +439,53 @@ void main() {
       '-9007199254740993.01',
     );
   });
-  testWidgets(
-    'keypad precision/delete/clear, hardware input and kind/category reset',
-    (tester) async {
-      final f = FormFixture();
-      addTearDown(f.close);
-      await mountForm(tester, f);
-      for (final key in ['1', '2', '.', '5', '0', '9']) {
-        await tester.tap(find.byKey(Key('amount-key-$key')));
-        await tester.pump();
-      }
-      expect(f.form.amount, '12.50');
-      expect(find.text('12,50 S/.'), findsOneWidget);
-      await tester.tap(find.byKey(const Key('amount-key-backspace')));
+  testWidgets('keypad precision/delete/clear and kind/category reset', (
+    tester,
+  ) async {
+    final f = FormFixture();
+    addTearDown(f.close);
+    await mountForm(tester, f);
+    expect(find.text(l.formSelectCategory), findsOneWidget);
+    await tester.tap(find.byKey(const Key('form-amount')));
+    await tester.pumpAndSettle();
+    for (final key in ['1', '2', '.', '5', '0', '9']) {
+      await tester.tap(find.byKey(Key('amount-key-$key')));
       await tester.pump();
-      expect(f.form.amount, '12.5');
-      await tester.longPress(find.byKey(const Key('amount-key-backspace')));
-      await tester.pump();
-      expect(f.form.amount, isEmpty);
-      await fillAmount(tester, '12.50');
-      await tester.tap(find.byKey(Key('form-category-${mockCategory(l).id}')));
-      await tester.pump();
-      expect(f.form.categoryId, mockCategory(l).id);
-      await tester.tap(find.byKey(const Key('select-income')));
-      await tester.pumpAndSettle();
-      expect(f.form.categoryId, isNull);
-      expect(
-        tester
-            .widget<TransactionCategoryGrid>(
-              find.byType(TransactionCategoryGrid),
-            )
-            .categories
-            .single
-            .kind,
-        CategoryKind.income,
-      );
-    },
-  );
+    }
+    expect(f.form.amount, '12.50');
+    expect(find.text('12,50 S/.'), findsWidgets);
+    await tester.tap(find.byKey(const Key('amount-key-backspace')));
+    await tester.pump();
+    expect(f.form.amount, '12.5');
+    await tester.longPress(find.byKey(const Key('amount-key-backspace')));
+    await tester.pump();
+    expect(f.form.amount, isEmpty);
+    await tester.tap(find.byKey(const Key('amount-sheet-done')));
+    await tester.pumpAndSettle();
+    await fillAmount(tester, '12.50');
+    // With no category chosen, the bottom action opens the category sheet.
+    await tester.tap(find.byKey(const Key('save-transaction')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(Key('form-category-${mockCategory(l).id}')));
+    await tester.pumpAndSettle();
+    expect(f.form.categoryId, mockCategory(l).id);
+    expect(find.text(l.saveTransaction), findsOneWidget);
+    expect(f.posts, isEmpty);
+    await tester.tap(find.byKey(const Key('select-income')));
+    await tester.pumpAndSettle();
+    expect(f.form.categoryId, isNull);
+    expect(find.text(l.formSelectCategory), findsOneWidget);
+    await tester.tap(find.byKey(const Key('form-category-button')));
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<TransactionCategoryGrid>(find.byType(TransactionCategoryGrid))
+          .categories
+          .single
+          .kind,
+      CategoryKind.income,
+    );
+  });
   testWidgets(
     'preferred account, rate editing/account change and field errors',
     (tester) async {
@@ -469,6 +493,7 @@ void main() {
       addTearDown(f.close);
       await mountForm(tester, f);
       expect(find.byKey(const Key('transaction-rate')), findsOneWidget);
+      await chooseCategory(tester);
       await tester.tap(find.byKey(const Key('save-transaction')));
       await tester.pump();
       expect(find.text(l.positiveAmountRequired), findsOneWidget);
@@ -476,16 +501,31 @@ void main() {
       await fillAmount(tester, '12.50');
       await tester.ensureVisible(find.byKey(const Key('transaction-rate')));
       await tester.enterText(
-        find.byKey(const Key('transaction-rate')),
+        find.descendant(
+          of: find.byKey(const Key('transaction-rate')),
+          matching: find.byType(EditableText),
+        ),
         '3.800001',
       );
       await tester.pump();
       expect(f.form.rate, '3.800001');
-      await tester.tap(find.byKey(ValueKey('form-account-$usdId')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text(f.accounts.first.name).last);
+      await tester.ensureVisible(
+        find.byKey(Key('form-account-$mockAccountId')),
+      );
+      await tester.tap(find.byKey(Key('form-account-$mockAccountId')));
       await tester.pumpAndSettle();
       expect(f.form.account!.id, mockAccountId);
+      expect(find.byKey(const Key('transaction-rate')), findsNothing);
+      await tester.ensureVisible(find.byKey(const Key('form-account-list')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('form-account-list')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(Key('form-account-option-$usdId')));
+      await tester.pumpAndSettle();
+      expect(f.form.account!.id, usdId);
+      expect(f.form.rate, isEmpty);
+      await tester.tap(find.byKey(Key('form-account-$mockAccountId')));
+      await tester.pumpAndSettle();
       expect(find.byKey(const Key('transaction-rate')), findsNothing);
     },
   );
@@ -499,6 +539,7 @@ void main() {
       f.catalogStatus = null;
       await tester.tap(find.byKey(const Key('retry-transaction')));
       await tester.pumpAndSettle();
+      await chooseCategory(tester);
       await tester.tap(find.byKey(const Key('save-transaction')));
       await tester.pump();
       expect(find.text(l.accountRequired), findsOneWidget);
@@ -512,6 +553,7 @@ void main() {
     addTearDown(f.close);
     await mountForm(tester, f);
     await fillAmount(tester, '12.50');
+    await chooseCategory(tester);
     f.pending = Completer<http.Response>();
     await tester.tap(find.byKey(const Key('save-transaction')));
     await tester.tap(find.byKey(const Key('save-transaction')));
@@ -536,6 +578,7 @@ void main() {
       addTearDown(f.close);
       await mountForm(tester, f);
       await fillAmount(tester, '12.50');
+      await chooseCategory(tester);
       await tester.tap(find.byKey(const Key('save-transaction')));
       await tester.pumpAndSettle();
       expect(find.text('Importe inválido sintético'), findsOneWidget);
@@ -556,6 +599,7 @@ void main() {
       addTearDown(f.close);
       await mountForm(tester, f);
       await fillAmount(tester, '12.50');
+      await chooseCategory(tester);
       await tester.tap(find.byKey(const Key('save-transaction')));
       await tester.pumpAndSettle();
       expect(
@@ -579,6 +623,7 @@ void main() {
     await tester.tap(find.byKey(const Key('add-transaction')));
     await tester.pumpAndSettle();
     await fillAmount(tester, '12.50');
+    await chooseCategory(tester);
     await tester.tap(find.byKey(const Key('save-transaction')));
     await tester.pumpAndSettle();
     expect(find.byType(LoginPage), findsOneWidget);
@@ -596,6 +641,7 @@ void main() {
       await tester.tap(find.byKey(const Key('transactions-add')));
       await tester.pumpAndSettle();
       await fillAmount(tester, '12.50');
+      await chooseCategory(tester);
       final before = f.requests.length;
       await tester.tap(find.byKey(const Key('save-transaction')));
       await tester.pumpAndSettle();
@@ -634,14 +680,15 @@ void main() {
       await tester.tap(find.byKey(const Key('add-transaction')));
       await tester.pumpAndSettle();
       await fillAmount(tester, '12.50');
+      await chooseCategory(tester);
       f.pending = Completer<http.Response>();
       await tester.tap(find.byKey(const Key('save-transaction')));
       await tester.pump();
       expect(
         tester
-            .widget<TextField>(find.byKey(const Key('transaction-amount')))
-            .readOnly,
-        isTrue,
+            .widget<FilledButton>(find.byKey(const Key('save-transaction')))
+            .onPressed,
+        isNull,
       );
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
@@ -699,12 +746,7 @@ void main() {
           f.form.selectLimaTime(DateTime(2026, 10, 11, 10, 30));
         }
         await mountForm(tester, f, brightness: brightness);
-        expect(
-          find.text(
-            variant == 'foreign' ? l.transactionScheduled : l.transactionPosted,
-          ),
-          findsOneWidget,
-        );
+        expect(f.form.scheduled, variant == 'foreign');
         await expectLater(
           find.byKey(const Key('capture')),
           matchesGoldenFile(

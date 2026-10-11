@@ -410,7 +410,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get cumulativeCashFlow => 'Evolución acumulada';
 
   @override
-  String get addTransaction => 'Añadir transacción';
+  String get addTransaction => 'Agregar transacción';
 
   @override
   String get comingSoon => 'Próximamente';
@@ -537,4 +537,67 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get editHome => 'Editar';
+
+  @override
+  String get formTransfer => 'Transferir';
+
+  @override
+  String get formTypeDefault => 'Predeterminado';
+
+  @override
+  String get formTypeUpcoming => 'Próximamente';
+
+  @override
+  String get formTypeSubscription => 'Suscripción';
+
+  @override
+  String get formTypeRepetitive => 'Repetitivo';
+
+  @override
+  String get formTypeLend => 'Prestar';
+
+  @override
+  String get formTypeBorrow => 'Deuda';
+
+  @override
+  String get formTypeInfo => 'Tipos de transacción';
+
+  @override
+  String get formAllAccounts => 'Todas las cuentas';
+
+  @override
+  String get formNoBudget => 'Sin presupuesto';
+
+  @override
+  String get formNoGoal => 'Sin objetivo';
+
+  @override
+  String get formNoLoan => 'Sin préstamo';
+
+  @override
+  String get formCreateBudget => 'Crear presupuesto';
+
+  @override
+  String get formCreateGoal => 'Crear objetivo';
+
+  @override
+  String get formTitleHint => 'Título';
+
+  @override
+  String get formNotesHint => 'Notas';
+
+  @override
+  String get formAddAttachment => 'Añadir un adjunto';
+
+  @override
+  String get formMoreOptions => 'Más opciones';
+
+  @override
+  String get formSelectCategory => 'Selecciona una categoría';
+
+  @override
+  String get formMenu => 'Más acciones';
+
+  @override
+  String get formEditTitle => 'Editar transacción';
 }
