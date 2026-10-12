@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 /// Material icons are supplied by Flutter (Apache-2.0); no third-party PNGs.
 const baseCategoryIcons = <String, IconData>{
+  'swap_horiz': Icons.swap_horiz_rounded,
   'restaurant': Icons.restaurant_rounded,
   'work': Icons.work_rounded,
   'transport': Icons.directions_bus_rounded,

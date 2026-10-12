@@ -713,4 +713,43 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get formTypeNotice =>
       'Aún no disponible: se guardará como transacción normal';
+
+  @override
+  String get transferBalanceTitle => 'Transferir saldo';
+
+  @override
+  String get transferBalanceInfo =>
+      'Transfiere un importe de una cuenta a otra. Al realizar una transferencia, se crean dos transacciones de \"Corrección de saldo\": una de \"salida de cuenta\" y otra de \"entrada de cuenta\". Cada una es una transacción independiente y puede editarse en cualquier momento desde la lista de transacciones.';
+
+  @override
+  String get transferCorrectionCategory => 'Corrección De Saldo';
+
+  @override
+  String get transferConfirm => 'Transferir cantidad';
+
+  @override
+  String get transferRates => 'Tipos de cambio';
+
+  @override
+  String get transferSwap => 'Intercambiar cuentas';
+
+  @override
+  String get transferClear => 'Borrar importe';
+
+  @override
+  String get transferArrivalSame => 'Llegada: igual que la salida';
+
+  @override
+  String transferArrivalLabel(String date) {
+    return 'Llegada: $date';
+  }
+
+  @override
+  String get transferArrivalReset => 'Igual que la salida';
+
+  @override
+  String get transferInfoLabel => 'Información sobre transferir saldo';
+
+  @override
+  String get transferOk => 'OK';
 }

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../data/api_dtos.dart';
+import '../data/balance_correction_dtos.dart';
 import '../l10n/app_localizations.dart';
 import 'browser_environment.dart';
 import 'report_query.dart';
@@ -115,6 +116,18 @@ final class ApiClient {
 
   Future<CurrentUserDto> currentUser() async =>
       CurrentUserDto.fromJson(await _request('GET', 'users/me'));
+
+  Future<BalanceCorrectionDto> createBalanceCorrection(
+    BalanceCorrectionCreateDto correction, {
+    required String idempotencyKey,
+  }) async => BalanceCorrectionDto.fromJson(
+    await _request(
+      'POST',
+      'balance-corrections',
+      body: correction.toJson(),
+      idempotencyKey: idempotencyKey,
+    ),
+  );
 
   Future<TransactionDto> createTransaction(
     TransactionCreateDto transaction, {

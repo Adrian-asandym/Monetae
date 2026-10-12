@@ -150,10 +150,12 @@ class FormSheetButton extends StatelessWidget {
     required this.label,
     required this.onPressed,
     this.height = _T.sheetButtonHeight,
+    this.color,
   });
   final String label;
   final VoidCallback? onPressed;
   final double height;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -163,7 +165,7 @@ class FormSheetButton extends StatelessWidget {
       child: FilledButton(
         onPressed: onPressed,
         style: FilledButton.styleFrom(
-          backgroundColor: form.sheetAction,
+          backgroundColor: color ?? form.sheetAction,
           foregroundColor: form.onAction,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(_T.sheetButtonRadius),

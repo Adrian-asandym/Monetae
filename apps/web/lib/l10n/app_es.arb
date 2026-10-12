@@ -336,5 +336,24 @@
   "formTypeBorrowDescription": "Transacción prestada de alguien",
   "formTypeBorrowCashFlow": "Flujo de caja positivo hasta que se marque como 'Liquidado'",
   "formTypeHelp": "Marque una transacción especial tocando el botón de acción en la entrada de la transacción",
-  "formTypeNotice": "Aún no disponible: se guardará como transacción normal"
+  "formTypeNotice": "Aún no disponible: se guardará como transacción normal",
+  "transferBalanceTitle": "Transferir saldo",
+  "transferBalanceInfo": "Transfiere un importe de una cuenta a otra. Al realizar una transferencia, se crean dos transacciones de \"Corrección de saldo\": una de \"salida de cuenta\" y otra de \"entrada de cuenta\". Cada una es una transacción independiente y puede editarse en cualquier momento desde la lista de transacciones.",
+  "transferCorrectionCategory": "Corrección De Saldo",
+  "transferConfirm": "Transferir cantidad",
+  "transferRates": "Tipos de cambio",
+  "transferSwap": "Intercambiar cuentas",
+  "transferClear": "Borrar importe",
+  "transferArrivalSame": "Llegada: igual que la salida",
+  "transferArrivalLabel": "Llegada: {date}",
+  "transferArrivalReset": "Igual que la salida",
+  "transferInfoLabel": "Información sobre transferir saldo",
+  "@transferArrivalLabel": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "transferOk": "OK"
 }

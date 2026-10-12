@@ -709,4 +709,43 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get formTypeNotice =>
       'Not yet available: it will be saved as a normal transaction';
+
+  @override
+  String get transferBalanceTitle => 'Transfer balance';
+
+  @override
+  String get transferBalanceInfo =>
+      'Transfer an amount from one account to another. A transfer creates two \"Balance correction\" transactions: one \"account outflow\" and one \"account inflow\". Each is an independent transaction and can be edited at any time from the transaction list.';
+
+  @override
+  String get transferCorrectionCategory => 'Balance Correction';
+
+  @override
+  String get transferConfirm => 'Transfer amount';
+
+  @override
+  String get transferRates => 'Exchange rates';
+
+  @override
+  String get transferSwap => 'Swap accounts';
+
+  @override
+  String get transferClear => 'Clear amount';
+
+  @override
+  String get transferArrivalSame => 'Arrival: same as departure';
+
+  @override
+  String transferArrivalLabel(String date) {
+    return 'Arrival: $date';
+  }
+
+  @override
+  String get transferArrivalReset => 'Same as departure';
+
+  @override
+  String get transferInfoLabel => 'About transferring balance';
+
+  @override
+  String get transferOk => 'OK';
 }
