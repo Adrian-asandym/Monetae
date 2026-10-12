@@ -47,6 +47,7 @@
 - El ⓘ de la fila 1 (`form-type-info`) abre una hoja casi a pantalla completa «Seleccionar El Tipo De Transacción» con tarjetas (radio 16, fondo gris oscuro, borde fino, icono + nombre negrita ≈ 22 dp, ⋮ en las que lo llevan, viñetas ≈ 15 dp) con los **textos exactos** de la skill, y al final el panel explicativo con los 5 botones circulares y la entrada de ejemplo.
 - Tocar una tarjeta llama a la misma `_selectType` de los chips y cierra la hoja; la tarjeta seleccionada va con fondo más claro (estado compartido con la fila 1).
 - Claves: `type-sheet`, `type-card-<FormTransactionType.name>`.
+- **Aviso (decisión de Adrian, 2026-10-11):** si el tipo elegido es Suscripción, Repetitivo, Prestar o Deuda, muestra bajo la fila 1 una nota pequeña gris (≈ 12 dp): «Aún no disponible: se guardará como transacción normal» (clave `form-type-notice`; texto en ARB es/en).
 
 ## Criterios de aceptación (por pieza)
 1. La pieza coincide con su captura (posiciones, tamaños, colores, textos) a 400×642 en oscuro; claro coherente.
