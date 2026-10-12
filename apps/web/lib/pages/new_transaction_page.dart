@@ -4,6 +4,7 @@
 // decimals, manual exchange rate, UTC/Lima dates and server error handling.
 // Modified 2026-10-10 (T-515): Cashew layout — kind tabs, amount header, date
 // box, chip rows, filled title/notes and bottom action bar.
+// Modified 2026-10-11 (T-515 piece 2): initial title sheet and shared title input.
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -56,6 +57,8 @@ class NewTransactionPage extends StatefulWidget {
 class _NewTransactionPageState extends State<NewTransactionPage> {
   late final NewTransactionController _form;
   late final TextEditingController _rate;
+  late final TextEditingController _title;
+  bool _initialTitleOpened = false;
   bool _uncategorizedChosen = false;
   FormTransactionType _designType = FormTransactionType.standard;
   List<BudgetDto> _budgets = const [];
@@ -70,9 +73,11 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
         widget.controller ??
         NewTransactionController(widget.session.api, widget.session.user!);
     _rate = TextEditingController(text: _form.rate);
+    _title = TextEditingController(text: _form.title);
     _form.addListener(_changed);
     if (_form.loading) _form.load();
     _loadChipCatalogs();
+    _scheduleTitleSheet();
   }
 
   /// Budgets and goals only feed the chip rows; failures leave them empty.
@@ -99,7 +104,74 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
   }
 
   void _changed() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    if (_title.text != _form.title) _title.text = _form.title;
+    setState(() {});
+    _scheduleTitleSheet();
+  }
+
+  void _scheduleTitleSheet() {
+    if (widget.editing || _form.loading || _initialTitleOpened) return;
+    _initialTitleOpened = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_form.loading) {
+        _initialTitleOpened = false;
+        return;
+      }
+      _openTitleSheet();
+    });
+  }
+
+  Future<void> _openTitleSheet() async {
+    final l = AppLocalizations.of(context);
+    final next = await showFormSheet<bool>(
+      context,
+      key: const Key('title-sheet'),
+      title: l.formEnterTitle,
+      trailing: IconButton(
+        key: const Key('title-sheet-date'),
+        tooltip: l.formChooseDate,
+        padding: EdgeInsets.zero,
+        style: IconButton.styleFrom(
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+        constraints: const BoxConstraints.tightFor(
+          width: _T.sheetTitleSize,
+          height: _T.sheetTitleSize,
+        ),
+        icon: const Icon(Icons.calendar_month_rounded, size: _T.sheetTitleSize),
+        onPressed: _pickDate,
+      ),
+      builder: (sheet) {
+        void continueToCategories() {
+          FocusScope.of(sheet).unfocus();
+          Navigator.of(sheet).pop(true);
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            FormFilledField(
+              key: const Key('title-sheet-field'),
+              controller: _title,
+              hint: l.formTitleHint,
+              icon: Icons.title_rounded,
+              autofocus: true,
+              onChanged: (text) => _form.edit(() => _form.title = text),
+              onSubmitted: (_) => continueToCategories(),
+            ),
+            const SizedBox(height: _T.sheetFieldGap),
+            FormSheetButton(
+              key: const Key('title-sheet-next'),
+              label: l.formSelectCategory,
+              onPressed: continueToCategories,
+            ),
+          ],
+        );
+      },
+    );
+    if (mounted && next == true) await _openCategorySheet();
   }
 
   @override
@@ -107,6 +179,7 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
     _form.removeListener(_changed);
     if (widget.controller == null) _form.dispose();
     _rate.dispose();
+    _title.dispose();
     super.dispose();
   }
 
@@ -651,7 +724,7 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
           key: const Key('transaction-title'),
           hint: l.formTitleHint,
           icon: Icons.title_rounded,
-          initialValue: _form.title,
+          controller: _title,
           readOnly: _form.busy,
           errorText: _fieldError('title'),
           onChanged: (text) => _form.edit(() => _form.title = text),

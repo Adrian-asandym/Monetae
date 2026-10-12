@@ -745,6 +745,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(NewTransactionPage), findsOneWidget);
       expect(find.byKey(const Key('form-amount')), findsOneWidget);
+      expect(find.byKey(const Key('title-sheet')), findsOneWidget);
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('nav-2')));

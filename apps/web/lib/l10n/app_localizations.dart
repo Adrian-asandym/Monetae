@@ -1130,6 +1130,18 @@ abstract class AppLocalizations {
   /// **'Título'**
   String get formTitleHint;
 
+  /// No description provided for @formEnterTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Escribe Un Título'**
+  String get formEnterTitle;
+
+  /// No description provided for @formChooseDate.
+  ///
+  /// In es, this message translates to:
+  /// **'Seleccionar fecha'**
+  String get formChooseDate;
+
   /// No description provided for @formNotesHint.
   ///
   /// In es, this message translates to:

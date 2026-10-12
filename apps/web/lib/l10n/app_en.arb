@@ -297,6 +297,8 @@
   "formCreateBudget": "Create budget",
   "formCreateGoal": "Create goal",
   "formTitleHint": "Title",
+  "formEnterTitle": "Enter A Title",
+  "formChooseDate": "Choose date",
   "formNotesHint": "Notes",
   "formAddAttachment": "Add an attachment",
   "formMoreOptions": "More options",

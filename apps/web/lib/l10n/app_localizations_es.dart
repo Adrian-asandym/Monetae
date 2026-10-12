@@ -584,6 +584,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get formTitleHint => 'Título';
 
   @override
+  String get formEnterTitle => 'Escribe Un Título';
+
+  @override
+  String get formChooseDate => 'Seleccionar fecha';
+
+  @override
   String get formNotesHint => 'Notas';
 
   @override

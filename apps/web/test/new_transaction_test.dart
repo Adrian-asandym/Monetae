@@ -10,6 +10,8 @@ import 'package:monetae_web/api/new_transaction_controller.dart';
 import 'package:monetae_web/data/api_dtos.dart';
 import 'package:monetae_web/data/mock_data.dart';
 import 'package:monetae_web/main.dart';
+import 'package:monetae_web/l10n/app_localizations.dart';
+import 'package:monetae_web/theme/monetae_theme.dart';
 import 'package:monetae_web/pages/home_page.dart';
 import 'package:monetae_web/pages/login_page.dart';
 import 'package:monetae_web/pages/new_transaction_page.dart';
@@ -64,6 +66,7 @@ class FormFixture {
   String cookie = 'monetae_csrf=synthetic.one';
   DateTime clock = now;
   Completer<http.Response>? pending;
+  Completer<http.Response>? pendingAccounts;
   bool fieldError = false, networkError = false, paginated = false;
   int? catalogStatus;
   http.Response created(http.Request r) {
@@ -109,6 +112,7 @@ class FormFixture {
       case '/api/v1/users/me':
         return fixtures.ok(profile);
       case '/api/v1/accounts':
+        if (pendingAccounts != null) return pendingAccounts!.future;
         if (catalogStatus != null) return fixtures.problem(catalogStatus!);
         if (paginated && r.url.queryParameters['cursor'] == null) {
           return fixtures.ok({
@@ -152,18 +156,33 @@ Future<void> mountForm(
   WidgetTester tester,
   FormFixture f, {
   Brightness brightness = Brightness.light,
+  bool keepTitleSheet = false,
+  bool editing = false,
 }) async {
   await harness.mount(
     tester,
     brightness,
-    (_, _) => NewTransactionPage(session: f.session, controller: f.form),
+    (_, _) => NewTransactionPage(
+      session: f.session,
+      controller: f.form,
+      editing: editing,
+    ),
     captureSize: const Size(430, 1120),
     viewSize: const Size(480, 1170),
   );
   await tester.pumpAndSettle();
+  if (!keepTitleSheet) await dismissTitleSheet(tester);
+}
+
+Future<void> dismissTitleSheet(WidgetTester tester) async {
+  final sheet = find.byKey(const Key('title-sheet'));
+  if (sheet.evaluate().isEmpty) return;
+  await tester.tapAt(const Offset(10, 10));
+  await tester.pumpAndSettle();
 }
 
 Future<void> fillAmount(WidgetTester tester, String text) async {
+  await dismissTitleSheet(tester);
   await tester.tap(find.byKey(const Key('form-amount')));
   await tester.pumpAndSettle();
   for (final key in text.split('')) {
@@ -439,6 +458,180 @@ void main() {
       '-9007199254740993.01',
     );
   });
+  testWidgets('title sheet waits for catalogs and opens only once', (
+    tester,
+  ) async {
+    final f = FormFixture()..pendingAccounts = Completer<http.Response>();
+    addTearDown(f.close);
+    await harness.mount(
+      tester,
+      Brightness.dark,
+      (_, _) => NewTransactionPage(session: f.session, controller: f.form),
+    );
+    await tester.pump();
+    expect(f.form.loading, isTrue);
+    expect(find.byKey(const Key('title-sheet')), findsNothing);
+    f.pendingAccounts!.complete(
+      fixtures.ok({
+        'items': f.accounts.map((a) => a.toJson()).toList(),
+        'next_cursor': null,
+      }),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('title-sheet')), findsOneWidget);
+    final input = find.descendant(
+      of: find.byKey(const Key('title-sheet-field')),
+      matching: find.byType(EditableText),
+    );
+    expect(tester.widget<EditableText>(input).focusNode.hasFocus, isTrue);
+    await tester.enterText(input, 'Título sintético');
+    await dismissTitleSheet(tester);
+    expect(f.form.title, 'Título sintético');
+    final formInput = find.descendant(
+      of: find.byKey(const Key('transaction-title')),
+      matching: find.byType(EditableText),
+    );
+    expect(
+      tester.widget<EditableText>(formInput).controller.text,
+      f.form.title,
+    );
+    await tester.ensureVisible(formInput);
+    await tester.enterText(formInput, 'Título actualizado');
+    await tester.pumpAndSettle();
+    expect(f.form.title, 'Título actualizado');
+    await f.form.load();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('title-sheet')), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final submit in ['button', 'enter', 'empty']) {
+    testWidgets('title sheet chains categories via $submit', (tester) async {
+      final f = FormFixture();
+      addTearDown(f.close);
+      await mountForm(tester, f, keepTitleSheet: true);
+      final input = find.descendant(
+        of: find.byKey(const Key('title-sheet-field')),
+        matching: find.byType(EditableText),
+      );
+      if (submit != 'empty') await tester.enterText(input, 'Título sintético');
+      if (submit == 'enter') {
+        await tester.testTextInput.receiveAction(TextInputAction.done);
+      } else {
+        await tester.tap(find.byKey(const Key('title-sheet-next')));
+      }
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('title-sheet')), findsNothing);
+      expect(find.byType(TransactionCategoryGrid), findsOneWidget);
+      expect(f.form.title, submit == 'empty' ? '' : 'Título sintético');
+      expect(f.posts, isEmpty);
+      await tester.tap(find.byKey(const Key('form-category-none')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('title-sheet')), findsNothing);
+      expect(find.text(l.saveTransaction), findsOneWidget);
+    });
+  }
+
+  testWidgets('swiping the title sheet preserves input', (tester) async {
+    final f = FormFixture();
+    addTearDown(f.close);
+    await mountForm(tester, f, keepTitleSheet: true);
+    await tester.enterText(
+      find.descendant(
+        of: find.byKey(const Key('title-sheet-field')),
+        matching: find.byType(EditableText),
+      ),
+      'Borrador sintético',
+    );
+    await tester.fling(find.text(l.formEnterTitle), const Offset(0, 400), 1500);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('title-sheet')), findsNothing);
+    expect(f.form.title, 'Borrador sintético');
+    expect(find.byType(TransactionCategoryGrid), findsNothing);
+  });
+
+  testWidgets('title sheet calendar changes the form date', (tester) async {
+    final f = FormFixture();
+    addTearDown(f.close);
+    await mountForm(tester, f, keepTitleSheet: true);
+    await tester.tap(find.byKey(const Key('title-sheet-date')));
+    await tester.pumpAndSettle();
+    expect(find.byType(DatePickerDialog), findsOneWidget);
+    await tester.tap(find.text('12').last);
+    await tester.tap(find.byType(TextButton).last);
+    await tester.pumpAndSettle();
+    expect(f.form.limaTime, DateTime.utc(2026, 10, 12, 22, 30));
+    expect(find.byKey(const Key('title-sheet')), findsOneWidget);
+    await dismissTitleSheet(tester);
+    expect(find.byKey(const Key('title-sheet')), findsNothing);
+  });
+
+  testWidgets(
+    'editing skips the initial sheet and synchronizes existing title',
+    (tester) async {
+      final f = FormFixture();
+      addTearDown(f.close);
+      await f.form.load();
+      f.form.edit(() => f.form.title = 'Título existente');
+      await mountForm(tester, f, editing: true, keepTitleSheet: true);
+      expect(find.byKey(const Key('title-sheet')), findsNothing);
+      final input = find.descendant(
+        of: find.byKey(const Key('transaction-title')),
+        matching: find.byType(EditableText),
+      );
+      expect(
+        tester.widget<EditableText>(input).controller.text,
+        'Título existente',
+      );
+      f.form.edit(() => f.form.title = 'Título externo');
+      await tester.pump();
+      expect(
+        tester.widget<EditableText>(input).controller.text,
+        'Título externo',
+      );
+    },
+  );
+
+  for (final brightness in Brightness.values) {
+    testWidgets('golden title sheet ${brightness.name} at 400x642', (
+      tester,
+    ) async {
+      final f = FormFixture();
+      addTearDown(f.close);
+      tester.view.physicalSize = const Size(400, 642);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        RepaintBoundary(
+          key: const Key('title-sheet-capture'),
+          child: MaterialApp(
+            debugShowCheckedModeBanner: false,
+            theme: monetaeTheme(brightness: brightness),
+            locale: const Locale('es'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: NewTransactionPage(session: f.session, controller: f.form),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text(l.formEnterTitle), findsOneWidget);
+      await expectLater(
+        find.byKey(const Key('title-sheet-capture')),
+        matchesGoldenFile(
+          'goldens/new_transaction_title_sheet_${brightness.name}.png',
+        ),
+      );
+      tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+      addTearDown(tester.view.resetViewInsets);
+      await tester.pumpAndSettle();
+      final next = find.byKey(const Key('title-sheet-next'));
+      expect(tester.getRect(next).bottom, lessThanOrEqualTo(342));
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets('keypad precision/delete/clear and kind/category reset', (
     tester,
   ) async {
@@ -721,6 +914,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
         expect(find.byKey(const Key('save-transaction')), findsOneWidget);
+        await dismissTitleSheet(tester);
         await tester.ensureVisible(find.byKey(const Key('transaction-rate')));
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
