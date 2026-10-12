@@ -311,10 +311,12 @@ class FormChipRow extends StatelessWidget {
     required this.chips,
     this.leading,
     this.trailing,
+    this.horizontalPadding = _T.sidePadding,
   });
   final List<FormChipData> chips;
   final Widget? leading;
   final Widget? trailing;
+  final double horizontalPadding;
 
   @override
   Widget build(BuildContext context) {
@@ -324,7 +326,7 @@ class FormChipRow extends StatelessWidget {
       height: _T.chipHeight,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: _T.sidePadding),
+        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
         child: Row(
           children: [
             if (leading != null) ...[

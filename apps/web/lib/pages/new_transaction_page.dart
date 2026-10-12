@@ -6,7 +6,9 @@
 // box, chip rows, filled title/notes and bottom action bar.
 // Modified 2026-10-11 (T-515 piece 2): initial title sheet and shared title input.
 // Modified 2026-10-11 (T-515 piece 3): category sheet followed by amount sheet.
+// Modified 2026-10-11 (T-515 piece 4): amount sheet, account chips and keyboard.
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 import '../api/home_controller.dart';
@@ -266,34 +268,120 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
   Future<void> _openAmountSheet() async {
     if (_form.busy) return;
     final l = AppLocalizations.of(context);
-    // TODO(T-515 piece 4): Cashew amount sheet (capture 16).
     await showFormSheet<void>(
       context,
-      title: l.transactionAmount,
-      builder: (sheet) => ListenableBuilder(
-        listenable: _form,
-        builder: (_, _) => Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              _amountText(l),
-              textAlign: TextAlign.end,
-              style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            DecimalNumberPad(
-              onKey: _applyKey,
-              onClear: () => _form.edit(() => _form.amount = ''),
-            ),
-            const SizedBox(height: 12),
-            FormSheetButton(
-              key: const Key('amount-sheet-done'),
-              label: l.saveTransaction,
-              onPressed: () => Navigator.of(sheet).pop(),
-            ),
-          ],
+      key: const Key('amount-sheet'),
+      bottomPadding: _T.sheetPadding,
+      title: l.formEnterAmount,
+      builder: (sheet) => Focus(
+        autofocus: true,
+        onKeyEvent: (_, event) => _handleAmountKey(sheet, event),
+        child: ListenableBuilder(
+          listenable: _form,
+          builder: (_, _) => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerRight,
+                child: Text(
+                  _amountText(l),
+                  key: const Key('amount-sheet-value'),
+                  textAlign: TextAlign.end,
+                  maxLines: 1,
+                  style: const TextStyle(
+                    fontSize: _T.amountSheetFontSize,
+                    height: _T.amountSheetLineHeight,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(height: _T.amountSheetGap),
+              _accountRow(inSheet: true),
+              const SizedBox(height: _T.amountSheetGap),
+              DecimalNumberPad(
+                onKey: _applyKey,
+                onClear: () => _form.edit(() => _form.amount = ''),
+              ),
+              const SizedBox(height: _T.amountSheetActionGap),
+              FormSheetButton(
+                key: const Key('amount-sheet-done'),
+                height: _T.amountSheetButtonHeight,
+                label: l.formSetAmount,
+                onPressed: () => Navigator.of(sheet).pop(),
+              ),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  KeyEventResult _handleAmountKey(BuildContext sheet, KeyEvent event) {
+    if ((event is! KeyDownEvent && event is! KeyRepeatEvent) ||
+        ModalRoute.of(sheet)?.isCurrent != true ||
+        _form.busy ||
+        HardwareKeyboard.instance.isControlPressed ||
+        HardwareKeyboard.instance.isMetaPressed ||
+        HardwareKeyboard.instance.isAltPressed) {
+      return KeyEventResult.ignored;
+    }
+    final key = event.logicalKey;
+    if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter) {
+      Navigator.of(sheet).pop();
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.backspace) {
+      _applyKey('backspace');
+      return KeyEventResult.handled;
+    }
+    final numpadDigits = {
+      LogicalKeyboardKey.numpad0: '0',
+      LogicalKeyboardKey.numpad1: '1',
+      LogicalKeyboardKey.numpad2: '2',
+      LogicalKeyboardKey.numpad3: '3',
+      LogicalKeyboardKey.numpad4: '4',
+      LogicalKeyboardKey.numpad5: '5',
+      LogicalKeyboardKey.numpad6: '6',
+      LogicalKeyboardKey.numpad7: '7',
+      LogicalKeyboardKey.numpad8: '8',
+      LogicalKeyboardKey.numpad9: '9',
+    };
+    final text = event.character ?? numpadDigits[key] ?? key.keyLabel;
+    if (RegExp(r'^[0-9]$').hasMatch(text)) {
+      _applyKey(text);
+      return KeyEventResult.handled;
+    }
+    if (text == '.' || text == ',' || key == LogicalKeyboardKey.numpadDecimal) {
+      _applyKey('.');
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
+  Widget _accountRow({bool inSheet = false}) {
+    final l = AppLocalizations.of(context);
+    final prefix = inSheet ? 'amount-sheet-account' : 'form-account';
+    return FormChipRow(
+      key: Key('$prefix-row'),
+      horizontalPadding: inSheet ? _T.amountSheetAccountInset : _T.sidePadding,
+      leading: FormSquareButton(
+        key: Key('$prefix-list'),
+        icon: Icons.keyboard_arrow_down_rounded,
+        tooltip: l.formAllAccounts,
+        onTap: _showAllAccounts,
+      ),
+      chips: [
+        for (final a in _form.accounts)
+          FormChipData(
+            key: Key('$prefix-${a.id}'),
+            label: a.name,
+            color: accountColor(a.id, a.color),
+            selected: a.id == _form.account?.id,
+            onTap: () => _selectAccount(a),
+          ),
+      ],
     );
   }
 
@@ -647,25 +735,7 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
       ),
       _error(_fieldError('status')),
       const SizedBox(height: _T.rowGap),
-      FormChipRow(
-        key: const Key('form-account-row'),
-        leading: FormSquareButton(
-          key: const Key('form-account-list'),
-          icon: Icons.keyboard_arrow_down_rounded,
-          tooltip: l.formAllAccounts,
-          onTap: _showAllAccounts,
-        ),
-        chips: [
-          for (final a in _form.accounts)
-            FormChipData(
-              key: Key('form-account-${a.id}'),
-              label: a.name,
-              color: accountColor(a.id, a.color),
-              selected: a.id == _form.account?.id,
-              onTap: () => _selectAccount(a),
-            ),
-        ],
-      ),
+      _accountRow(),
       _error(_fieldError('account_id') ?? _fieldError('currency')),
       const SizedBox(height: _T.rowGap),
       // TODO(T-515): budget/goal selection is visual only; linking needs

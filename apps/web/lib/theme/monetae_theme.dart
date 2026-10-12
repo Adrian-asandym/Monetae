@@ -339,6 +339,14 @@ abstract final class TransactionFormTokens {
   static const keypadRowHeight = 57.0;
   static const keypadRadius = 24.0;
   static const keypadFontSize = 30.0;
+  static const keypadPadding = 6.0;
+  static const keypadBackspaceSize = 26.0;
+  static const amountSheetFontSize = 40.0;
+  static const amountSheetLineHeight = 1.2;
+  static const amountSheetGap = 12.0;
+  static const amountSheetActionGap = 16.0;
+  static const amountSheetAccountInset = 4.0;
+  static const amountSheetButtonHeight = 48.0;
   static const optionCardHeight = 53.0;
   static const optionCardRadius = 16.0;
 }

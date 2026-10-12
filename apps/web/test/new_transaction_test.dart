@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -868,6 +869,237 @@ void main() {
           }
         },
       );
+    }
+  }
+
+  testWidgets(
+    'amount keypad comma, operators and long press preserve exact text',
+    (tester) async {
+      final f = FormFixture();
+      addTearDown(f.close);
+      await mountForm(tester, f);
+      await tester.tap(find.byKey(const Key('form-amount')));
+      await tester.pumpAndSettle();
+      expect(find.text(l.formEnterAmount), findsOneWidget);
+      expect(find.text(l.formSetAmount), findsOneWidget);
+      expect(find.text(','), findsOneWidget);
+      for (final key in ['.', '0', '1', '9']) {
+        await tester.tap(find.byKey(Key('amount-key-$key')));
+        await tester.pump();
+      }
+      expect(f.form.amount, '0.01');
+      for (final key in ['divide', 'multiply', 'subtract', 'add']) {
+        await tester.tap(find.byKey(Key('amount-key-$key')));
+        await tester.pump();
+        expect(f.form.amount, '0.01');
+      }
+      await tester.longPress(find.byKey(const Key('amount-key-backspace')));
+      await tester.pump();
+      expect(f.form.amount, isEmpty);
+      expect(
+        tester.widget<Text>(find.byKey(const Key('amount-sheet-value'))).data,
+        '0 S/.',
+      );
+      await tester.tap(find.byKey(const Key('amount-sheet-done')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('amount-sheet')), findsNothing);
+      expect(f.posts, isEmpty);
+    },
+  );
+
+  for (final separator in [
+    LogicalKeyboardKey.comma,
+    LogicalKeyboardKey.period,
+    LogicalKeyboardKey.numpadDecimal,
+  ]) {
+    testWidgets(
+      'physical decimal ${separator.keyLabel}, repeat, delete and Enter',
+      (tester) async {
+        final f = FormFixture();
+        addTearDown(f.close);
+        await mountForm(tester, f);
+        await tester.tap(find.byKey(const Key('form-amount')));
+        await tester.pumpAndSettle();
+        await tester.sendKeyEvent(LogicalKeyboardKey.digit1);
+        await tester.sendKeyEvent(LogicalKeyboardKey.numpad2);
+        await tester.sendKeyEvent(separator);
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.digit5);
+        await tester.sendKeyRepeatEvent(LogicalKeyboardKey.digit5);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.digit5);
+        await tester.sendKeyEvent(LogicalKeyboardKey.digit9);
+        await tester.pump();
+        expect(f.form.amount, '12.55');
+        await tester.sendKeyEvent(LogicalKeyboardKey.backspace);
+        await tester.sendKeyEvent(LogicalKeyboardKey.numpad0);
+        await tester.pump();
+        expect(f.form.amount, '12.50');
+        expect(
+          tester.widget<Text>(find.byKey(const Key('amount-sheet-value'))).data,
+          '12,50 S/.',
+        );
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('amount-sheet')), findsNothing);
+        expect(f.form.amount, '12.50');
+        expect(f.posts, isEmpty);
+        await tester.sendKeyEvent(LogicalKeyboardKey.backspace);
+        await tester.pump();
+        expect(f.form.amount, '12.50');
+      },
+    );
+  }
+
+  testWidgets(
+    'physical input keeps huge decimals exact and ignores modifiers/operators',
+    (tester) async {
+      final f = FormFixture();
+      addTearDown(f.close);
+      await mountForm(tester, f);
+      await tester.tap(find.byKey(const Key('form-amount')));
+      await tester.pumpAndSettle();
+      const digits = [
+        LogicalKeyboardKey.digit0,
+        LogicalKeyboardKey.digit1,
+        LogicalKeyboardKey.digit2,
+        LogicalKeyboardKey.digit3,
+        LogicalKeyboardKey.digit4,
+        LogicalKeyboardKey.digit5,
+        LogicalKeyboardKey.digit6,
+        LogicalKeyboardKey.digit7,
+        LogicalKeyboardKey.digit8,
+        LogicalKeyboardKey.digit9,
+      ];
+      for (final modifier in [
+        LogicalKeyboardKey.controlLeft,
+        LogicalKeyboardKey.metaLeft,
+        LogicalKeyboardKey.altLeft,
+      ]) {
+        await tester.sendKeyDownEvent(modifier);
+        await tester.sendKeyEvent(LogicalKeyboardKey.digit4);
+        await tester.sendKeyUpEvent(modifier);
+      }
+      await tester.sendKeyEvent(LogicalKeyboardKey.numpadAdd);
+      await tester.sendKeyEvent(LogicalKeyboardKey.minus);
+      await tester.sendKeyEvent(LogicalKeyboardKey.digit1, character: '!');
+      expect(f.form.amount, isEmpty);
+      for (final char in '9007199254740993.01'.split('')) {
+        await tester.sendKeyEvent(
+          char == '.' ? LogicalKeyboardKey.period : digits[int.parse(char)],
+        );
+      }
+      await tester.pump();
+      expect(f.form.amount, '9007199254740993.01');
+      expect(
+        tester.widget<Text>(find.byKey(const Key('amount-sheet-value'))).data,
+        '9.007.199.254.740.993,01 S/.',
+      );
+      expect(tester.takeException(), isNull);
+      await tester.sendKeyEvent(LogicalKeyboardKey.numpadEnter);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('amount-sheet')), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'amount account chips and account picker share state and isolate focus',
+    (tester) async {
+      final f = FormFixture(preferred: usdId);
+      addTearDown(f.close);
+      await f.form.load();
+      f.form.edit(() {
+        f.form.amount = '12';
+        f.form.rate = '3.800001';
+      });
+      await mountForm(tester, f);
+      await tester.tap(find.byKey(const Key('form-amount')));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<Text>(find.byKey(const Key('amount-sheet-value'))).data,
+        r'12 $',
+      );
+      final baseChip = find.byKey(Key('amount-sheet-account-$mockAccountId'));
+      await tester.ensureVisible(baseChip);
+      await tester.tap(baseChip);
+      await tester.pumpAndSettle();
+      expect(f.form.account!.id, mockAccountId);
+      expect(f.form.rate, isEmpty);
+      expect(
+        tester.widget<Text>(find.byKey(const Key('amount-sheet-value'))).data,
+        '12 S/.',
+      );
+      await tester.tap(find.byKey(const Key('amount-sheet-account-list')));
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.digit9);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+      expect(f.form.amount, '12');
+      expect(find.byKey(Key('form-account-option-$usdId')), findsOneWidget);
+      await tester.tap(find.byKey(Key('form-account-option-$usdId')));
+      await tester.pumpAndSettle();
+      expect(f.form.account!.id, usdId);
+      expect(
+        tester.widget<Text>(find.byKey(const Key('amount-sheet-value'))).data,
+        r'12 $',
+      );
+      await tester.sendKeyEvent(LogicalKeyboardKey.backspace);
+      await tester.pump();
+      expect(f.form.amount, '1');
+      await tester.tap(find.byKey(const Key('amount-sheet-done')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('transaction-rate')), findsOneWidget);
+      expect(f.form.account!.id, usdId);
+    },
+  );
+
+  testWidgets('short amount sheet scrolls to its action without overflow', (
+    tester,
+  ) async {
+    final f = FormFixture();
+    addTearDown(f.close);
+    await mountCategoryForm(tester, f, size: const Size(400, 350));
+    await tester.tap(find.byKey(const Key('form-category-none')));
+    await tester.pumpAndSettle();
+    final action = find.byKey(const Key('amount-sheet-done'));
+    await tester.ensureVisible(action);
+    await tester.pumpAndSettle();
+    await tester.tap(action);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('amount-sheet')), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final brightness in Brightness.values) {
+    for (final variant in ['empty', 'filled', 'foreign']) {
+      testWidgets('golden amount sheet $variant ${brightness.name} at 400x642', (
+        tester,
+      ) async {
+        final f = FormFixture(
+          preferred: variant == 'foreign' ? usdId : mockAccountId,
+        );
+        addTearDown(f.close);
+        await f.form.load();
+        f.form.edit(
+          () => f.form.amount = switch (variant) {
+            'filled' => '40',
+            'foreign' => '12.50',
+            _ => '',
+          },
+        );
+        await mountCategoryForm(tester, f, brightness: brightness);
+        await tester.tap(
+          find.byKey(Key('form-category-${f.categories.first.id}')),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text(l.formEnterAmount), findsOneWidget);
+        expect(find.text(l.formSetAmount), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await expectLater(
+          find.byKey(const Key('category-sheet-capture')),
+          matchesGoldenFile(
+            'goldens/new_transaction_amount_sheet_${variant}_${brightness.name}.png',
+          ),
+        );
+      });
     }
   }
 

@@ -217,6 +217,12 @@
     }
   },
   "transactionAmount": "Importe",
+  "formEnterAmount": "Introduce El Importe",
+  "formSetAmount": "Fijar importe",
+  "formDivide": "Dividir",
+  "formMultiply": "Multiplicar",
+  "formSubtract": "Restar",
+  "formAdd": "Sumar",
   "transactionCategory": "Categoría (opcional)",
   "transactionAccount": "Cuenta",
   "transactionTitle": "Título (opcional)",
@@ -233,7 +239,7 @@
   "savingTransaction": "Guardando…",
   "transactionSaved": "Transacción guardada",
   "deleteDigit": "Borrar dígito; mantén pulsado para borrar todo",
-  "decimalPoint": "Punto decimal",
+  "decimalPoint": "Separador decimal",
   "@manualRateHint": {
     "placeholders": {
       "fromSymbol": {

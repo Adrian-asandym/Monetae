@@ -890,6 +890,42 @@ abstract class AppLocalizations {
   /// **'Importe'**
   String get transactionAmount;
 
+  /// No description provided for @formEnterAmount.
+  ///
+  /// In es, this message translates to:
+  /// **'Introduce El Importe'**
+  String get formEnterAmount;
+
+  /// No description provided for @formSetAmount.
+  ///
+  /// In es, this message translates to:
+  /// **'Fijar importe'**
+  String get formSetAmount;
+
+  /// No description provided for @formDivide.
+  ///
+  /// In es, this message translates to:
+  /// **'Dividir'**
+  String get formDivide;
+
+  /// No description provided for @formMultiply.
+  ///
+  /// In es, this message translates to:
+  /// **'Multiplicar'**
+  String get formMultiply;
+
+  /// No description provided for @formSubtract.
+  ///
+  /// In es, this message translates to:
+  /// **'Restar'**
+  String get formSubtract;
+
+  /// No description provided for @formAdd.
+  ///
+  /// In es, this message translates to:
+  /// **'Sumar'**
+  String get formAdd;
+
   /// No description provided for @transactionCategory.
   ///
   /// In es, this message translates to:
@@ -989,7 +1025,7 @@ abstract class AppLocalizations {
   /// No description provided for @decimalPoint.
   ///
   /// In es, this message translates to:
-  /// **'Punto decimal'**
+  /// **'Separador decimal'**
   String get decimalPoint;
 
   /// No description provided for @budgetCanSpendPerDay.

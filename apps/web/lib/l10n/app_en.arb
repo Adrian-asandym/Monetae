@@ -217,6 +217,12 @@
     }
   },
   "transactionAmount": "Amount",
+  "formEnterAmount": "Enter The Amount",
+  "formSetAmount": "Set amount",
+  "formDivide": "Divide",
+  "formMultiply": "Multiply",
+  "formSubtract": "Subtract",
+  "formAdd": "Add",
   "transactionCategory": "Category (optional)",
   "transactionAccount": "Account",
   "transactionTitle": "Title (optional)",
@@ -233,7 +239,7 @@
   "savingTransaction": "Saving…",
   "transactionSaved": "Transaction saved",
   "deleteDigit": "Delete digit; hold to clear all",
-  "decimalPoint": "Decimal point",
+  "decimalPoint": "Decimal separator",
   "@manualRateHint": {
     "placeholders": {
       "fromSymbol": {

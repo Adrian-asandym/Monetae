@@ -15,6 +15,7 @@ Future<T?> showFormSheet<T>(
   Widget? trailing,
   Key? key,
   bool expand = false,
+  double bottomPadding = _T.sheetPadding + 8,
 }) {
   final form = TransactionFormColors.of(context);
   return showModalBottomSheet<T>(
@@ -32,6 +33,7 @@ Future<T?> showFormSheet<T>(
         title: title,
         trailing: trailing,
         expand: expand,
+        bottomPadding: bottomPadding,
         child: builder(context),
       );
       return Padding(
@@ -55,12 +57,14 @@ class _SheetBody extends StatelessWidget {
     required this.title,
     required this.child,
     required this.expand,
+    required this.bottomPadding,
     this.trailing,
   });
   final String title;
   final Widget child;
   final Widget? trailing;
   final bool expand;
+  final double bottomPadding;
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +97,7 @@ class _SheetBody extends StatelessWidget {
         _T.sheetPadding,
         0,
         _T.sheetPadding,
-        expand ? 0 : _T.sheetPadding + 8,
+        expand ? 0 : bottomPadding,
       ),
       child: child,
     );
@@ -102,7 +106,7 @@ class _SheetBody extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         heading,
-        if (expand) Flexible(child: body) else body,
+        Flexible(child: expand ? body : SingleChildScrollView(child: body)),
       ],
     );
   }
@@ -115,15 +119,17 @@ class FormSheetButton extends StatelessWidget {
     super.key,
     required this.label,
     required this.onPressed,
+    this.height = _T.sheetButtonHeight,
   });
   final String label;
   final VoidCallback? onPressed;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
     final form = TransactionFormColors.of(context);
     return SizedBox(
-      height: _T.sheetButtonHeight,
+      height: height,
       child: FilledButton(
         onPressed: onPressed,
         style: FilledButton.styleFrom(

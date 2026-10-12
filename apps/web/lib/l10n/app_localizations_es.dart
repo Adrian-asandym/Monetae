@@ -436,6 +436,24 @@ class AppLocalizationsEs extends AppLocalizations {
   String get transactionAmount => 'Importe';
 
   @override
+  String get formEnterAmount => 'Introduce El Importe';
+
+  @override
+  String get formSetAmount => 'Fijar importe';
+
+  @override
+  String get formDivide => 'Dividir';
+
+  @override
+  String get formMultiply => 'Multiplicar';
+
+  @override
+  String get formSubtract => 'Restar';
+
+  @override
+  String get formAdd => 'Sumar';
+
+  @override
   String get transactionCategory => 'Categoría (opcional)';
 
   @override
@@ -488,7 +506,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get deleteDigit => 'Borrar dígito; mantén pulsado para borrar todo';
 
   @override
-  String get decimalPoint => 'Punto decimal';
+  String get decimalPoint => 'Separador decimal';
 
   @override
   String budgetCanSpendPerDay(String amount, int days) {
