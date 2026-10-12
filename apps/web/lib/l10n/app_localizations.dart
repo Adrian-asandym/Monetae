@@ -1130,6 +1130,12 @@ abstract class AppLocalizations {
   /// **'Todas las cuentas'**
   String get formAllAccounts;
 
+  /// No description provided for @formAccountSheetTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Seleccionar Cuenta'**
+  String get formAccountSheetTitle;
+
   /// No description provided for @formNoBudget.
   ///
   /// In es, this message translates to:

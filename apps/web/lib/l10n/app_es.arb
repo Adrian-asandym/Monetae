@@ -297,6 +297,7 @@
   "formTypeBorrow": "Deuda",
   "formTypeInfo": "Tipos de transacción",
   "formAllAccounts": "Todas las cuentas",
+  "formAccountSheetTitle": "Seleccionar Cuenta",
   "formNoBudget": "Sin presupuesto",
   "formNoGoal": "Sin objetivo",
   "formNoLoan": "Sin préstamo",

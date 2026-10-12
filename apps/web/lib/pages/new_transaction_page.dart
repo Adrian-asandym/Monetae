@@ -27,6 +27,7 @@ import '../theme/monetae_theme.dart';
 import '../widgets/category_icon.dart';
 import '../widgets/decimal_number_pad.dart';
 import '../widgets/transaction_category_grid.dart';
+import '../widgets/transaction_form/account_selection_sheet.dart';
 import '../widgets/transaction_form/form_controls.dart';
 import '../widgets/transaction_form/form_sheet.dart';
 import '../widgets/transaction_form/transaction_type_sheet.dart';
@@ -376,7 +377,7 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
       leading: FormSquareButton(
         key: Key('$prefix-list'),
         icon: Icons.keyboard_arrow_down_rounded,
-        tooltip: l.formAllAccounts,
+        tooltip: l.formAccountSheetTitle,
         onTap: _showAllAccounts,
       ),
       chips: [
@@ -500,32 +501,12 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
   }
 
   Future<void> _showAllAccounts() async {
-    final l = AppLocalizations.of(context);
-    await showFormSheet<void>(
+    final account = await showAccountSelectionSheet(
       context,
-      title: l.formAllAccounts,
-      builder: (sheet) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (final a in _form.accounts)
-            ListTile(
-              key: Key('form-account-option-${a.id}'),
-              leading: Icon(
-                Icons.circle,
-                size: 14,
-                color: accountColor(a.id, a.color),
-              ),
-              title: Text(a.name),
-              trailing: Text(currencySymbol(a.currency, l.localeName)),
-              selected: a.id == _form.account?.id,
-              onTap: () {
-                _selectAccount(a);
-                Navigator.of(sheet).pop();
-              },
-            ),
-        ],
-      ),
+      accounts: _form.accounts,
+      selectedId: _form.account?.id,
     );
+    if (mounted && account != null) _selectAccount(account);
   }
 
   void _selectAccount(AccountDto account) {

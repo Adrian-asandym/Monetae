@@ -297,6 +297,7 @@
   "formTypeBorrow": "Borrow",
   "formTypeInfo": "Transaction types",
   "formAllAccounts": "All accounts",
+  "formAccountSheetTitle": "Select Account",
   "formNoBudget": "No budget",
   "formNoGoal": "No goal",
   "formNoLoan": "No loan",

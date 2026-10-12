@@ -22,6 +22,8 @@ import 'package:monetae_web/session/session_controller.dart';
 import 'package:monetae_web/widgets/transaction_category_grid.dart';
 import 'package:monetae_web/widgets/category_icon.dart';
 import 'package:monetae_web/widgets/transaction_form/form_controls.dart';
+import 'package:monetae_web/widgets/transaction_form/account_selection_sheet.dart';
+import 'package:monetae_web/presentation/account_color.dart';
 
 import 'api_session_test.dart' as fixtures;
 import 'components_test.dart' as harness;
@@ -216,6 +218,28 @@ Future<void> chooseCategory(WidgetTester tester, [String? id]) async {
   await tester.tap(find.byKey(const Key('amount-sheet-done')));
   await tester.pumpAndSettle();
 }
+
+List<AccountDto> sheetAccounts(FormFixture f, {int count = 7}) => List.generate(
+  count,
+  (i) => AccountDto.fromJson({
+    ...f.accounts.first.toJson(),
+    'id': i == 0
+        ? mockAccountId
+        : i == 1
+        ? usdId
+        : 'synthetic-account-$i',
+    'name': 'Cuenta ${i + 1}',
+    'currency': i == 1 ? 'USD' : 'PEN',
+    'balance': i == 0
+        ? '120.50'
+        : i == 1
+        ? '35.00'
+        : i == 2
+        ? '0.00'
+        : '-8.25',
+    'color': ['#40545F', '#B3A329', '#A23355', '#317347'][i % 4],
+  }),
+);
 
 /// Synthetic catalog with enough rows to exercise scrolling and truncation.
 List<CategoryDto> sheetCategories() {
@@ -1169,6 +1193,203 @@ void main() {
       expect(find.byKey(const Key('amount-sheet')), findsNothing);
     },
   );
+
+  for (final inAmountSheet in [false, true]) {
+    testWidgets(
+      'account sheet selects and closes only its route stacked=$inAmountSheet',
+      (tester) async {
+        final f = FormFixture();
+        addTearDown(f.close);
+        f.accounts = sheetAccounts(f);
+        await mountForm(tester, f);
+        if (inAmountSheet) {
+          await tester.tap(find.byKey(const Key('form-amount')));
+          await tester.pumpAndSettle();
+        }
+        final trigger = find.byKey(
+          Key(
+            inAmountSheet ? 'amount-sheet-account-list' : 'form-account-list',
+          ),
+        );
+        await tester.tap(trigger);
+        await tester.pumpAndSettle();
+        expect(find.text(l.formAccountSheetTitle), findsOneWidget);
+        final selected = tester.widget<Material>(
+          find.byKey(Key('account-sheet-row-$mockAccountId')),
+        );
+        expect(
+          selected.color,
+          accountColor(
+            mockAccountId,
+            f.accounts.first.color,
+          ).withValues(alpha: .33),
+        );
+        final other = tester.widget<Material>(
+          find.byKey(Key('account-sheet-row-$usdId')),
+        );
+        expect(other.color, Colors.transparent);
+        expect(find.text('120,50 S/. PEN'), findsOneWidget);
+        expect(find.text(r'35 $ USD'), findsOneWidget);
+        expect(find.text('0 S/. PEN'), findsOneWidget);
+        final requestCount = f.requests.length;
+        await tester.tap(find.byKey(const Key('account-sheet-menu')));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('account-sheet')), findsOneWidget);
+        expect(f.requests.length, requestCount);
+        await tester.tap(find.byKey(Key('form-account-option-$usdId')));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('account-sheet')), findsNothing);
+        expect(f.form.account!.id, usdId);
+        expect(
+          find.byKey(const Key('amount-sheet')),
+          inAmountSheet ? findsOneWidget : findsNothing,
+        );
+        if (inAmountSheet) {
+          expect(
+            tester
+                .widget<FormChipRow>(
+                  find.byKey(const Key('amount-sheet-account-row')),
+                )
+                .chips
+                .singleWhere((chip) => chip.selected)
+                .key,
+            Key('amount-sheet-account-$usdId'),
+          );
+          await tester.tap(find.byKey(const Key('amount-sheet-done')));
+          await tester.pumpAndSettle();
+        }
+        expect(
+          tester
+              .widget<FormChipRow>(find.byKey(const Key('form-account-row')))
+              .chips
+              .singleWhere((chip) => chip.selected)
+              .key,
+          Key('form-account-$usdId'),
+        );
+        await tester.tap(find.byKey(const Key('form-account-list')));
+        await tester.pumpAndSettle();
+        final radio = tester.widget<Container>(
+          find.byKey(Key('account-sheet-radio-$usdId')),
+        );
+        expect(radio.child, isNotNull);
+        await tester.tapAt(const Offset(10, 10));
+        await tester.pumpAndSettle();
+        expect(f.form.account!.id, usdId);
+        expect(f.posts, isEmpty);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  testWidgets(
+    'account sheet scrolls internally with long exact balances at a narrow viewport',
+    (tester) async {
+      final f = FormFixture();
+      addTearDown(f.close);
+      f.accounts = sheetAccounts(f, count: 24);
+      f.accounts[0] = AccountDto.fromJson({
+        ...f.accounts.first.toJson(),
+        'name': 'Cuenta sintética con un nombre muy largo',
+        'balance': '9007199254740993.01',
+      });
+      await mountCategoryForm(tester, f, size: const Size(320, 480));
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('form-account-list')));
+      await tester.pumpAndSettle();
+      expect(find.text('9.007.199.254.740.993,01 S/. PEN'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      final last = find.byKey(Key('form-account-option-${f.accounts.last.id}'));
+      await tester.scrollUntilVisible(
+        last,
+        200,
+        scrollable: find.descendant(
+          of: find.byKey(const Key('account-sheet-list')),
+          matching: find.byType(Scrollable),
+        ),
+      );
+      await tester.tap(last);
+      await tester.pumpAndSettle();
+      expect(f.form.account!.id, f.accounts.last.id);
+      expect(find.byKey(const Key('account-sheet')), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('account sheet is reusable and has English labels', (
+    tester,
+  ) async {
+    final f = FormFixture();
+    addTearDown(f.close);
+    AccountDto? selected;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: monetaeTheme(brightness: Brightness.light),
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () async => selected = await showAccountSelectionSheet(
+                context,
+                accounts: f.accounts,
+                selectedId: null,
+              ),
+              child: const Text('Open'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+    expect(find.text('Select Account'), findsOneWidget);
+    expect(find.text(r'$500.25 USD'), findsOneWidget);
+    await tester.tap(find.byKey(Key('form-account-option-$usdId')));
+    await tester.pumpAndSettle();
+    expect(selected?.id, usdId);
+    expect(f.form.account, isNull);
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final brightness in Brightness.values) {
+    for (final stacked in [false, true]) {
+      testWidgets(
+        'golden account sheet ${brightness.name} stacked=$stacked at 400x642',
+        (tester) async {
+          final f = FormFixture();
+          addTearDown(f.close);
+          f.accounts = sheetAccounts(f);
+          await f.form.load();
+          f.form.edit(() {
+            f.form.amount = '40';
+            f.form.categoryId = f.categories.first.id;
+          });
+          await mountCategoryForm(tester, f, brightness: brightness);
+          await tester.tapAt(const Offset(10, 10));
+          await tester.pumpAndSettle();
+          if (stacked) {
+            await tester.tap(find.byKey(const Key('form-amount')));
+            await tester.pumpAndSettle();
+          }
+          await tester.tap(
+            find.byKey(
+              Key(stacked ? 'amount-sheet-account-list' : 'form-account-list'),
+            ),
+          );
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull);
+          await expectLater(
+            find.byKey(const Key('category-sheet-capture')),
+            matchesGoldenFile(
+              'goldens/new_transaction_account_sheet_${stacked ? 'stacked_' : ''}${brightness.name}.png',
+            ),
+          );
+        },
+      );
+    }
+  }
 
   testWidgets(
     'amount account chips and account picker share state and isolate focus',

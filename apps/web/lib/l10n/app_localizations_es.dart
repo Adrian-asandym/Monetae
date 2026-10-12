@@ -584,6 +584,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get formAllAccounts => 'Todas las cuentas';
 
   @override
+  String get formAccountSheetTitle => 'Seleccionar Cuenta';
+
+  @override
   String get formNoBudget => 'Sin presupuesto';
 
   @override

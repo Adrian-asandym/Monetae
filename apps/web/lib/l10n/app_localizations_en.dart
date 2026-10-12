@@ -582,6 +582,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get formAllAccounts => 'All accounts';
 
   @override
+  String get formAccountSheetTitle => 'Select Account';
+
+  @override
   String get formNoBudget => 'No budget';
 
   @override
