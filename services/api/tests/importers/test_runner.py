@@ -110,11 +110,12 @@ def test_v48_expected_core(
     for transaction in transactions.values():
         assert transaction.source == "import" and transaction.categorization_source == "manual"
     outgoing, incoming = (transactions[external_id(ROW_MAP[name])] for name in ("H_out", "H_in"))
-    assert outgoing.kind == incoming.kind == "transfer"
+    assert outgoing.kind == "expense" and incoming.kind == "income"
     assert outgoing.transfer_group_id == incoming.transfer_group_id
     assert outgoing.transfer_group_id is not None
     assert outgoing.amount + incoming.amount == Decimal("0.00")
-    assert outgoing.category_id is incoming.category_id is None
+    assert outgoing.category_id is not None and incoming.category_id is not None
+    assert outgoing.category_id != incoming.category_id
     tags = list(db_session.scalars(select(Tag).where(Tag.user_id == import_user.id)))
     assert sum(tag.archived_at is not None for tag in tags) == 1
     for source_tag in snapshot.tags:
@@ -307,7 +308,7 @@ def test_name_collisions_and_system_category(
     assert any(w.startswith("interest_category_not_merged:") for w in report.warnings)
     assert (
         len(list(db_session.scalars(select(Category).where(Category.user_id == import_user.id))))
-        == 8
+        == 10
     )
 
 

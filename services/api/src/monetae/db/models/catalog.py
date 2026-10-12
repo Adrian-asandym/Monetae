@@ -70,7 +70,11 @@ class Category(UserScopedModel):
         ),
         UniqueConstraint("id", "user_id", name="uq_categories_id_user_id"),
         CheckConstraint("kind IN ('income', 'expense')", name="kind"),
-        CheckConstraint("system_key IN ('interest_income', 'interest_expense')", name="system_key"),
+        CheckConstraint(
+            "system_key IN ('interest_income', 'interest_expense', "
+            "'balance_correction_income', 'balance_correction_expense')",
+            name="system_key",
+        ),
         CheckConstraint("is_system = (system_key IS NOT NULL)", name="is_system"),
         Index(
             "uq_categories_user_id_system_key",

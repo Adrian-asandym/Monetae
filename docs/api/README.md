@@ -784,3 +784,44 @@ Origin. `/reports/goals` queda fuera de T-602.
 ## Cambios del contrato 0.6.0 (SPEC v0.6)
 
 - `CurrentUser.display_name` (obligatorio en la respuesta, `string` de 1–60 caracteres o `null`) y `UserUpdate.display_name` (opcional en `PATCH /users/me`). El servidor recorta espacios; vacío tras recortar → 422; `null` borra el nombre. Implementado en T-603.
+
+
+## Correcciones de saldo · contrato 0.7.0 (T-604)
+
+`POST /api/v1/balance-corrections` crea atómicamente un gasto y un ingreso,
+con las categorías de sistema `balance_correction_expense` y
+`balance_correction_income`, enlazados por `transfer_group_id`. Reutiliza los
+campos y validadores de `TransferCreate`; acepta `Idempotency-Key`, título
+opcional (por defecto «Transferir saldo») y `to_occurred_at` opcional (por
+defecto igual a `occurred_at`, nunca anterior al crear). Cada pierna nace
+`posted` o `scheduled` según su fecha frente al reloj UTC del servidor.
+
+Después se editan, borran, restauran y publican por separado mediante
+`/transactions`; borrar una no borra la otra. La regla mínima de PATCH es
+conservar el `kind` y la categoría de sistema correspondientes de toda pierna
+enlazada, incluso si su pareja está borrada (`422 correction_role_immutable`).
+También se aplica a la edición en lote. Se admiten fechas e importes
+independientes después de crear el par; no se impone de nuevo el orden de
+fechas de creación ni la igualdad de importes. Ninguna entrada ordinaria
+acepta `transfer_group_id`. `/transfers` sigue siendo exclusivo de `kind=transfer`.
+
+`GET /api/v1/balance-corrections` pagina los pares completos sin borrar,
+por fecha de salida y UUID del grupo descendentes. El cursor está firmado y
+ligado al usuario y a los filtros `from_account_id`, `to_account_id`,
+`from_currency`, `to_currency`. Devuelve piernas resumidas e `implicit_rate`
+calculada como ingreso / valor absoluto del gasto, con seis decimales y
+`ROUND_HALF_UP`; nunca se persiste esa tasa.
+
+Las categorías de corrección quedan fuera de flujo de caja (también del neto
+acumulado), categorías y presupuestos, incluso con selección manual. Siguen
+contando en saldo y número de transacciones de cuentas. En metas contribuyen
+con signo igual que `transfer`: ahorro suma el signo del libro, gasto lo
+invierte. Cashew hace lo mismo en `database/tables.dart`,
+`watchTotalTowardsObjective` (~5650): suma las transacciones pagadas asignadas
+al objetivo sin excluir la categoría 0.
+
+La migración `0012` siembra categorías para usuarios existentes; las nuevas
+altas las reciben junto a Intereses. Al revertir a `0011`, conserva importes,
+transacciones, etiquetas y referencias de categorías: elimina los enlaces
+de correcciones y convierte sus categorías en ordinarias. Una subida posterior
+vuelve a sembrar las categorías de sistema; no reclasifica el libro antiguo.

@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Monetae API",
-    "version": "0.6.0",
-    "description": "Contrato inicial V1 basado en SPEC v0.5, ARCHITECTURE v0.2 y ADR aceptadas 002/003/004/006. Dinero como cadenas decimales; aislamiento por sesión y borrado lógico. Documentación y observaciones en README.md.",
+    "version": "0.7.0",
+    "description": "Contrato inicial V1 basado en SPEC v0.7, ARCHITECTURE v0.2 y ADR aceptadas 002/003/004/006. Dinero como cadenas decimales; aislamiento por sesión y borrado lógico. Documentación y observaciones en README.md.",
     "license": {
       "name": "GPL-3.0-only",
       "identifier": "GPL-3.0-only"
@@ -1593,7 +1593,7 @@
           "transactions"
         ],
         "summary": "Editar transactions",
-        "description": "Transferencias y capital de préstamos no cuentan como ingreso/gasto; interés sí en base caja. Edición monetaria de loan/transfer usa su recurso y evita romper invariantes. Actualización parcial explícita; recalcula derivados. Valida Origin y X-CSRF-Token; ningún user_id se acepta del cliente. Aislamiento por sesión; referencias ajenas responden 404.",
+        "description": "Transferencias y capital de préstamos no cuentan como ingreso/gasto; interés sí en base caja. Edición monetaria de loan/transfer usa su recurso y evita romper invariantes. Actualización parcial explícita; recalcula derivados. Valida Origin y X-CSRF-Token; ningún user_id se acepta del cliente. Aislamiento por sesión; referencias ajenas responden 404. Las correcciones enlazadas conservan kind y categoría de sistema correspondiente (422 correction_role_immutable); cada pierna admite fecha, importe, título, nota y borrado independientes.",
         "security": [
           {
             "SessionCookie": []
@@ -8730,6 +8730,149 @@
           }
         ]
       }
+    },
+    "/api/v1/balance-corrections": {
+      "get": {
+        "operationId": "list_balance_corrections",
+        "tags": [
+          "balance-corrections"
+        ],
+        "summary": "Listar pares de corrección",
+        "description": "Pares completos no borrados; orden por fecha de salida y group_id descendente. Tasa implícita calculada como incoming.amount / abs(outgoing.amount), redondeada a seis decimales. Cursor ligado al usuario y a los filtros.",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación correcta.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BalanceCorrectionPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem422"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/Cursor"
+          },
+          {
+            "name": "from_account_id",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Uuid"
+            }
+          },
+          {
+            "name": "to_account_id",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Uuid"
+            }
+          },
+          {
+            "name": "from_currency",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Currency"
+            }
+          },
+          {
+            "name": "to_currency",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Currency"
+            }
+          }
+        ],
+        "x-paginated": true
+      },
+      "post": {
+        "operationId": "create_balance_correction",
+        "tags": [
+          "balance-corrections"
+        ],
+        "summary": "Crear corrección de saldo atómica",
+        "description": "Crea gasto e ingreso con categorías de sistema; Idempotency-Key evita duplicados. to_occurred_at por defecto igual a occurred_at, debe ser posterior o igual. Cada pierna es posted o scheduled según su fecha; después se edita o borra independientemente en /transactions. Cuentas distintas, propias y no archivadas; tasas como TransferCreate. Ambos importes positivos; no es obligatorio igualarlos. Valida Origin y X-CSRF-Token; aislamiento por sesión.",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Operación correcta.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BalanceCorrection"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem422"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CsrfToken"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BalanceCorrectionCreate"
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -9227,7 +9370,9 @@
                 "type": "string",
                 "enum": [
                   "interest_income",
-                  "interest_expense"
+                  "interest_expense",
+                  "balance_correction_expense",
+                  "balance_correction_income"
                 ]
               },
               {
@@ -14375,6 +14520,216 @@
           "items",
           "next_cursor"
         ]
+      },
+      "BalanceCorrectionCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "from_account_id": {
+            "format": "uuid",
+            "title": "From Account Id",
+            "type": "string"
+          },
+          "to_account_id": {
+            "format": "uuid",
+            "title": "To Account Id",
+            "type": "string"
+          },
+          "from_amount": {
+            "pattern": "^(?:0\\.(?!00)[0-9]{2}|[1-9][0-9]{0,15}\\.[0-9]{2})$",
+            "title": "From Amount",
+            "type": "string"
+          },
+          "to_amount": {
+            "pattern": "^(?:0\\.(?!00)[0-9]{2}|[1-9][0-9]{0,15}\\.[0-9]{2})$",
+            "title": "To Amount",
+            "type": "string"
+          },
+          "from_fx_rate_to_base": {
+            "pattern": "^(?:0\\.(?!000000)[0-9]{6}|[1-9][0-9]{0,11}\\.[0-9]{6})$",
+            "title": "From Fx Rate To Base",
+            "type": "string"
+          },
+          "to_fx_rate_to_base": {
+            "pattern": "^(?:0\\.(?!000000)[0-9]{6}|[1-9][0-9]{0,11}\\.[0-9]{6})$",
+            "title": "To Fx Rate To Base",
+            "type": "string"
+          },
+          "fx_rate_source": {
+            "enum": [
+              "manual",
+              "auto"
+            ],
+            "title": "Fx Rate Source",
+            "type": "string"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "title": {
+            "default": "Transferir saldo",
+            "title": "Title",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Note"
+          },
+          "to_occurred_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "To Occurred At"
+          }
+        },
+        "required": [
+          "from_account_id",
+          "to_account_id",
+          "from_amount",
+          "to_amount",
+          "from_fx_rate_to_base",
+          "to_fx_rate_to_base",
+          "fx_rate_source",
+          "occurred_at"
+        ],
+        "title": "BalanceCorrectionCreate",
+        "type": "object"
+      },
+      "BalanceCorrection": {
+        "additionalProperties": false,
+        "properties": {
+          "group_id": {
+            "format": "uuid",
+            "title": "Group Id",
+            "type": "string"
+          },
+          "outgoing": {
+            "$ref": "#/components/schemas/Transaction"
+          },
+          "incoming": {
+            "$ref": "#/components/schemas/Transaction"
+          }
+        },
+        "required": [
+          "group_id",
+          "outgoing",
+          "incoming"
+        ],
+        "title": "BalanceCorrection",
+        "type": "object"
+      },
+      "BalanceCorrectionLeg": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "account_id": {
+            "format": "uuid",
+            "title": "Account Id",
+            "type": "string"
+          },
+          "currency": {
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency",
+            "type": "string"
+          },
+          "amount": {
+            "pattern": "^-?(0|[1-9][0-9]{0,15})\\.[0-9]{2}$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "account_id",
+          "currency",
+          "amount",
+          "occurred_at"
+        ],
+        "title": "BalanceCorrectionLeg",
+        "type": "object"
+      },
+      "BalanceCorrectionSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "group_id": {
+            "format": "uuid",
+            "title": "Group Id",
+            "type": "string"
+          },
+          "outgoing": {
+            "$ref": "#/components/schemas/BalanceCorrectionLeg"
+          },
+          "incoming": {
+            "$ref": "#/components/schemas/BalanceCorrectionLeg"
+          },
+          "implicit_rate": {
+            "pattern": "^(?:0|[1-9][0-9]{0,17})\\.[0-9]{6}$",
+            "title": "Implicit Rate",
+            "type": "string"
+          }
+        },
+        "required": [
+          "group_id",
+          "outgoing",
+          "incoming",
+          "implicit_rate"
+        ],
+        "title": "BalanceCorrectionSummary",
+        "type": "object"
+      },
+      "BalanceCorrectionPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BalanceCorrectionSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "BalanceCorrectionPage",
+        "type": "object"
       }
     },
     "parameters": {

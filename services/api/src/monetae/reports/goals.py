@@ -11,6 +11,8 @@ from sqlalchemy.orm import Session
 from monetae.db.models import User
 from monetae.reports.queries import Aggregate
 
+# Corrections are income/expense legs: retain their signed contribution,
+# exactly as transfers (Cashew watchTotalTowardsObjective includes category 0).
 GOAL_SQL = text("""
 WITH daily AS (
     SELECT g.id AS goal_id, g.currency AS report_currency,

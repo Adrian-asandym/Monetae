@@ -47,7 +47,6 @@ def test_direct_sql_transfer_integrity(db_session: Session, users: tuple[User, U
         {"amount": -5},
         {"amount": 5},
         {"amount": 5, "group": None},
-        {"amount": 5, "kind": "income"},
     ):
         with pytest.raises(IntegrityError), db_session.begin_nested():
             db_session.execute(insert, {**params, **changes})

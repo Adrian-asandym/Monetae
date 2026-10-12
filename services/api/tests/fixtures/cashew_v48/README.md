@@ -224,3 +224,10 @@ de documentación sobre scripts, JSON y CSV: **cero coincidencias**; la consulta
 en las dos bases devolvió solo Cuenta Soles, Cuenta Dolares, Efectivo,
 Cuenta Archivada Ejemplo y Persona Ejemplo A–E. La búsqueda es una comprobación
 complementaria; la garantía principal es la construcción exclusivamente sintética.
+
+
+T-604: los pares explícitos H se importan como gasto/ingreso con categorías
+de sistema de corrección, conservando sus importes y el grupo. Las pruebas
+`tests/importers/test_balance_corrections.py` derivan variantes sintéticas de H
+con categoría 0, sin pareja, referencia unilateral, moneda distinta, llegada
+diferida y referencia ambigua; no requieren respaldos reales.
