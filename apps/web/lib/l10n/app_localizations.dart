@@ -1076,6 +1076,66 @@ abstract class AppLocalizations {
   /// **'Editar'**
   String get editHome;
 
+  /// No description provided for @formAddMenuTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Agregar Transacción'**
+  String get formAddMenuTitle;
+
+  /// No description provided for @formEditMenuTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar Transacción'**
+  String get formEditMenuTitle;
+
+  /// No description provided for @formSettingTransferTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Pestaña de transferencia de saldo'**
+  String get formSettingTransferTitle;
+
+  /// No description provided for @formSettingTransferSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'En la página \'Agregar nueva transacción\''**
+  String get formSettingTransferSubtitle;
+
+  /// No description provided for @formSettingAttachmentTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Botón Agregar archivos adjuntos'**
+  String get formSettingAttachmentTitle;
+
+  /// No description provided for @formSettingAttachmentSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Mostrar debajo de la sección de notas'**
+  String get formSettingAttachmentSubtitle;
+
+  /// No description provided for @formSettingAutoTitleTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Agregar títulos automáticamente'**
+  String get formSettingAutoTitleTitle;
+
+  /// No description provided for @formSettingAutoTitleSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuando se crea una transacción'**
+  String get formSettingAutoTitleSubtitle;
+
+  /// No description provided for @formSettingInitialInputTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Indicaciones iniciales de entrada'**
+  String get formSettingInitialInputTitle;
+
+  /// No description provided for @formSettingInitialInputSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Al añadir una transacción por primera vez'**
+  String get formSettingInitialInputSubtitle;
+
   /// No description provided for @formTransfer.
   ///
   /// In es, this message translates to:

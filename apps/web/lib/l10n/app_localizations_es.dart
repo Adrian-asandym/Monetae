@@ -557,6 +557,40 @@ class AppLocalizationsEs extends AppLocalizations {
   String get editHome => 'Editar';
 
   @override
+  String get formAddMenuTitle => 'Agregar Transacción';
+
+  @override
+  String get formEditMenuTitle => 'Editar Transacción';
+
+  @override
+  String get formSettingTransferTitle => 'Pestaña de transferencia de saldo';
+
+  @override
+  String get formSettingTransferSubtitle =>
+      'En la página \'Agregar nueva transacción\'';
+
+  @override
+  String get formSettingAttachmentTitle => 'Botón Agregar archivos adjuntos';
+
+  @override
+  String get formSettingAttachmentSubtitle =>
+      'Mostrar debajo de la sección de notas';
+
+  @override
+  String get formSettingAutoTitleTitle => 'Agregar títulos automáticamente';
+
+  @override
+  String get formSettingAutoTitleSubtitle => 'Cuando se crea una transacción';
+
+  @override
+  String get formSettingInitialInputTitle =>
+      'Indicaciones iniciales de entrada';
+
+  @override
+  String get formSettingInitialInputSubtitle =>
+      'Al añadir una transacción por primera vez';
+
+  @override
   String get formTransfer => 'Transferir';
 
   @override

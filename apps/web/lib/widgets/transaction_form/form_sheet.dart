@@ -20,6 +20,8 @@ Future<T?> showFormSheet<T>(
   double horizontalPadding = _T.sheetPadding,
   double heightFraction = _T.expandedSheetHeightFraction,
   double? headingTop,
+  double titleSize = _T.sheetTitleSize,
+  double? headingGap,
   double bottomPadding = _T.sheetPadding + 8,
 }) {
   final form = TransactionFormColors.of(context);
@@ -42,6 +44,8 @@ Future<T?> showFormSheet<T>(
         scrollHeading: scrollHeading,
         horizontalPadding: horizontalPadding,
         headingTop: headingTop,
+        titleSize: titleSize,
+        headingGap: headingGap,
         bottomPadding: bottomPadding,
         child: builder(context),
       );
@@ -66,6 +70,8 @@ class _SheetBody extends StatelessWidget {
     required this.scrollHeading,
     required this.horizontalPadding,
     required this.headingTop,
+    required this.titleSize,
+    required this.headingGap,
     required this.bottomPadding,
     this.trailing,
   });
@@ -76,6 +82,8 @@ class _SheetBody extends StatelessWidget {
   final bool scrollHeading;
   final double horizontalPadding;
   final double? headingTop;
+  final double titleSize;
+  final double? headingGap;
   final double bottomPadding;
 
   @override
@@ -86,7 +94,7 @@ class _SheetBody extends StatelessWidget {
         headingTop ??
             (expand ? _T.expandedSheetHeadingTop : _T.sheetPadding + 8),
         _T.sheetPadding,
-        expand ? _T.expandedSheetHeadingGap : _T.sheetPadding,
+        headingGap ?? (expand ? _T.expandedSheetHeadingGap : _T.sheetPadding),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,8 +102,8 @@ class _SheetBody extends StatelessWidget {
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(
-                fontSize: _T.sheetTitleSize,
+              style: TextStyle(
+                fontSize: titleSize,
                 fontWeight: FontWeight.bold,
                 height: 1.15,
               ),

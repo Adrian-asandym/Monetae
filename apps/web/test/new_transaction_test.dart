@@ -22,6 +22,7 @@ import 'package:monetae_web/session/session_controller.dart';
 import 'package:monetae_web/widgets/transaction_category_grid.dart';
 import 'package:monetae_web/widgets/category_icon.dart';
 import 'package:monetae_web/widgets/transaction_form/form_controls.dart';
+import 'package:monetae_web/widgets/transaction_form/form_settings.dart';
 import 'package:monetae_web/widgets/transaction_form/account_selection_sheet.dart';
 import 'package:monetae_web/presentation/account_color.dart';
 
@@ -173,6 +174,7 @@ Future<void> mountForm(
   Brightness brightness = Brightness.light,
   bool keepTitleSheet = false,
   bool editing = false,
+  TransactionFormSettings? settings,
 }) async {
   await harness.mount(
     tester,
@@ -181,6 +183,7 @@ Future<void> mountForm(
       session: f.session,
       controller: f.form,
       editing: editing,
+      settings: settings,
     ),
     captureSize: const Size(430, 1120),
     viewSize: const Size(480, 1170),
@@ -289,6 +292,7 @@ Future<void> mountCategoryForm(
   FormFixture f, {
   Brightness brightness = Brightness.dark,
   Size size = const Size(400, 642),
+  TransactionFormSettings? settings,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -303,7 +307,11 @@ Future<void> mountCategoryForm(
         locale: const Locale('es'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: NewTransactionPage(session: f.session, controller: f.form),
+        home: NewTransactionPage(
+          session: f.session,
+          controller: f.form,
+          settings: settings,
+        ),
       ),
     ),
   );
@@ -677,6 +685,293 @@ void main() {
     expect(find.byKey(const Key('title-sheet')), findsNothing);
     expect(tester.takeException(), isNull);
   });
+
+  Future<void> openSettings(WidgetTester tester) async {
+    await tester.tap(find.byKey(const Key('form-menu')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('form-settings-sheet')), findsOneWidget);
+  }
+
+  Future<void> toggleSetting(WidgetTester tester, String id) async {
+    final control = find.byKey(Key('form-setting-$id'));
+    await tester.ensureVisible(control);
+    await tester.pumpAndSettle();
+    await tester.tap(control);
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> closeSettings(WidgetTester tester) async {
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('form-settings-sheet')), findsNothing);
+  }
+
+  testWidgets(
+    'form menu toggles transfer and attachment without losing fields',
+    (tester) async {
+      final f = FormFixture();
+      final settings = TransactionFormSettings();
+      addTearDown(f.close);
+      addTearDown(settings.dispose);
+      await mountForm(tester, f, settings: settings);
+      final width = tester
+          .getSize(find.byKey(const Key('select-expense')))
+          .width;
+      final title = find.descendant(
+        of: find.byKey(const Key('transaction-title')),
+        matching: find.byType(EditableText),
+      );
+      final note = find.descendant(
+        of: find.byKey(const Key('transaction-note')),
+        matching: find.byType(EditableText),
+      );
+      await tester.ensureVisible(title);
+      await tester.enterText(title, 'Título sintético');
+      await tester.ensureVisible(note);
+      await tester.enterText(note, 'Nota sintética');
+      final notesHeight = tester.getSize(find.byType(FormNotesPanel)).height;
+      await openSettings(tester);
+      for (final id in ['transfer', 'attachment', 'auto-title']) {
+        expect(
+          tester.widget<Switch>(find.byKey(Key('form-setting-$id'))).value,
+          isTrue,
+        );
+      }
+      for (final text in [
+        'Pestaña de transferencia de saldo',
+        "En la página 'Agregar nueva transacción'",
+        'Botón Agregar archivos adjuntos',
+        'Mostrar debajo de la sección de notas',
+        'Agregar títulos automáticamente',
+        'Cuando se crea una transacción',
+        'Indicaciones iniciales de entrada',
+        'Al añadir una transacción por primera vez',
+      ]) {
+        expect(find.text(text), findsOneWidget);
+      }
+      await toggleSetting(tester, 'transfer');
+      await toggleSetting(tester, 'attachment');
+      await closeSettings(tester);
+      expect(find.byKey(const Key('select-transfer')), findsNothing);
+      expect(find.byKey(const Key('form-add-attachment')), findsNothing);
+      expect(
+        tester.getSize(find.byKey(const Key('select-expense'))).width,
+        closeTo(width * 1.5, .01),
+      );
+      expect(
+        tester.getSize(find.byKey(const Key('select-income'))).width,
+        closeTo(width * 1.5, .01),
+      );
+      expect(
+        tester.getSize(find.byType(FormNotesPanel)).height,
+        lessThan(notesHeight),
+      );
+      expect(
+        tester.widget<EditableText>(title).controller.text,
+        'Título sintético',
+      );
+      expect(
+        tester.widget<EditableText>(note).controller.text,
+        'Nota sintética',
+      );
+      await openSettings(tester);
+      await toggleSetting(tester, 'transfer');
+      await toggleSetting(tester, 'attachment');
+      await closeSettings(tester);
+      expect(find.byKey(const Key('select-transfer')), findsOneWidget);
+      expect(find.byKey(const Key('form-add-attachment')), findsOneWidget);
+      expect(f.form.title, 'Título sintético');
+      expect(f.form.note, 'Nota sintética');
+      expect(f.posts, isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'shared menu preferences survive reopening create and edit forms',
+    (tester) async {
+      final shared = TransactionFormSettings.shared;
+      addTearDown(() {
+        shared.showTransfer = true;
+        shared.showAttachment = true;
+      });
+      final first = FormFixture(), second = FormFixture();
+      addTearDown(first.close);
+      addTearDown(second.close);
+      await mountForm(tester, first);
+      await openSettings(tester);
+      await toggleSetting(tester, 'transfer');
+      await toggleSetting(tester, 'attachment');
+      await closeSettings(tester);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await mountForm(tester, second, editing: true);
+      expect(find.byKey(const Key('select-transfer')), findsNothing);
+      expect(find.byKey(const Key('form-add-attachment')), findsNothing);
+      await openSettings(tester);
+      expect(find.text(l.formEditMenuTitle), findsOneWidget);
+      expect(
+        tester
+            .widget<Switch>(find.byKey(const Key('form-setting-transfer')))
+            .value,
+        isFalse,
+      );
+      expect(
+        tester
+            .widget<Switch>(find.byKey(const Key('form-setting-attachment')))
+            .value,
+        isFalse,
+      );
+      await toggleSetting(tester, 'transfer');
+      await toggleSetting(tester, 'attachment');
+      await closeSettings(tester);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'design-only menu entries preserve the initial title prompt and form state',
+    (tester) async {
+      final f = FormFixture();
+      final settings = TransactionFormSettings();
+      addTearDown(f.close);
+      addTearDown(settings.dispose);
+      await mountForm(tester, f, settings: settings);
+      final requestCount = f.requests.length;
+      await openSettings(tester);
+      await toggleSetting(tester, 'auto-title');
+      expect(
+        tester
+            .widget<Switch>(find.byKey(const Key('form-setting-auto-title')))
+            .value,
+        isTrue,
+      );
+      final initial = find.byKey(const Key('form-setting-row-initial-input'));
+      await tester.ensureVisible(initial);
+      await tester.tap(initial);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('form-settings-sheet')), findsOneWidget);
+      expect(f.requests.length, requestCount);
+      await closeSettings(tester);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await mountForm(tester, f, settings: settings, keepTitleSheet: true);
+      expect(find.byKey(const Key('title-sheet')), findsOneWidget);
+      expect(f.posts, isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('form menu preferences do not change the request or retry key', (
+    tester,
+  ) async {
+    final f = FormFixture()..status = 500;
+    final settings = TransactionFormSettings();
+    addTearDown(f.close);
+    addTearDown(settings.dispose);
+    await mountForm(tester, f, settings: settings);
+    await fillAmount(tester, '12.50');
+    await chooseCategory(tester);
+    await tester.tap(find.byKey(const Key('save-transaction')));
+    await tester.pumpAndSettle();
+    final first = f.posts.single;
+    await openSettings(tester);
+    await toggleSetting(tester, 'transfer');
+    await toggleSetting(tester, 'attachment');
+    await closeSettings(tester);
+    await tester.tap(find.byKey(const Key('save-transaction')));
+    await tester.pumpAndSettle();
+    expect(f.posts.last.body, first.body);
+    expect(
+      f.posts.last.headers['Idempotency-Key'],
+      first.headers['Idempotency-Key'],
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final editing in [false, true]) {
+    testWidgets(
+      'English form menu fits and scrolls at 320x480 editing=$editing',
+      (tester) async {
+        final f = FormFixture();
+        final settings = TransactionFormSettings();
+        addTearDown(f.close);
+        addTearDown(settings.dispose);
+        tester.view.physicalSize = const Size(320, 480);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: monetaeTheme(brightness: Brightness.dark),
+            locale: const Locale('en'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: NewTransactionPage(
+              session: f.session,
+              controller: f.form,
+              settings: settings,
+              editing: editing,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await dismissTitleSheet(tester);
+        await openSettings(tester);
+        expect(
+          find.text(editing ? 'Edit Transaction' : 'Add Transaction'),
+          findsOneWidget,
+        );
+        final initial = find.byKey(const Key('form-setting-row-initial-input'));
+        await tester.ensureVisible(initial);
+        await tester.tap(initial);
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('form-settings-sheet')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  for (final brightness in Brightness.values) {
+    for (final hidden in [false, true]) {
+      testWidgets(
+        'golden form menu ${brightness.name} hidden=$hidden at 400x642',
+        (tester) async {
+          final f = FormFixture();
+          final settings = TransactionFormSettings();
+          addTearDown(f.close);
+          addTearDown(settings.dispose);
+          await f.form.load();
+          f.form.edit(() {
+            f.form.amount = '40';
+            f.form.categoryId = f.categories.first.id;
+          });
+          await mountCategoryForm(
+            tester,
+            f,
+            brightness: brightness,
+            settings: settings,
+          );
+          await tester.tapAt(const Offset(10, 10));
+          await tester.pumpAndSettle();
+          await openSettings(tester);
+          if (hidden) {
+            await toggleSetting(tester, 'transfer');
+            await toggleSetting(tester, 'attachment');
+          }
+          await expectLater(
+            find.byKey(const Key('category-sheet-capture')),
+            matchesGoldenFile(
+              'goldens/new_transaction_menu_${hidden ? 'hidden_' : ''}${brightness.name}.png',
+            ),
+          );
+          if (hidden) {
+            await toggleSetting(tester, 'transfer');
+            await toggleSetting(tester, 'attachment');
+          }
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
+  }
 
   for (final brightness in Brightness.values) {
     testWidgets(

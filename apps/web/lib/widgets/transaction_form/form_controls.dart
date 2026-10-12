@@ -19,8 +19,10 @@ class FormKindTabs extends StatelessWidget {
     super.key,
     required this.income,
     required this.onChanged,
+    this.showTransfer = true,
   });
   final bool income;
+  final bool showTransfer;
   final ValueChanged<bool> onChanged;
 
   @override
@@ -90,13 +92,14 @@ class FormKindTabs extends StatelessWidget {
         ),
         // TODO(T-515): transfers exist in the API (/transfers) but not in the
         // web client; this tab is design only until that flow is built.
-        tab(
-          const Key('select-transfer'),
-          l.formTransfer,
-          Icon(Icons.swap_horiz_rounded, size: 22, color: colors.muted),
-          false,
-          null,
-        ),
+        if (showTransfer)
+          tab(
+            const Key('select-transfer'),
+            l.formTransfer,
+            Icon(Icons.swap_horiz_rounded, size: 22, color: colors.muted),
+            false,
+            null,
+          ),
       ],
     );
   }
@@ -526,6 +529,7 @@ class FormNotesPanel extends StatelessWidget {
     required this.initialValue,
     required this.onChanged,
     required this.readOnly,
+    this.showAttachment = true,
     this.errorText,
   });
   final Key fieldKey;
@@ -533,6 +537,7 @@ class FormNotesPanel extends StatelessWidget {
   final ValueChanged<String> onChanged;
   final bool readOnly;
   final String? errorText;
+  final bool showAttachment;
 
   @override
   Widget build(BuildContext context) {
@@ -583,30 +588,32 @@ class FormNotesPanel extends StatelessWidget {
                   ],
                 ),
               ),
-              Divider(height: 1, thickness: 1, color: form.fieldDivider),
-              InkWell(
-                key: const Key('form-add-attachment'),
-                // TODO(T-515): attachments are a Phase 6 feature; design only.
-                onTap: () {},
-                child: SizedBox(
-                  height: _T.attachmentHeight,
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 14),
-                      const Icon(Icons.attach_file_rounded, size: 22),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          l.formAddAttachment,
-                          style: const TextStyle(fontSize: _T.fieldFontSize),
+              if (showAttachment) ...[
+                Divider(height: 1, thickness: 1, color: form.fieldDivider),
+                InkWell(
+                  key: const Key('form-add-attachment'),
+                  // TODO(T-515): attachments are a Phase 6 feature; design only.
+                  onTap: () {},
+                  child: SizedBox(
+                    height: _T.attachmentHeight,
+                    child: Row(
+                      children: [
+                        const SizedBox(width: 14),
+                        const Icon(Icons.attach_file_rounded, size: 22),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            l.formAddAttachment,
+                            style: const TextStyle(fontSize: _T.fieldFontSize),
+                          ),
                         ),
-                      ),
-                      const Icon(Icons.add_rounded, size: 24),
-                      const SizedBox(width: 14),
-                    ],
+                        const Icon(Icons.add_rounded, size: 24),
+                        const SizedBox(width: 14),
+                      ],
+                    ),
                   ),
                 ),
-              ),
+              ],
             ],
           ),
         ),

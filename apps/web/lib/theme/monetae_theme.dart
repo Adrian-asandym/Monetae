@@ -211,6 +211,7 @@ class TransactionFormColors {
     required this.switchTrack,
     required this.switchThumb,
     required this.typeText,
+    required this.menuSubtitle,
   });
 
   final Color header;
@@ -236,6 +237,7 @@ class TransactionFormColors {
   final Color switchTrack;
   final Color switchThumb;
   final Color typeText;
+  final Color menuSubtitle;
 
   static const _dark = TransactionFormColors._(
     header: Color(0xFF33383A),
@@ -261,6 +263,7 @@ class TransactionFormColors {
     switchTrack: Color(0xFF707C81),
     switchThumb: Color(0xFFBAC8CF),
     typeText: Color(0xFFFFFFFF),
+    menuSubtitle: Color(0xCCFFFFFF),
   );
 
   static const _light = TransactionFormColors._(
@@ -287,6 +290,7 @@ class TransactionFormColors {
     switchTrack: Color(0xFF78909C),
     switchThumb: Color(0xFFFFFFFF),
     typeText: Color(0xFF121212),
+    menuSubtitle: Color(0xCC121212),
   );
 
   static TransactionFormColors of(BuildContext context) =>
@@ -377,6 +381,21 @@ abstract final class TransactionFormTokens {
   static const accountRadioFillSize = 10.0;
   static const accountSelectionOpacity = .33;
   static const accountHoverOpacity = .04;
+  static const menuListInset = 0.0;
+  static const menuHeadingSize = 23.0;
+  static const menuHeadingTop = 19.0;
+  static const menuHeadingGap = 13.0;
+  static const menuBottomPadding = 16.0;
+  static const menuRowHorizontalPadding = 16.0;
+  static const menuRowVerticalPadding = 12.0;
+  static const menuIconSize = 28.0;
+  static const menuIconGap = 16.0;
+  static const menuTitleSize = 16.0;
+  static const menuSubtitleSize = 14.0;
+  static const menuTextHeight = 1.2;
+  static const menuSubtitleGap = 3.0;
+  static const menuTrailingGap = 5.0;
+  static const menuChevronWidth = 52.0;
   static const moreDividerHeight = 20.0;
   static const moreDividerLabelGap = 10.0;
   static const moreDividerThickness = 1.0;

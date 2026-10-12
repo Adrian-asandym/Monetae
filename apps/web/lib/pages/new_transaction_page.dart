@@ -29,6 +29,8 @@ import '../widgets/decimal_number_pad.dart';
 import '../widgets/transaction_category_grid.dart';
 import '../widgets/transaction_form/account_selection_sheet.dart';
 import '../widgets/transaction_form/form_controls.dart';
+import '../widgets/transaction_form/form_settings.dart';
+import '../widgets/transaction_form/form_settings_sheet.dart';
 import '../widgets/transaction_form/form_sheet.dart';
 import '../widgets/transaction_form/transaction_type_sheet.dart';
 
@@ -43,12 +45,14 @@ class NewTransactionPage extends StatefulWidget {
     required this.session,
     this.controller,
     this.editing = false,
+    this.settings,
   });
   final SessionController session;
   final NewTransactionController? controller;
 
   /// Only switches the title; there is no edit route yet (TODO T-515).
   final bool editing;
+  final TransactionFormSettings? settings;
   @override
   State<NewTransactionPage> createState() => _NewTransactionPageState();
 }
@@ -57,6 +61,7 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
   late final NewTransactionController _form;
   late final TextEditingController _rate;
   late final TextEditingController _title;
+  late final TransactionFormSettings _settings;
   bool _initialTitleOpened = false;
   bool _uncategorizedChosen = false;
   FormTransactionType _designType = FormTransactionType.standard;
@@ -77,6 +82,8 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
     _rate = TextEditingController(text: _form.rate);
     _title = TextEditingController(text: _form.title);
     _form.addListener(_changed);
+    _settings = widget.settings ?? TransactionFormSettings.shared;
+    _settings.addListener(_settingsChanged);
     if (_form.loading) _form.load();
     _loadChipCatalogs();
     _scheduleTitleSheet();
@@ -110,6 +117,10 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
     if (_title.text != _form.title) _title.text = _form.title;
     setState(() {});
     _scheduleTitleSheet();
+  }
+
+  void _settingsChanged() {
+    if (mounted) setState(() {});
   }
 
   void _scheduleTitleSheet() {
@@ -179,6 +190,7 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
   @override
   void dispose() {
     _form.removeListener(_changed);
+    _settings.removeListener(_settingsChanged);
     if (widget.controller == null) _form.dispose();
     _rate.dispose();
     _title.dispose();
@@ -584,8 +596,13 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
             key: const Key('form-menu'),
             tooltip: l.formMenu,
             icon: const Icon(Icons.more_vert_rounded),
-            // TODO(T-515): Cashew's menu (duplicate, delete…) needs edit mode.
-            onPressed: () {},
+            onPressed: busy
+                ? null
+                : () => showFormSettingsSheet(
+                    context,
+                    settings: _settings,
+                    editing: widget.editing,
+                  ),
           ),
         ],
       ),
@@ -672,7 +689,11 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
             ],
           ),
         ),
-      FormKindTabs(income: _form.income, onChanged: _selectIncome),
+      FormKindTabs(
+        income: _form.income,
+        onChanged: _selectIncome,
+        showTransfer: _settings.showTransfer,
+      ),
       _error(_fieldError('kind')),
       FormAmountHeader(
         category: _headerCategory(),
@@ -858,6 +879,7 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
       Padding(
         padding: pad,
         child: FormNotesPanel(
+          showAttachment: _settings.showAttachment,
           fieldKey: const Key('transaction-note'),
           initialValue: _form.note,
           readOnly: _form.busy,
