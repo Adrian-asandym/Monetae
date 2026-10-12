@@ -8,33 +8,40 @@
 
 | | |
 |---|---|
-| **Última actualización** | **2026-10-11, ~23:20 (America/Lima)** — cierre de sesión («Continuaremos en otro momento») |
+| **Última actualización** | **2026-10-12, tarde (America/Lima)** — cierre de sesión («Continuaremos en otro momento») |
 | **`origin`** | `origin/main` = `origin/master-dev` = **`8b8688e`** (hasta T-508, SPEC v0.5; G6). |
 | **`main`** | `8b8688e`. |
-| **`master-dev`** | **`9e39160` + el commit de este cierre (`git log -1`)** |
-| **Rama de tarea** | **`claude/T-515-form-transaccion` = `ff412ca`** (worktree `../Monetae-claude-T-515-form-transaccion`): **T-515 completa** (piezas 1–6) y verificada por el coordinador. **Sin fusionar** en `master-dev`: espera la revisión visual de Adrian (R3). |
-| **Gate abierto** | **G7 `gate_ecde8d19a53a`** (publicar en `main`): propuesto; Adrian eligió **B (esperar a su revisión visual)**. Su texto menciona T-509/T-510/T-601/T-602, pero al resolverlo se publicará **todo `master-dev`** tras repetir la auditoría. |
-| **SPEC / ARCHITECTURE / contrato** | SPEC **v0.6** · `docs/ARCHITECTURE.md` v0.3 · `docs/api/openapi.json` **0.6.0** (89 paths, 131 operaciones). |
+| **`master-dev`** | **`eeb622a` + el commit de este cierre (`git log -1`)**: incluye T-515 (formulario piezas 1–9), T-518, T-604 (contrato **0.7.0**, migración **`0012`**) y la corrección de DTO. **Sin publicar.** |
+| **Rama de tarea** | **`codex/T-519-transfer-balance` = `1fb2c4b`** (pieza 10 aceptada) + **pieza 11 sin commit al cerrar** (Codex la estaba cerrando: integrar `eeb622a`, repetir verificación y commit). |
+| **Gate abierto** | **G7 `gate_ecde8d19a53a`** (publicar en `main`): sin resolver; al resolverlo se publica **todo `master-dev`** tras la auditoría. |
+| **SPEC / ARCHITECTURE / contrato** | SPEC **v0.7** · `docs/ARCHITECTURE.md` v0.3 · `docs/api/openapi.json` **0.7.0** (90 paths, 133 operaciones). |
 
 ## 2. Fase actual
 
 | Estado | Contenido |
 |---|---|
-| ✅ **Completo** | Fases 0–4. **Fase 5:** T-501…T-510 (UI base, gráficas, cliente, formulario de transacción), T-512/T-513/T-514 (Inicio fiel a Cashew según la skill). **Adelantado de la Fase 6:** API de presupuestos (T-601), metas (T-602) y `display_name` (T-603). |
-| 🔄 **En curso** | **T-515** formulario de transacción fiel a Cashew: **terminado en su rama**, pendiente de la revisión de Adrian (R3) y de la fusión (M1). Ningún worker vivo. |
-| ⏳ **Pendiente** | **R3 revisión de T-515 por Adrian** · **M1** fusión de T-515 · **T-518** goldens dependientes de la fecha · **Revisión visual de Inicio por Adrian** (R2) · **G7** · **F1** (formularios crear objetivo/presupuesto, detalle de categorías, reordenar Inicio) · **D12** (historial de presupuestos/metas = transacciones filtradas) · resto de la Fase 5 (pestañas Transacciones/Presupuestos/Más completas) · Fase 6 (íconos SVG API, adjuntos, notificaciones, Google, PIN/WebAuthn, proveedor de tipo de cambio) · Fase 7 · importación real (D9-A) · VPS → V2–V4. |
+| ✅ **Completo** | Fases 0–4. **Fase 5:** T-501…T-515 (formulario de transacción fiel a Cashew, piezas 1–9 incluidos los ajustes v2 1–3 de Adrian), T-518 (goldens sin fecha). **Adelantado de la Fase 6:** T-601/T-602/T-603 y **T-604** («Corrección de saldo»: categorías de sistema, `POST/GET /balance-corrections`, exclusión de totales, importador). |
+| 🔄 **En curso** | **T-519** pantalla «Transferir saldo» (pieza 10 aceptada en la rama) + **pieza 11** hoja «Tipo De Cambio» con sugerencia (Codex la terminaba al cerrar). |
+| ⏳ **Pendiente** | Revisar e integrar T-519 · actualizar la skill `cashew-form-transaccion` (pedido de Adrian) · **TAM** (medidas de ajustes 1–2) · R2/G7 · F1 · D12 · VPS1-C (cuando Adrian contrate el VPS) · resto de la Fase 5 · Fase 6 · Fase 7 · importación real (D9-A). |
 
-Backend: **58 de 89 rutas** aprox., 11 migraciones (cabeza **`0011`**), **1164 pruebas**. UI `apps/web`: **217 pruebas** (goldens claro/oscuro con DM Sans). Detalle en el Anexo A (sin actualizar para T-601–T-603).
+Backend: **1190 pruebas**, migraciones hasta **`0012`**. UI `apps/web`: **301 pruebas** en `master-dev` (todas verdes; 321 en la rama T-519 tras la pieza 10).
 
-## 3. Trabajo hecho en esta sesión (2026-10-11)
+## 3. Trabajo hecho en esta sesión (2026-10-12)
 
-- **Reanudación:** STATUS coincidía con git. Adrian reactivó Docker y dio el permiso SSH a Orca (**O1 resuelto**); aprobó «todo A».
-- **T-515 piezas 2–6 delegadas a Codex** (`gpt-6.1-sol` high, una por lanzamiento, misma terminal y rama). Arranque con incidencias: aviso «Update available» (Esc + `--retry-of`) y un fallo de Codex `account/read … workspace routing discovery timed out` (`worker-stop` del dispatch y nuevo `worker-start`).
-  - `a0cb695` pieza 2 hoja de título (11) · `8da7527` pieza 3 hoja de categorías (15) · `fef03d1` pieza 4 hoja de importe y teclado (16) · `8a79c57` pieza 5 Más opciones (14) · `ff412ca` pieza 6 modal de tipos (17–19) + aviso «Aún no disponible: se guardará como transacción normal».
-  - Cada pieza la verificó el coordinador: diff, `flutter analyze` limpio, `flutter test` (final: **262 verdes**, 10 fallos previos), goldens nuevos revisados, `flutter build web --release`, y captura Playwright a 400×642 oscuro contra la captura correspondiente (todas fieles).
-  - **Prueba de punta a punta** en `localhost:8080`: «+» → título «Prueba T-515» → Alimentación → 12,5 → Guardar ⇒ API: gasto −12.50 PEN `posted` con categoría; Inicio se refrescó. **Esa transacción sintética queda en la BD de revisión.**
-- **Hallazgo:** 10 goldens fallan **también en `master-dev`** (no es regresión de T-515): `GoalCard` usa `DateTime.now()` (`apps/web/lib/widgets/goal_card.dart:78`), así que «X/día para N días» cambia cada día. Afecta a `budgets_goals_test` (goal half, goals_horizontal/vertical_data), `home_v2_test` (Home v2) y `home_assembly_test` (assembled home data), en claro y oscuro.
-- Codex preguntó dos veces (`ask`): no actualizar la rama con los commits de docs de `master-dev` (respuesta: no, integra el coordinador) y adaptar `home_assembly_test.dart` (autorizado, solo la prueba de navegación).
+- **Reanudación:** STATUS coincidía con git. Pila de revisión levantada; **pasada al puerto 8090** (el 8080 es de Tomcat/Lupuna de Adrian).
+- **Respuestas a Adrian:** el formulario guarda en la BD (`POST /transactions`); tipo de cambio solo manual (proveedor en la Fase 6); transferencias: API sí, UI no (resuelto con T-519). Plan VPS (VPS1-C).
+- **Pautas v2 del formulario (capturas 20–25)** repartidas así:
+  - **T-515 piezas 7–9** (Codex `gpt-6.1-sol` high, una por lanzamiento): `fdb955e` nombre de categoría bajo el monto + «Agregar transacción»; `3fa1af9` hoja «Seleccionar Cuenta» reutilizable (también apilada sobre la hoja de importe); `dbdc2eb` menú ⋮ (a y b funcionales, en memoria; c y d diseño). Investigación: (c) en Cashew guarda asociaciones título-categoría (no controla la hoja de título, `editAssociatedTitlesPage.dart:323`); (d) no existe en el clon local (versión anterior), equivalentes `askForTransactionTitle`/`askForTransactionNoteWithTitle`.
+  - **T-604** (Codex high): migración `0012` (2 categorías de sistema «Corrección de saldo», CHECK de `transfer_group_id` ampliado), `POST/GET /balance-corrections` atómico e idempotente con `to_occurred_at` (llegada diferida), piernas editables por separado (PATCH conserva kind/categoría), exclusión en reportes/presupuestos/Inicio, metas como `transfer` (igual que Cashew `watchTotalTowardsObjective`), importador (categoría 0 de Cashew → correcciones). Verificado por el coordinador: ruff, mypy, **1190 pruebas**, `alembic` up/check/down/up, `check_openapi`.
+  - **T-519** (Codex high): pieza 10 `1fb2c4b` pantalla «Transferir saldo» (tarjetas, ✕, ↓, ⓘ, línea «Llegada: igual que la salida», guardado exacto con idempotencia, ícono `swap_horiz`). Verificada: 321 pruebas, golden vs captura 24, **POST real** contra la pila (201; piernas borradas después). El clon de Cashew es **anterior** a las capturas 24–25: ✕ = limpiar importe, ↓ = intercambiar cuentas, «Corrección De Saldo» = TODO (la lista no filtra por categoría).
+- **T-518** (Codex medium): reloj inyectable `PresentationClock`; 10 goldens ya no dependen del día.
+- **Integrado en `master-dev`:** T-518, T-604, T-515 (M1). UI **301 pruebas verdes**.
+- **SPEC v0.7** (RF-03 y §9.4) por T1-B.
+- **Incidente:** tras subir la API de revisión a `0012`, la UI mostraba «no se pudo conectar con el servidor»: los DTO (contrato 0.6.0) rechazaban `system_key` `balance_correction_*` y fallaba toda la lista de categorías. Corregido regenerando DTO con `apps/web/tool/generate_dtos.py` (`eeb622a`, 4 líneas). Ver lección en el Anexo C.
+
+## 3b. Sesión anterior (2026-10-11)
+
+- T-515 piezas 2–6 con Codex; prueba de punta a punta en la pila; hallazgo de los 10 goldens dependientes de la fecha (resuelto hoy con T-518).
 
 ## 3b. Sesión anterior (2026-10-10, noche — 2.ª sesión)
 
@@ -58,6 +65,7 @@ Backend: **58 de 89 rutas** aprox., 11 migraciones (cabeza **`0011`**), **1164 p
 
 | Fecha | Decisión |
 |---|---|
+| 2026-10-12 (tarde) | **Cierre** («Continuaremos en otro momento») con la pieza 11 de T-519 cerrándose en su rama. Antes, Adrian autorizó: «**si te quedas sin cuota con Codex, completa su trabajo solo por esta vez**» (excepción puntual; la regla sigue siendo que el código lo escribe Codex). Reportó el error «no se pudo conectar con el servidor» en Inicio y al crear transacción (corregido, `eeb622a`). TAM sigue sin respuesta. |
 | 2026-10-12 | «**OK todo A**» al plan T1-B: **Z1-A** (correcciones excluidas de ingresos/gastos, presupuestos e Inicio), **Z2-A** (el importador trae las «Correcciones de saldo» de Cashew como tales), **Z3**: por defecto ambas piernas con la misma fecha y hora, pero **la de llegada debe poder editarse** (transferencias diferidas). Por eso el par se enlaza con el `transfer_group_id` existente (pauta de Adrian: usar el campo de enlace si existe) en vez de emparejar por fecha. SPEC v0.7. T-604 lanzada. |
 | 2026-10-12 | Pautas de diseño v2 del formulario (capturas 20–25; 5 ajustes) delegadas a Codex: piezas 7–9 de T-515 (`docs/tasks/T-515-ui-transaction-form.md`, sección «Ajustes v2»). **M1 = sí** (fusionar T-515 al terminar los ajustes). **T-518 = A** (lanzada, Codex `gpt-6.1-sol` medium, rama `codex/T-518-date-goldens`). **T1 = B**: transferencia «a lo Cashew» = dos transacciones independientes gasto/ingreso con la categoría **«Corrección de saldo»** (no `/transfers`). Como la categoría no existe, el coordinador presenta el plan para añadirla y **espera confirmación** antes de implementarla; no se cambian los totales hasta su OK. |
 | 2026-10-12 | **VPS1-C**: contratará un VPS Contabo (6 vCPU, 12 GB RAM, 200 GB SSD o 100 GB NVMe) con **AlmaLinux 10**; primero para **desarrollo** (Orca por SSH, usuario sin root) y después también para **producción** en el mismo VPS (alternativas que evaluará: datos reales aislados solo para root, o PaaS tipo Supabase). Exposición con **Cloudflare Tunnel + Cloudflare Access** (Adrian gestiona sus subdominios en Cloudflare; el coordinador le dará los pasos). La pila de revisión local pasa al puerto **8090** (el 8080 queda para Tomcat/Lupuna). |
@@ -98,73 +106,53 @@ Backend: **58 de 89 rutas** aprox., 11 migraciones (cabeza **`0011`**), **1164 p
 
 Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
-**R3 · Revisión de T-515 por Adrian** (en curso desde el 2026-10-12). Levantar la pila en el **8090** **sin recompilar** (el `build/web` de `master-dev` ya contiene T-515 `ff412ca`) y que Adrian recorra el formulario a 400×642 con `revision-g7@example.test`. Sus ajustes → una tarea Codex (`claude/T-515-form-transaccion`, misma mecánica pieza a pieza).
+**TAM · Medidas de los ajustes 1 y 2.** En la pieza 9 se vio que las medidas en dp de las pautas parecen px de la captura (escala 1,25): con 20/16 dp la hoja salía mucho más alta que en Cashew, y se calibró a 16/14 dp del código de Cashew. Los ajustes 1 (nombre de categoría, 20 dp, una línea) y 2 (hoja de cuentas, nombre 20 dp, radio de fila 12) usan los números literales; Cashew usa 18 dp (categoría hasta 2 líneas) y radio 15.
+- **A (recomendada): igualarlos al código de Cashew** en una tarea pequeña de Codex (medium). *Razón:* misma regla para todo el formulario.
+- B: dejarlos como están.
 
-**VPS1 · (decidido 2026-10-12: C) Entorno en un VPS.** Pendiente de que Adrian contrate el VPS. Plan: endurecer (usuario sin root con clave SSH, sin contraseña ni root por SSH, cortafuegos solo SSH, actualizaciones automáticas) → instalar Docker, git, `gh`, uv, Flutter, CLIs de Codex/Claude (verificar en AlmaLinux 10, que exige x86-64-v3) → permiso SSH de Orca para el nuevo host → llevar `master-dev` y la rama T-515 (`git bundle` o push auditado) + `reference/cashew-inicio-ui/` (**nunca** `reference/backups/`) → Cloudflare Tunnel + Access para el subdominio de revisión → pruebas completas allá → corregir IP tras proxy (`ARCHITECTURE.md` §10.10, tarea Codex). **Riesgo a resolver antes de cargar datos reales:** un usuario en el grupo `docker` equivale a root; recomendación del coordinador: Docker **rootless** para el usuario de desarrollo desde el primer día, de modo que la producción (Docker de root u otro usuario) quede fuera del alcance de los agentes.
+**R4 · Revisión de T-519 por Adrian** (pantalla «Transferir saldo» + tipo de cambio) en `localhost:8090` cuando se integre.
 
-**M1 · Fusionar T-515 en `master-dev`.**
-- **A (recomendada): sí, tras R3 y sus ajustes**; actualizar la skill `cashew-form-transaccion` si cambia algo. A `main` solo con G7.
-- B: esperar a terminar más pantallas.
+**R2 · Revisión visual de Inicio por Adrian** y **G7 · Publicar en `main`** (`gate_ecde8d19a53a`).
+- **A (recomendada tras R2/R4): aprobar merge y push** sin `--force` tras la auditoría. *Razón:* hay mucho trabajo verificado solo en local (T-509…T-604, 4 migraciones).
+- B: seguir esperando. *Contra:* sin copia remota.
 
-**T-518 · Goldens dependientes de la fecha (10 en rojo también en `master-dev`).**
-- **A (recomendada): tarea pequeña Codex (`gpt-6.1-sol` medium)**: inyectar un reloj (`DateTime Function() now`) en `GoalCard` y los widgets que calculan «X/día para N días», fijar la fecha en las pruebas y regenerar esos goldens. **Necesaria antes de G7** (no publicar con pruebas en rojo).
-- B: actualizar los goldens a mano cada vez. *Contra:* se rompen al día siguiente.
+**F1 · Pantallas que faltan para conectar Inicio:** crear objetivo, crear presupuesto, detalle de categorías, reordenar Inicio. **A (recomendada):** una tarea Codex por pantalla. B: esperar.
 
-**O1 · (resuelto 2026-10-11)** Orca no aceptaba órdenes desde la terminal WSL.
-- **A (recomendada): activar en Orca *Settings → SSH → host `ssh-1790983388010-x1ugta`* «Allow this host's orca CLI to control Orca»** y seguir el flujo normal (Run `run_c2cebe1745b9`, una tarea Codex por pieza en `path:/home/artur/propio2/Monetae-claude-T-515-form-transaccion`). *Razón:* supervisión, `ask` y `worker_done` como siempre.
-- B: plan B de `CLAUDE.md` §3.4: el coordinador da a Adrian el texto de cada pieza para pegarlo en un panel de Codex y revisa por git.
-- C: `codex exec` no interactivo desde el coordinador. *Contra:* Adrian lo rechazó la última vez; no usar sin su permiso explícito.
+**F2 · Edición de transacciones existentes y filtro por categoría** (nuevo): la UI no abre transacciones guardadas para editarlas (la llegada diferida hoy solo se fija al crear) y la lista no filtra por categoría (botón «Corrección De Saldo» del diálogo ⓘ). **A (recomendada):** tarea Codex tras T-519. B: esperar a la pestaña Transacciones completa.
 
-**T-515 · ¿Aviso para tipos solo de diseño?** Hoy, elegir Suscripción/Repetitivo/Prestar/Deuda guarda una transacción normal sin avisar. **A (recomendada):** nota pequeña bajo la fila («Aún no disponible: se guardará como transacción normal»). B: dejarlo así y reportarlo.
+**D12 · Historial de presupuestos y metas** = lista de transacciones filtrada. **A (recomendada):** filtros `budget_id`/`goal_id` en `GET /transactions` (contrato 0.8.0). B: etiquetas.
 
-**R2 · Revisión visual de Inicio por Adrian** (lo primero al volver). Inicio ya incluye T-512/T-513/T-514. Relanzar la pila de revisión (§7) y abrir `http://localhost:8080` a 400×642 con `revision-g7@example.test` (nombre «Adrian Sandy»; contraseña dada en el chat, **no** versionada). Sus observaciones → una tarea Codex de ajuste.
+**VPS1 · (decidido C)** pendiente de que Adrian contrate el VPS (6 vCPU, 12 GB; recomendado 100 GB NVMe; AlmaLinux 10). Plan en el punto VPS1 de la sesión 2026-10-12 (§4) y recomendación de **Docker rootless** para el usuario de desarrollo.
 
-**G7 · Publicar en `main`** (`gate_ecde8d19a53a`; Adrian eligió **B: esperar a su revisión**). Al resolverlo se publica **todo `master-dev`** tras repetir la auditoría de seguridad.
-- **A (recomendada tras R2): aprobar merge y push** sin `--force`. *Razón:* hay mucho trabajo verificado solo en local (8 tareas, 3 migraciones).
-- B: seguir esperando. *Contra:* sin copia remota de ese trabajo.
-
-**F1 · Pantallas que faltan para conectar Inicio** (TODO en T-514): crear **objetivo**, crear **presupuesto**, **detalle de categorías** (lista + selector de mes) y **reordenar Inicio** (píldora «Editar», `preferences.home_widgets`).
-- **A (recomendada): una tarea Codex por pantalla**, empezando por los formularios de objetivo y presupuesto (la API existe), fieles a `addObjectivePage.dart` / `addBudgetPage.dart` de Cashew.
-- B: esperar a terminar la revisión visual de Inicio.
-
-**D12 · Historial de presupuestos y metas (RF-30)** — Adrian prefiere **la misma lista de transacciones filtrada**, sin historial aparte. *Falta su confirmación de la forma:*
-- **A (recomendada):** filtros `budget_id` (+ fecha del periodo) y `goal_id` en `GET /transactions`, y `GET /budgets/{id}?on=<fecha>` para el total de un periodo; pantalla del presupuesto con su barra y la lista debajo, flechas ◀ ▶ por periodo (como Cashew). Contrato 0.7.0 pequeño.
-- B: usar **etiquetas** para marcar la pertenencia. *Contra:* duplica lo que ya calcula el servidor y obliga a etiquetar a mano.
-
-**D7 · Para más adelante:** ADR-005 sincronización Android (antes de V4) · orden de categorías · OAuth de Google y proveedor de tipo de cambio (Fase 6) · proxy del VPS (`ARCHITECTURE.md` §10.10) · corregir el principal de un desembolso sin dinero sin crear efectivo · zona horaria de la UI distinta de Lima · radio de tarjetas 20 dp (Monetae) vs 15 dp (Cashew), pendiente de que Adrian elija.
-
-*Resueltas el 2026-10-10:* G6-A, P1-A, S1–S6, plan de T-512, G7-B (esperar), paso de Antigravity a Codex (ver §4).
+**D7 · Para más adelante:** ADR-005 · orden de categorías · OAuth Google y proveedor de tipo de cambio (Fase 6; habilita el paso 4 «mercado» de la sugerencia y «Ver todos los tipos de cambio») · proxy del VPS (`ARCHITECTURE.md` §10.10) · zona horaria de la UI · radio de tarjetas 20 vs 15 dp · persistir los ajustes del menú ⋮ (hoy en memoria).
 
 ## 6. Siguiente paso concreto
 
-**Al reanudar (pedido explícito de Adrian):** levantar la pila de revisión en `localhost:8090` **sin recompilar** (el `build/web` servido es T-515 `ff412ca`), comprobar login por nginx y dar a Adrian usuario/contraseña para que termine de verificar T-515 (R3). Luego, según su respuesta: tarea Codex de ajustes de T-515 → M1 (fusionar) → T-518 (goldens por fecha) → R2/G7/F1/D12.
-
-0. **(Hecho 2026-10-11)** ~~T-515 piezas 2–6 con Codex~~ (`gpt-6.1-sol`, high), **una pieza por lanzamiento** en el worktree `../Monetae-claude-T-515-form-transaccion` (rama `claude/T-515-form-transaccion`), spec `docs/tasks/T-515-ui-transaction-form.md`, tras resolver **O1**. Por cada pieza el coordinador: lee el diff, corre `dart analyze` + `flutter test`, revisa goldens, compila (`flutter build web --release`), copia `apps/web/build/web` al de `master-dev` (lo sirve nginx) y captura con Playwright a 400×642 en oscuro comparando con la captura 11–19. Al terminar la pieza 6: informe de TODO/diferencias a Adrian, actualizar la skill si hace falta y fusionar la rama en `master-dev`.
-1. **Relanzar la pila de revisión** (§7) y que **Adrian revise Inicio (R2)**; responder **F1**, **D12** y, tras la revisión, **G7**.
-2. **G7 = A:** auditoría (`git diff origin/main..master-dev`: rutas prohibidas, `.env`, `reference/`, secretos, correos, cifras reales), `gate-resolve gate_ecde8d19a53a`, `git merge --ff-only master-dev` en `../Monetae`, push sin `--force` (Anexo B), marcar `task_752b79134036` `completed`.
-3. **Ajustes de R2:** una tarea Codex `gpt-6.1-sol` high en `apps/web`, rama `codex/T-515-…`, verificación `dart analyze` + `flutter test` (goldens con texto versionados) + build web + revisión de goldens por el coordinador.
-4. **F1 = A:** T-516 formulario de objetivo y T-517 formulario de presupuesto (Codex high; `apps/web`; contra la API de T-601/T-602), después detalle de categorías y reordenar Inicio.
-5. **D12 = A:** contrato 0.7.0 + T-604 API de filtros (Codex medium) y pantalla de presupuesto/meta (Codex high).
-
-**Antes de lanzar:** `orca skills get orchestration --full`, `orca status --json`, `docker version`, `git worktree list`, disco ≥ 2,5 GB y puertos libres. Codex muestra «Update available» en cada lanzamiento: enviar *Esc* y reintentar con `--retry-of` (Anexo C). **Agentes:** Codex para todo; Antigravity solo como relevo por cuota (memoria y §4).
+**Al reanudar:**
+1. **T-519 pieza 11:** `orca orchestration check --run run_c2cebe1745b9` (puede haber un `worker_done` sin confirmar). Si Codex no llegó a hacer el commit, la rama tendrá cambios sin commit: mirar su terminal (`term_69891d59-…`) antes de tocar nada. **Si Codex no tiene cuota, el coordinador termina la pieza** (excepción autorizada el 2026-10-12, solo esta vez).
+2. **Revisar la pieza 11** (diff, `dart analyze`, `flutter test`, golden vs captura 24, conversión peruana, orden de la sugerencia) y una **prueba real** en la pila (sugerencia con historial real: crear una corrección y abrir la hoja de tasa).
+3. **Integrar T-519 en `master-dev`**, `flutter build web --release` en `master-dev` (sirve el 8090) y avisar a Adrian (R4).
+4. **Actualizar la skill** `.claude/skills/cashew-form-transaccion/SKILL.md` con las decisiones de los ajustes v2 (nombre bajo el monto, «Seleccionar Cuenta», menú ⋮, «Transferir saldo», tipo de cambio) y el informe final a Adrian de lo que quedó como diseño o distinto de Cashew.
+5. Según respuestas: **TAM** (Codex `gpt-6.1-sol` medium, `apps/web`) → **F2** → R2/G7 → F1/D12.
 
 ## 7. Estado del Run, de los worktrees y de los agentes abiertos
 
-**Run de la Fase 5: `run_c2cebe1745b9`.** Todas las tareas `completed` salvo: T-602 `task_752b79134036` **`blocked`** por el gate G7 (normal; marcar `completed` al resolverlo) y T-512b `task_e7ef47b4ca85` `failed` (sustituida por `task_c6324ab6cc3e`, completada). **Ningún worker vivo**; terminales de Codex liberadas. La terminal de Antigravity es externa (Orca no la libera): Adrian la cierra. Runs anteriores: `run_f5e95406186a` (F4), `run_63b520544a30` (F3), `run_70f5f187fe16` (F2), `run_2cddcd14320c` (F1), `run_bef8ecfc67a7` (F0). El CLI no cierra Runs; no usar `orchestration reset`.
+**Run de la Fase 5: `run_c2cebe1745b9`.** Completadas hoy: T-515 piezas 7–9 (`task_918cdbe06dbc`, `task_881bf03f5c44`, `task_2f7a58d49d4d`), T-518 `task_6e7d560172a3`, T-604 `task_1e5ea0e539ae`, T-519 pieza 10 `task_10487b71ff18`. **En curso al cerrar: T-519 pieza 11 `task_0d6fceaff333`** (dispatch `ctx_b9b2114b4dbc`, terminal `term_69891d59-37f1-4de9-a522-346e3c4b2d92`). T-602 `task_752b79134036` sigue `blocked` por G7 (normal). El CLI no cierra Runs; no usar `orchestration reset`.
 
-**Worktrees:** `Monetae` → `main`, `Monetae-master-dev` → `master-dev`, **`Monetae-claude-T-515-form-transaccion` → `claude/T-515-form-transaccion` = `ff412ca`** (en uso hasta M1: **no borrar**). Sin `.env` sueltos. **Orca (Run `run_c2cebe1745b9`):** tareas T-515 piezas 2–6 (`task_06b41e86c5d6`, `task_27874f259698`, `task_5e43a1ac4aa5`, `task_777ec99c0d6f`, `task_6ccfad199f27`) **completed**; terminal de Codex liberada; ningún worker vivo.
+**Worktrees:** `Monetae` → `main`; `Monetae-master-dev` → `master-dev`; **`Monetae-codex-T-519-transfer-balance`** → `codex/T-519-transfer-balance` (**en uso: no borrar**). **Ya fusionados (Adrian puede borrarlos):** `Monetae-claude-T-515-form-transaccion`, `Monetae-codex-T-518-date-goldens`, `Monetae-codex-T-604-balance-correction` (y sus ramas).
 
-**Contenedores:** **ninguno en marcha** (pila de revisión bajada al cerrar). **Ojo:** `Monetae-master-dev/apps/web/build/web` (artefacto ignorado que monta nginx) contiene la compilación de **T-515 `ff412ca`** (formulario completo + Inicio): **no recompilar desde `master-dev` antes de R3**. La BD de revisión incluye la transacción sintética «Prueba T-515». Se conserva el volumen `monetae-review_postgres_data` (BD en `0011`; usuarios sintéticos `adrian-review@example.test` y `revision-g7@example.test` «Adrian Sandy» con datos de octubre 2026; contraseñas solo en el chat). La pila de prueba que dejó Antigravity (`monetae-t512`) se bajó con su volumen. **Relanzar la pila de revisión** desde `Monetae-master-dev`:
+**Pila de revisión `monetae-review`: queda EN MARCHA** en `http://localhost:8090` (API `8000`, BD `5433`, migración **`0012`**), sirviendo la compilación de **`master-dev` `eeb622a`** (Inicio + formulario piezas 1–9; sin la pantalla «Transferir saldo» hasta integrar T-519). Usuario `revision-g7@example.test` (contraseña solo en el chat). Si se apaga WSL/Docker, relanzar desde `Monetae-master-dev`:
 ```bash
 export PATH="$HOME/flutter/bin:$HOME/.local/bin:$PATH"
-(cd apps/web && flutter build web --release)          # build/web ya existe de la última integración; recompilar si hay cambios
 cp .env.example .env && sed -i 's/^MONETAE_COOKIE_SECURE=true$/MONETAE_COOKIE_SECURE=false/' .env
-MONETAE_WEB_PORT=8090 COMPOSE_PROJECT_NAME=monetae-review docker compose -f infra/docker-compose.yml up -d --build db api web   # el puerto se pasa como variable: compose no lee el .env de la raíz
-COMPOSE_PROJECT_NAME=monetae-review docker compose -f infra/docker-compose.yml exec -T api alembic upgrade head
-# bajar: COMPOSE_PROJECT_NAME=monetae-review docker compose -f infra/docker-compose.yml down && rm -f .env
+MONETAE_WEB_PORT=8090 COMPOSE_PROJECT_NAME=monetae-review docker compose -f infra/docker-compose.yml up -d --build db api web   # el puerto va como variable: compose no lee el .env de la raíz
+MONETAE_WEB_PORT=8090 COMPOSE_PROJECT_NAME=monetae-review docker compose -f infra/docker-compose.yml exec -T api alembic upgrade head
+rm -f .env
+# bajar: MONETAE_WEB_PORT=8090 COMPOSE_PROJECT_NAME=monetae-review docker compose -f infra/docker-compose.yml down
 ```
+`apps/web/build/web` de `master-dev` (ignorado) es lo que monta nginx: recompilar ahí tras cada integración.
 
-**Paneles de Orca abiertos:** el del coordinador, `lupuna` (otro proyecto, no se toca) y, si siguen, los de Codex T-513/T-514 y Antigravity T-512 (inactivos: Adrian puede cerrarlos).
+**Paneles de Orca abiertos:** coordinador, `lupuna` (otro proyecto, no tocar) y Codex: T-515 (`term_dd064818…`, terminado), T-518 (`term_a28d5186…`, terminado), T-604 (`term_6956b6c7…`, terminado) y **T-519 (`term_69891d59…`, activo: no cerrar hasta su `worker_done`)**.
 
 ## 8. Limitaciones y riesgos conocidos
 
@@ -177,8 +165,10 @@ COMPOSE_PROJECT_NAME=monetae-review docker compose -f infra/docker-compose.yml e
 - **Reportes:** sin proveedor de tipo de cambio (Fase 6), con moneda de reporte ≠ base todo cae en `unconverted_count` salvo tasas insertadas a mano en `exchange_rates`.
 - **Sin auditoría de seguridad externa** (Fase 7). La BD admite un `income` negativo por SQL directo (`ARCHITECTURE.md` §10.12). Límite de login detrás de proxy (§10.10). `501 google_login_not_available` fuera del contrato (§10.11).
 - **Zona horaria en la UI:** la presentación asume America/Lima (UTC−5 fijo) aunque `CurrentUser.timezone` admite cualquier zona IANA. Generalizarlo es una tarea aparte (decidido en T-513, 2026-10-10).
-- **Disco:** ≈ 2,5 GB libres en `/` (20 GB) al cerrar el 2026-10-11. Playwright + Chromium para capturas ocupa ≈ 600 MB (se instaló en el scratchpad de la sesión y se borró al cerrar). Flutter + Docker lo consumen rápido: borrar artefactos (`build/`, `.dart_tool/`, `.venv/`) de worktrees ya fusionados.
+- **Disco:** ≈ 2,3 GB libres en `/` (20 GB) al cerrar el 2026-10-12 (se liberan al borrar los 3 worktrees ya fusionados). Playwright + Chromium para capturas ocupa ≈ 600 MB (se instaló en el scratchpad de la sesión y se borró al cerrar). Flutter + Docker lo consumen rápido: borrar artefactos (`build/`, `.dart_tool/`, `.venv/`) de worktrees ya fusionados.
 - **Repositorio público:** todo push se audita antes; los datos reales solo viven en `reference/backups/` (ignorado).
+- **Ajustes del menú ⋮** (pestaña Transferir, adjunto) solo en memoria: se pierden al recargar la página.
+- **Clon de Cashew anterior** a las capturas 20–25: varios controles nuevos (menú ⋮ (d), ✕/↓/ⓘ de «Transferir saldo») siguen las capturas, no el código.
 - La cuota de Claude Pro es limitada: delegar generación de código; reservar al coordinador specs, revisión e integración.
 
 ## 9. Cómo retomar (comandos exactos)
@@ -193,7 +183,7 @@ git -C ../Monetae log --oneline -1 && GIT_TERMINAL_PROMPT=0 git -c credential.he
 export PATH="$HOME/.local/bin:$HOME/flutter/bin:$PATH"
 uv --version && docker compose version && flutter --version | head -1
 orca status --json | head -5 && orca orchestration run-use --id run_c2cebe1745b9
-orca orchestration gate-list --json | grep -A3 gate_70e14ac5abc1     # G6 pendiente
+orca orchestration gate-list --json | grep -A3 gate_ecde8d19a53a     # G7 pendiente
 
 # 2) Backend (≈ 8 min; BD propia)
 cp .env.example .env && MONETAE_DB_PORT=5433 COMPOSE_PROJECT_NAME=monetae-check docker compose -f infra/docker-compose.yml up -d db
@@ -201,13 +191,13 @@ cd services/api
 export MONETAE_TEST_DATABASE_URL=postgresql+psycopg://monetae:change-me@127.0.0.1:5433/postgres MONETAE_REQUIRE_DB=1
 export MONETAE_DATABASE_URL=$MONETAE_TEST_DATABASE_URL
 uv sync --frozen && uv lock --check && uv run ruff check . && uv run ruff format --check . && uv run mypy
-uv run pytest -q                                        # esperado: 1164 passed
-uv run alembic upgrade head && uv run alembic check     # cabeza: 0011
-cd ../.. && python3 -I scripts/check_openapi.py         # 89 paths, 131 operaciones
+uv run pytest -q                                        # esperado: 1190 passed (usar MONETAE_DB_PORT=5434 si la pila de revisión ocupa el 5433)
+uv run alembic upgrade head && uv run alembic check     # cabeza: 0012
+cd ../.. && python3 -I scripts/check_openapi.py         # 90 paths, 133 operaciones
 COMPOSE_PROJECT_NAME=monetae-check docker compose -f infra/docker-compose.yml down -v && rm -f .env
 
 # 3) UI
-cd apps/web && flutter pub get && dart analyze && flutter test && flutter build web --release   # esperado: 217 pruebas
+cd apps/web && flutter pub get && dart analyze && flutter test && flutter build web --release   # esperado: 301 pruebas (master-dev)
 grep -rE "drift|firebase|appStateSettings|package:budget/" lib || echo limpio
 
 # 4) Recorrido real web+API por nginx (sin navegador): apps/web/tool/e2e_session.sh (proyecto monetae-t503, puertos 5444/8001/8081)
@@ -276,3 +266,6 @@ FastAPI síncrono (ADR-007) en `services/api`: **46 de 89 rutas = 73 de 131 oper
 - **El código lo escribe Codex**, aunque la petición diga «implementa»; el coordinador planifica, especifica y verifica (memoria `delegate-code-to-codex`).
 - **Codex en Orca:** si `worker-start` deja la terminal con `account/read failed … timed out`, la terminal queda en el shell (`agent_unconfigured`): `worker-stop --dispatch <id>` y `worker-start --task <id> --retry-of <id> --worktree path:<dir> --agent codex --model … --effort …` en terminal nueva. Para las piezas siguientes reutilizar la terminal con `worker-start --task <nueva> --worktree path:<dir> --terminal <h>` (sin «Update available»). Los latidos (`heartbeat`) llegan como mensajes: confirmarlos con `--ack`.
 - **Goldens que dependen de `DateTime.now()`** se rompen solos al cambiar el día: antes de culpar a un worker, correr la misma suite en `master-dev` (T-518).
+- **Contrato cambiado ⇒ regenerar DTO de la UI en la misma integración** (`python3 -I apps/web/tool/generate_dtos.py`, sin `dart format`) y probar la UI contra la **API real** antes de publicar en la pila: un `enum` nuevo (`system_key`) hizo fallar toda la lista de categorías y la UI lo mostró como «no se pudo conectar» (2026-10-12). Las pruebas con `ApiClient` falso no lo detectan.
+- **Medidas de Adrian en dp:** suelen ser px de la captura (escala 1,25); manda el código de Cashew + la captura (pieza 9).
+- **`rm -rf "$VAR"/*`** está bloqueado por seguridad: usar rutas literales.
