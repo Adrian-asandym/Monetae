@@ -27,16 +27,26 @@ Future<T?> showFormSheet<T>(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(_T.sheetRadius)),
     ),
-    builder: (context) => Padding(
-      key: key,
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: _SheetBody(
+    builder: (context) {
+      final body = _SheetBody(
         title: title,
         trailing: trailing,
         expand: expand,
         child: builder(context),
-      ),
-    ),
+      );
+      return Padding(
+        key: key,
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(context).bottom,
+        ),
+        child: expand
+            ? FractionallySizedBox(
+                heightFactor: _T.expandedSheetHeightFraction,
+                child: body,
+              )
+            : body,
+      );
+    },
   );
 }
 
@@ -55,11 +65,11 @@ class _SheetBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final heading = Padding(
-      padding: const EdgeInsets.fromLTRB(
+      padding: EdgeInsets.fromLTRB(
         _T.sheetPadding + 4,
-        _T.sheetPadding + 8,
+        expand ? _T.expandedSheetHeadingTop : _T.sheetPadding + 8,
         _T.sheetPadding,
-        _T.sheetPadding,
+        expand ? _T.expandedSheetHeadingGap : _T.sheetPadding,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,11 +89,11 @@ class _SheetBody extends StatelessWidget {
       ),
     );
     final body = Padding(
-      padding: const EdgeInsets.fromLTRB(
+      padding: EdgeInsets.fromLTRB(
         _T.sheetPadding,
         0,
         _T.sheetPadding,
-        _T.sheetPadding + 8,
+        expand ? 0 : _T.sheetPadding + 8,
       ),
       child: child,
     );

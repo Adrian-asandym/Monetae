@@ -5,6 +5,7 @@
 // Modified 2026-10-10 (T-515): Cashew layout — kind tabs, amount header, date
 // box, chip rows, filled title/notes and bottom action bar.
 // Modified 2026-10-11 (T-515 piece 2): initial title sheet and shared title input.
+// Modified 2026-10-11 (T-515 piece 3): category sheet followed by amount sheet.
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -229,19 +230,37 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
   Future<void> _openCategorySheet() async {
     if (_form.busy) return;
     final l = AppLocalizations.of(context);
-    // TODO(T-515 piece 3): Cashew category sheet (capture 15).
-    await showFormSheet<void>(
+    final chosen = await showFormSheet<bool>(
       context,
-      title: l.formSelectCategory,
+      key: const Key('category-sheet'),
+      title: l.formCategorySheetTitle,
+      expand: true,
+      trailing: IconButton(
+        key: const Key('category-sheet-menu'),
+        tooltip: l.formMenu,
+        padding: EdgeInsets.zero,
+        style: IconButton.styleFrom(
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+        constraints: const BoxConstraints.tightFor(
+          width: _T.sheetTitleSize,
+          height: _T.sheetTitleSize,
+        ),
+        icon: const Icon(Icons.more_vert_rounded, size: _T.sheetTitleSize),
+        // TODO(T-515): category management menu is presentation only.
+        onPressed: () {},
+      ),
       builder: (sheet) => TransactionCategoryGrid(
         categories: _form.visibleCategories,
         selectedId: _form.categoryId,
+        uncategorizedSelected: _uncategorizedChosen,
         onSelected: (id) {
           _selectCategory(id);
-          Navigator.of(sheet).pop();
+          Navigator.of(sheet).pop(true);
         },
       ),
     );
+    if (mounted && chosen == true) await _openAmountSheet();
   }
 
   Future<void> _openAmountSheet() async {

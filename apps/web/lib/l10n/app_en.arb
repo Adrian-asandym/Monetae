@@ -303,6 +303,7 @@
   "formAddAttachment": "Add an attachment",
   "formMoreOptions": "More options",
   "formSelectCategory": "Select a category",
+  "formCategorySheetTitle": "Select A Category",
   "formMenu": "More actions",
   "formEditTitle": "Edit transaction"
 }

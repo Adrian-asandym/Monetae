@@ -18,6 +18,7 @@ import 'package:monetae_web/pages/new_transaction_page.dart';
 import 'package:monetae_web/presentation/decimal_input.dart';
 import 'package:monetae_web/session/session_controller.dart';
 import 'package:monetae_web/widgets/transaction_category_grid.dart';
+import 'package:monetae_web/widgets/category_icon.dart';
 
 import 'api_session_test.dart' as fixtures;
 import 'components_test.dart' as harness;
@@ -199,7 +200,93 @@ Future<void> chooseCategory(WidgetTester tester, [String? id]) async {
   await tester.pumpAndSettle();
   await tester.tap(find.byKey(Key('form-category-${id ?? 'none'}')));
   await tester.pumpAndSettle();
+  expect(find.byKey(const Key('amount-sheet-done')), findsOneWidget);
+  await tester.tap(find.byKey(const Key('amount-sheet-done')));
+  await tester.pumpAndSettle();
 }
+
+/// Synthetic catalog with enough rows to exercise scrolling and truncation.
+List<CategoryDto> sheetCategories() {
+  const names = [
+    'Comida',
+    'Transporte',
+    'Hogar',
+    'Salud',
+    'Compras',
+    'Educación',
+    'Servicios',
+    'Entretenimiento y actividades',
+  ];
+  const colors = [
+    '#40545F',
+    '#B3A329',
+    '#A23355',
+    '#317347',
+    '#6151A0',
+    '#25678F',
+    '#AE542F',
+    '#259A92',
+  ];
+  const icons = [
+    'restaurant',
+    'transport',
+    'home',
+    'wallet',
+    'calendar',
+    'work',
+    'loan',
+  ];
+  return List.generate(
+    28,
+    (i) => CategoryDto.fromJson({
+      ...mockCategory(l).toJson(),
+      'id': '00000000-0000-4000-8000-${(201 + i).toString().padLeft(12, '0')}',
+      'name': i < names.length ? names[i] : 'Categoría sintética ${i + 1}',
+      'color': colors[i % colors.length],
+      'icon': icons[i % icons.length],
+    }),
+  );
+}
+
+Future<void> mountCategoryForm(
+  WidgetTester tester,
+  FormFixture f, {
+  Brightness brightness = Brightness.dark,
+  Size size = const Size(400, 642),
+}) async {
+  tester.view.physicalSize = size;
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+  await tester.pumpWidget(
+    RepaintBoundary(
+      key: const Key('category-sheet-capture'),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: monetaeTheme(brightness: brightness),
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: NewTransactionPage(session: f.session, controller: f.form),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+  await dismissTitleSheet(tester);
+  await tester.tap(find.byKey(const Key('form-category-button')));
+  await tester.pumpAndSettle();
+}
+
+BoxDecoration tileDecoration(WidgetTester tester, String? id) =>
+    tester
+            .widget<Container>(
+              find.descendant(
+                of: find.byKey(Key('form-category-${id ?? 'none'}')),
+                matching: find.byType(Container),
+              ),
+            )
+            .decoration!
+        as BoxDecoration;
 
 void main() {
   harness.loadGoldenFonts();
@@ -528,6 +615,9 @@ void main() {
       await tester.tap(find.byKey(const Key('form-category-none')));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('title-sheet')), findsNothing);
+      expect(find.byKey(const Key('amount-sheet-done')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('amount-sheet-done')));
+      await tester.pumpAndSettle();
       expect(find.text(l.saveTransaction), findsOneWidget);
     });
   }
@@ -632,6 +722,155 @@ void main() {
     });
   }
 
+  for (final uncategorized in [false, true]) {
+    testWidgets('category choice $uncategorized opens amount and keeps title', (
+      tester,
+    ) async {
+      final f = FormFixture();
+      addTearDown(f.close);
+      await mountForm(tester, f, keepTitleSheet: true);
+      await tester.enterText(
+        find.descendant(
+          of: find.byKey(const Key('title-sheet-field')),
+          matching: find.byType(EditableText),
+        ),
+        'Título sintético',
+      );
+      await tester.tap(find.byKey(const Key('title-sheet-next')));
+      await tester.pumpAndSettle();
+      final id = uncategorized ? null : mockCategory(l).id;
+      await tester.tap(find.byKey(Key('form-category-${id ?? 'none'}')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('category-sheet')), findsNothing);
+      expect(find.byKey(const Key('amount-sheet-done')), findsOneWidget);
+      expect(f.form.categoryId, id);
+      expect(f.form.title, 'Título sintético');
+      expect(f.posts, isEmpty);
+      await tester.tap(find.byKey(const Key('amount-key-7')));
+      await tester.tap(find.byKey(const Key('amount-sheet-done')));
+      await tester.pumpAndSettle();
+      expect(f.form.amount, '7');
+      expect(find.text(l.saveTransaction), findsOneWidget);
+      await tester.tap(find.byKey(const Key('form-category-button')));
+      await tester.pumpAndSettle();
+      expect(tileDecoration(tester, id).border, isNotNull);
+      expect(tileDecoration(tester, id).border!.top.width, 3);
+      if (!uncategorized) expect(tileDecoration(tester, null).border, isNull);
+    });
+  }
+
+  testWidgets('category dismissal and menu never open amount or save', (
+    tester,
+  ) async {
+    final f = FormFixture();
+    addTearDown(f.close);
+    await mountCategoryForm(tester, f);
+    expect(tileDecoration(tester, null).border, isNull);
+    await tester.tap(find.byKey(const Key('category-sheet-menu')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('category-sheet')), findsOneWidget);
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('category-sheet')), findsNothing);
+    expect(find.byKey(const Key('amount-sheet-done')), findsNothing);
+    expect(f.form.categoryId, isNull);
+    expect(find.text(l.formSelectCategory), findsOneWidget);
+    expect(f.posts, isEmpty);
+    await tester.tap(find.byKey(const Key('save-transaction')));
+    await tester.pumpAndSettle();
+    await tester.fling(
+      find.text(l.formCategorySheetTitle),
+      const Offset(0, 650),
+      1500,
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('category-sheet')), findsNothing);
+    expect(find.byKey(const Key('amount-sheet-done')), findsNothing);
+  });
+
+  testWidgets(
+    'category grid has solid squares, light icons and truncated labels',
+    (tester) async {
+      final f = FormFixture()..categories = sheetCategories();
+      addTearDown(f.close);
+      await mountCategoryForm(tester, f);
+      final first = f.categories.first;
+      final grid = tester.widget<GridView>(
+        find.byKey(const Key('category-sheet-grid')),
+      );
+      expect(
+        (grid.gridDelegate as SliverGridDelegateWithFixedCrossAxisCount)
+            .crossAxisCount,
+        4,
+      );
+      expect(tileDecoration(tester, first.id).color, const Color(0xFF40545F));
+      final square = find.descendant(
+        of: find.byKey(Key('form-category-${first.id}')),
+        matching: find.byType(Container),
+      );
+      expect(tester.getSize(square), const Size(64, 64));
+      final icon = tester.widget<CategoryIcon>(
+        find.descendant(
+          of: find.byKey(Key('form-category-${first.id}')),
+          matching: find.byType(CategoryIcon),
+        ),
+      );
+      expect(icon.color, Colors.white);
+      expect(icon.tintCustom, isTrue);
+      final label = tester.widget<Text>(find.text(f.categories[7].name));
+      expect(label.maxLines, 1);
+      expect(label.overflow, TextOverflow.ellipsis);
+      expect(label.textAlign, TextAlign.center);
+      final none = tester.getRect(find.byKey(const Key('form-category-none')));
+      final real = tester.getRect(find.byKey(Key('form-category-${first.id}')));
+      expect(none.top, real.top);
+      expect(none.left, lessThan(real.left));
+      final last = find.byKey(Key('form-category-${f.categories.last.id}'));
+      await tester.scrollUntilVisible(
+        last,
+        200,
+        scrollable: find.descendant(
+          of: find.byKey(const Key('category-sheet-grid')),
+          matching: find.byType(Scrollable),
+        ),
+      );
+      await tester.tap(last);
+      await tester.pumpAndSettle();
+      expect(f.form.categoryId, f.categories.last.id);
+      expect(find.byKey(const Key('amount-sheet-done')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  for (final brightness in Brightness.values) {
+    for (final empty in [false, true]) {
+      testWidgets(
+        'golden category sheet ${brightness.name} empty=$empty at 400x642',
+        (tester) async {
+          final f = FormFixture()..categories = empty ? [] : sheetCategories();
+          addTearDown(f.close);
+          await f.form.load();
+          if (!empty) f.form.edit(() => f.form.categoryId = f.categories[2].id);
+          await mountCategoryForm(tester, f, brightness: brightness);
+          expect(find.text(l.formCategorySheetTitle), findsOneWidget);
+          expect(find.text(l.uncategorized), findsOneWidget);
+          expect(tester.takeException(), isNull);
+          await expectLater(
+            find.byKey(const Key('category-sheet-capture')),
+            matchesGoldenFile(
+              'goldens/new_transaction_category_sheet_${empty ? 'empty_' : ''}${brightness.name}.png',
+            ),
+          );
+          if (empty) {
+            await tester.tap(find.byKey(const Key('form-category-none')));
+            await tester.pumpAndSettle();
+            expect(find.byKey(const Key('amount-sheet-done')), findsOneWidget);
+          }
+        },
+      );
+    }
+  }
+
   testWidgets('keypad precision/delete/clear and kind/category reset', (
     tester,
   ) async {
@@ -662,6 +901,9 @@ void main() {
     await tester.tap(find.byKey(Key('form-category-${mockCategory(l).id}')));
     await tester.pumpAndSettle();
     expect(f.form.categoryId, mockCategory(l).id);
+    expect(find.byKey(const Key('amount-sheet-done')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('amount-sheet-done')));
+    await tester.pumpAndSettle();
     expect(find.text(l.saveTransaction), findsOneWidget);
     expect(f.posts, isEmpty);
     await tester.tap(find.byKey(const Key('select-income')));

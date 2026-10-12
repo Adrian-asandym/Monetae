@@ -1166,6 +1166,12 @@ abstract class AppLocalizations {
   /// **'Selecciona una categoría'**
   String get formSelectCategory;
 
+  /// No description provided for @formCategorySheetTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Selecciona Una Categoría'**
+  String get formCategorySheetTitle;
+
   /// No description provided for @formMenu.
   ///
   /// In es, this message translates to:

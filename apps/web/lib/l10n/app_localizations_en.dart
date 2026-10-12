@@ -600,6 +600,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get formSelectCategory => 'Select a category';
 
   @override
+  String get formCategorySheetTitle => 'Select A Category';
+
+  @override
   String get formMenu => 'More actions';
 
   @override

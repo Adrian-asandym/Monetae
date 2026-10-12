@@ -205,6 +205,8 @@ class TransactionFormColors {
     required this.action,
     required this.sheetAction,
     required this.onAction,
+    required this.onCategory,
+    required this.neutralCategory,
   });
 
   final Color header;
@@ -224,6 +226,8 @@ class TransactionFormColors {
   final Color action;
   final Color sheetAction;
   final Color onAction;
+  final Color onCategory;
+  final Color neutralCategory;
 
   static const _dark = TransactionFormColors._(
     header: Color(0xFF33383A),
@@ -243,6 +247,8 @@ class TransactionFormColors {
     action: Color(0xFF7B8C94),
     sheetAction: Color(0xFF96A2A8),
     onAction: Color(0xFF000000),
+    onCategory: Color(0xFFFFFFFF),
+    neutralCategory: Color(0xFF424242),
   );
 
   static const _light = TransactionFormColors._(
@@ -263,6 +269,8 @@ class TransactionFormColors {
     action: Color(0xFFB0BEC5),
     sheetAction: Color(0xFFB0BEC5),
     onAction: Color(0xFF000000),
+    onCategory: Color(0xFFFFFFFF),
+    neutralCategory: Color(0xFF757575),
   );
 
   static TransactionFormColors of(BuildContext context) =>
@@ -314,6 +322,20 @@ abstract final class TransactionFormTokens {
   static const sheetButtonHeight = 40.0;
   static const sheetButtonRadius = 20.0;
   static const sheetFieldGap = 20.0;
+  static const expandedSheetHeightFraction = .95;
+  static const expandedSheetHeadingTop = 20.0;
+  static const expandedSheetHeadingGap = 14.0;
+  static const categoryGridColumns = 4;
+  static const categoryGridSquare = 64.0;
+  static const categoryGridRadius = 14.0;
+  static const categoryGridIconSize = 40.0;
+  static const categoryGridLabelSize = 12.0;
+  static const categoryGridLabelHeight = 1.0;
+  static const categoryGridInset = 12.0;
+  static const categoryGridLabelGap = 4.0;
+  static const categoryGridGap = 9.0;
+  static const categoryGridTileHeight = 82.0;
+  static const categoryGridBorderWidth = 3.0;
   static const keypadRowHeight = 57.0;
   static const keypadRadius = 24.0;
   static const keypadFontSize = 30.0;

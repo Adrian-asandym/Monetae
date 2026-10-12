@@ -303,6 +303,7 @@
   "formAddAttachment": "Añadir un adjunto",
   "formMoreOptions": "Más opciones",
   "formSelectCategory": "Selecciona una categoría",
+  "formCategorySheetTitle": "Selecciona Una Categoría",
   "formMenu": "Más acciones",
   "formEditTitle": "Editar transacción"
 }
