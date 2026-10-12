@@ -2,6 +2,8 @@
 // SelectChips rows, TextInput, SaveBottomButton) and widgets/selectChips.dart.
 // Copyright James Kokoska, GPL-3.0. Modified 2026-10-10: Monetae theme tokens,
 // typed callbacks and stable test keys; presentation only.
+// Modified 2026-10-11 (T-515 piece 5): expandable options divider and include
+// amount card; callbacks only update local presentation state.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -610,14 +612,51 @@ class FormNotesPanel extends StatelessWidget {
 
 /// Grey "Más opciones" pill.
 class FormMoreOptionsPill extends StatelessWidget {
-  const FormMoreOptionsPill({super.key, required this.onTap});
+  const FormMoreOptionsPill({
+    super.key,
+    required this.onTap,
+    this.expanded = false,
+  });
   final VoidCallback onTap;
+  final bool expanded;
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final form = TransactionFormColors.of(context);
     final colors = MonetaeColors.of(context);
+    if (expanded) {
+      Widget line() => Expanded(
+        child: Divider(
+          height: _T.moreDividerThickness,
+          thickness: _T.moreDividerThickness,
+          color: form.emptyCategory,
+        ),
+      );
+      return InkWell(
+        key: const Key('form-more-options'),
+        onTap: onTap,
+        child: SizedBox(
+          height: _T.moreDividerHeight,
+          child: Row(
+            children: [
+              line(),
+              const SizedBox(width: _T.moreDividerLabelGap),
+              Text(
+                l.formMoreOptions,
+                style: TextStyle(
+                  fontSize: _T.pillFontSize,
+                  height: _T.optionLabelHeight,
+                  color: colors.muted,
+                ),
+              ),
+              const SizedBox(width: _T.moreDividerLabelGap),
+              line(),
+            ],
+          ),
+        ),
+      );
+    }
     return Center(
       child: Material(
         color: form.pill,
@@ -639,6 +678,70 @@ class FormMoreOptionsPill extends StatelessWidget {
                 ),
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Cashew's include-amount switch; persistence remains the caller's concern.
+class FormIncludeAmountCard extends StatelessWidget {
+  const FormIncludeAmountCard({
+    super.key,
+    required this.value,
+    required this.onChanged,
+  });
+  final bool value;
+  final ValueChanged<bool>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final form = TransactionFormColors.of(context);
+    final colors = MonetaeColors.of(context);
+    return Material(
+      key: const Key('form-include-amount-card'),
+      color: form.card,
+      borderRadius: BorderRadius.circular(_T.optionCardRadius),
+      child: SizedBox(
+        height: _T.optionCardHeight,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: _T.sidePadding),
+          child: Row(
+            children: [
+              Icon(
+                value ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                size: _T.optionIconSize,
+                color: colors.muted,
+              ),
+              const SizedBox(width: _T.optionSectionGap),
+              Expanded(
+                child: Text(
+                  l.formIncludeAmount,
+                  style: const TextStyle(
+                    fontSize: _T.optionLabelSize,
+                    height: _T.optionLabelHeight,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Switch(
+                key: const Key('form-include-amount'),
+                value: value,
+                onChanged: onChanged,
+                activeTrackColor: form.switchTrack,
+                activeThumbColor: form.switchThumb,
+                inactiveTrackColor: form.field,
+                inactiveThumbColor: colors.muted,
+                trackOutlineColor: WidgetStateProperty.resolveWith(
+                  (states) => states.contains(WidgetState.selected)
+                      ? form.switchTrack
+                      : form.chipBorder,
+                ),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ],
           ),
         ),
       ),

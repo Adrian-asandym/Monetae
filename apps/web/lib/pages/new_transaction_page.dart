@@ -7,6 +7,7 @@
 // Modified 2026-10-11 (T-515 piece 2): initial title sheet and shared title input.
 // Modified 2026-10-11 (T-515 piece 3): category sheet followed by amount sheet.
 // Modified 2026-10-11 (T-515 piece 4): amount sheet, account chips and keyboard.
+// Modified 2026-10-11 (T-515 piece 5): collapsible options with local state.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -68,6 +69,9 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
   List<GoalDto> _goals = const [];
   String? _budgetId;
   String? _goalId;
+  bool _moreOptionsExpanded = false;
+  bool _includeAmount = true;
+  final Set<String> _excludedBudgetIds = {};
 
   @override
   void initState() {
@@ -208,6 +212,15 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
   void _selectCategory(String? id) {
     setState(() => _uncategorizedChosen = id == null);
     _form.edit(() => _form.categoryId = id);
+  }
+
+  void _toggleExcludedBudget(String id) {
+    if (_form.busy) return;
+    // TODO(T-515): budget exclusions are local presentation until supported
+    // by the transaction model; they do not affect the submission.
+    setState(() {
+      if (!_excludedBudgetIds.remove(id)) _excludedBudgetIds.add(id);
+    });
   }
 
   /// Applies one keypad key with the same two-decimal rules as typing.
@@ -595,7 +608,11 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
                 constraints: const BoxConstraints(maxWidth: _T.maxWidth),
                 child: SingleChildScrollView(
                   key: const Key('transaction-form-scroll'),
-                  padding: const EdgeInsets.only(bottom: 24),
+                  padding: EdgeInsets.only(
+                    bottom: _moreOptionsExpanded
+                        ? _T.optionsBottomPadding
+                        : _T.formBottomPadding,
+                  ),
                   child: AbsorbPointer(
                     absorbing: busy,
                     child: Column(
@@ -831,8 +848,60 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
         ),
       ),
       const SizedBox(height: 18),
-      // TODO(T-515 piece 5): expands the "Más opciones" section (capture 14).
-      FormMoreOptionsPill(onTap: () {}),
+      FormMoreOptionsPill(
+        expanded: _moreOptionsExpanded,
+        onTap: () {
+          if (_form.busy) return;
+          setState(() => _moreOptionsExpanded = !_moreOptionsExpanded);
+        },
+      ),
+      if (_moreOptionsExpanded) ...[
+        const SizedBox(height: _T.optionGap),
+        Padding(
+          padding: pad,
+          child: FormIncludeAmountCard(
+            value: _includeAmount,
+            // TODO(T-515): include amount is local presentation only; the
+            // transaction model has no flag to exclude it from balances.
+            onChanged: _form.busy
+                ? null
+                : (value) => setState(() => _includeAmount = value),
+          ),
+        ),
+        const SizedBox(height: _T.optionSectionGap),
+        Padding(
+          padding: pad,
+          child: Text(
+            l.formExcludeBudget,
+            style: TextStyle(
+              fontSize: _T.optionLabelSize,
+              height: _T.optionLabelHeight,
+              color: colors.muted,
+            ),
+          ),
+        ),
+        const SizedBox(height: _T.optionLabelGap),
+        FormChipRow(
+          key: const Key('form-exclude-budget-row'),
+          chips: [
+            for (final b in _budgets)
+              FormChipData(
+                key: Key('form-exclude-budget-${b.id}'),
+                label: b.name,
+                color: presentationColor(b.color, fallback: colors.muted),
+                selected: _excludedBudgetIds.contains(b.id),
+                onTap: () => _toggleExcludedBudget(b.id),
+              ),
+          ],
+          trailing: FormSquareButton(
+            key: const Key('form-exclude-budget-add'),
+            icon: Icons.add_rounded,
+            tooltip: l.formCreateBudget,
+            // TODO(F1): the create-budget form does not exist yet.
+            onTap: () {},
+          ),
+        ),
+      ],
     ];
   }
 }

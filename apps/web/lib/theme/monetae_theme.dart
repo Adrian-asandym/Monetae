@@ -207,6 +207,8 @@ class TransactionFormColors {
     required this.onAction,
     required this.onCategory,
     required this.neutralCategory,
+    required this.switchTrack,
+    required this.switchThumb,
   });
 
   final Color header;
@@ -228,6 +230,8 @@ class TransactionFormColors {
   final Color onAction;
   final Color onCategory;
   final Color neutralCategory;
+  final Color switchTrack;
+  final Color switchThumb;
 
   static const _dark = TransactionFormColors._(
     header: Color(0xFF33383A),
@@ -249,6 +253,8 @@ class TransactionFormColors {
     onAction: Color(0xFF000000),
     onCategory: Color(0xFFFFFFFF),
     neutralCategory: Color(0xFF424242),
+    switchTrack: Color(0xFF707C81),
+    switchThumb: Color(0xFFBAC8CF),
   );
 
   static const _light = TransactionFormColors._(
@@ -271,6 +277,8 @@ class TransactionFormColors {
     onAction: Color(0xFF000000),
     onCategory: Color(0xFFFFFFFF),
     neutralCategory: Color(0xFF757575),
+    switchTrack: Color(0xFF78909C),
+    switchThumb: Color(0xFFFFFFFF),
   );
 
   static TransactionFormColors of(BuildContext context) =>
@@ -347,6 +355,17 @@ abstract final class TransactionFormTokens {
   static const amountSheetActionGap = 16.0;
   static const amountSheetAccountInset = 4.0;
   static const amountSheetButtonHeight = 48.0;
-  static const optionCardHeight = 53.0;
+  static const moreDividerHeight = 20.0;
+  static const moreDividerLabelGap = 10.0;
+  static const moreDividerThickness = 1.0;
+  static const optionGap = 12.0;
+  static const optionSectionGap = 16.0;
+  static const optionLabelGap = 8.0;
+  static const optionIconSize = 26.0;
+  static const optionLabelSize = 18.0;
+  static const optionLabelHeight = 1.2;
+  static const formBottomPadding = 24.0;
+  static const optionsBottomPadding = 56.0;
+  static const optionCardHeight = 62.0;
   static const optionCardRadius = 16.0;
 }

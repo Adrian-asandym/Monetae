@@ -10,6 +10,7 @@ import 'package:monetae_web/api/api_client.dart';
 import 'package:monetae_web/api/new_transaction_controller.dart';
 import 'package:monetae_web/data/api_dtos.dart';
 import 'package:monetae_web/data/mock_data.dart';
+import 'package:monetae_web/data/mock_budgets_goals.dart';
 import 'package:monetae_web/main.dart';
 import 'package:monetae_web/l10n/app_localizations.dart';
 import 'package:monetae_web/theme/monetae_theme.dart';
@@ -20,6 +21,7 @@ import 'package:monetae_web/presentation/decimal_input.dart';
 import 'package:monetae_web/session/session_controller.dart';
 import 'package:monetae_web/widgets/transaction_category_grid.dart';
 import 'package:monetae_web/widgets/category_icon.dart';
+import 'package:monetae_web/widgets/transaction_form/form_controls.dart';
 
 import 'api_session_test.dart' as fixtures;
 import 'components_test.dart' as harness;
@@ -57,6 +59,7 @@ class FormFixture {
   late final Map<String, Object?> profile;
   late List<AccountDto> accounts;
   late List<CategoryDto> categories;
+  List<BudgetDto>? budgetCatalog;
   late final ApiClient api;
   late final SessionController session;
   late final NewTransactionController form;
@@ -128,6 +131,14 @@ class FormFixture {
               .toList(),
           'next_cursor': null,
         });
+      case '/api/v1/budgets':
+        if (budgetCatalog != null) {
+          return fixtures.ok({
+            'items': budgetCatalog!.map((b) => b.toJson()).toList(),
+            'next_cursor': null,
+          });
+        }
+        return backend.handle(r);
       case '/api/v1/categories':
         if (paginated && r.url.queryParameters['cursor'] == null) {
           return fixtures.ok({
@@ -288,6 +299,29 @@ BoxDecoration tileDecoration(WidgetTester tester, String? id) =>
             )
             .decoration!
         as BoxDecoration;
+
+Future<void> tapMoreOptions(WidgetTester tester) async {
+  final toggle = find.byKey(const Key('form-more-options'));
+  await tester.ensureVisible(toggle);
+  await tester.pumpAndSettle();
+  await tester.tap(toggle);
+  await tester.pumpAndSettle();
+}
+
+Future<void> toggleExcludedBudget(WidgetTester tester, String id) async {
+  final chip = find.byKey(Key('form-exclude-budget-$id'));
+  await tester.ensureVisible(chip);
+  await tester.pumpAndSettle();
+  await tester.tap(chip);
+  await tester.pump();
+}
+
+Set<Key?> excludedBudgetKeys(WidgetTester tester) => tester
+    .widget<FormChipRow>(find.byKey(const Key('form-exclude-budget-row')))
+    .chips
+    .where((c) => c.selected)
+    .map((c) => c.key)
+    .toSet();
 
 void main() {
   harness.loadGoldenFonts();
@@ -1100,6 +1134,170 @@ void main() {
           ),
         );
       });
+    }
+  }
+
+  testWidgets(
+    'more options expands, collapses and preserves its local values',
+    (tester) async {
+      final f = FormFixture();
+      addTearDown(f.close);
+      await mountForm(tester, f);
+      expect(find.byKey(const Key('form-include-amount')), findsNothing);
+      await tapMoreOptions(tester);
+      final field = find.byKey(const Key('form-include-amount'));
+      expect(tester.widget<Switch>(field).value, isTrue);
+      expect(
+        tester
+            .widget<FormMoreOptionsPill>(find.byType(FormMoreOptionsPill))
+            .expanded,
+        isTrue,
+      );
+      await tester.ensureVisible(field);
+      await tester.tap(field);
+      await tester.pump();
+      expect(tester.widget<Switch>(field).value, isFalse);
+      final budgets = mockBudgets(l);
+      await toggleExcludedBudget(tester, budgets[0].id);
+      await toggleExcludedBudget(tester, budgets[1].id);
+      expect(
+        excludedBudgetKeys(tester),
+        unorderedEquals([
+          Key('form-exclude-budget-${budgets[0].id}'),
+          Key('form-exclude-budget-${budgets[1].id}'),
+        ]),
+      );
+      await tapMoreOptions(tester);
+      expect(find.byKey(const Key('form-include-amount')), findsNothing);
+      expect(find.byKey(const Key('form-exclude-budget-row')), findsNothing);
+      await tapMoreOptions(tester);
+      expect(tester.widget<Switch>(field).value, isFalse);
+      expect(excludedBudgetKeys(tester), hasLength(2));
+      await toggleExcludedBudget(tester, budgets[0].id);
+      expect(excludedBudgetKeys(tester), {
+        Key('form-exclude-budget-${budgets[1].id}'),
+      });
+      expect(
+        tester
+            .widget<FormChipRow>(find.byKey(const Key('form-budget-row')))
+            .chips
+            .first
+            .selected,
+        isTrue,
+      );
+      expect(f.posts, isEmpty);
+    },
+  );
+
+  testWidgets(
+    'more options leaves submission and retry idempotency unchanged',
+    (tester) async {
+      final f = FormFixture()..status = 500;
+      addTearDown(f.close);
+      await mountForm(tester, f);
+      await fillAmount(tester, '12.50');
+      await chooseCategory(tester);
+      await tester.tap(find.byKey(const Key('save-transaction')));
+      await tester.pumpAndSettle();
+      final first = f.posts.single;
+      final requestCount = f.requests.length;
+      await tapMoreOptions(tester);
+      final field = find.byKey(const Key('form-include-amount'));
+      await tester.ensureVisible(field);
+      await tester.tap(field);
+      await tester.pump();
+      for (final budget in mockBudgets(l).take(2)) {
+        await toggleExcludedBudget(tester, budget.id);
+      }
+      expect(f.requests, hasLength(requestCount));
+      await tester.tap(find.byKey(const Key('save-transaction')));
+      await tester.pumpAndSettle();
+      expect(f.posts.last.body, first.body);
+      expect(
+        f.posts.last.headers['Idempotency-Key'],
+        first.headers['Idempotency-Key'],
+      );
+      // A genuine form edit starts a fresh submission, still without design flags.
+      f.form.edit(() => f.form.title = 'Título sintético actualizado');
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('save-transaction')));
+      await tester.pumpAndSettle();
+      expect(
+        f.posts.last.headers['Idempotency-Key'],
+        isNot(first.headers['Idempotency-Key']),
+      );
+      expect(jsonDecode(f.posts.last.body), {
+        'account_id': mockAccountId,
+        'kind': 'expense',
+        'amount': '-12.50',
+        'currency': 'PEN',
+        'occurred_at': '2026-10-10T03:30:00.000Z',
+        'status': 'posted',
+        'title': 'Título sintético actualizado',
+        'fx_rate_to_base': '1.000000',
+        'fx_rate_source': 'manual',
+      });
+    },
+  );
+
+  testWidgets('empty budget options retain a visible inert create button', (
+    tester,
+  ) async {
+    final f = FormFixture()..budgetCatalog = [];
+    addTearDown(f.close);
+    await mountForm(tester, f);
+    await tapMoreOptions(tester);
+    final row = tester.widget<FormChipRow>(
+      find.byKey(const Key('form-exclude-budget-row')),
+    );
+    expect(row.chips, isEmpty);
+    final add = find.byKey(const Key('form-exclude-budget-add'));
+    await tester.ensureVisible(add);
+    final requestCount = f.requests.length;
+    await tester.tap(add);
+    await tester.pumpAndSettle();
+    expect(f.requests, hasLength(requestCount));
+    expect(find.byKey(const Key('form-exclude-budget-add')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final brightness in Brightness.values) {
+    for (final selected in [false, true]) {
+      testWidgets(
+        'golden more options ${brightness.name} selected=$selected at 400x642',
+        (tester) async {
+          final f = FormFixture()
+            ..budgetCatalog = mockBudgets(l).take(2).toList();
+          addTearDown(f.close);
+          await mountCategoryForm(tester, f, brightness: brightness);
+          await tester.tapAt(const Offset(10, 10));
+          await tester.pumpAndSettle();
+          await tapMoreOptions(tester);
+          if (selected) {
+            final field = find.byKey(const Key('form-include-amount'));
+            await tester.ensureVisible(field);
+            await tester.tap(field);
+            await tester.pump();
+            for (final budget in f.budgetCatalog!) {
+              await toggleExcludedBudget(tester, budget.id);
+            }
+          }
+          await tester.drag(
+            find.byKey(const Key('transaction-form-scroll')),
+            const Offset(0, -800),
+          );
+          await tester.pumpAndSettle();
+          expect(find.text(l.formIncludeAmount), findsOneWidget);
+          expect(find.text(l.formExcludeBudget), findsOneWidget);
+          expect(tester.takeException(), isNull);
+          await expectLater(
+            find.byKey(const Key('category-sheet-capture')),
+            matchesGoldenFile(
+              'goldens/new_transaction_more_options_${selected ? 'selected_' : ''}${brightness.name}.png',
+            ),
+          );
+        },
+      );
     }
   }
 

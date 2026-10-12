@@ -1196,6 +1196,18 @@ abstract class AppLocalizations {
   /// **'Más opciones'**
   String get formMoreOptions;
 
+  /// No description provided for @formIncludeAmount.
+  ///
+  /// In es, this message translates to:
+  /// **'Incluir importe'**
+  String get formIncludeAmount;
+
+  /// No description provided for @formExcludeBudget.
+  ///
+  /// In es, this message translates to:
+  /// **'Excluir del presupuesto'**
+  String get formExcludeBudget;
+
   /// No description provided for @formSelectCategory.
   ///
   /// In es, this message translates to:

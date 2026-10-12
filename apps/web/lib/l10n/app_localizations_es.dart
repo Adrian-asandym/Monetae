@@ -617,6 +617,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get formMoreOptions => 'Más opciones';
 
   @override
+  String get formIncludeAmount => 'Incluir importe';
+
+  @override
+  String get formExcludeBudget => 'Excluir del presupuesto';
+
+  @override
   String get formSelectCategory => 'Selecciona una categoría';
 
   @override

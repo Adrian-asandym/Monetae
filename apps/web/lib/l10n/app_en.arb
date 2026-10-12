@@ -308,6 +308,8 @@
   "formNotesHint": "Notes",
   "formAddAttachment": "Add an attachment",
   "formMoreOptions": "More options",
+  "formIncludeAmount": "Include amount",
+  "formExcludeBudget": "Exclude from budget",
   "formSelectCategory": "Select a category",
   "formCategorySheetTitle": "Select A Category",
   "formMenu": "More actions",
