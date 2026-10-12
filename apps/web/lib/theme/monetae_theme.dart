@@ -182,3 +182,261 @@ abstract final class HomeTokens {
   static const editGap = 8.0;
   static const editFontSize = 14.0;
 }
+
+/// Transaction form colors sampled from Cashew web (dark, 400×642 at 1.25×)
+/// in reference captures 11–19; light values mirror Cashew's light palette.
+@immutable
+class TransactionFormColors {
+  const TransactionFormColors._({
+    required this.header,
+    required this.headerCategoryName,
+    required this.tabIdle,
+    required this.emptyCategory,
+    required this.dateBox,
+    required this.dateIcon,
+    required this.timeBox,
+    required this.field,
+    required this.fieldDivider,
+    required this.chipSelected,
+    required this.chipBorder,
+    required this.pill,
+    required this.card,
+    required this.sheet,
+    required this.keypad,
+    required this.action,
+    required this.sheetAction,
+    required this.onAction,
+    required this.onCategory,
+    required this.neutralCategory,
+    required this.switchTrack,
+    required this.switchThumb,
+    required this.typeText,
+    required this.menuSubtitle,
+  });
+
+  final Color header;
+  final Color headerCategoryName;
+  final Color tabIdle;
+  final Color emptyCategory;
+  final Color dateBox;
+  final Color dateIcon;
+  final Color timeBox;
+  final Color field;
+  final Color fieldDivider;
+  final Color chipSelected;
+  final Color chipBorder;
+  final Color pill;
+  final Color card;
+  final Color sheet;
+  final Color keypad;
+  final Color action;
+  final Color sheetAction;
+  final Color onAction;
+  final Color onCategory;
+  final Color neutralCategory;
+  final Color switchTrack;
+  final Color switchThumb;
+  final Color typeText;
+  final Color menuSubtitle;
+
+  static const _dark = TransactionFormColors._(
+    header: Color(0xFF33383A),
+    headerCategoryName: Color(0xB3FFFFFF),
+    tabIdle: Color(0xFF242729),
+    emptyCategory: Color(0xFF242424),
+    dateBox: Color(0xFF181818),
+    dateIcon: Color(0xFF424242),
+    timeBox: Color(0xFF242424),
+    field: Color(0xFF424242),
+    fieldDivider: Color(0xFF4E4E4E),
+    chipSelected: Color(0xFF424242),
+    chipBorder: Color(0xFF646464),
+    pill: Color(0xFF1F2021),
+    card: Color(0xFF323232),
+    sheet: Color(0xFF2E2E2E),
+    keypad: Color(0xFF424242),
+    action: Color(0xFF7B8C94),
+    sheetAction: Color(0xFF96A2A8),
+    onAction: Color(0xFF000000),
+    onCategory: Color(0xFFFFFFFF),
+    neutralCategory: Color(0xFF424242),
+    switchTrack: Color(0xFF707C81),
+    switchThumb: Color(0xFFBAC8CF),
+    typeText: Color(0xFFFFFFFF),
+    menuSubtitle: Color(0xCCFFFFFF),
+  );
+
+  static const _light = TransactionFormColors._(
+    header: Color(0xFFDDE3E6),
+    headerCategoryName: Color(0xB3000000),
+    tabIdle: Color(0xFFEEF1F2),
+    emptyCategory: Color(0xFFE0E0E0),
+    dateBox: Color(0xFFF2F2F2),
+    dateIcon: Color(0xFFDDDDDD),
+    timeBox: Color(0xFFE6E6E6),
+    field: Color(0xFFEBEBEB),
+    fieldDivider: Color(0xFFD6D6D6),
+    chipSelected: Color(0xFFD5D5D5),
+    chipBorder: Color(0xFFB5B5B5),
+    pill: Color(0xFFEDEFF0),
+    card: Color(0xFFEBEBEB),
+    sheet: Color(0xFFF7F7F7),
+    keypad: Color(0xFFEBEBEB),
+    action: Color(0xFFB0BEC5),
+    sheetAction: Color(0xFFB0BEC5),
+    onAction: Color(0xFF000000),
+    onCategory: Color(0xFFFFFFFF),
+    neutralCategory: Color(0xFF757575),
+    switchTrack: Color(0xFF78909C),
+    switchThumb: Color(0xFFFFFFFF),
+    typeText: Color(0xFF121212),
+    menuSubtitle: Color(0xCC121212),
+  );
+
+  static TransactionFormColors of(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? _dark : _light;
+}
+
+/// Transaction form sizes in dp, calibrated from Cashew addTransactionPage,
+/// selectChips, selectAmount and captures 11–19 (1 dp = 1.25 px).
+abstract final class TransactionFormTokens {
+  static const maxWidth = 560.0;
+  static const sidePadding = 20.0;
+  static const titleSize = 20.0;
+  static const tabHeight = 50.0;
+  static const tabFontSize = 16.0;
+  static const headerHeight = 136.0;
+  static const categorySquare = 80.0;
+  static const categoryRadius = 15.0;
+  static const categoryIconSize = 44.0;
+  static const amountFontSize = 36.0;
+  static const headerCategoryNameSize = 20.0;
+  static const headerCategoryNameHeight = 1.0;
+  static const dateHeight = 53.0;
+  static const dateRadius = 15.0;
+  static const dateIconBox = 35.0;
+  static const dateFontSize = 24.0;
+  static const timeFontSize = 20.0;
+  static const timeBoxWidth = 30.0;
+  static const timeBoxRadius = 6.0;
+  static const captionSize = 12.0;
+  static const chipHeight = 30.0;
+  static const chipRadius = 8.0;
+  static const chipBorder = 1.5;
+  static const chipFontSize = 15.0;
+  static const chipGap = 10.0;
+  static const chipPadding = 12.0;
+  static const rowGap = 15.0;
+  static const fieldHeight = 38.0;
+  static const fieldRadius = 14.0;
+  static const fieldFontSize = 16.0;
+  static const notesHeight = 87.0;
+  static const attachmentHeight = 41.0;
+  static const pillRadius = 12.0;
+  static const pillHeight = 38.0;
+  static const pillFontSize = 15.0;
+  static const actionHeight = 50.0;
+  static const actionRadius = 28.0;
+  static const actionFontSize = 17.0;
+  static const sheetRadius = 28.0;
+  static const sheetPadding = 16.0;
+  static const sheetTitleSize = 26.0;
+  static const sheetButtonHeight = 40.0;
+  static const sheetButtonRadius = 20.0;
+  static const sheetFieldGap = 20.0;
+  static const expandedSheetHeightFraction = .95;
+  static const expandedSheetHeadingTop = 20.0;
+  static const expandedSheetHeadingGap = 14.0;
+  static const categoryGridColumns = 4;
+  static const categoryGridSquare = 64.0;
+  static const categoryGridRadius = 14.0;
+  static const categoryGridIconSize = 40.0;
+  static const categoryGridLabelSize = 12.0;
+  static const categoryGridLabelHeight = 1.0;
+  static const categoryGridInset = 12.0;
+  static const categoryGridLabelGap = 4.0;
+  static const categoryGridGap = 9.0;
+  static const categoryGridTileHeight = 82.0;
+  static const categoryGridBorderWidth = 3.0;
+  static const keypadRowHeight = 57.0;
+  static const keypadRadius = 24.0;
+  static const keypadFontSize = 30.0;
+  static const keypadPadding = 6.0;
+  static const keypadBackspaceSize = 26.0;
+  static const amountSheetFontSize = 40.0;
+  static const amountSheetLineHeight = 1.2;
+  static const amountSheetGap = 12.0;
+  static const amountSheetActionGap = 16.0;
+  static const amountSheetAccountInset = 4.0;
+  static const amountSheetButtonHeight = 48.0;
+  static const accountSheetHeightFraction = .65;
+  static const accountRowHeight = 48.0;
+  static const accountRowRadius = 12.0;
+  static const accountRowPadding = 16.0;
+  static const accountRowGap = 12.0;
+  static const accountNameSize = 20.0;
+  static const accountBalanceSize = 18.0;
+  static const accountRadioSize = 20.0;
+  static const accountRadioBorder = 2.0;
+  static const accountRadioFillSize = 10.0;
+  static const accountSelectionOpacity = .33;
+  static const accountHoverOpacity = .04;
+  static const menuListInset = 0.0;
+  static const menuHeadingSize = 23.0;
+  static const menuHeadingTop = 19.0;
+  static const menuHeadingGap = 13.0;
+  static const menuBottomPadding = 16.0;
+  static const menuRowHorizontalPadding = 16.0;
+  static const menuRowVerticalPadding = 12.0;
+  static const menuIconSize = 28.0;
+  static const menuIconGap = 16.0;
+  static const menuTitleSize = 16.0;
+  static const menuSubtitleSize = 14.0;
+  static const menuTextHeight = 1.2;
+  static const menuSubtitleGap = 3.0;
+  static const menuTrailingGap = 5.0;
+  static const menuChevronWidth = 52.0;
+  static const moreDividerHeight = 20.0;
+  static const moreDividerLabelGap = 10.0;
+  static const moreDividerThickness = 1.0;
+  static const optionGap = 12.0;
+  static const optionSectionGap = 16.0;
+  static const optionLabelGap = 8.0;
+  static const optionIconSize = 26.0;
+  static const optionLabelSize = 18.0;
+  static const optionLabelHeight = 1.2;
+  static const formBottomPadding = 24.0;
+  static const optionsBottomPadding = 56.0;
+  static const optionCardHeight = 62.0;
+  static const optionCardRadius = 16.0;
+  static const typeSheetInset = 12.0;
+  static const typeCardRadius = 16.0;
+  static const typeCardBorder = 1.5;
+  static const typeCardPadding = 20.0;
+  static const typeCardGap = 14.0;
+  static const typeCardIconSize = 26.0;
+  static const typeCardTitleSize = 22.0;
+  static const typeCardTitleHeight = 1.2;
+  static const typeCardIconGap = 12.0;
+  static const typeBulletSize = 15.0;
+  static const typeBulletHeight = 1.25;
+  static const typeBulletGap = 2.0;
+  static const typeBulletIndent = 14.0;
+  static const typeDescriptionGap = 14.0;
+  static const typeMenuSize = 26.0;
+  static const typeHelpFontSize = 16.0;
+  static const typeHelpGap = 18.0;
+  static const typeHelpActionSize = 35.0;
+  static const typeHelpActionIconSize = 23.0;
+  static const typeHelpActionGap = 10.0;
+  static const typeExamplePadding = 12.0;
+  static const typeExampleAvatarSize = 48.0;
+  static const typeExampleHighlightBorder = 2.0;
+  static const typeExampleAmountSize = 20.0;
+  static const typeExampleNoteSize = 20.0;
+  static const typeExampleAccountRadius = 4.0;
+  static const typeExampleAccountInset = 4.0;
+  static const typeNoticeTop = 6.0;
+  static const typeSheetHeightFraction = .985;
+  static const typeSheetHeadingTop = 0.0;
+}

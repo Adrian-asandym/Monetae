@@ -410,7 +410,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get cumulativeCashFlow => 'Evolución acumulada';
 
   @override
-  String get addTransaction => 'Añadir transacción';
+  String get addTransaction => 'Agregar transacción';
 
   @override
   String get comingSoon => 'Próximamente';
@@ -434,6 +434,24 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get transactionAmount => 'Importe';
+
+  @override
+  String get formEnterAmount => 'Introduce El Importe';
+
+  @override
+  String get formSetAmount => 'Fijar importe';
+
+  @override
+  String get formDivide => 'Dividir';
+
+  @override
+  String get formMultiply => 'Multiplicar';
+
+  @override
+  String get formSubtract => 'Restar';
+
+  @override
+  String get formAdd => 'Sumar';
 
   @override
   String get transactionCategory => 'Categoría (opcional)';
@@ -488,7 +506,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get deleteDigit => 'Borrar dígito; mantén pulsado para borrar todo';
 
   @override
-  String get decimalPoint => 'Punto decimal';
+  String get decimalPoint => 'Separador decimal';
 
   @override
   String budgetCanSpendPerDay(String amount, int days) {
@@ -537,4 +555,162 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get editHome => 'Editar';
+
+  @override
+  String get formAddMenuTitle => 'Agregar Transacción';
+
+  @override
+  String get formEditMenuTitle => 'Editar Transacción';
+
+  @override
+  String get formSettingTransferTitle => 'Pestaña de transferencia de saldo';
+
+  @override
+  String get formSettingTransferSubtitle =>
+      'En la página \'Agregar nueva transacción\'';
+
+  @override
+  String get formSettingAttachmentTitle => 'Botón Agregar archivos adjuntos';
+
+  @override
+  String get formSettingAttachmentSubtitle =>
+      'Mostrar debajo de la sección de notas';
+
+  @override
+  String get formSettingAutoTitleTitle => 'Agregar títulos automáticamente';
+
+  @override
+  String get formSettingAutoTitleSubtitle => 'Cuando se crea una transacción';
+
+  @override
+  String get formSettingInitialInputTitle =>
+      'Indicaciones iniciales de entrada';
+
+  @override
+  String get formSettingInitialInputSubtitle =>
+      'Al añadir una transacción por primera vez';
+
+  @override
+  String get formTransfer => 'Transferir';
+
+  @override
+  String get formTypeDefault => 'Predeterminado';
+
+  @override
+  String get formTypeUpcoming => 'Próximamente';
+
+  @override
+  String get formTypeSubscription => 'Suscripción';
+
+  @override
+  String get formTypeRepetitive => 'Repetitivo';
+
+  @override
+  String get formTypeLend => 'Prestar';
+
+  @override
+  String get formTypeBorrow => 'Deuda';
+
+  @override
+  String get formTypeInfo => 'Tipos de transacción';
+
+  @override
+  String get formAllAccounts => 'Todas las cuentas';
+
+  @override
+  String get formAccountSheetTitle => 'Seleccionar Cuenta';
+
+  @override
+  String get formNoBudget => 'Sin presupuesto';
+
+  @override
+  String get formNoGoal => 'Sin objetivo';
+
+  @override
+  String get formNoLoan => 'Sin préstamo';
+
+  @override
+  String get formCreateBudget => 'Crear presupuesto';
+
+  @override
+  String get formCreateGoal => 'Crear objetivo';
+
+  @override
+  String get formTitleHint => 'Título';
+
+  @override
+  String get formEnterTitle => 'Escribe Un Título';
+
+  @override
+  String get formChooseDate => 'Seleccionar fecha';
+
+  @override
+  String get formNotesHint => 'Notas';
+
+  @override
+  String get formAddAttachment => 'Añadir un adjunto';
+
+  @override
+  String get formMoreOptions => 'Más opciones';
+
+  @override
+  String get formIncludeAmount => 'Incluir importe';
+
+  @override
+  String get formExcludeBudget => 'Excluir del presupuesto';
+
+  @override
+  String get formSelectCategory => 'Selecciona una categoría';
+
+  @override
+  String get formCategorySheetTitle => 'Selecciona Una Categoría';
+
+  @override
+  String get formMenu => 'Más acciones';
+
+  @override
+  String get formEditTitle => 'Editar transacción';
+
+  @override
+  String get formTypeSheetTitle => 'Seleccionar El Tipo De Transacción';
+
+  @override
+  String get formTypeUnpaid => 'Una transacción que no está pagada';
+
+  @override
+  String get formTypeNotInTotal =>
+      'No cuenta para su total a menos que sea marcado como \'Pagado\' o \'Depositado\'';
+
+  @override
+  String get formTypeSubscriptionDescription =>
+      'Transacción recurrente que se mostrará en la página de suscripciones';
+
+  @override
+  String get formTypeNextGenerated =>
+      'Próxima transacción generada cuando la actual está marcada como \"Pagada\" o \"Depositada\"';
+
+  @override
+  String get formTypeRepetitiveDescription => 'Transacción recurrente';
+
+  @override
+  String get formTypeLendDescription => 'Transacción que prestaste';
+
+  @override
+  String get formTypeLendCashFlow =>
+      'Flujo de caja negativo hasta que se marque como \'Recolectado\'';
+
+  @override
+  String get formTypeBorrowDescription => 'Transacción prestada de alguien';
+
+  @override
+  String get formTypeBorrowCashFlow =>
+      'Flujo de caja positivo hasta que se marque como \'Liquidado\'';
+
+  @override
+  String get formTypeHelp =>
+      'Marque una transacción especial tocando el botón de acción en la entrada de la transacción';
+
+  @override
+  String get formTypeNotice =>
+      'Aún no disponible: se guardará como transacción normal';
 }

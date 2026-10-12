@@ -59,25 +59,43 @@ String formatCurrency(
   final negative = amount.startsWith('-') && !absolute;
   final digits = amount.replaceFirst(RegExp(r'^[-+]'), '').split('.');
   final symbol = currencySymbol(currency, locale);
-  
+
   final spanish = locale.split(RegExp('[-_]')).first == 'es';
-  
+
   // Cashew formatting rules for Spanish
   final groupSep = spanish ? '.' : ',';
   final decimalSep = spanish ? ',' : '.';
-  
+
   final whole = digits.first.replaceAllMapped(
     RegExp(r'\B(?=(\d{3})+(?!\d))'),
     (_) => groupSep,
   );
-  
+
   final fractionDigits = digits.length == 1 ? '00' : digits[1].padRight(2, '0');
-  
+
   // Hide decimals if they are zero
   final hasDecimals = fractionDigits != '00';
   final fraction = hasDecimals ? '$decimalSep$fractionDigits' : '';
-  
+
   if (spanish) return '${negative ? '-' : ''}$whole$fraction $symbol';
-  
+
   return '${negative ? '-' : ''}$symbol$whole$fraction';
+}
+
+/// Amount as the user is typing it ("12," stays visible), with the same
+/// grouping and symbol placement as [formatCurrency].
+String formatTypedAmount(String typed, String currency, String locale) {
+  final parts = typed.split('.');
+  if (parts.length == 1) {
+    return formatCurrency(typed.isEmpty ? '0' : typed, currency, locale);
+  }
+  final spanish = locale.split(RegExp('[-_]')).first == 'es';
+  final whole = parts.first.isEmpty ? '0' : parts.first;
+  final grouped = whole.replaceAllMapped(
+    RegExp(r'\B(?=(\d{3})+(?!\d))'),
+    (_) => spanish ? '.' : ',',
+  );
+  final number = '$grouped${spanish ? ',' : '.'}${parts[1]}';
+  final symbol = currencySymbol(currency, locale);
+  return spanish ? '$number $symbol' : '$symbol$number';
 }

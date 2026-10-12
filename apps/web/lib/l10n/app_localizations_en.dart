@@ -434,6 +434,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactionAmount => 'Amount';
 
   @override
+  String get formEnterAmount => 'Enter The Amount';
+
+  @override
+  String get formSetAmount => 'Set amount';
+
+  @override
+  String get formDivide => 'Divide';
+
+  @override
+  String get formMultiply => 'Multiply';
+
+  @override
+  String get formSubtract => 'Subtract';
+
+  @override
+  String get formAdd => 'Add';
+
+  @override
   String get transactionCategory => 'Category (optional)';
 
   @override
@@ -486,7 +504,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteDigit => 'Delete digit; hold to clear all';
 
   @override
-  String get decimalPoint => 'Decimal point';
+  String get decimalPoint => 'Decimal separator';
 
   @override
   String budgetCanSpendPerDay(String amount, int days) {
@@ -535,4 +553,160 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editHome => 'Edit';
+
+  @override
+  String get formAddMenuTitle => 'Add Transaction';
+
+  @override
+  String get formEditMenuTitle => 'Edit Transaction';
+
+  @override
+  String get formSettingTransferTitle => 'Balance transfer tab';
+
+  @override
+  String get formSettingTransferSubtitle =>
+      'On the \'Add new transaction\' page';
+
+  @override
+  String get formSettingAttachmentTitle => 'Add attachments button';
+
+  @override
+  String get formSettingAttachmentSubtitle => 'Show below the notes section';
+
+  @override
+  String get formSettingAutoTitleTitle => 'Add titles automatically';
+
+  @override
+  String get formSettingAutoTitleSubtitle => 'When a transaction is created';
+
+  @override
+  String get formSettingInitialInputTitle => 'Initial input prompts';
+
+  @override
+  String get formSettingInitialInputSubtitle =>
+      'When adding a transaction for the first time';
+
+  @override
+  String get formTransfer => 'Transfer';
+
+  @override
+  String get formTypeDefault => 'Default';
+
+  @override
+  String get formTypeUpcoming => 'Upcoming';
+
+  @override
+  String get formTypeSubscription => 'Subscription';
+
+  @override
+  String get formTypeRepetitive => 'Repetitive';
+
+  @override
+  String get formTypeLend => 'Lend';
+
+  @override
+  String get formTypeBorrow => 'Borrow';
+
+  @override
+  String get formTypeInfo => 'Transaction types';
+
+  @override
+  String get formAllAccounts => 'All accounts';
+
+  @override
+  String get formAccountSheetTitle => 'Select Account';
+
+  @override
+  String get formNoBudget => 'No budget';
+
+  @override
+  String get formNoGoal => 'No goal';
+
+  @override
+  String get formNoLoan => 'No loan';
+
+  @override
+  String get formCreateBudget => 'Create budget';
+
+  @override
+  String get formCreateGoal => 'Create goal';
+
+  @override
+  String get formTitleHint => 'Title';
+
+  @override
+  String get formEnterTitle => 'Enter A Title';
+
+  @override
+  String get formChooseDate => 'Choose date';
+
+  @override
+  String get formNotesHint => 'Notes';
+
+  @override
+  String get formAddAttachment => 'Add an attachment';
+
+  @override
+  String get formMoreOptions => 'More options';
+
+  @override
+  String get formIncludeAmount => 'Include amount';
+
+  @override
+  String get formExcludeBudget => 'Exclude from budget';
+
+  @override
+  String get formSelectCategory => 'Select a category';
+
+  @override
+  String get formCategorySheetTitle => 'Select A Category';
+
+  @override
+  String get formMenu => 'More actions';
+
+  @override
+  String get formEditTitle => 'Edit transaction';
+
+  @override
+  String get formTypeSheetTitle => 'Select The Transaction Type';
+
+  @override
+  String get formTypeUnpaid => 'A transaction that is not paid';
+
+  @override
+  String get formTypeNotInTotal =>
+      'Does not count towards your total unless marked as \'Paid\' or \'Deposited\'';
+
+  @override
+  String get formTypeSubscriptionDescription =>
+      'Recurring transaction displayed on the subscriptions page';
+
+  @override
+  String get formTypeNextGenerated =>
+      'Next transaction generated when the current one is marked as \"Paid\" or \"Deposited\"';
+
+  @override
+  String get formTypeRepetitiveDescription => 'Recurring transaction';
+
+  @override
+  String get formTypeLendDescription => 'A transaction you lent';
+
+  @override
+  String get formTypeLendCashFlow =>
+      'Negative cash flow until marked as \'Collected\'';
+
+  @override
+  String get formTypeBorrowDescription => 'A transaction borrowed from someone';
+
+  @override
+  String get formTypeBorrowCashFlow =>
+      'Positive cash flow until marked as \'Settled\'';
+
+  @override
+  String get formTypeHelp =>
+      'Mark a special transaction by tapping the action button on the transaction entry';
+
+  @override
+  String get formTypeNotice =>
+      'Not yet available: it will be saved as a normal transaction';
 }

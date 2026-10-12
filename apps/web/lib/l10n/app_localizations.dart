@@ -857,7 +857,7 @@ abstract class AppLocalizations {
   /// No description provided for @addTransaction.
   ///
   /// In es, this message translates to:
-  /// **'Añadir transacción'**
+  /// **'Agregar transacción'**
   String get addTransaction;
 
   /// No description provided for @comingSoon.
@@ -889,6 +889,42 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Importe'**
   String get transactionAmount;
+
+  /// No description provided for @formEnterAmount.
+  ///
+  /// In es, this message translates to:
+  /// **'Introduce El Importe'**
+  String get formEnterAmount;
+
+  /// No description provided for @formSetAmount.
+  ///
+  /// In es, this message translates to:
+  /// **'Fijar importe'**
+  String get formSetAmount;
+
+  /// No description provided for @formDivide.
+  ///
+  /// In es, this message translates to:
+  /// **'Dividir'**
+  String get formDivide;
+
+  /// No description provided for @formMultiply.
+  ///
+  /// In es, this message translates to:
+  /// **'Multiplicar'**
+  String get formMultiply;
+
+  /// No description provided for @formSubtract.
+  ///
+  /// In es, this message translates to:
+  /// **'Restar'**
+  String get formSubtract;
+
+  /// No description provided for @formAdd.
+  ///
+  /// In es, this message translates to:
+  /// **'Sumar'**
+  String get formAdd;
 
   /// No description provided for @transactionCategory.
   ///
@@ -989,7 +1025,7 @@ abstract class AppLocalizations {
   /// No description provided for @decimalPoint.
   ///
   /// In es, this message translates to:
-  /// **'Punto decimal'**
+  /// **'Separador decimal'**
   String get decimalPoint;
 
   /// No description provided for @budgetCanSpendPerDay.
@@ -1039,6 +1075,300 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Editar'**
   String get editHome;
+
+  /// No description provided for @formAddMenuTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Agregar Transacción'**
+  String get formAddMenuTitle;
+
+  /// No description provided for @formEditMenuTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar Transacción'**
+  String get formEditMenuTitle;
+
+  /// No description provided for @formSettingTransferTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Pestaña de transferencia de saldo'**
+  String get formSettingTransferTitle;
+
+  /// No description provided for @formSettingTransferSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'En la página \'Agregar nueva transacción\''**
+  String get formSettingTransferSubtitle;
+
+  /// No description provided for @formSettingAttachmentTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Botón Agregar archivos adjuntos'**
+  String get formSettingAttachmentTitle;
+
+  /// No description provided for @formSettingAttachmentSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Mostrar debajo de la sección de notas'**
+  String get formSettingAttachmentSubtitle;
+
+  /// No description provided for @formSettingAutoTitleTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Agregar títulos automáticamente'**
+  String get formSettingAutoTitleTitle;
+
+  /// No description provided for @formSettingAutoTitleSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuando se crea una transacción'**
+  String get formSettingAutoTitleSubtitle;
+
+  /// No description provided for @formSettingInitialInputTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Indicaciones iniciales de entrada'**
+  String get formSettingInitialInputTitle;
+
+  /// No description provided for @formSettingInitialInputSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Al añadir una transacción por primera vez'**
+  String get formSettingInitialInputSubtitle;
+
+  /// No description provided for @formTransfer.
+  ///
+  /// In es, this message translates to:
+  /// **'Transferir'**
+  String get formTransfer;
+
+  /// No description provided for @formTypeDefault.
+  ///
+  /// In es, this message translates to:
+  /// **'Predeterminado'**
+  String get formTypeDefault;
+
+  /// No description provided for @formTypeUpcoming.
+  ///
+  /// In es, this message translates to:
+  /// **'Próximamente'**
+  String get formTypeUpcoming;
+
+  /// No description provided for @formTypeSubscription.
+  ///
+  /// In es, this message translates to:
+  /// **'Suscripción'**
+  String get formTypeSubscription;
+
+  /// No description provided for @formTypeRepetitive.
+  ///
+  /// In es, this message translates to:
+  /// **'Repetitivo'**
+  String get formTypeRepetitive;
+
+  /// No description provided for @formTypeLend.
+  ///
+  /// In es, this message translates to:
+  /// **'Prestar'**
+  String get formTypeLend;
+
+  /// No description provided for @formTypeBorrow.
+  ///
+  /// In es, this message translates to:
+  /// **'Deuda'**
+  String get formTypeBorrow;
+
+  /// No description provided for @formTypeInfo.
+  ///
+  /// In es, this message translates to:
+  /// **'Tipos de transacción'**
+  String get formTypeInfo;
+
+  /// No description provided for @formAllAccounts.
+  ///
+  /// In es, this message translates to:
+  /// **'Todas las cuentas'**
+  String get formAllAccounts;
+
+  /// No description provided for @formAccountSheetTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Seleccionar Cuenta'**
+  String get formAccountSheetTitle;
+
+  /// No description provided for @formNoBudget.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin presupuesto'**
+  String get formNoBudget;
+
+  /// No description provided for @formNoGoal.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin objetivo'**
+  String get formNoGoal;
+
+  /// No description provided for @formNoLoan.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin préstamo'**
+  String get formNoLoan;
+
+  /// No description provided for @formCreateBudget.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear presupuesto'**
+  String get formCreateBudget;
+
+  /// No description provided for @formCreateGoal.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear objetivo'**
+  String get formCreateGoal;
+
+  /// No description provided for @formTitleHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Título'**
+  String get formTitleHint;
+
+  /// No description provided for @formEnterTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Escribe Un Título'**
+  String get formEnterTitle;
+
+  /// No description provided for @formChooseDate.
+  ///
+  /// In es, this message translates to:
+  /// **'Seleccionar fecha'**
+  String get formChooseDate;
+
+  /// No description provided for @formNotesHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Notas'**
+  String get formNotesHint;
+
+  /// No description provided for @formAddAttachment.
+  ///
+  /// In es, this message translates to:
+  /// **'Añadir un adjunto'**
+  String get formAddAttachment;
+
+  /// No description provided for @formMoreOptions.
+  ///
+  /// In es, this message translates to:
+  /// **'Más opciones'**
+  String get formMoreOptions;
+
+  /// No description provided for @formIncludeAmount.
+  ///
+  /// In es, this message translates to:
+  /// **'Incluir importe'**
+  String get formIncludeAmount;
+
+  /// No description provided for @formExcludeBudget.
+  ///
+  /// In es, this message translates to:
+  /// **'Excluir del presupuesto'**
+  String get formExcludeBudget;
+
+  /// No description provided for @formSelectCategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Selecciona una categoría'**
+  String get formSelectCategory;
+
+  /// No description provided for @formCategorySheetTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Selecciona Una Categoría'**
+  String get formCategorySheetTitle;
+
+  /// No description provided for @formMenu.
+  ///
+  /// In es, this message translates to:
+  /// **'Más acciones'**
+  String get formMenu;
+
+  /// No description provided for @formEditTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar transacción'**
+  String get formEditTitle;
+
+  /// No description provided for @formTypeSheetTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Seleccionar El Tipo De Transacción'**
+  String get formTypeSheetTitle;
+
+  /// No description provided for @formTypeUnpaid.
+  ///
+  /// In es, this message translates to:
+  /// **'Una transacción que no está pagada'**
+  String get formTypeUnpaid;
+
+  /// No description provided for @formTypeNotInTotal.
+  ///
+  /// In es, this message translates to:
+  /// **'No cuenta para su total a menos que sea marcado como \'Pagado\' o \'Depositado\''**
+  String get formTypeNotInTotal;
+
+  /// No description provided for @formTypeSubscriptionDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Transacción recurrente que se mostrará en la página de suscripciones'**
+  String get formTypeSubscriptionDescription;
+
+  /// No description provided for @formTypeNextGenerated.
+  ///
+  /// In es, this message translates to:
+  /// **'Próxima transacción generada cuando la actual está marcada como \"Pagada\" o \"Depositada\"'**
+  String get formTypeNextGenerated;
+
+  /// No description provided for @formTypeRepetitiveDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Transacción recurrente'**
+  String get formTypeRepetitiveDescription;
+
+  /// No description provided for @formTypeLendDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Transacción que prestaste'**
+  String get formTypeLendDescription;
+
+  /// No description provided for @formTypeLendCashFlow.
+  ///
+  /// In es, this message translates to:
+  /// **'Flujo de caja negativo hasta que se marque como \'Recolectado\''**
+  String get formTypeLendCashFlow;
+
+  /// No description provided for @formTypeBorrowDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Transacción prestada de alguien'**
+  String get formTypeBorrowDescription;
+
+  /// No description provided for @formTypeBorrowCashFlow.
+  ///
+  /// In es, this message translates to:
+  /// **'Flujo de caja positivo hasta que se marque como \'Liquidado\''**
+  String get formTypeBorrowCashFlow;
+
+  /// No description provided for @formTypeHelp.
+  ///
+  /// In es, this message translates to:
+  /// **'Marque una transacción especial tocando el botón de acción en la entrada de la transacción'**
+  String get formTypeHelp;
+
+  /// No description provided for @formTypeNotice.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no disponible: se guardará como transacción normal'**
+  String get formTypeNotice;
 }
 
 class _AppLocalizationsDelegate
