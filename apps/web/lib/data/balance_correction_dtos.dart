@@ -47,3 +47,65 @@ final class BalanceCorrectionDto {
     incoming: TransactionDto.fromJson(json['incoming'] as Map<String, Object?>),
   );
 }
+
+/// OpenAPI 0.7.0: pairs are linked and ordered newest departure first by API.
+final class BalanceCorrectionLegDto {
+  const BalanceCorrectionLegDto({
+    required this.id,
+    required this.accountId,
+    required this.currency,
+    required this.amount,
+    required this.occurredAt,
+  });
+  final String id, accountId, currency, amount, occurredAt;
+  factory BalanceCorrectionLegDto.fromJson(Map<String, Object?> json) =>
+      BalanceCorrectionLegDto(
+        id: json['id'] as String,
+        accountId: json['account_id'] as String,
+        currency: json['currency'] as String,
+        amount: json['amount'] as String,
+        occurredAt: json['occurred_at'] as String,
+      );
+}
+
+final class BalanceCorrectionSummaryDto {
+  const BalanceCorrectionSummaryDto({
+    required this.groupId,
+    required this.outgoing,
+    required this.incoming,
+    required this.implicitRate,
+  });
+  final String groupId, implicitRate;
+  final BalanceCorrectionLegDto outgoing, incoming;
+  factory BalanceCorrectionSummaryDto.fromJson(Map<String, Object?> json) =>
+      BalanceCorrectionSummaryDto(
+        groupId: json['group_id'] as String,
+        implicitRate: json['implicit_rate'] as String,
+        outgoing: BalanceCorrectionLegDto.fromJson(
+          json['outgoing'] as Map<String, Object?>,
+        ),
+        incoming: BalanceCorrectionLegDto.fromJson(
+          json['incoming'] as Map<String, Object?>,
+        ),
+      );
+}
+
+final class BalanceCorrectionPageDto {
+  const BalanceCorrectionPageDto({
+    required this.items,
+    required this.nextCursor,
+  });
+  final List<BalanceCorrectionSummaryDto> items;
+  final String? nextCursor;
+  factory BalanceCorrectionPageDto.fromJson(Map<String, Object?> json) =>
+      BalanceCorrectionPageDto(
+        items: List<BalanceCorrectionSummaryDto>.unmodifiable(
+          (json['items'] as List<Object?>).map(
+            (item) => BalanceCorrectionSummaryDto.fromJson(
+              item as Map<String, Object?>,
+            ),
+          ),
+        ),
+        nextCursor: json['next_cursor'] as String?,
+      );
+}

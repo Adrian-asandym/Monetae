@@ -1441,6 +1441,54 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'OK'**
   String get transferOk;
+
+  /// No description provided for @transferRateSheetTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tipo De Cambio'**
+  String get transferRateSheetTitle;
+
+  /// No description provided for @transferRateSuggested.
+  ///
+  /// In es, this message translates to:
+  /// **'Sugerido · tu última compra ({date})'**
+  String transferRateSuggested(String date);
+
+  /// No description provided for @transferRateManual.
+  ///
+  /// In es, this message translates to:
+  /// **'Manual'**
+  String get transferRateManual;
+
+  /// No description provided for @transferRateInverted.
+  ///
+  /// In es, this message translates to:
+  /// **'Dirección contraria · tasa invertida'**
+  String get transferRateInverted;
+
+  /// No description provided for @transferRateLoading.
+  ///
+  /// In es, this message translates to:
+  /// **'Buscando una tasa sugerida…'**
+  String get transferRateLoading;
+
+  /// No description provided for @transferRateApply.
+  ///
+  /// In es, this message translates to:
+  /// **'Aplicar'**
+  String get transferRateApply;
+
+  /// No description provided for @transferRateUseSuggested.
+  ///
+  /// In es, this message translates to:
+  /// **'Usar sugerido'**
+  String get transferRateUseSuggested;
+
+  /// No description provided for @transferRateViewAll.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver todos los tipos de cambio'**
+  String get transferRateViewAll;
 }
 
 class _AppLocalizationsDelegate

@@ -117,6 +117,28 @@ final class ApiClient {
   Future<CurrentUserDto> currentUser() async =>
       CurrentUserDto.fromJson(await _request('GET', 'users/me'));
 
+  Future<BalanceCorrectionPageDto> balanceCorrections({
+    String? fromAccountId,
+    String? toAccountId,
+    String? fromCurrency,
+    String? toCurrency,
+    String? cursor,
+    int limit = 1,
+  }) async => BalanceCorrectionPageDto.fromJson(
+    await _request(
+      'GET',
+      'balance-corrections',
+      query: {
+        'limit': limit.toString(),
+        'from_account_id': ?fromAccountId,
+        'to_account_id': ?toAccountId,
+        'from_currency': ?fromCurrency,
+        'to_currency': ?toCurrency,
+        'cursor': ?cursor,
+      },
+    ),
+  );
+
   Future<BalanceCorrectionDto> createBalanceCorrection(
     BalanceCorrectionCreateDto correction, {
     required String idempotencyKey,

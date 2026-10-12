@@ -3,6 +3,8 @@
 // Copyright James Kokoska, GPL-3.0. Modified 2026-10-12 (T-519 piece 10).
 // That local reference predates captures 24–25: cards, dialog, clear and swap
 // follow those captures and the coordinator's explicit clarification instead.
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -17,6 +19,7 @@ import '../theme/monetae_theme.dart';
 import '../widgets/decimal_number_pad.dart';
 import '../widgets/transaction_form/account_selection_sheet.dart';
 import '../widgets/transaction_form/form_controls.dart';
+import '../widgets/transaction_form/exchange_rate_sheet.dart';
 import '../widgets/transaction_form/form_sheet.dart';
 
 typedef _T = TransactionFormTokens;
@@ -35,27 +38,19 @@ class TransferBalancePage extends StatefulWidget {
 
 class _TransferBalancePageState extends State<TransferBalancePage> {
   TransferBalanceController get form => widget.controller;
-  final _rate = TextEditingController();
-  final _rateFocus = FocusNode();
   final _fromBaseRate = TextEditingController();
   final _toBaseRate = TextEditingController();
   @override
   void initState() {
     super.initState();
-    _rate.text = form.rate;
     _fromBaseRate.text = form.fromManualRate;
     _toBaseRate.text = form.toManualRate;
     form.addListener(_changed);
+    unawaited(form.loadSuggestion());
   }
 
   void _changed() {
     if (!mounted) return;
-    if (_rate.text != form.rate) {
-      _rate.value = TextEditingValue(
-        text: form.rate,
-        selection: TextSelection.collapsed(offset: form.rate.length),
-      );
-    }
     if (_fromBaseRate.text != form.fromManualRate) {
       _fromBaseRate.text = form.fromManualRate;
     }
@@ -68,8 +63,6 @@ class _TransferBalancePageState extends State<TransferBalancePage> {
   @override
   void dispose() {
     form.removeListener(_changed);
-    _rate.dispose();
-    _rateFocus.dispose();
     _fromBaseRate.dispose();
     _toBaseRate.dispose();
     // The caller owns the controller until any in-flight save completes.
@@ -90,6 +83,16 @@ class _TransferBalancePageState extends State<TransferBalancePage> {
             key: Key('transfer-error-$field'),
             style: TextStyle(color: Theme.of(context).colorScheme.error),
           );
+  }
+
+  Future<void> _rateSheet() async {
+    if (form.busy ||
+        form.sameCurrency ||
+        form.from == null ||
+        form.to == null) {
+      return;
+    }
+    await showExchangeRateSheet(context, form);
   }
 
   Future<void> _accounts(bool outgoing) async {
@@ -587,38 +590,28 @@ class _TransferBalancePageState extends State<TransferBalancePage> {
                               ),
                               const Spacer(),
                               if (!form.sameCurrency)
-                                SizedBox(
-                                  width: _T.transferRateWidth,
-                                  height: _T.transferRateHeight,
-                                  child: TextField(
+                                Material(
+                                  color: c.dateBox,
+                                  borderRadius: BorderRadius.circular(
+                                    _T.transferAmountRadius,
+                                  ),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: InkWell(
                                     key: const Key('transfer-rate'),
-                                    controller: _rate,
-                                    focusNode: _rateFocus,
-                                    keyboardType:
-                                        const TextInputType.numberWithOptions(
-                                          decimal: true,
-                                        ),
-                                    inputFormatters: const [
-                                      DecimalTextFormatter(6),
-                                    ],
-                                    onChanged: form.setRate,
-                                    style: TextStyle(
-                                      fontSize: _T.transferRateSize,
-                                      color: MonetaeColors.of(context).muted,
-                                    ),
-                                    decoration: InputDecoration(
-                                      prefixText: '× ',
-                                      filled: true,
-                                      fillColor: c.dateBox,
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                            horizontal:
-                                                _T.transferAmountPadding,
+                                    onTap: _rateSheet,
+                                    child: SizedBox(
+                                      width: _T.transferRateWidth,
+                                      height: _T.transferRateHeight,
+                                      child: Center(
+                                        child: Text(
+                                          '× ${form.rateLabel}',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: _T.transferRateSize,
+                                            color: MonetaeColors.of(context)
+                                                .muted,
                                           ),
-                                      border: OutlineInputBorder(
-                                        borderSide: BorderSide.none,
-                                        borderRadius: BorderRadius.circular(
-                                          _T.transferAmountRadius,
                                         ),
                                       ),
                                     ),
@@ -745,7 +738,7 @@ class _TransferBalancePageState extends State<TransferBalancePage> {
                                     ),
                                   ),
                                 ),
-                                onPressed: () => _rateFocus.requestFocus(),
+                                onPressed: _rateSheet,
                                 child: Text(l.transferRates),
                               ),
                             ),

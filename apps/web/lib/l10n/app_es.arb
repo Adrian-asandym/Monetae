@@ -355,5 +355,20 @@
       }
     }
   },
-  "transferOk": "OK"
+  "transferOk": "OK",
+  "transferRateSheetTitle": "Tipo De Cambio",
+  "transferRateSuggested": "Sugerido · tu última compra ({date})",
+  "transferRateManual": "Manual",
+  "transferRateInverted": "Dirección contraria · tasa invertida",
+  "transferRateLoading": "Buscando una tasa sugerida…",
+  "transferRateApply": "Aplicar",
+  "transferRateUseSuggested": "Usar sugerido",
+  "transferRateViewAll": "Ver todos los tipos de cambio",
+  "@transferRateSuggested": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  }
 }

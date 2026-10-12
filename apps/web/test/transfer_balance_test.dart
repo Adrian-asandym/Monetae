@@ -31,11 +31,14 @@ class TransferFixture {
     String base = 'PEN',
     bool same = false,
     bool single = false,
+    String fromCurrency = 'PEN',
+    String toCurrency = 'USD',
   }) {
     accounts = [
       AccountDto.fromJson({
         ...mockAccount(l).toJson(),
         'name': 'Cuenta de prueba',
+        'currency': fromCurrency,
         'balance': '150.50',
         'color': '#529F8D',
       }),
@@ -44,7 +47,7 @@ class TransferFixture {
           ...mockAccount(l).toJson(),
           'id': transaction.usdId,
           'name': 'Cuenta secundaria',
-          'currency': same ? 'PEN' : 'USD',
+          'currency': same ? fromCurrency : toCurrency,
           'balance': '22.25',
           'color': '#38A84A',
         }),
@@ -73,10 +76,18 @@ class TransferFixture {
   late final SessionController session;
   late final TransferBalanceController form;
   final requests = <http.Request>[];
+  final historyRequests = <http.Request>[];
+  Future<http.Response> Function(http.Request)? historyHandler;
   int status = 201;
   bool fieldError = false;
   Completer<http.Response>? pending;
   Future<http.Response> handle(http.Request request) async {
+    if (request.method == 'GET') {
+      historyRequests.add(request);
+      return historyHandler != null
+          ? historyHandler!(request)
+          : session_fixtures.ok({'items': <Object>[], 'next_cursor': null});
+    }
     requests.add(request);
     if (pending != null) return pending!.future;
     if (fieldError) {
@@ -427,39 +438,43 @@ void main() {
     },
   );
 
-  testWidgets('amount sheet keypad, live balance, swap, rate focus and clear', (
-    tester,
-  ) async {
-    final f = TransferFixture();
-    addTearDown(f.close);
-    f.fill();
-    await mount(tester, f);
-    await tester.enterText(find.byKey(const Key('transfer-rate')), '0,5');
-    expect(f.form.toAmount, '15.00');
-    await tester.tap(find.byKey(const Key('transfer-from-amount')));
-    await tester.pumpAndSettle();
-    await tester.longPress(find.byKey(const Key('amount-key-backspace')));
-    await tester.tap(find.byKey(const Key('amount-key-2')));
-    await tester.tap(find.byKey(const Key('amount-key-0')));
-    await tester.tap(find.byKey(const Key('transfer-amount-done')));
-    await tester.pumpAndSettle();
-    expect(f.form.fromAmount, '20');
-    expect(f.form.toAmount, '10.00');
-    await tester.tap(find.byKey(const Key('transfer-swap')));
-    await tester.pumpAndSettle();
-    expect(f.form.rate, '2.000000');
-    await tester.ensureVisible(find.byKey(const Key('transfer-rates')));
-    await tester.tap(find.byKey(const Key('transfer-rates')));
-    await tester.pump();
-    final rateField = tester.widget<TextField>(
-      find.byKey(const Key('transfer-rate')),
-    );
-    expect(rateField.focusNode!.hasFocus, isTrue);
-    await tester.tap(find.byKey(const Key('transfer-clear')));
-    await tester.pump();
-    expect(f.form.fromAmount, '');
-    expect(f.form.toAmount, '');
-  });
+  testWidgets(
+    'amount sheet keypad, live balance, swap, shared rate sheet and clear',
+    (tester) async {
+      final f = TransferFixture();
+      addTearDown(f.close);
+      f.fill();
+      await mount(tester, f);
+      await tester.tap(find.byKey(const Key('transfer-rate')));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('exchange-rate-input')), '2');
+      await tester.tap(find.byKey(const Key('exchange-rate-apply')));
+      await tester.pumpAndSettle();
+      expect(f.form.toAmount, '15.00');
+      await tester.tap(find.byKey(const Key('transfer-from-amount')));
+      await tester.pumpAndSettle();
+      await tester.longPress(find.byKey(const Key('amount-key-backspace')));
+      await tester.tap(find.byKey(const Key('amount-key-2')));
+      await tester.tap(find.byKey(const Key('amount-key-0')));
+      await tester.tap(find.byKey(const Key('transfer-amount-done')));
+      await tester.pumpAndSettle();
+      expect(f.form.fromAmount, '20');
+      expect(f.form.toAmount, '10.00');
+      await tester.tap(find.byKey(const Key('transfer-swap')));
+      await tester.pumpAndSettle();
+      expect(f.form.rate, '2.000000');
+      await tester.ensureVisible(find.byKey(const Key('transfer-rates')));
+      await tester.tap(find.byKey(const Key('transfer-rates')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('exchange-rate-sheet')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('exchange-rate-apply')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('transfer-clear')));
+      await tester.pump();
+      expect(f.form.fromAmount, '');
+      expect(f.form.toAmount, '');
+    },
+  );
 
   testWidgets(
     'arrival reset restores default after independent date and rejects early departure',

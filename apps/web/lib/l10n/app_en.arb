@@ -355,5 +355,20 @@
       }
     }
   },
-  "transferOk": "OK"
+  "transferOk": "OK",
+  "transferRateSheetTitle": "Exchange Rate",
+  "transferRateSuggested": "Suggested · your last purchase ({date})",
+  "transferRateManual": "Manual",
+  "transferRateInverted": "Opposite direction · inverted rate",
+  "transferRateLoading": "Looking for a suggested rate…",
+  "transferRateApply": "Apply",
+  "transferRateUseSuggested": "Use suggested",
+  "transferRateViewAll": "View all exchange rates",
+  "@transferRateSuggested": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  }
 }

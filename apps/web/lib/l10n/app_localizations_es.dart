@@ -752,4 +752,30 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get transferOk => 'OK';
+
+  @override
+  String get transferRateSheetTitle => 'Tipo De Cambio';
+
+  @override
+  String transferRateSuggested(String date) {
+    return 'Sugerido · tu última compra ($date)';
+  }
+
+  @override
+  String get transferRateManual => 'Manual';
+
+  @override
+  String get transferRateInverted => 'Dirección contraria · tasa invertida';
+
+  @override
+  String get transferRateLoading => 'Buscando una tasa sugerida…';
+
+  @override
+  String get transferRateApply => 'Aplicar';
+
+  @override
+  String get transferRateUseSuggested => 'Usar sugerido';
+
+  @override
+  String get transferRateViewAll => 'Ver todos los tipos de cambio';
 }

@@ -322,6 +322,16 @@ class TransactionFormColors {
 abstract final class TransactionFormTokens {
   // Captures 24–25, right viewport 500 px / 400 dp = 1.25 px per dp.
   // The local Cashew TransferBalancePopup predates this card-based screen.
+  // Piece 11: reuse sheet typography/spacing from captures 11 and 16;
+  // capture 24 only shows the multiplicative rate control, not this sheet.
+  static const rateSheetGap = 16.0;
+  static const rateSheetCaptionGap = 8.0;
+  static const rateSheetEquationGap = 8.0;
+  static const rateSheetCaptionSize = 14.0;
+  static const rateSheetEquationSize = 16.0;
+  static const rateSheetPreviewGap = 20.0;
+  static const rateSheetArrowSize = 22.0;
+  static const rateSheetPreviewSize = 24.0;
   static const transferInset = 13.0;
   static const transferTop = 17.0;
   static const transferCardHeight = 96.0;
