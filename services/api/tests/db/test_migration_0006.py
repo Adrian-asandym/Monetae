@@ -41,7 +41,7 @@ def test_roundtrip_with_materialized_payment_preserves_transactions(
     from sqlalchemy.orm import Session
 
     from monetae.api.schemas.subscriptions import SubscriptionCreate
-    from monetae.db.models import Account, Transaction, User
+    from monetae.db.models import Account, Category, Transaction, User
     from monetae.services.auth import SystemClock
     from monetae.services.subscriptions import SubscriptionService
 
@@ -94,7 +94,7 @@ def test_roundtrip_with_materialized_payment_preserves_transactions(
     finally:
         command.upgrade(config, "head")
         with Session(db_engine) as db:
-            for model in (Transaction, Account):
+            for model in (Transaction, Category, Account):
                 db.execute(delete(model).where(model.user_id == user_id))
             db.execute(delete(User).where(User.id == user_id))
             db.commit()

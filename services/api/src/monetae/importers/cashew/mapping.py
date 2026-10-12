@@ -182,6 +182,8 @@ def _pair_transfers(
         if counterpart_pk is None:
             continue
         other = normal.get(counterpart_pk)
+        correction = row.category_pk == "0"
+        correction_pair = correction and other is not None and other.source.category_pk == "0"
         reason: str | None = None
         # Orden de precedencia contractual: una sola explicación por fila.
         if counterpart_pk not in rows:
@@ -190,11 +192,14 @@ def _pair_transfers(
             reason = "counterpart_not_ordinary"
         elif row.wallet_pk == other.source.wallet_pk:
             reason = "same_wallet"
-        elif mapped.currency != other.currency:
+        elif mapped.currency != other.currency and not correction_pair:
             reason = "currency_mismatch"
-        elif mapped.amount != -other.amount or row.amount != -other.source.amount:
+        elif (mapped.amount > 0) == (other.amount > 0) or (
+            not correction_pair
+            and (mapped.amount != -other.amount or row.amount != -other.source.amount)
+        ):
             reason = "amount_mismatch"
-        elif not row.paid or not other.source.paid:
+        elif (not row.paid or not other.source.paid) and not correction_pair:
             reason = "unpaid"
         elif pk in ambiguous or counterpart_pk in ambiguous:
             reason = "ambiguous_counterpart"
@@ -202,7 +207,7 @@ def _pair_transfers(
             assert other is not None
             transfers.append((mapped, other))
             paired.update((pk, counterpart_pk))
-        else:
+        elif not correction:
             reviews.append(
                 ReviewItem(
                     kind="unpaired_transfer",

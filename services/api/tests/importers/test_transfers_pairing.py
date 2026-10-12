@@ -62,7 +62,8 @@ def test_explicit_pair_import_idempotence_and_isolation(
         db_session.scalars(select(Transaction).where(Transaction.user_id == import_user.id))
     )
     assert len(legs) == 2
-    assert all(t.kind == "transfer" and t.category_id is None for t in legs)
+    assert {t.kind for t in legs} == {"income", "expense"}
+    assert all(t.category_id is not None for t in legs)
     assert legs[0].transfer_group_id == legs[1].transfer_group_id is not None
     before = financial_rows(db_session, import_user)
     second = run_import(db_session, import_user.id, snapshot, options)

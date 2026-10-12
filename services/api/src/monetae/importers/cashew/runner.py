@@ -98,6 +98,27 @@ class ImportContext:
         if account.deleted_at is not None or account.currency != mapped.currency:
             raise ImportFailure("Cuenta importada borrada o con moneda incompatible.")
         category = self.categories.get(mapped.category_pk or "")
+        if source.category_pk == "0" or transfer_group_id is not None:
+            key = f"balance_correction_{mapped.kind}"
+            category = self.session.scalar(
+                select(Category).where(
+                    Category.user_id == self.user_id,
+                    Category.system_key == key,
+                    Category.deleted_at.is_(None),
+                )
+            )
+            if category is None:
+                category = Category(
+                    user_id=self.user_id,
+                    kind=mapped.kind,
+                    name="Corrección de saldo",
+                    is_system=True,
+                    system_key=key,
+                    icon="swap_horiz",
+                    color="#808080",
+                )
+                self.session.add(category)
+                self.session.flush()
         if mapped.category_pk is not None and category is None:
             self.report.warnings.append(f"missing_category:{source.pk}")
         row = Transaction(
@@ -204,7 +225,8 @@ def _categories(ctx: ImportContext) -> None:
         for row in ctx.session.scalars(select(Category).where(Category.user_id == ctx.user_id))
         if row.import_external_id
     }
-    pending = {source.pk: source for source in ctx.snapshot.categories}
+    # Category 0 has two destination system categories, selected by leg polarity.
+    pending = {source.pk: source for source in ctx.snapshot.categories if source.pk != "0"}
     # Dos fases: resolver identidades existentes y luego insertar padres antes que hijos.
     for pk in list(pending):
         row = existing.get(external_id(pk))
@@ -294,23 +316,24 @@ def _transfers(ctx: ImportContext) -> None:
             continue
         if rows:
             # No reparar una pata previamente editada/borrada creando un grupo incompleto.
-            ctx.report.review_items.append(
-                ReviewItem(
-                    kind="unpaired_transfer",
-                    payload={
-                        "transaction_pk": left.source.pk,
-                        "paired_pk": right.source.pk,
-                        "reason": "partially_imported",
-                    },
+            if left.source.category_pk != "0" and right.source.category_pk != "0":
+                ctx.report.review_items.append(
+                    ReviewItem(
+                        kind="unpaired_transfer",
+                        payload={
+                            "transaction_pk": left.source.pk,
+                            "paired_pk": right.source.pk,
+                            "reason": "partially_imported",
+                        },
+                    )
                 )
-            )
             for mapped in (left, right):
                 ctx.insert_transaction(mapped)
             ctx.report.entity("transfers").skipped += 1
             continue
         group_id = uuid4()
         for mapped in (left, right):
-            ctx.insert_transaction(mapped, kind="transfer", transfer_group_id=group_id)
+            ctx.insert_transaction(mapped, transfer_group_id=group_id)
         ctx.report.entity("transfers").created += 1
 
 

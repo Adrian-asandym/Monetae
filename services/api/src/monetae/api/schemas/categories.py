@@ -56,7 +56,15 @@ class Category(StrictModel):
     updated_at: datetime
     deleted_at: datetime | None
     is_system: bool
-    system_key: Literal["interest_income", "interest_expense"] | None
+    system_key: (
+        Literal[
+            "interest_income",
+            "interest_expense",
+            "balance_correction_income",
+            "balance_correction_expense",
+        ]
+        | None
+    )
 
 
 class CategoryPage(Page[Category]):

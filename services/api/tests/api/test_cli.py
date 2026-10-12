@@ -58,7 +58,12 @@ def test_cli_stdin_duplicates_and_categories(
         assert user is not None and user.report_currency == user.base_currency == "USD"
         assert user.display_name == "Synthetic User"
         rows = db.scalars(select(Category).where(Category.user_id == user.id)).all()
-        assert {row.system_key for row in rows} == {"interest_income", "interest_expense"}
+        assert {row.system_key for row in rows} == {
+            "interest_income",
+            "interest_expense",
+            "balance_correction_income",
+            "balance_correction_expense",
+        }
         assert all(row.is_system for row in rows)
 
 

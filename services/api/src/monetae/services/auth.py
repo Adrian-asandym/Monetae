@@ -111,6 +111,18 @@ class AuthService:
                             is_system=True,
                             system_key="interest_expense",
                         ),
+                        *(
+                            Category(
+                                user_id=user.id,
+                                kind=kind,
+                                name="Corrección de saldo",
+                                is_system=True,
+                                system_key=f"balance_correction_{kind}",
+                                icon="swap_horiz",
+                                color="#808080",
+                            )
+                            for kind in ("income", "expense")
+                        ),
                     ]
                 )
                 self.db.flush()

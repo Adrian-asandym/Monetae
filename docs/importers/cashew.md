@@ -117,33 +117,37 @@ si hace falta). Categorías de Cashew llamadas Intereses siguen siendo distintas
 de las categorías de sistema y generan aviso. El archivado y emoji de categorías
 se conservan como campos sin destino en el reporte.
 
-Las transferencias se forman únicamente por una referencia explícita
-`a.paired_transaction_fk = b.transaction_pk`. Se acepta si la referencia de b
-es nula o apunta de vuelta a a; el par se cuenta una sola vez. Ambas filas deben
-ser ordinarias (tipo nulo o 0, sin préstamo, no omitidas), de cuentas distintas,
-misma moneda, importes opuestos y pagadas. Se insertan atómicamente sin categoría,
-con un único grupo; nunca se empareja por parecido de importes, títulos o fechas.
+Desde T-604 (SPEC v0.7), la categoría de Cashew `category_fk="0"`
+se importa como «Corrección de saldo»: gasto negativo o ingreso positivo,
+con su categoría de sistema correspondiente. La categoría 0 no se duplica
+como una categoría ordinaria. Una corrección sin pareja, o con una referencia
+incompleta/ambigua, conserva su dinero como una sola corrección sin grupo;
+no produce `unpaired_transfer`.
 
-Si varias filas apuntan a b, o b apunta a una tercera fila, las filas implicadas
-no forman ningún par. Un par inválido conserva sus patas ordinarias y genera
-`unpaired_transfer` por cada pata ordinaria implicada, incluso la que no tiene
-referencia saliente. El payload contiene `transaction_pk`, `paired_pk` (la
-contraparte explícita entrante o saliente) y un único `reason`: el primero que
-aplique en este orden:
+Los pares se forman únicamente por una referencia explícita
+`a.paired_transaction_fk = b.transaction_pk`, recíproca o unidireccional.
+No se empareja por importe, título o fecha. Para dos correcciones de categoría 0
+se admiten monedas distintas, importes reales distintos y fecha/estado de pago
+independientes; las cuentas deben ser distintas y los signos contrarios. Se
+insertan dentro de la operación financiera atómica con el mismo
+`transfer_group_id`, conservando las tasas históricas de cada cuenta. Ya no
+se crean transacciones `kind=transfer` desde Cashew.
 
-1. `counterpart_missing`: la contraparte no existe.
-2. `counterpart_not_ordinary`: préstamo, recurrente, fila omitida o tipo distinto de 0/nulo.
-3. `same_wallet`: ambas patas usan la misma cuenta.
-4. `currency_mismatch`: monedas distintas.
-5. `amount_mismatch`: los importes no son opuestos.
-6. `unpaid`: alguna pata no está pagada.
-7. `ambiguous_counterpart`: varias referencias entrantes o referencia a una tercera fila.
+Para compatibilidad con fuentes sintéticas/antiguas cuyos pares explícitos no
+usan la categoría 0, se mantiene la validación previa: filas ordinarias,
+cuentas distintas, misma moneda, importes opuestos y pagadas. Un par válido
+se importa también como corrección enlazada. Los pares ordinarios inválidos
+mantienen el diagnóstico `unpaired_transfer`, con la precedencia existente:
+`counterpart_missing`, `counterpart_not_ordinary`, `same_wallet`,
+`currency_mismatch`, `amount_mismatch`, `unpaid`, `ambiguous_counterpart`.
+Los conteos `transfers` del reporte siguen nombrando los pares importados
+por compatibilidad; describen grupos de correcciones, no el recurso `/transfers`.
 
-El emparejado entre monedas distintas queda como mejora futura: se importa como
-ordinario con `currency_mismatch`, sin inventar una tasa. Una pareja parcialmente
-importada tampoco modifica la pata existente; la nueva se inserta como ordinaria
-con el motivo existente `partially_imported`. Se mantienen la identidad por pata
-y la política de solo inserción.
+Una pareja parcialmente importada nunca modifica una pierna existente. La
+nueva se inserta por separado; si es categoría 0 conserva su clasificación
+de corrección, sin `unpaired_transfer`. Para pares ordinarios se mantiene
+`partially_imported`. Se conservan identidad por pierna, idempotencia,
+`--dry-run` y cuadre por cuenta.
 
 `steps.transfers.unpaired_by_reason` agrega el número de ítems `unpaired_transfer`
 por motivo (incluido `partially_imported`), no el número de pares, para mostrar un

@@ -22,6 +22,11 @@ ENTRY_SQL = """
     FROM transactions t
     WHERE t.user_id = :user_id AND t.deleted_at IS NULL AND t.status = 'posted'
       AND t.kind IN ('income', 'expense') AND CAST(:person_id AS uuid) IS NULL
+      AND NOT EXISTS (
+          SELECT 1 FROM categories correction
+          WHERE correction.id = t.category_id AND correction.user_id = :user_id
+            AND correction.system_key IN ('balance_correction_income', 'balance_correction_expense')
+      )
       AND t.occurred_at >= :start_at AND t.occurred_at < :end_at
       AND (CAST(:account_id AS uuid) IS NULL OR t.account_id = :account_id)
     UNION ALL

@@ -200,6 +200,23 @@ class TransactionService:
         category_id = (
             payload.category_id if "category_id" in payload.model_fields_set else row.category_id
         )
+        if row.transfer_group_id is not None:
+            # Corrections keep their role even if the other leg is deleted; batch edits
+            # also pass here. Transfer/loan kinds already require their own resource.
+            category = self.db.scalar(
+                select(Category).where(
+                    Category.user_id == user_id,
+                    Category.id == category_id,
+                    Category.system_key == f"balance_correction_{row.kind}",
+                    Category.deleted_at.is_(None),
+                )
+            )
+            if (payload.kind is not None and payload.kind != row.kind) or category is None:
+                raise AuthError(
+                    422,
+                    "correction_role_immutable",
+                    "A linked correction must retain its kind and system category.",
+                )
         account = self._references(user_id, account_id, category_id)
         amount, rate = self._normalize(
             payload.kind or row.kind,

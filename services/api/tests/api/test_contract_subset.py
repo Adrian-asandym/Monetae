@@ -17,6 +17,13 @@ from monetae.api.schemas.auth import (
     UserPreferences,
     UserUpdate,
 )
+from monetae.api.schemas.balance_corrections import (
+    BalanceCorrection,
+    BalanceCorrectionCreate,
+    BalanceCorrectionLeg,
+    BalanceCorrectionPage,
+    BalanceCorrectionSummary,
+)
 from monetae.api.schemas.budgets import (
     Budget,
     BudgetCategoryLimit,
@@ -111,12 +118,17 @@ def test_mounted_operations_security_responses_and_csrf() -> None:
                     for p in operation["parameters"]
                 )
             count += 1
-    assert count == 85
+    assert count == 87
 
 
 def test_schema_properties_mirror_contract() -> None:
     schemas = json.loads(CONTRACT.read_text())["components"]["schemas"]
     models: list[type[BaseModel]] = [
+        BalanceCorrection,
+        BalanceCorrectionCreate,
+        BalanceCorrectionPage,
+        BalanceCorrectionLeg,
+        BalanceCorrectionSummary,
         Goal,
         GoalCreate,
         GoalUpdate,

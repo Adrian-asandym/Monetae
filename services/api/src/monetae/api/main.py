@@ -5,6 +5,7 @@ from monetae.api.errors import register_exception_handlers
 from monetae.api.routers.accounts import router as accounts_router
 from monetae.api.routers.auth import ERROR_RESPONSES
 from monetae.api.routers.auth import router as auth_router
+from monetae.api.routers.balance_corrections import router as balance_corrections_router
 from monetae.api.routers.budgets import router as budgets_router
 from monetae.api.routers.categories import router as categories_router
 from monetae.api.routers.goals import router as goals_router
@@ -48,6 +49,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(tags_router)
     application.include_router(transactions_router)
     application.include_router(transfers_router)
+    application.include_router(balance_corrections_router)
     application.include_router(loans_router)
     application.include_router(subscriptions_router)
     application.include_router(reports_router)

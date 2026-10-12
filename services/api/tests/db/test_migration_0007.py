@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from alembic import command
-from monetae.db.models import Account, ImportReviewItem, ImportRun, User
+from monetae.db.models import Account, Category, ImportReviewItem, ImportRun, User
 
 from .conftest import migration_config
 
@@ -89,7 +89,7 @@ def test_migration_0007_roundtrip_with_data(database_url: str, db_engine: Engine
     finally:
         command.upgrade(config, "head")
         with Session(db_engine) as session:
-            for model in (ImportReviewItem, ImportRun, Account):
+            for model in (ImportReviewItem, ImportRun, Category, Account):
                 session.execute(delete(model).where(model.user_id == user_id))
             session.execute(delete(User).where(User.id == user_id))
             session.commit()
