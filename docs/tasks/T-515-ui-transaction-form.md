@@ -57,3 +57,36 @@
 5. `flutter build web --release` compila.
 6. Sin cambios fuera de los archivos permitidos; sin datos reales; sin dependencias nuevas.
 7. En tu respuesta final: archivos tocados, TODO añadidos y cualquier diferencia con Cashew y su motivo.
+
+---
+
+## Ajustes v2 de Adrian (capturas 20–25) — piezas 7–9
+
+> Pedido por Adrian el 2026-10-12. Capturas (solo lectura, ignoradas por git): `/home/artur/propio2/Monetae-master-dev/reference/cashew-inicio-ui/20.png … 25.png` (izquierda = Monetae hoy, derecha = Cashew, objetivo). Identifícalas por su número. Mismas **Reglas**, **Contexto** y **Criterios de aceptación** de arriba; **una pieza por lanzamiento** y un commit por pieza. Los saldos y nombres de cuenta que ves en las capturas son de Adrian: **no los copies** a código, pruebas ni goldens (usa los datos sintéticos de las pruebas).
+> Las piezas 10 (pantalla «Transferir saldo», capturas 24–25) y 11 (tipo de cambio con sugerencia) se especificarán aparte: dependen de una decisión de Adrian sobre el modelo de transferencia.
+
+### 7 · Nombre de la categoría bajo el monto (captura 20)
+- En la cabecera, **debajo del monto**, el nombre de la categoría elegida: alineado a la derecha como el monto, ≈ 20 dp, blanco ~70 %, una línea con «…» si es largo. Sin categoría no se muestra nada (ni reserva hueco visible).
+- Sube el bloque del monto ≈ 10 dp para dejar sitio al nombre, como en Cashew.
+- En modo crear, el botón inferior dice **«Agregar transacción»** (en: «Add transaction»), no «Guardar transacción». Si existe modo editar, conserva su texto actual.
+- Commit: `feat(web): category name under amount and add button label (T-515 piece 7)`.
+
+### 8 · Hoja «Seleccionar Cuenta» (capturas 21 y 22)
+- Sustituye la hoja «Todas las cuentas» por la de Cashew: título **«Seleccionar Cuenta»** (negrita ≈ 26 dp) con ⋮ a la derecha (solo diseño: handler vacío + `TODO(T-515)`), esquinas superiores ≈ 28 dp, hoja alta (≈ 65 % de la pantalla) con scroll interno.
+- Filas ≈ 48 dp, ancho completo, padding horizontal ≈ 16 dp: radio (círculo vacío, borde ≈ 2 dp del color de la cuenta) + nombre en blanco ≈ 20 dp + **saldo actual** a la derecha en blanco ≈ 18 dp con el formato «120,50 S/. PEN», «35,00 $ USD», «0 S/. PEN» (formato de montos de la skill + espacio + código ISO; aquí sí va el código, por pedido expreso de Adrian).
+- Cuenta seleccionada: radio relleno por dentro y fila con fondo del color de la cuenta a ~30–35 % de opacidad, radio ≈ 12 dp. En la captura 21 la fila con fondo tenue es un estado hover/pressed: no es un estado permanente (sí puede usarse como efecto de hover/pulsación).
+- Quita los puntos de color rellenos, el nombre coloreado de la seleccionada y el símbolo suelto a la derecha de la hoja actual.
+- Se abre desde **dos sitios**: el botón ▼ de la fila de cuentas del formulario (21) y el ▼ de la hoja «Introduce El Importe» (22). En el segundo caso se **apila** sobre la hoja del importe (que queda atenuada detrás). Al elegir una cuenta se cierra **solo** esta hoja y la selección se actualiza en ambos lugares (un único estado compartido: la cuenta del controlador).
+- Haz la hoja reutilizable (widget/función propia en `widgets/transaction_form/`): la pieza 10 la usará para origen y destino.
+- Commit: `feat(web): Cashew account selection sheet (T-515 piece 8)`.
+
+### 9 · Menú ⋮ del formulario (captura 23)
+- El ⋮ de la esquina superior derecha abre una hoja inferior con título **«Agregar Transacción»** («Editar Transacción» en modo editar, si existe), negrita ≈ 26 dp. Lista sin separadores; filas con padding vertical ≈ 12 dp y horizontal ≈ 16 dp: icono a la izquierda (≈ 28 dp, gris claro), título en negrita ≈ 20 dp (hasta 2 líneas), subtítulo regular ≈ 16 dp (blanco ~80 %) y a la derecha un interruptor (todos activados por defecto) o un chevron ›. Textos exactos (es; traduce en en):
+  a. «Pestaña de transferencia de saldo» / «En la página 'Agregar nueva transacción'» (icono ⇄, interruptor)
+  b. «Botón Agregar archivos adjuntos» / «Mostrar debajo de la sección de notas» (icono de clip, interruptor)
+  c. «Agregar títulos automáticamente» / «Cuando se crea una transacción» (icono de nota con +, interruptor)
+  d. «Indicaciones iniciales de entrada» / «Al añadir una transacción por primera vez» (icono de edición, chevron)
+- Persistencia: si Monetae ya tiene un mecanismo de ajustes locales del navegador, úsalo; si no, estado en memoria compartido (una clase pequeña de ajustes del formulario) + `TODO(T-515): persist`. **Sin dependencias nuevas** y sin tocar el contrato ni `users/me`.
+- Funcionales solo **(a)** (muestra u oculta la pestaña Transferir; con ella oculta, las pestañas Gasto/Ingreso ocupan todo el ancho) y **(b)** (muestra u oculta la fila de adjunto bajo Notas). (c) y (d) quedan como diseño con `TODO`.
+- **Investigación (sin implementar):** en el código de Cashew, ¿qué controla exactamente (c)? Hipótesis de Adrian: si aparece la hoja inicial de título (captura 11). ¿Y qué abre (d)? Responde con archivo y línea en tu `worker_done`.
+- Commit: `feat(web): add transaction options menu (T-515 piece 9)`.
