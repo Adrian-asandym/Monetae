@@ -1,11 +1,11 @@
 ---
 name: cashew-form-transaccion
-description: Diseño del flujo y del formulario de agregar/editar transacción de Monetae (Flutter web) fiel a Cashew — hoja inicial de título, cabecera con pestañas e importe, filas de etiquetas (tipo, cuenta, presupuesto, objetivo, préstamo), título, notas y adjunto, "Más opciones", hojas de categoría e importe, y modal de tipos de transacción. Úsala siempre que se cree o modifique el botón "+", el formulario de transacción, las hojas de categoría o importe, o cualquier pantalla de agregar/editar transacción. Complementa a cashew-ui.
+description: Diseño del flujo y del formulario de agregar/editar transacción de Monetae (Flutter web) fiel a Cashew — hoja inicial de título, cabecera con pestañas e importe, filas de etiquetas (tipo, cuenta, presupuesto, objetivo, préstamo), título, notas y adjunto, "Más opciones", hojas de categoría e importe, modal de tipos de transacción, hoja "Seleccionar Cuenta", menú ⋮ del formulario, pantalla "Transferir saldo" y hoja "Tipo De Cambio". Úsala siempre que se cree o modifique el botón "+", el formulario de transacción, las hojas de categoría o importe, o cualquier pantalla de agregar/editar transacción. Complementa a cashew-inicio-ui.
 ---
 
 # Formulario de transacción de Monetae → fiel a Cashew
 
-Complementa la skill `cashew-ui`. Aplican igual sus reglas: solo presentación (no tocar modelos ni lógica de datos), reutilizar los tokens de tema (colores, radios, tipografía, formato de montos; no crear valores sueltos por widget), calibrar las medidas, un componente a la vez y un commit por pieza. Las medidas de abajo son aproximaciones leídas de las capturas (1 dp ≈ 1.25 px, viewport 400×642): calíbralas con el código de Cashew (https://github.com/jameskokoska/Cashew, clonado fuera del repo, solo lectura) o midiendo píxeles.
+Complementa la skill `cashew-inicio-ui` (la skill `cashew-ui` que se citaba no existe). Aplican igual sus reglas: solo presentación (no tocar modelos ni lógica de datos), reutilizar los tokens de tema (colores, radios, tipografía, formato de montos; no crear valores sueltos por widget), calibrar las medidas, un componente a la vez y un commit por pieza. Las medidas de abajo son aproximaciones leídas de las capturas (1 dp ≈ 1.25 px, viewport 400×642): calíbralas con el código de Cashew (https://github.com/jameskokoska/Cashew, clonado fuera del repo, solo lectura) o midiendo píxeles. **Regla (2026-10-12):** si una medida en dp de una pauta no cuadra con la captura, probablemente se midió en px (escala 1,25); manda el código de Cashew + la captura, y se anota la medida final y su fuente. El clon local de Cashew es **anterior** a las capturas 20–25: lo que no existe en el código sigue las capturas.
 
 ## Identificación de las capturas
 
@@ -22,8 +22,14 @@ Las capturas se identifican por el número con que las nombró el usuario (image
 | 17 | Modal "Seleccionar El Tipo De Transacción", parte superior (Predeterminado, Próximamente, Suscripción, Repetitivo) |
 | 18 | El mismo modal, parte media (Repetitivo, Prestar, Deuda) |
 | 19 | El mismo modal, final (Prestar, Deuda y panel explicativo con ejemplo) |
+| 20 | Cabecera con el nombre de la categoría bajo el monto y botón "Agregar transacción" |
+| 21 | Hoja "Seleccionar Cuenta" abierta desde el ▼ de la fila de cuentas del formulario |
+| 22 | La misma hoja apilada sobre "Introduce El Importe" |
+| 23 | Menú ⋮ del formulario: hoja "Agregar Transacción" con 4 opciones |
+| 24 | Pantalla "Transferir saldo" (tarjetas de origen y destino, tasa, fecha, "Transferir cantidad") |
+| 25 | Diálogo ⓘ de "Transferir saldo" |
 
-Las imágenes 17–19 son tres tramos de scroll del mismo modal. Si el orden numérico real difiere del de la tabla, guíate por el contenido.
+Las capturas 20–25 están en `reference/cashew-inicio-ui/` del worktree `master-dev` (ignoradas por git; los nombres y saldos que muestran son reales: no copiarlos). Las imágenes 17–19 son tres tramos de scroll del mismo modal. Si el orden numérico real difiere del de la tabla, guíate por el contenido.
 
 ## Estado actual de Monetae (lo que hay que reemplazar)
 
@@ -36,7 +42,7 @@ Pantalla única con AppBar "Añadir transacción" de color distinto, selector Ga
 3. Hoja de categorías (imagen 15): al elegir una categoría, la hoja se cierra y se abre la hoja de importe (imagen 16). En la captura 16 se ve la categoría ya elegida detrás, lo que indica este orden; verifícalo en el código de Cashew.
 4. Hoja de importe (imagen 16): "Fijar importe" la cierra y vuelve al formulario (imagen 12) con el icono de categoría y el importe en la cabecera.
 5. En el formulario, tocar el importe reabre la hoja 16, tocar el icono de categoría o el botón inferior reabre la hoja 15, y el campo "Título" del formulario edita el mismo título.
-6. El botón inferior dice "Selecciona una categoría" mientras no haya categoría elegida; después pasa a ser el botón de guardar (conserva el texto "Guardar transacción" de Monetae con el estilo del botón de Cashew). Monetae hoy permite "Sin categoría": mantén esa opción como primera celda de la cuadrícula y cuenta como elección válida.
+6. El botón inferior dice "Selecciona una categoría" mientras no haya categoría elegida; después pasa a ser el botón de guardar: **"Agregar transacción"** en modo crear (como Cashew) y "Guardar transacción" en modo editar. Monetae hoy permite "Sin categoría": mantén esa opción como primera celda de la cuadrícula y cuenta como elección válida.
 7. El mismo formulario sirve para editar: título de pantalla "Editar transacción" (en crear, "Agregar transacción").
 
 ## Título de pantalla y cabecera (imagen 12)
@@ -44,6 +50,8 @@ Pantalla única con AppBar "Añadir transacción" de color distinto, selector Ga
 - AppBar sin color propio (mismo fondo de página): flecha atrás a la izquierda, título centrado en negrita ("Agregar transacción"), menú ⋮ a la derecha.
 - Pestañas en tres partes iguales: "Gasto" (▼ rojo), "Ingreso" (▲ verde) y "Transferir" (icono ⇄). La seleccionada tiene fondo más claro, las demás más oscuro; alto ≈ 50 dp. "Transferir" se añade como diseño; si Monetae no tiene transferencias, queda visual con TODO y se reporta.
 - Bloque de importe (≈ 136 dp de alto), fondo gris azulado oscuro (color de acento del tema atenuado): a la izquierda un cuadrado redondeado de ≈ 80 dp (oscuro y vacío sin categoría; con la categoría elegida muestra su icono sobre su color); a la derecha el importe en negrita ≈ 36 dp alineado a la derecha ("0 S/.", mismo formato de montos de cashew-ui). Tocarlo abre la hoja 16.
+- **Nombre de la categoría bajo el monto (imagen 20):** alineado a la derecha, ≈ 20 dp (Cashew: 18 dp y hasta 2 líneas; pendiente de igualar, decisión TAM), blanco ~70 %, una línea con "…"; sin categoría no se muestra. El bloque del monto sube ≈ 10 dp.
+- La pestaña "Transferir" abre la **pantalla aparte "Transferir saldo"** (imagen 24) y puede ocultarse desde el menú ⋮.
 
 ## Fecha (imagen 12)
 
@@ -111,8 +119,37 @@ Se abre con el ⓘ de la primera fila. Hoja a casi pantalla completa con título
 - Al final, un panel más oscuro con borde, con texto centrado "Marque una transacción especial tocando el botón de acción en la entrada de la transacción", una fila de 5 botones circulares grises (calendario, calendario con flecha, repetir, archivo arriba, archivo abajo) y debajo una entrada de transacción de ejemplo (avatar gris con el icono de repetir resaltado en círculo rojo, título recortado, chip de cuenta, icono de nota, hora, "▼ 100 S/.").
 - El chip "Predeterminado/Próximamente/…" de la fila 1 y este modal comparten el mismo estado.
 
+## Hoja "Seleccionar Cuenta" (imágenes 21 y 22)
+
+- Título "Seleccionar Cuenta" (negrita) con ⋮ a la derecha (solo diseño, TODO), esquinas superiores ≈ 28 dp, ≈ 65 % de la pantalla con scroll interno.
+- Filas ≈ 48 dp a todo el ancho: radio vacío con borde del color de la cuenta + nombre (≈ 20 dp; Cashew `radioItems.dart` usa 18, pendiente TAM) + saldo actual a la derecha con **símbolo y código ISO** ("120,50 S/. PEN", "35 $ USD", "0 S/. PEN": formato de montos de Cashew, sin decimales cero).
+- Seleccionada: radio relleno y fila con fondo del color de la cuenta a ~30–35 %, radio ≈ 12 dp (Cashew 15). El fondo tenue de la imagen 21 es hover/pressed, no un estado fijo.
+- Se abre desde el ▼ del formulario y desde el ▼ de la hoja de importe (apilada encima); al elegir se cierra solo esta hoja y la selección es un único estado compartido. Es reutilizable (la usa "Transferir saldo" para origen y destino). Código: `apps/web/lib/widgets/transaction_form/account_selection_sheet.dart`.
+
+## Menú ⋮ del formulario (imagen 23)
+
+- Hoja "Agregar Transacción" ("Editar Transacción" al editar), título 23 dp negrita (`popupFramework.dart:117`). Filas sin separadores: icono gris claro a la izquierda, título negrita 16 dp y subtítulo 14 dp (`settingsContainers.dart:120,653,669`), interruptor (activados por defecto) o chevron. Textos exactos: "Pestaña de transferencia de saldo" / "En la página 'Agregar nueva transacción'" (⇄); "Botón Agregar archivos adjuntos" / "Mostrar debajo de la sección de notas" (clip); "Agregar títulos automáticamente" / "Cuando se crea una transacción" (nota con +); "Indicaciones iniciales de entrada" / "Al añadir una transacción por primera vez" (edición, chevron).
+- Funcionales: la 1.ª muestra/oculta la pestaña Transferir (Gasto/Ingreso ocupan todo el ancho) y la 2.ª la fila de adjunto. Se guardan **en memoria** (`TransactionFormSettings`; TODO persistir).
+- La 3.ª y la 4.ª son diseño. En Cashew, "Agregar títulos automáticamente" guarda/reordena asociaciones título-categoría al crear (`editAssociatedTitlesPage.dart:323`, `addTransactionPage.dart:459`); **no** controla la hoja de título. "Indicaciones iniciales de entrada" no existe en el clon local; equivalentes: `askForTransactionTitle` / `askForTransactionNoteWithTitle` (`editAssociatedTitlesPage.dart:351,382`).
+
+## Pantalla "Transferir saldo" (imágenes 24 y 25)
+
+- Pantalla aparte (ruta propia, sin pestañas) con flecha atrás al formulario, título centrado en negrita y ⓘ a la derecha.
+- Diálogo ⓘ centrado (radio ≈ 28 dp, fondo gris muy oscuro): icono ⇄ grande, título "Transferir saldo", texto exacto de la imagen 25 y botones apilados "OK" y "Corrección De Saldo" (este último TODO: la lista de transacciones aún no filtra por categoría).
+- Tarjeta de origen (borde ≈ 2 dp del color de la cuenta): "<cuenta> • <código>", "<saldo> − <monto>" y "= <resultado>" en vivo, botón ✕ (limpia el importe) y píldora roja "▼ <monto>" que abre la hoja de importe. Entre tarjetas: botón ↓ (intercambia cuentas y montos, invierte la tasa) y caja "× <tasa>". Tarjeta de destino igual con píldora verde "▲ <monto>" (editable). Tocar una tarjeta abre "Seleccionar Cuenta"; origen ≠ destino; origen por defecto = cuenta activa del formulario, destino = la primera distinta.
+- Misma moneda: tasa 1, destino = origen; se ocultan "× …" y "Tipos de cambio".
+- Abajo: divisoria, fila de fecha del formulario, línea discreta **"Llegada: igual que la salida"** (añadido de Monetae para transferencias diferidas: permite fecha/hora de llegada ≥ salida), título prellenado "Transferir saldo", píldora "Tipos de cambio" y barra "Transferir cantidad".
+- **Qué se guarda (SPEC v0.7, RF-03):** `POST /api/v1/balance-corrections` crea a la vez **dos transacciones independientes** con la categoría de sistema "Corrección de saldo": gasto en origen e ingreso en destino (cada una en su moneda), enlazadas por `transfer_group_id`, con `to_occurred_at` para la llegada. No se guarda la tasa. No cuentan como ingreso ni gasto en reportes, presupuestos ni Inicio (sí en el saldo de cada cuenta). Cada pierna se edita/borra por separado (sin cambiar su tipo ni categoría).
+
+## Hoja "Tipo De Cambio" (imagen 24)
+
+- Solo con monedas distintas; la abren la caja "× tasa" y el botón "Tipos de cambio". Valor interno único: multiplicador origen → destino.
+- Indicador "Sugerido · tu última compra (fecha)" / "Manual"; campo en **convención peruana cuando hay PEN** ("1 USD = [3,4294] PEN") y "1 [origen] = [x] [destino]" en otros pares; equivalente interno "× 0.2916" en gris; acepta coma y punto; vista previa "40 S/. → 11,66 $"; "Aplicar", "Usar sugerido" (solo si es Manual) y "Ver todos los tipos de cambio" (TODO: no hay lista de tasas hasta la Fase 6).
+- Edición bidireccional exacta (sin `double`): tasa → destino; destino → tasa (sin redondear, pasa a Manual); origen → destino con la tasa vigente.
+- Sugerencia (`GET /balance-corrections`, `implicit_rate`): 1) mismas dos cuentas; 2) mismo par de monedas y dirección; 3) dirección contraria invertida; 4) mercado (no existe aún: Fase 6); 5) vacío y obligatorio.
+
 ## Verificación
 
-- Recorre el flujo completo en localhost:8080 a 400×642: "+" → hoja de título → categorías → importe → formulario → "Más opciones" → modal de tipos. Compara cada paso con su imagen (11 a 19).
+- Recorre el flujo completo en localhost:**8090** (pila de revisión; el 8080 es de Tomcat) a 400×642: "+" → hoja de título → categorías → importe → formulario → "Más opciones" → modal de tipos. Compara cada paso con su imagen (11 a 25), incluidos el menú ⋮, "Seleccionar Cuenta" y "Transferir saldo" con su hoja de tasa.
 - Confirma: ya no hay AppBar de color, campo "Importe" ni teclado en línea, cuadrícula de categorías en el formulario, desplegable "Cuenta", campos con subrayado, chip "Publicada" suelto, azul de acento ni botón azul claro.
 - Reporta lo que quedó solo como diseño (Suscripción, Repetitivo, Transferir, adjunto, calculadora, interruptor "Incluir importe", filtros de exclusión) y todo lo que no coincide con Cashew, con el motivo.
