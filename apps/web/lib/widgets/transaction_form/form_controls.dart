@@ -20,9 +20,11 @@ class FormKindTabs extends StatelessWidget {
     required this.income,
     required this.onChanged,
     this.showTransfer = true,
+    this.onTransfer,
   });
   final bool income;
   final bool showTransfer;
+  final VoidCallback? onTransfer;
   final ValueChanged<bool> onChanged;
 
   @override
@@ -90,15 +92,13 @@ class FormKindTabs extends StatelessWidget {
           income,
           () => onChanged(true),
         ),
-        // TODO(T-515): transfers exist in the API (/transfers) but not in the
-        // web client; this tab is design only until that flow is built.
         if (showTransfer)
           tab(
             const Key('select-transfer'),
             l.formTransfer,
             Icon(Icons.swap_horiz_rounded, size: 22, color: colors.muted),
             false,
-            null,
+            onTransfer,
           ),
       ],
     );
@@ -779,9 +779,11 @@ class FormBottomAction extends StatelessWidget {
     required this.label,
     required this.busy,
     required this.onPressed,
+    this.color,
   });
   final String label;
   final bool busy;
+  final Color? color;
   final VoidCallback? onPressed;
 
   @override
@@ -798,9 +800,11 @@ class FormBottomAction extends StatelessWidget {
             key: const Key('save-transaction'),
             onPressed: onPressed,
             style: FilledButton.styleFrom(
-              backgroundColor: form.action,
+              backgroundColor: color ?? form.action,
               foregroundColor: form.onAction,
-              disabledBackgroundColor: form.action.withValues(alpha: .6),
+              disabledBackgroundColor: (color ?? form.action).withValues(
+                alpha: .6,
+              ),
               disabledForegroundColor: form.onAction.withValues(alpha: .6),
               padding: EdgeInsets.only(
                 bottom: MediaQuery.paddingOf(context).bottom,

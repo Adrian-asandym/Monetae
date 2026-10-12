@@ -336,5 +336,39 @@
   "formTypeBorrowDescription": "A transaction borrowed from someone",
   "formTypeBorrowCashFlow": "Positive cash flow until marked as 'Settled'",
   "formTypeHelp": "Mark a special transaction by tapping the action button on the transaction entry",
-  "formTypeNotice": "Not yet available: it will be saved as a normal transaction"
+  "formTypeNotice": "Not yet available: it will be saved as a normal transaction",
+  "transferBalanceTitle": "Transfer balance",
+  "transferBalanceInfo": "Transfer an amount from one account to another. A transfer creates two \"Balance correction\" transactions: one \"account outflow\" and one \"account inflow\". Each is an independent transaction and can be edited at any time from the transaction list.",
+  "transferCorrectionCategory": "Balance Correction",
+  "transferConfirm": "Transfer amount",
+  "transferRates": "Exchange rates",
+  "transferSwap": "Swap accounts",
+  "transferClear": "Clear amount",
+  "transferArrivalSame": "Arrival: same as departure",
+  "transferArrivalLabel": "Arrival: {date}",
+  "transferArrivalReset": "Same as departure",
+  "transferInfoLabel": "About transferring balance",
+  "@transferArrivalLabel": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "transferOk": "OK",
+  "transferRateSheetTitle": "Exchange Rate",
+  "transferRateSuggested": "Suggested · your last purchase ({date})",
+  "transferRateManual": "Manual",
+  "transferRateInverted": "Opposite direction · inverted rate",
+  "transferRateLoading": "Looking for a suggested rate…",
+  "transferRateApply": "Apply",
+  "transferRateUseSuggested": "Use suggested",
+  "transferRateViewAll": "View all exchange rates",
+  "@transferRateSuggested": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  }
 }

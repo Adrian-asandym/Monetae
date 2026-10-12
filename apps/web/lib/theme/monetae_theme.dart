@@ -212,6 +212,11 @@ class TransactionFormColors {
     required this.switchThumb,
     required this.typeText,
     required this.menuSubtitle,
+    required this.transferBackground,
+    required this.transferCard,
+    required this.transferDialog,
+    required this.transferMuted,
+    required this.transferAmount,
   });
 
   final Color header;
@@ -238,6 +243,11 @@ class TransactionFormColors {
   final Color switchThumb;
   final Color typeText;
   final Color menuSubtitle;
+  final Color transferBackground,
+      transferCard,
+      transferDialog,
+      transferMuted,
+      transferAmount;
 
   static const _dark = TransactionFormColors._(
     header: Color(0xFF33383A),
@@ -264,6 +274,11 @@ class TransactionFormColors {
     switchThumb: Color(0xFFBAC8CF),
     typeText: Color(0xFFFFFFFF),
     menuSubtitle: Color(0xCCFFFFFF),
+    transferBackground: Color(0xFF0F0F0F),
+    transferCard: Color(0xFF1A1C1D),
+    transferDialog: Color(0xFF212121),
+    transferMuted: Color(0xFF666868),
+    transferAmount: Color(0xFF2E2F2F),
   );
 
   static const _light = TransactionFormColors._(
@@ -291,6 +306,11 @@ class TransactionFormColors {
     switchThumb: Color(0xFFFFFFFF),
     typeText: Color(0xFF121212),
     menuSubtitle: Color(0xCC121212),
+    transferBackground: Color(0xFFFFFFFF),
+    transferCard: Color(0xFFF2F3F3),
+    transferDialog: Color(0xFFF0F0F0),
+    transferMuted: Color(0xFF666868),
+    transferAmount: Color(0xFFE2E5E5),
   );
 
   static TransactionFormColors of(BuildContext context) =>
@@ -300,6 +320,57 @@ class TransactionFormColors {
 /// Transaction form sizes in dp, calibrated from Cashew addTransactionPage,
 /// selectChips, selectAmount and captures 11–19 (1 dp = 1.25 px).
 abstract final class TransactionFormTokens {
+  // Captures 24–25, right viewport 500 px / 400 dp = 1.25 px per dp.
+  // The local Cashew TransferBalancePopup predates this card-based screen.
+  // Piece 11: reuse sheet typography/spacing from captures 11 and 16;
+  // capture 24 only shows the multiplicative rate control, not this sheet.
+  static const rateSheetGap = 16.0;
+  static const rateSheetCaptionGap = 8.0;
+  static const rateSheetEquationGap = 8.0;
+  static const rateSheetCaptionSize = 14.0;
+  static const rateSheetEquationSize = 16.0;
+  static const rateSheetPreviewGap = 20.0;
+  static const rateSheetArrowSize = 22.0;
+  static const rateSheetPreviewSize = 24.0;
+  static const transferInset = 13.0;
+  static const transferTop = 17.0;
+  static const transferCardHeight = 96.0;
+  static const transferCardRadius = 15.0;
+  static const transferBorder = 2.0;
+  static const transferCardPadding = 15.0;
+  static const transferNameHeight = 1.0;
+  static const transferNameSize = 18.0;
+  static const transferBalanceSize = 14.0;
+  static const transferAmountMaxWidth = 180.0;
+  static const transferDirectionSize = 22.0;
+  static const transferAmountSize = 30.0;
+  static const transferAmountRadius = 12.0;
+  static const transferAmountPadding = 8.0;
+  static const transferAmountHeight = 42.0;
+  static const transferControlHeight = 60.0;
+  static const transferSwapSize = 40.0;
+  static const transferClearSize = 34.0;
+  static const transferRateWidth = 110.0;
+  static const transferRateSize = 18.0;
+  static const transferRateHeight = 34.0;
+  static const transferDetailsGap = 28.0;
+  static const transferDetailInset = 16.0;
+  static const transferTitleGap = 12.0;
+  static const transferArrivalSize = 12.0;
+  static const transferPillTop = 22.0;
+  static const transferDialogInset = 20.0;
+  static const transferDialogRadius = 28.0;
+  static const transferDialogIconSize = 56.0;
+  static const transferDialogTitleSize = 24.0;
+  static const transferDialogBodySize = 17.0;
+  static const transferDialogLineHeight = 1.18;
+  static const transferDialogIconGap = 22.0;
+  static const transferDialogTextGap = 16.0;
+  static const transferDialogButtonGap = 10.0;
+  static const transferDialogActionTop = 26.0;
+  static const transferDialogButtonHeight = 48.0;
+  static const transferDialogPadding = 26.0;
+
   static const maxWidth = 560.0;
   static const sidePadding = 20.0;
   static const titleSize = 20.0;

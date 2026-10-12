@@ -15,6 +15,8 @@ import 'package:intl/intl.dart';
 
 import '../api/home_controller.dart';
 import '../api/new_transaction_controller.dart';
+import '../api/transfer_balance_controller.dart';
+import 'transfer_balance_page.dart';
 import '../data/api_dtos.dart';
 import '../l10n/app_localizations.dart';
 import '../presentation/account_color.dart';
@@ -208,6 +210,29 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
       'account_id' => l.accountRequired,
       _ => l.positiveRateRequired,
     };
+  }
+
+  Future<void> _openTransfer() async {
+    if (_form.busy) return;
+    final controller = TransferBalanceController(
+      widget.session.api,
+      _form.user,
+      accounts: _form.accounts,
+      initialAccount: _form.account,
+      occurredAt: _form.occurredAt,
+      now: _form.now,
+    );
+    controller.setFromAmount(_form.amount);
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        settings: const RouteSettings(name: '/transactions/transfer-balance'),
+        builder: (_) => TransferBalancePage(
+          session: widget.session,
+          controller: controller,
+        ),
+      ),
+    );
+    controller.dispose();
   }
 
   void _selectIncome(bool income) {
@@ -693,6 +718,7 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
         income: _form.income,
         onChanged: _selectIncome,
         showTransfer: _settings.showTransfer,
+        onTransfer: _openTransfer,
       ),
       _error(_fieldError('kind')),
       FormAmountHeader(

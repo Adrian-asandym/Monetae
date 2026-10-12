@@ -1369,6 +1369,126 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Aún no disponible: se guardará como transacción normal'**
   String get formTypeNotice;
+
+  /// No description provided for @transferBalanceTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Transferir saldo'**
+  String get transferBalanceTitle;
+
+  /// No description provided for @transferBalanceInfo.
+  ///
+  /// In es, this message translates to:
+  /// **'Transfiere un importe de una cuenta a otra. Al realizar una transferencia, se crean dos transacciones de \"Corrección de saldo\": una de \"salida de cuenta\" y otra de \"entrada de cuenta\". Cada una es una transacción independiente y puede editarse en cualquier momento desde la lista de transacciones.'**
+  String get transferBalanceInfo;
+
+  /// No description provided for @transferCorrectionCategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Corrección De Saldo'**
+  String get transferCorrectionCategory;
+
+  /// No description provided for @transferConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'Transferir cantidad'**
+  String get transferConfirm;
+
+  /// No description provided for @transferRates.
+  ///
+  /// In es, this message translates to:
+  /// **'Tipos de cambio'**
+  String get transferRates;
+
+  /// No description provided for @transferSwap.
+  ///
+  /// In es, this message translates to:
+  /// **'Intercambiar cuentas'**
+  String get transferSwap;
+
+  /// No description provided for @transferClear.
+  ///
+  /// In es, this message translates to:
+  /// **'Borrar importe'**
+  String get transferClear;
+
+  /// No description provided for @transferArrivalSame.
+  ///
+  /// In es, this message translates to:
+  /// **'Llegada: igual que la salida'**
+  String get transferArrivalSame;
+
+  /// No description provided for @transferArrivalLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Llegada: {date}'**
+  String transferArrivalLabel(String date);
+
+  /// No description provided for @transferArrivalReset.
+  ///
+  /// In es, this message translates to:
+  /// **'Igual que la salida'**
+  String get transferArrivalReset;
+
+  /// No description provided for @transferInfoLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Información sobre transferir saldo'**
+  String get transferInfoLabel;
+
+  /// No description provided for @transferOk.
+  ///
+  /// In es, this message translates to:
+  /// **'OK'**
+  String get transferOk;
+
+  /// No description provided for @transferRateSheetTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tipo De Cambio'**
+  String get transferRateSheetTitle;
+
+  /// No description provided for @transferRateSuggested.
+  ///
+  /// In es, this message translates to:
+  /// **'Sugerido · tu última compra ({date})'**
+  String transferRateSuggested(String date);
+
+  /// No description provided for @transferRateManual.
+  ///
+  /// In es, this message translates to:
+  /// **'Manual'**
+  String get transferRateManual;
+
+  /// No description provided for @transferRateInverted.
+  ///
+  /// In es, this message translates to:
+  /// **'Dirección contraria · tasa invertida'**
+  String get transferRateInverted;
+
+  /// No description provided for @transferRateLoading.
+  ///
+  /// In es, this message translates to:
+  /// **'Buscando una tasa sugerida…'**
+  String get transferRateLoading;
+
+  /// No description provided for @transferRateApply.
+  ///
+  /// In es, this message translates to:
+  /// **'Aplicar'**
+  String get transferRateApply;
+
+  /// No description provided for @transferRateUseSuggested.
+  ///
+  /// In es, this message translates to:
+  /// **'Usar sugerido'**
+  String get transferRateUseSuggested;
+
+  /// No description provided for @transferRateViewAll.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver todos los tipos de cambio'**
+  String get transferRateViewAll;
 }
 
 class _AppLocalizationsDelegate
