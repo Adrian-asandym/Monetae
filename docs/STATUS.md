@@ -8,11 +8,11 @@
 
 | | |
 |---|---|
-| **Última actualización** | **2026-10-10, ~22:45 (America/Lima)** — cierre de sesión («Continuaremos en otro momento») |
+| **Última actualización** | **2026-10-11, ~23:20 (America/Lima)** — cierre de sesión («Continuaremos en otro momento») |
 | **`origin`** | `origin/main` = `origin/master-dev` = **`8b8688e`** (hasta T-508, SPEC v0.5; G6). |
 | **`main`** | `8b8688e`. |
-| **`master-dev`** | **`d835d1b` (skill `cashew-form-transaccion`) + el commit de este cierre (`git log -1`)**, por delante de `main`: T-509, T-510, T-512, T-513, T-514 (UI), T-601, T-602, T-603 (API; migraciones `0009`–`0011`), SPEC v0.6, contrato 0.6.0, skill `cashew-inicio-ui`, `scripts/seed_review_data.py`. **Sin publicar.** |
-| **Rama de tarea** | **`claude/T-515-form-transaccion` = `1f39158`** (worktree `../Monetae-claude-T-515-form-transaccion`): pieza 1 del formulario (`83a3e62`) + spec T-515 (`1f39158`). **Sin fusionar** en `master-dev` (la tarea sigue abierta). |
+| **`master-dev`** | **`9e39160` + el commit de este cierre (`git log -1`)** |
+| **Rama de tarea** | **`claude/T-515-form-transaccion` = `ff412ca`** (worktree `../Monetae-claude-T-515-form-transaccion`): **T-515 completa** (piezas 1–6) y verificada por el coordinador. **Sin fusionar** en `master-dev`: espera la revisión visual de Adrian (R3). |
 | **Gate abierto** | **G7 `gate_ecde8d19a53a`** (publicar en `main`): propuesto; Adrian eligió **B (esperar a su revisión visual)**. Su texto menciona T-509/T-510/T-601/T-602, pero al resolverlo se publicará **todo `master-dev`** tras repetir la auditoría. |
 | **SPEC / ARCHITECTURE / contrato** | SPEC **v0.6** · `docs/ARCHITECTURE.md` v0.3 · `docs/api/openapi.json` **0.6.0** (89 paths, 131 operaciones). |
 
@@ -21,12 +21,22 @@
 | Estado | Contenido |
 |---|---|
 | ✅ **Completo** | Fases 0–4. **Fase 5:** T-501…T-510 (UI base, gráficas, cliente, formulario de transacción), T-512/T-513/T-514 (Inicio fiel a Cashew según la skill). **Adelantado de la Fase 6:** API de presupuestos (T-601), metas (T-602) y `display_name` (T-603). |
-| 🔄 **En curso** | **T-515** formulario de transacción fiel a Cashew (skill `cashew-form-transaccion`, capturas 11–19): pieza 1 hecha y verificada; piezas 2–6 pendientes de delegar a Codex. Ningún worker vivo. |
-| ⏳ **Pendiente** | **T-515 piezas 2–6** · **permiso SSH de Orca** (O1) · **Revisión visual de Inicio por Adrian** (R2) · **G7** · **F1** (formularios crear objetivo/presupuesto, detalle de categorías, reordenar Inicio) · **D12** (historial de presupuestos/metas = transacciones filtradas) · resto de la Fase 5 (pestañas Transacciones/Presupuestos/Más completas) · Fase 6 (íconos SVG API, adjuntos, notificaciones, Google, PIN/WebAuthn, proveedor de tipo de cambio) · Fase 7 · importación real (D9-A) · VPS → V2–V4. |
+| 🔄 **En curso** | **T-515** formulario de transacción fiel a Cashew: **terminado en su rama**, pendiente de la revisión de Adrian (R3) y de la fusión (M1). Ningún worker vivo. |
+| ⏳ **Pendiente** | **R3 revisión de T-515 por Adrian** · **M1** fusión de T-515 · **T-518** goldens dependientes de la fecha · **Revisión visual de Inicio por Adrian** (R2) · **G7** · **F1** (formularios crear objetivo/presupuesto, detalle de categorías, reordenar Inicio) · **D12** (historial de presupuestos/metas = transacciones filtradas) · resto de la Fase 5 (pestañas Transacciones/Presupuestos/Más completas) · Fase 6 (íconos SVG API, adjuntos, notificaciones, Google, PIN/WebAuthn, proveedor de tipo de cambio) · Fase 7 · importación real (D9-A) · VPS → V2–V4. |
 
 Backend: **58 de 89 rutas** aprox., 11 migraciones (cabeza **`0011`**), **1164 pruebas**. UI `apps/web`: **217 pruebas** (goldens claro/oscuro con DM Sans). Detalle en el Anexo A (sin actualizar para T-601–T-603).
 
-## 3. Trabajo hecho en esta sesión (2026-10-10, noche — 2.ª sesión)
+## 3. Trabajo hecho en esta sesión (2026-10-11)
+
+- **Reanudación:** STATUS coincidía con git. Adrian reactivó Docker y dio el permiso SSH a Orca (**O1 resuelto**); aprobó «todo A».
+- **T-515 piezas 2–6 delegadas a Codex** (`gpt-6.1-sol` high, una por lanzamiento, misma terminal y rama). Arranque con incidencias: aviso «Update available» (Esc + `--retry-of`) y un fallo de Codex `account/read … workspace routing discovery timed out` (`worker-stop` del dispatch y nuevo `worker-start`).
+  - `a0cb695` pieza 2 hoja de título (11) · `8da7527` pieza 3 hoja de categorías (15) · `fef03d1` pieza 4 hoja de importe y teclado (16) · `8a79c57` pieza 5 Más opciones (14) · `ff412ca` pieza 6 modal de tipos (17–19) + aviso «Aún no disponible: se guardará como transacción normal».
+  - Cada pieza la verificó el coordinador: diff, `flutter analyze` limpio, `flutter test` (final: **262 verdes**, 10 fallos previos), goldens nuevos revisados, `flutter build web --release`, y captura Playwright a 400×642 oscuro contra la captura correspondiente (todas fieles).
+  - **Prueba de punta a punta** en `localhost:8080`: «+» → título «Prueba T-515» → Alimentación → 12,5 → Guardar ⇒ API: gasto −12.50 PEN `posted` con categoría; Inicio se refrescó. **Esa transacción sintética queda en la BD de revisión.**
+- **Hallazgo:** 10 goldens fallan **también en `master-dev`** (no es regresión de T-515): `GoalCard` usa `DateTime.now()` (`apps/web/lib/widgets/goal_card.dart:78`), así que «X/día para N días» cambia cada día. Afecta a `budgets_goals_test` (goal half, goals_horizontal/vertical_data), `home_v2_test` (Home v2) y `home_assembly_test` (assembled home data), en claro y oscuro.
+- Codex preguntó dos veces (`ask`): no actualizar la rama con los commits de docs de `master-dev` (respuesta: no, integra el coordinador) y adaptar `home_assembly_test.dart` (autorizado, solo la prueba de navegación).
+
+## 3b. Sesión anterior (2026-10-10, noche — 2.ª sesión)
 
 - **Reanudación:** STATUS coincidía con git y Orca. Docker no respondía (integración WSL); Adrian lo reactivó y liberó disco (borró los worktrees T-513/T-514 y cachés). Pila de revisión levantada y login verificado por nginx.
 - **T-515 (formulario de transacción fiel a Cashew):** plan aprobado (plan mode). Adrian añadió la skill `.claude/skills/cashew-form-transaccion` (versionada en `d835d1b`) y las capturas `reference/cashew-inicio-ui/11–19.png` (coinciden con la tabla de la skill). La skill `cashew-ui` que citaba **no existe**: se usa `cashew-inicio-ui`.
@@ -48,6 +58,7 @@ Backend: **58 de 89 rutas** aprox., 11 migraciones (cabeza **`0011`**), **1164 p
 
 | Fecha | Decisión |
 |---|---|
+| 2026-10-11 (noche) | **Cierre** («Continuaremos en otro momento»). Adrian **terminará de verificar T-515** y dará su opinión del diseño y si hay que modificar algo más del formulario. Pide que **al reanudar se levante la interfaz en el 8080** para terminar de verificarla. M1 (fusionar) y T-518 (goldens por fecha) quedan sin respuesta. |
 | 2026-10-11 | Reanudación: STATUS coincide con git; Adrian reactivó Docker y dio permiso SSH a Orca (O1 resuelto: `run-use`/`worker-list` funcionan). «**Apruebo todo A con el OK**»: **O1-A** (orquestación normal), **aviso A** (nota bajo la fila de tipos para los tipos solo de diseño, en la pieza 6) y el plan T-515 piezas 2–6 con Codex `gpt-6.1-sol` high, una por lanzamiento. |
 | 2026-10-10 (noche, 2.ª) | **Cierre** («Continuaremos en otro momento») tras rechazar el lanzamiento de `codex exec`. |
 | 2026-10-10 (noche, 2.ª) | Adrian recuerda: **el código lo escribe un agente (Codex de preferencia); el coordinador solo planifica y monitorea**, aunque la petición diga «implementa» (guardado en memoria). |
@@ -83,7 +94,17 @@ Backend: **58 de 89 rutas** aprox., 11 migraciones (cabeza **`0011`**), **1164 p
 
 Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
-**O1 · Orca no acepta órdenes desde la terminal WSL** (bloquea delegar T-515).
+**R3 · Revisión de T-515 por Adrian** (lo primero al volver). Levantar la pila en el 8080 **sin recompilar** (el `build/web` de `master-dev` ya contiene T-515 `ff412ca`) y que Adrian recorra el formulario a 400×642 con `revision-g7@example.test`. Sus ajustes → una tarea Codex (`claude/T-515-form-transaccion`, misma mecánica pieza a pieza).
+
+**M1 · Fusionar T-515 en `master-dev`.**
+- **A (recomendada): sí, tras R3 y sus ajustes**; actualizar la skill `cashew-form-transaccion` si cambia algo. A `main` solo con G7.
+- B: esperar a terminar más pantallas.
+
+**T-518 · Goldens dependientes de la fecha (10 en rojo también en `master-dev`).**
+- **A (recomendada): tarea pequeña Codex (`gpt-6.1-sol` medium)**: inyectar un reloj (`DateTime Function() now`) en `GoalCard` y los widgets que calculan «X/día para N días», fijar la fecha en las pruebas y regenerar esos goldens. **Necesaria antes de G7** (no publicar con pruebas en rojo).
+- B: actualizar los goldens a mano cada vez. *Contra:* se rompen al día siguiente.
+
+**O1 · (resuelto 2026-10-11)** Orca no aceptaba órdenes desde la terminal WSL.
 - **A (recomendada): activar en Orca *Settings → SSH → host `ssh-1790983388010-x1ugta`* «Allow this host's orca CLI to control Orca»** y seguir el flujo normal (Run `run_c2cebe1745b9`, una tarea Codex por pieza en `path:/home/artur/propio2/Monetae-claude-T-515-form-transaccion`). *Razón:* supervisión, `ask` y `worker_done` como siempre.
 - B: plan B de `CLAUDE.md` §3.4: el coordinador da a Adrian el texto de cada pieza para pegarlo en un panel de Codex y revisa por git.
 - C: `codex exec` no interactivo desde el coordinador. *Contra:* Adrian lo rechazó la última vez; no usar sin su permiso explícito.
@@ -110,7 +131,9 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
 ## 6. Siguiente paso concreto
 
-0. **T-515 piezas 2–6 con Codex** (`gpt-6.1-sol`, high), **una pieza por lanzamiento** en el worktree `../Monetae-claude-T-515-form-transaccion` (rama `claude/T-515-form-transaccion`), spec `docs/tasks/T-515-ui-transaction-form.md`, tras resolver **O1**. Por cada pieza el coordinador: lee el diff, corre `dart analyze` + `flutter test`, revisa goldens, compila (`flutter build web --release`), copia `apps/web/build/web` al de `master-dev` (lo sirve nginx) y captura con Playwright a 400×642 en oscuro comparando con la captura 11–19. Al terminar la pieza 6: informe de TODO/diferencias a Adrian, actualizar la skill si hace falta y fusionar la rama en `master-dev`.
+**Al reanudar (pedido explícito de Adrian):** levantar la pila de revisión en `localhost:8080` **sin recompilar** (el `build/web` servido es T-515 `ff412ca`), comprobar login por nginx y dar a Adrian usuario/contraseña para que termine de verificar T-515 (R3). Luego, según su respuesta: tarea Codex de ajustes de T-515 → M1 (fusionar) → T-518 (goldens por fecha) → R2/G7/F1/D12.
+
+0. **(Hecho 2026-10-11)** ~~T-515 piezas 2–6 con Codex~~ (`gpt-6.1-sol`, high), **una pieza por lanzamiento** en el worktree `../Monetae-claude-T-515-form-transaccion` (rama `claude/T-515-form-transaccion`), spec `docs/tasks/T-515-ui-transaction-form.md`, tras resolver **O1**. Por cada pieza el coordinador: lee el diff, corre `dart analyze` + `flutter test`, revisa goldens, compila (`flutter build web --release`), copia `apps/web/build/web` al de `master-dev` (lo sirve nginx) y captura con Playwright a 400×642 en oscuro comparando con la captura 11–19. Al terminar la pieza 6: informe de TODO/diferencias a Adrian, actualizar la skill si hace falta y fusionar la rama en `master-dev`.
 1. **Relanzar la pila de revisión** (§7) y que **Adrian revise Inicio (R2)**; responder **F1**, **D12** y, tras la revisión, **G7**.
 2. **G7 = A:** auditoría (`git diff origin/main..master-dev`: rutas prohibidas, `.env`, `reference/`, secretos, correos, cifras reales), `gate-resolve gate_ecde8d19a53a`, `git merge --ff-only master-dev` en `../Monetae`, push sin `--force` (Anexo B), marcar `task_752b79134036` `completed`.
 3. **Ajustes de R2:** una tarea Codex `gpt-6.1-sol` high en `apps/web`, rama `codex/T-515-…`, verificación `dart analyze` + `flutter test` (goldens con texto versionados) + build web + revisión de goldens por el coordinador.
@@ -123,9 +146,9 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
 **Run de la Fase 5: `run_c2cebe1745b9`.** Todas las tareas `completed` salvo: T-602 `task_752b79134036` **`blocked`** por el gate G7 (normal; marcar `completed` al resolverlo) y T-512b `task_e7ef47b4ca85` `failed` (sustituida por `task_c6324ab6cc3e`, completada). **Ningún worker vivo**; terminales de Codex liberadas. La terminal de Antigravity es externa (Orca no la libera): Adrian la cierra. Runs anteriores: `run_f5e95406186a` (F4), `run_63b520544a30` (F3), `run_70f5f187fe16` (F2), `run_2cddcd14320c` (F1), `run_bef8ecfc67a7` (F0). El CLI no cierra Runs; no usar `orchestration reset`.
 
-**Worktrees:** `Monetae` → `main`, `Monetae-master-dev` → `master-dev`, **`Monetae-claude-T-515-form-transaccion` → `claude/T-515-form-transaccion`** (en uso: **no borrar**). Sin `.env` sueltos. **Orca:** ninguna tarea T-515 creada (O1).
+**Worktrees:** `Monetae` → `main`, `Monetae-master-dev` → `master-dev`, **`Monetae-claude-T-515-form-transaccion` → `claude/T-515-form-transaccion` = `ff412ca`** (en uso hasta M1: **no borrar**). Sin `.env` sueltos. **Orca (Run `run_c2cebe1745b9`):** tareas T-515 piezas 2–6 (`task_06b41e86c5d6`, `task_27874f259698`, `task_5e43a1ac4aa5`, `task_777ec99c0d6f`, `task_6ccfad199f27`) **completed**; terminal de Codex liberada; ningún worker vivo.
 
-**Contenedores:** **ninguno en marcha** (pila de revisión bajada al cerrar). **Ojo:** `Monetae-master-dev/apps/web/build/web` (artefacto ignorado que monta nginx) contiene ahora la compilación de **T-515 pieza 1**, no la de `master-dev`; recompilar desde `master-dev` si se quiere revisar solo Inicio. Se conserva el volumen `monetae-review_postgres_data` (BD en `0011`; usuarios sintéticos `adrian-review@example.test` y `revision-g7@example.test` «Adrian Sandy» con datos de octubre 2026; contraseñas solo en el chat). La pila de prueba que dejó Antigravity (`monetae-t512`) se bajó con su volumen. **Relanzar la pila de revisión** desde `Monetae-master-dev`:
+**Contenedores:** **ninguno en marcha** (pila de revisión bajada al cerrar). **Ojo:** `Monetae-master-dev/apps/web/build/web` (artefacto ignorado que monta nginx) contiene la compilación de **T-515 `ff412ca`** (formulario completo + Inicio): **no recompilar desde `master-dev` antes de R3**. La BD de revisión incluye la transacción sintética «Prueba T-515». Se conserva el volumen `monetae-review_postgres_data` (BD en `0011`; usuarios sintéticos `adrian-review@example.test` y `revision-g7@example.test` «Adrian Sandy» con datos de octubre 2026; contraseñas solo en el chat). La pila de prueba que dejó Antigravity (`monetae-t512`) se bajó con su volumen. **Relanzar la pila de revisión** desde `Monetae-master-dev`:
 ```bash
 export PATH="$HOME/flutter/bin:$HOME/.local/bin:$PATH"
 (cd apps/web && flutter build web --release)          # build/web ya existe de la última integración; recompilar si hay cambios
@@ -148,7 +171,7 @@ COMPOSE_PROJECT_NAME=monetae-review docker compose -f infra/docker-compose.yml e
 - **Reportes:** sin proveedor de tipo de cambio (Fase 6), con moneda de reporte ≠ base todo cae en `unconverted_count` salvo tasas insertadas a mano en `exchange_rates`.
 - **Sin auditoría de seguridad externa** (Fase 7). La BD admite un `income` negativo por SQL directo (`ARCHITECTURE.md` §10.12). Límite de login detrás de proxy (§10.10). `501 google_login_not_available` fuera del contrato (§10.11).
 - **Zona horaria en la UI:** la presentación asume America/Lima (UTC−5 fijo) aunque `CurrentUser.timezone` admite cualquier zona IANA. Generalizarlo es una tarea aparte (decidido en T-513, 2026-10-10).
-- **Disco:** ≈ 2,6 GB libres en `/` (20 GB) al cerrar el 2026-10-10 (noche, 2.ª). Playwright + Chromium para capturas ocupa ≈ 600 MB (se instaló en el scratchpad de la sesión y se borró al cerrar). Flutter + Docker lo consumen rápido: borrar artefactos (`build/`, `.dart_tool/`, `.venv/`) de worktrees ya fusionados.
+- **Disco:** ≈ 2,5 GB libres en `/` (20 GB) al cerrar el 2026-10-11. Playwright + Chromium para capturas ocupa ≈ 600 MB (se instaló en el scratchpad de la sesión y se borró al cerrar). Flutter + Docker lo consumen rápido: borrar artefactos (`build/`, `.dart_tool/`, `.venv/`) de worktrees ya fusionados.
 - **Repositorio público:** todo push se audita antes; los datos reales solo viven en `reference/backups/` (ignorado).
 - La cuota de Claude Pro es limitada: delegar generación de código; reservar al coordinador specs, revisión e integración.
 
@@ -245,3 +268,5 @@ FastAPI síncrono (ADR-007) en `services/api`: **46 de 89 rutas = 73 de 131 oper
 - **Capturas de Flutter Web sin navegador visible:** `uv venv` + `pip install playwright pillow` + `playwright install chromium` en el scratchpad; iniciar sesión **por la API antes** de cargar la app (health → cookie `monetae_csrf` → `POST /auth/login` con `Origin` y `X-CSRF-Token`), luego `goto /`; `color_scheme="dark"` para el tema; la ruta `#/transactions/new` no se abre por URL (abrir con «+»); en canvaskit usar `mouse.move` + `down` + `up` (un `click` simple a veces solo muestra el tooltip). Medir colores/alturas de las capturas de Adrian con Pillow (Cashew a 400 dp ≈ 500 px: escala 1,25).
 - **Nunca `dart format lib` entero:** reformatea archivos ajenos a la tarea; formatear solo los tocados.
 - **El código lo escribe Codex**, aunque la petición diga «implementa»; el coordinador planifica, especifica y verifica (memoria `delegate-code-to-codex`).
+- **Codex en Orca:** si `worker-start` deja la terminal con `account/read failed … timed out`, la terminal queda en el shell (`agent_unconfigured`): `worker-stop --dispatch <id>` y `worker-start --task <id> --retry-of <id> --worktree path:<dir> --agent codex --model … --effort …` en terminal nueva. Para las piezas siguientes reutilizar la terminal con `worker-start --task <nueva> --worktree path:<dir> --terminal <h>` (sin «Update available»). Los latidos (`heartbeat`) llegan como mensajes: confirmarlos con `--ack`.
+- **Goldens que dependen de `DateTime.now()`** se rompen solos al cambiar el día: antes de culpar a un worker, correr la misma suite en `master-dev` (T-518).
