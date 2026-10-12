@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:monetae_web/data/mock_data.dart';
 import 'package:monetae_web/l10n/app_localizations.dart';
 import 'package:monetae_web/main.dart';
+import 'package:monetae_web/presentation/clock.dart';
 import 'package:monetae_web/presentation/component_models.dart';
 import 'package:monetae_web/presentation/category_icon_source.dart';
 import 'package:monetae_web/theme/monetae_theme.dart';
@@ -26,33 +27,37 @@ Future<void> mount(
   bool reducedMotion = false,
   Size captureSize = const Size(600, 520),
   Size viewSize = const Size(800, 700),
+  Now? now,
 }) async {
   tester.view.physicalSize = viewSize;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(
-    MaterialApp(
-      theme: monetaeTheme(brightness: brightness),
-      locale: const Locale('es'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: Builder(
-        builder: (context) => MediaQuery(
-          data: MediaQuery.of(context)
-              .copyWith(disableAnimations: reducedMotion),
-          child: Scaffold(
-            body: Center(
-              child: RepaintBoundary(
-                key: _capture,
-                child: Container(
-                  width: captureSize.width,
-                  height: captureSize.height,
-                  padding: const EdgeInsets.all(24),
-                  color: MonetaeColors.of(context).background,
-                  child: Builder(
-                    builder: (context) =>
-                        builder(context, AppLocalizations.of(context)),
+    PresentationClock(
+      now: now ?? () => DateTime.utc(2026, 10, 9),
+      child: MaterialApp(
+        theme: monetaeTheme(brightness: brightness),
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(
+          builder: (context) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(disableAnimations: reducedMotion),
+            child: Scaffold(
+              body: Center(
+                child: RepaintBoundary(
+                  key: _capture,
+                  child: Container(
+                    width: captureSize.width,
+                    height: captureSize.height,
+                    padding: const EdgeInsets.all(24),
+                    color: MonetaeColors.of(context).background,
+                    child: Builder(
+                      builder: (context) =>
+                          builder(context, AppLocalizations.of(context)),
+                    ),
                   ),
                 ),
               ),
@@ -87,12 +92,32 @@ void loadGoldenFonts() {
     );
     await roboto.load();
     final loader = FontLoader('MaterialIcons');
-    loader.addFont(Future.value(ByteData.sublistView(await File('${sdk.path}/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf').readAsBytes())));
+    loader.addFont(
+      Future.value(
+        ByteData.sublistView(
+          await File(
+            '${sdk.path}/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf',
+          ).readAsBytes(),
+        ),
+      ),
+    );
     await loader.load();
 
     final dmSans = FontLoader('DM Sans');
-    dmSans.addFont(Future.value(ByteData.sublistView(await File('assets/fonts/DMSans-Regular.ttf').readAsBytes())));
-    dmSans.addFont(Future.value(ByteData.sublistView(await File('assets/fonts/DMSans-Bold.ttf').readAsBytes())));
+    dmSans.addFont(
+      Future.value(
+        ByteData.sublistView(
+          await File('assets/fonts/DMSans-Regular.ttf').readAsBytes(),
+        ),
+      ),
+    );
+    dmSans.addFont(
+      Future.value(
+        ByteData.sublistView(
+          await File('assets/fonts/DMSans-Bold.ttf').readAsBytes(),
+        ),
+      ),
+    );
     await dmSans.load();
   });
 }

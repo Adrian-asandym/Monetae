@@ -6,6 +6,7 @@ import '../api/api_client.dart';
 import '../api/home_controller.dart';
 import '../data/api_dtos.dart';
 import '../l10n/app_localizations.dart';
+import '../presentation/clock.dart';
 import '../widgets/budget_goal_lists.dart';
 import '../widgets/home_block_view.dart';
 
@@ -63,7 +64,9 @@ class _BudgetsPageState extends State<BudgetsPage> {
                 axis: Axis.vertical,
                 today:
                     widget.today ??
-                    DateTime.now().toUtc().subtract(const Duration(hours: 5)),
+                    PresentationClock.of(context)
+                        .toUtc()
+                        .subtract(const Duration(hours: 5)),
               ),
             ),
           ),
