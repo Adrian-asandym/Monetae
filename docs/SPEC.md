@@ -1,6 +1,6 @@
 # SPEC.md — Monetae
 
-> Versión 0.6 · 2026-10-10 · Autor: Adrian (revisión: Claude). Historial de cambios en §18.
+> Versión 0.7 · 2026-10-12 · Autor: Adrian (revisión: Claude). Historial de cambios en §18.
 > Documento fuente de verdad del producto. Los agentes lo leen junto con `AGENTS.md`.
 > Los cambios de alcance se registran como ADR en `docs/decisions/`, no se improvisan en código.
 
@@ -69,7 +69,7 @@ V2 y V3 **no se implementan en V1**, pero V1 deja listos los datos y endpoints l
 ### 5.1 Cuentas (medios de pago) y monedas
 - **RF-01** CRUD de cuentas: nombre, tipo (efectivo, banco, billetera digital, tarjeta, otro), **moneda propia** (código ISO 4217), saldo inicial, color/ícono, orden, archivada (sí/no).
 - **RF-02** Saldo actual de cada cuenta calculado desde saldo inicial + transacciones. Nunca se guarda un saldo "pegado" editable.
-- **RF-03** Transferencia entre cuentas, también entre monedas distintas: se registran ambos montos y se muestra el tipo de cambio implícito.
+- **RF-03** Transferencia entre cuentas, también entre monedas distintas: se registran ambos montos y se muestra el tipo de cambio implícito. **(v0.7, como Cashew)** La pantalla «Transferir saldo» guarda **dos transacciones independientes** con la categoría de sistema **«Corrección de saldo»**: un gasto en la cuenta de origen y un ingreso en la de destino, cada una en su moneda, creadas a la vez (si una falla, ninguna) y enlazadas por `transfer_group_id`. Por defecto comparten fecha y hora, pero cada una se edita o borra por separado (p. ej. la hora de llegada de una transferencia diferida). La tasa no se guarda: queda reflejada en los dos montos. Las correcciones de saldo **no cuentan** como ingreso ni gasto en reportes, presupuestos ni Inicio (sí en el saldo de cada cuenta). El tipo `transfer` (`/transfers`) se conserva en la API, pero la UI no lo usa.
 - **RF-04** Vista de inicio con cuenta/moneda seleccionable y conversión a la moneda de reporte (ver sección 9).
 
 ### 5.2 Categorías
@@ -232,7 +232,7 @@ Criterios de aceptación:
 1. Cada cuenta tiene **una** moneda; cada transacción hereda la de su cuenta.
 2. Cada transacción guarda el **tipo de cambio de su momento** hacia la moneda base (`fx_rate_to_base`) y su origen (`manual` o `auto`). **No se recalcula el pasado** con el cambio de hoy.
 3. El tipo de cambio es **manual por defecto** (lo que realmente se pagó o recibió en casa de cambio), con sugerencia automática de una fuente a decidir en ADR-004.
-4. Transferencias entre monedas: dos transacciones enlazadas por `transfer_group_id`, con ambos montos reales y la tasa implícita.
+4. Transferencias entre monedas: dos transacciones enlazadas por `transfer_group_id`, con ambos montos reales y la tasa implícita. Desde v0.7 la UI las registra como par de «Corrección de saldo» (RF-03).
 5. Reportes: desglose **por moneda** más un total en la **moneda de reporte** (la base por defecto, seleccionable), calculado con las tasas guardadas.
 6. Importes en `Decimal` con 2 decimales de persistencia; tasas con 6 decimales. Operar con monedas distintas sin conversión explícita debe lanzar error.
 7. Detección de moneda para el futuro bot (V2): `S/` o "soles" → PEN; `$`, "dólares" o "USD" → USD; sin marca → PEN por defecto.
@@ -353,4 +353,5 @@ Bot de Telegram, clasificador de categorías, asistente Hermes, RAG, app Android
 | 0.3 | 2026-10-07 | ADR-002, 003, 004, 006 y 007 aceptados (opción A, §15). `loan_movements` incorpora `interest_part` y `principal_part` en los pagos (ADR-003, §6). Aprobado por Adrian. |
 | 0.4 | 2026-10-09 | Tras la revisión visual del spike de UI (T-501): **íconos SVG propios** para categorías (RF-46, tabla `user_icons`, saneado obligatorio; catálogo base abierto, sin copiar los PNG de Cashew), **tarjeta de transacción configurable** guardada en el servidor (RF-47), superficie azul en oscuro e ícono/favicon según el modo (RF-39), **fidelidad visual a Cashew** como criterio de aceptación (§5.10), seguridad de archivos subidos (§12), dos criterios nuevos (§14). Correcciones: §2 (contexto de Cashew confirmado) y §8 (archivar cancela **todas** las programadas sin publicar, D2). Contrato `openapi.json` 0.4.0. Decisiones D10-A y D11-A de Adrian. |
 | 0.6 | 2026-10-10 | Skill de Adrian `cashew-inicio-ui` como referencia visual de Inicio (sustituye el fondo azul y el formato «S/ 1,234.50»); **RF-50** `display_name`. Contrato 0.6.0: `CurrentUser.display_name` y `UserUpdate.display_name`. Excepción aprobada por Adrian: Inicio puede calcular en la UI los textos «X/día para N días» de presupuestos y objetivos (solo presentación). Aprobado por Adrian (S2–S5 del 2026-10-10). |
+| 0.7 | 2026-10-12 | **RF-03**: transferencias de la UI como par gasto/ingreso con la categoría de sistema «Corrección de saldo» (T1-B), enlazado por `transfer_group_id` (Z3, reutilizado: sin campos nuevos), excluido de ingresos/gastos en reportes, presupuestos e Inicio (Z1-A); el importador de Cashew las trae igual (Z2-A); fecha de llegada editable por separado (transferencias diferidas). Contrato 0.7.0 (T-604). Aprobado por Adrian el 2026-10-12. |
 | 0.5 | 2026-10-09 | Tras revisar T-503/T-504: disposición de Inicio de referencia (`docs/ui/home-layout.md`, RF-38), **cuenta por defecto** (RF-48), **navegación de 4 botones** y nº de transacciones por cuenta (RF-49). Contrato 0.5.0: `UserPreferences.default_account_id`, `Account.transaction_count`, `CashFlowRow.cumulative_net`. Aprobado por Adrian (su descripción del 2026-10-09). |
