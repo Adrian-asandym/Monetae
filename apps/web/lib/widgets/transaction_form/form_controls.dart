@@ -4,6 +4,7 @@
 // typed callbacks and stable test keys; presentation only.
 // Modified 2026-10-11 (T-515 piece 5): expandable options divider and include
 // amount card; callbacks only update local presentation state.
+// Modified 2026-10-12 (T-515 piece 7): selected category name under the amount.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -101,7 +102,7 @@ class FormKindTabs extends StatelessWidget {
   }
 }
 
-/// Category square on the left and the amount on the right.
+/// Category square on the left and amount with category name on the right.
 class FormAmountHeader extends StatelessWidget {
   const FormAmountHeader({
     super.key,
@@ -109,11 +110,13 @@ class FormAmountHeader extends StatelessWidget {
     required this.amount,
     required this.onCategoryTap,
     required this.onAmountTap,
+    this.categoryName,
     this.error,
   });
 
   /// Null while no category was chosen.
   final Widget? category;
+  final String? categoryName;
   final String amount;
   final VoidCallback onCategoryTap;
   final VoidCallback onAmountTap;
@@ -164,6 +167,19 @@ class FormAmountHeader extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (categoryName != null)
+                      Text(
+                        categoryName!,
+                        key: const Key('form-category-name'),
+                        textAlign: TextAlign.end,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: _T.headerCategoryNameSize,
+                          height: _T.headerCategoryNameHeight,
+                          color: form.headerCategoryName,
+                        ),
+                      ),
                     if (error != null)
                       Text(
                         error!,

@@ -610,7 +610,11 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
       ),
       bottomNavigationBar: FormBottomAction(
         label: _categoryChosen
-            ? (busy ? l.savingTransaction : l.saveTransaction)
+            ? (busy
+                  ? l.savingTransaction
+                  : widget.editing
+                  ? l.saveTransaction
+                  : l.addTransaction)
             : l.formSelectCategory,
         busy: busy,
         onPressed: busy || _form.loading ? null : _onAction,
@@ -691,6 +695,10 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
       _error(_fieldError('kind')),
       FormAmountHeader(
         category: _headerCategory(),
+        categoryName: _form.categories
+            .where((category) => category.id == _form.categoryId)
+            .firstOrNull
+            ?.name,
         amount: _amountText(l),
         error: _fieldError('amount'),
         onCategoryTap: _openCategorySheet,

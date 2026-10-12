@@ -189,6 +189,7 @@ abstract final class HomeTokens {
 class TransactionFormColors {
   const TransactionFormColors._({
     required this.header,
+    required this.headerCategoryName,
     required this.tabIdle,
     required this.emptyCategory,
     required this.dateBox,
@@ -213,6 +214,7 @@ class TransactionFormColors {
   });
 
   final Color header;
+  final Color headerCategoryName;
   final Color tabIdle;
   final Color emptyCategory;
   final Color dateBox;
@@ -237,6 +239,7 @@ class TransactionFormColors {
 
   static const _dark = TransactionFormColors._(
     header: Color(0xFF33383A),
+    headerCategoryName: Color(0xB3FFFFFF),
     tabIdle: Color(0xFF242729),
     emptyCategory: Color(0xFF242424),
     dateBox: Color(0xFF181818),
@@ -262,6 +265,7 @@ class TransactionFormColors {
 
   static const _light = TransactionFormColors._(
     header: Color(0xFFDDE3E6),
+    headerCategoryName: Color(0xB3000000),
     tabIdle: Color(0xFFEEF1F2),
     emptyCategory: Color(0xFFE0E0E0),
     dateBox: Color(0xFFF2F2F2),
@@ -302,6 +306,8 @@ abstract final class TransactionFormTokens {
   static const categoryRadius = 15.0;
   static const categoryIconSize = 44.0;
   static const amountFontSize = 36.0;
+  static const headerCategoryNameSize = 20.0;
+  static const headerCategoryNameHeight = 1.0;
   static const dateHeight = 53.0;
   static const dateRadius = 15.0;
   static const dateIconBox = 35.0;

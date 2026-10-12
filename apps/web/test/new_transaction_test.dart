@@ -654,6 +654,115 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  for (final brightness in Brightness.values) {
+    testWidgets(
+      'category name follows selection without reserving space ${brightness.name}',
+      (tester) async {
+        final f = FormFixture()..categories = sheetCategories();
+        addTearDown(f.close);
+        await mountForm(tester, f, brightness: brightness);
+        final name = find.byKey(const Key('form-category-name'));
+        final amount = find.byKey(const Key('form-formatted-amount'));
+        final emptyAmountTop = tester.getTopLeft(amount).dy;
+        expect(name, findsNothing);
+        await chooseCategory(tester, f.categories.first.id);
+        expect(tester.widget<Text>(name).data, f.categories.first.name);
+        expect(tester.getTopLeft(amount).dy, closeTo(emptyAmountTop - 10, 1));
+        expect(
+          tester.getRect(name).top,
+          greaterThanOrEqualTo(tester.getRect(amount).bottom),
+        );
+        expect(tester.getRect(name).right, tester.getRect(amount).right);
+        await chooseCategory(tester, f.categories[1].id);
+        expect(tester.widget<Text>(name).data, f.categories[1].name);
+        await chooseCategory(tester);
+        expect(name, findsNothing);
+        expect(tester.getTopLeft(amount).dy, emptyAmountTop);
+        expect(
+          tester.widget<FormBottomAction>(find.byType(FormBottomAction)).label,
+          l.addTransaction,
+        );
+        await chooseCategory(tester, f.categories.first.id);
+        await tester.tap(find.byKey(const Key('select-income')));
+        await tester.pumpAndSettle();
+        expect(name, findsNothing);
+        expect(
+          tester.widget<FormBottomAction>(find.byType(FormBottomAction)).label,
+          l.formSelectCategory,
+        );
+        expect(f.posts, isEmpty);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets('golden category header ${brightness.name} at 400x642', (
+      tester,
+    ) async {
+      final f = FormFixture()..categories = sheetCategories();
+      addTearDown(f.close);
+      await f.form.load();
+      f.form.edit(() {
+        f.form.amount = '40';
+        f.form.categoryId = f.categories[7].id;
+      });
+      await mountCategoryForm(tester, f, brightness: brightness);
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+      final name = tester.widget<Text>(
+        find.byKey(const Key('form-category-name')),
+      );
+      expect(name.data, f.categories[7].name);
+      expect(name.maxLines, 1);
+      expect(name.overflow, TextOverflow.ellipsis);
+      expect(tester.takeException(), isNull);
+      await expectLater(
+        find.byKey(const Key('category-sheet-capture')),
+        matchesGoldenFile(
+          'goldens/new_transaction_category_header_${brightness.name}.png',
+        ),
+      );
+    });
+  }
+
+  for (final locale in ['es', 'en']) {
+    for (final editing in [false, true]) {
+      testWidgets(
+        'bottom action preserves create/edit label $locale editing=$editing',
+        (tester) async {
+          final f = FormFixture();
+          addTearDown(f.close);
+          await f.form.load();
+          f.form.edit(() => f.form.categoryId = f.categories.first.id);
+          await tester.pumpWidget(
+            MaterialApp(
+              theme: monetaeTheme(brightness: Brightness.dark),
+              locale: Locale(locale),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: NewTransactionPage(
+                session: f.session,
+                controller: f.form,
+                editing: editing,
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          await dismissTitleSheet(tester);
+          final action = tester.widget<FormBottomAction>(
+            find.byType(FormBottomAction),
+          );
+          expect(
+            action.label,
+            editing
+                ? (locale == 'es' ? 'Guardar transacción' : 'Save transaction')
+                : (locale == 'es' ? 'Agregar transacción' : 'Add transaction'),
+          );
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
+  }
+
   for (final submit in ['button', 'enter', 'empty']) {
     testWidgets('title sheet chains categories via $submit', (tester) async {
       final f = FormFixture();
@@ -680,7 +789,7 @@ void main() {
       expect(find.byKey(const Key('amount-sheet-done')), findsOneWidget);
       await tester.tap(find.byKey(const Key('amount-sheet-done')));
       await tester.pumpAndSettle();
-      expect(find.text(l.saveTransaction), findsOneWidget);
+      expect(find.text(l.addTransaction), findsNWidgets(2));
     });
   }
 
@@ -812,7 +921,7 @@ void main() {
       await tester.tap(find.byKey(const Key('amount-sheet-done')));
       await tester.pumpAndSettle();
       expect(f.form.amount, '7');
-      expect(find.text(l.saveTransaction), findsOneWidget);
+      expect(find.text(l.addTransaction), findsNWidgets(2));
       await tester.tap(find.byKey(const Key('form-category-button')));
       await tester.pumpAndSettle();
       expect(tileDecoration(tester, id).border, isNotNull);
@@ -1603,7 +1712,7 @@ void main() {
     expect(find.byKey(const Key('amount-sheet-done')), findsOneWidget);
     await tester.tap(find.byKey(const Key('amount-sheet-done')));
     await tester.pumpAndSettle();
-    expect(find.text(l.saveTransaction), findsOneWidget);
+    expect(find.text(l.addTransaction), findsNWidgets(2));
     expect(f.posts, isEmpty);
     await tester.tap(find.byKey(const Key('select-income')));
     await tester.pumpAndSettle();
