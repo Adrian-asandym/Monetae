@@ -8,11 +8,11 @@
 
 | | |
 |---|---|
-| **Última actualización** | **2026-10-12, tarde (America/Lima)** — cierre de sesión («Continuaremos en otro momento») |
+| **Última actualización** | **2026-10-12, noche (America/Lima)** — cierre de sesión («Continuaremos en otro momento»), tras terminar T-519 |
 | **`origin`** | `origin/main` = `origin/master-dev` = **`8b8688e`** (hasta T-508, SPEC v0.5; G6). |
 | **`main`** | `8b8688e`. |
-| **`master-dev`** | **`eeb622a` + el commit de este cierre (`git log -1`)**: incluye T-515 (formulario piezas 1–9), T-518, T-604 (contrato **0.7.0**, migración **`0012`**) y la corrección de DTO. **Sin publicar.** |
-| **Rama de tarea** | **`codex/T-519-transfer-balance` = `1fb2c4b`** (pieza 10 aceptada) + **pieza 11 sin commit al cerrar** (Codex la estaba cerrando: integrar `eeb622a`, repetir verificación y commit). |
+| **`master-dev`** | **`0e1508e` + el commit de este cierre (`git log -1`)**: incluye T-515 (formulario piezas 1–9), T-518, T-604 (contrato **0.7.0**, migración **`0012`**), la corrección de DTO, **T-519** (pantalla «Transferir saldo» + hoja «Tipo De Cambio») y la skill `cashew-form-transaccion` actualizada. **Sin publicar.** |
+| **Rama de tarea** | Ninguna abierta: `codex/T-519-transfer-balance` = `21bfc63` ya fusionada (`1b559c8`). |
 | **Gate abierto** | **G7 `gate_ecde8d19a53a`** (publicar en `main`): sin resolver; al resolverlo se publica **todo `master-dev`** tras la auditoría. |
 | **SPEC / ARCHITECTURE / contrato** | SPEC **v0.7** · `docs/ARCHITECTURE.md` v0.3 · `docs/api/openapi.json` **0.7.0** (90 paths, 133 operaciones). |
 
@@ -21,10 +21,10 @@
 | Estado | Contenido |
 |---|---|
 | ✅ **Completo** | Fases 0–4. **Fase 5:** T-501…T-515 (formulario de transacción fiel a Cashew, piezas 1–9 incluidos los ajustes v2 1–3 de Adrian), T-518 (goldens sin fecha). **Adelantado de la Fase 6:** T-601/T-602/T-603 y **T-604** («Corrección de saldo»: categorías de sistema, `POST/GET /balance-corrections`, exclusión de totales, importador). |
-| 🔄 **En curso** | **T-519** pantalla «Transferir saldo» (pieza 10 aceptada en la rama) + **pieza 11** hoja «Tipo De Cambio» con sugerencia (Codex la terminaba al cerrar). |
-| ⏳ **Pendiente** | Revisar e integrar T-519 · actualizar la skill `cashew-form-transaccion` (pedido de Adrian) · **TAM** (medidas de ajustes 1–2) · R2/G7 · F1 · D12 · VPS1-C (cuando Adrian contrate el VPS) · resto de la Fase 5 · Fase 6 · Fase 7 · importación real (D9-A). |
+| 🔄 **En curso** | Nada. Ningún worker vivo. |
+| ⏳ **Pendiente** | **R4** revisión de T-519 por Adrian · **TAM** (medidas de ajustes 1–2) · R2/G7 · F1 · D12 · VPS1-C (cuando Adrian contrate el VPS) · resto de la Fase 5 · Fase 6 · Fase 7 · importación real (D9-A). |
 
-Backend: **1190 pruebas**, migraciones hasta **`0012`**. UI `apps/web`: **301 pruebas** en `master-dev` (todas verdes; 321 en la rama T-519 tras la pieza 10).
+Backend: **1190 pruebas**, migraciones hasta **`0012`**. UI `apps/web`: **343 pruebas** en `master-dev`, todas verdes.
 
 ## 3. Trabajo hecho en esta sesión (2026-10-12)
 
@@ -33,9 +33,10 @@ Backend: **1190 pruebas**, migraciones hasta **`0012`**. UI `apps/web`: **301 pr
 - **Pautas v2 del formulario (capturas 20–25)** repartidas así:
   - **T-515 piezas 7–9** (Codex `gpt-6.1-sol` high, una por lanzamiento): `fdb955e` nombre de categoría bajo el monto + «Agregar transacción»; `3fa1af9` hoja «Seleccionar Cuenta» reutilizable (también apilada sobre la hoja de importe); `dbdc2eb` menú ⋮ (a y b funcionales, en memoria; c y d diseño). Investigación: (c) en Cashew guarda asociaciones título-categoría (no controla la hoja de título, `editAssociatedTitlesPage.dart:323`); (d) no existe en el clon local (versión anterior), equivalentes `askForTransactionTitle`/`askForTransactionNoteWithTitle`.
   - **T-604** (Codex high): migración `0012` (2 categorías de sistema «Corrección de saldo», CHECK de `transfer_group_id` ampliado), `POST/GET /balance-corrections` atómico e idempotente con `to_occurred_at` (llegada diferida), piernas editables por separado (PATCH conserva kind/categoría), exclusión en reportes/presupuestos/Inicio, metas como `transfer` (igual que Cashew `watchTotalTowardsObjective`), importador (categoría 0 de Cashew → correcciones). Verificado por el coordinador: ruff, mypy, **1190 pruebas**, `alembic` up/check/down/up, `check_openapi`.
-  - **T-519** (Codex high): pieza 10 `1fb2c4b` pantalla «Transferir saldo» (tarjetas, ✕, ↓, ⓘ, línea «Llegada: igual que la salida», guardado exacto con idempotencia, ícono `swap_horiz`). Verificada: 321 pruebas, golden vs captura 24, **POST real** contra la pila (201; piernas borradas después). El clon de Cashew es **anterior** a las capturas 24–25: ✕ = limpiar importe, ↓ = intercambiar cuentas, «Corrección De Saldo» = TODO (la lista no filtra por categoría).
+  - **T-519** (Codex high; **pieza 11 terminada por el coordinador**: Codex se quedó sin continuar y Adrian autorizó la excepción): pieza 11 `21bfc63` hoja «Tipo De Cambio» (convención peruana «1 USD = x PEN», edición bidireccional exacta, sugerencia 1→2→3→5; el 4 «mercado» y «Ver todos los tipos de cambio» esperan a la Fase 6); verificada con 343 pruebas, golden y consulta real. Pieza 10 `1fb2c4b` pantalla «Transferir saldo» (tarjetas, ✕, ↓, ⓘ, línea «Llegada: igual que la salida», guardado exacto con idempotencia, ícono `swap_horiz`). Verificada: 321 pruebas, golden vs captura 24, **POST real** contra la pila (201; piernas borradas después). El clon de Cashew es **anterior** a las capturas 24–25: ✕ = limpiar importe, ↓ = intercambiar cuentas, «Corrección De Saldo» = TODO (la lista no filtra por categoría).
 - **T-518** (Codex medium): reloj inyectable `PresentationClock`; 10 goldens ya no dependen del día.
-- **Integrado en `master-dev`:** T-518, T-604, T-515 (M1). UI **301 pruebas verdes**.
+- **Integrado en `master-dev`:** T-518, T-604, T-515 (M1), **T-519** (`1b559c8`). UI **343 pruebas verdes**. Pila del 8090 recompilada con `master-dev`.
+- **Skill `cashew-form-transaccion` actualizada** (`0e1508e`) con los ajustes v2, la regla de medidas (px vs dp) y lo que quedó como diseño.
 - **SPEC v0.7** (RF-03 y §9.4) por T1-B.
 - **Incidente:** tras subir la API de revisión a `0012`, la UI mostraba «no se pudo conectar con el servidor»: los DTO (contrato 0.6.0) rechazaban `system_key` `balance_correction_*` y fallaba toda la lista de categorías. Corregido regenerando DTO con `apps/web/tool/generate_dtos.py` (`eeb622a`, 4 líneas). Ver lección en el Anexo C.
 
@@ -110,7 +111,7 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 - **A (recomendada): igualarlos al código de Cashew** en una tarea pequeña de Codex (medium). *Razón:* misma regla para todo el formulario.
 - B: dejarlos como están.
 
-**R4 · Revisión de T-519 por Adrian** (pantalla «Transferir saldo» + tipo de cambio) en `localhost:8090` cuando se integre.
+**R4 · Revisión de T-519 por Adrian** (pantalla «Transferir saldo» + hoja «Tipo De Cambio») en `localhost:8090` (ya publicada). La primera transferencia entre monedas pide la tasa a mano; desde la segunda aparece sugerida.
 
 **R2 · Revisión visual de Inicio por Adrian** y **G7 · Publicar en `main`** (`gate_ecde8d19a53a`).
 - **A (recomendada tras R2/R4): aprobar merge y push** sin `--force` tras la auditoría. *Razón:* hay mucho trabajo verificado solo en local (T-509…T-604, 4 migraciones).
@@ -129,19 +130,21 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 ## 6. Siguiente paso concreto
 
 **Al reanudar:**
-1. **T-519 pieza 11:** `orca orchestration check --run run_c2cebe1745b9` (puede haber un `worker_done` sin confirmar). Si Codex no llegó a hacer el commit, la rama tendrá cambios sin commit: mirar su terminal (`term_69891d59-…`) antes de tocar nada. **Si Codex no tiene cuota, el coordinador termina la pieza** (excepción autorizada el 2026-10-12, solo esta vez).
-2. **Revisar la pieza 11** (diff, `dart analyze`, `flutter test`, golden vs captura 24, conversión peruana, orden de la sugerencia) y una **prueba real** en la pila (sugerencia con historial real: crear una corrección y abrir la hoja de tasa).
-3. **Integrar T-519 en `master-dev`**, `flutter build web --release` en `master-dev` (sirve el 8090) y avisar a Adrian (R4).
-4. **Actualizar la skill** `.claude/skills/cashew-form-transaccion/SKILL.md` con las decisiones de los ajustes v2 (nombre bajo el monto, «Seleccionar Cuenta», menú ⋮, «Transferir saldo», tipo de cambio) y el informe final a Adrian de lo que quedó como diseño o distinto de Cashew.
-5. Según respuestas: **TAM** (Codex `gpt-6.1-sol` medium, `apps/web`) → **F2** → R2/G7 → F1/D12.
+1. Comprobar que la pila del 8090 sigue en marcha (`docker ps`); si no, relanzarla (§7). Dar a Adrian usuario y contraseña para **R4** (T-519) y el resto del formulario.
+2. Con sus respuestas:
+   - **TAM = A:** tarea Codex `gpt-6.1-sol` medium en `apps/web` (rama `codex/T-520-form-measures` desde `master-dev`): nombre de categoría 18 dp hasta 2 líneas (Cashew `addTransactionPage.dart` ~1973), filas de «Seleccionar Cuenta» nombre 18 dp y radio 15 (`radioItems.dart`); goldens regenerados; verificar con `dart analyze`, `flutter test`, build y captura.
+   - **F2 = A:** tarea Codex high: abrir una transacción guardada en el formulario en modo editar (incluida la llegada de una «Corrección de saldo», sin cambiar su tipo ni categoría) y filtro por categoría en la lista de transacciones (conecta el botón «Corrección De Saldo» del diálogo ⓘ). Revisar el contrato antes de escribir la spec.
+   - Ajustes de R4, si Adrian pide cambios.
+3. Luego **R2/G7** (publicar `master-dev` en `main` tras la auditoría) y **F1/D12**.
+4. **Regla nueva:** todo cambio de contrato se integra junto con la regeneración de los DTO de la UI y una prueba de la UI contra la API real (Anexo C).
 
 ## 7. Estado del Run, de los worktrees y de los agentes abiertos
 
-**Run de la Fase 5: `run_c2cebe1745b9`.** Completadas hoy: T-515 piezas 7–9 (`task_918cdbe06dbc`, `task_881bf03f5c44`, `task_2f7a58d49d4d`), T-518 `task_6e7d560172a3`, T-604 `task_1e5ea0e539ae`, T-519 pieza 10 `task_10487b71ff18`. **En curso al cerrar: T-519 pieza 11 `task_0d6fceaff333`** (dispatch `ctx_b9b2114b4dbc`, terminal `term_69891d59-37f1-4de9-a522-346e3c4b2d92`). T-602 `task_752b79134036` sigue `blocked` por G7 (normal). El CLI no cierra Runs; no usar `orchestration reset`.
+**Run de la Fase 5: `run_c2cebe1745b9`.** Completadas hoy: T-515 piezas 7–9 (`task_918cdbe06dbc`, `task_881bf03f5c44`, `task_2f7a58d49d4d`), T-518 `task_6e7d560172a3`, T-604 `task_1e5ea0e539ae`, T-519 piezas 10 `task_10487b71ff18` y 11 `task_0d6fceaff333` (el dispatch `ctx_b9b2114b4dbc` se detuvo con `worker-stop`; la terminó el coordinador). **Ningún worker vivo.** T-602 `task_752b79134036` sigue `blocked` por G7 (normal). El CLI no cierra Runs; no usar `orchestration reset`.
 
-**Worktrees:** `Monetae` → `main`; `Monetae-master-dev` → `master-dev`; **`Monetae-codex-T-519-transfer-balance`** → `codex/T-519-transfer-balance` (**en uso: no borrar**). **Ya fusionados (Adrian puede borrarlos):** `Monetae-claude-T-515-form-transaccion`, `Monetae-codex-T-518-date-goldens`, `Monetae-codex-T-604-balance-correction` (y sus ramas).
+**Worktrees:** `Monetae` → `main`; `Monetae-master-dev` → `master-dev`. **Ya fusionados (Adrian puede borrarlos, con sus ramas):** `Monetae-claude-T-515-form-transaccion`, `Monetae-codex-T-518-date-goldens`, `Monetae-codex-T-604-balance-correction`, `Monetae-codex-T-519-transfer-balance`.
 
-**Pila de revisión `monetae-review`: queda EN MARCHA** en `http://localhost:8090` (API `8000`, BD `5433`, migración **`0012`**), sirviendo la compilación de **`master-dev` `eeb622a`** (Inicio + formulario piezas 1–9; sin la pantalla «Transferir saldo» hasta integrar T-519). Usuario `revision-g7@example.test` (contraseña solo en el chat). Si se apaga WSL/Docker, relanzar desde `Monetae-master-dev`:
+**Pila de revisión `monetae-review`: queda EN MARCHA** en `http://localhost:8090` (API `8000`, BD `5433`, migración **`0012`**), sirviendo la compilación de **`master-dev` `1b559c8`** (Inicio + formulario completo + «Transferir saldo» + «Tipo De Cambio»). Usuario `revision-g7@example.test` (contraseña solo en el chat). Si se apaga WSL/Docker, relanzar desde `Monetae-master-dev`:
 ```bash
 export PATH="$HOME/flutter/bin:$HOME/.local/bin:$PATH"
 cp .env.example .env && sed -i 's/^MONETAE_COOKIE_SECURE=true$/MONETAE_COOKIE_SECURE=false/' .env
@@ -152,7 +155,7 @@ rm -f .env
 ```
 `apps/web/build/web` de `master-dev` (ignorado) es lo que monta nginx: recompilar ahí tras cada integración.
 
-**Paneles de Orca abiertos:** coordinador, `lupuna` (otro proyecto, no tocar) y Codex: T-515 (`term_dd064818…`, terminado), T-518 (`term_a28d5186…`, terminado), T-604 (`term_6956b6c7…`, terminado) y **T-519 (`term_69891d59…`, activo: no cerrar hasta su `worker_done`)**.
+**Paneles de Orca abiertos:** coordinador y `lupuna` (otro proyecto, no tocar). Los de Codex (T-515 `term_dd064818…`, T-518 `term_a28d5186…`, T-604 `term_6956b6c7…`, T-519 `term_69891d59…`) están terminados: Adrian puede cerrarlos.
 
 ## 8. Limitaciones y riesgos conocidos
 
@@ -165,7 +168,7 @@ rm -f .env
 - **Reportes:** sin proveedor de tipo de cambio (Fase 6), con moneda de reporte ≠ base todo cae en `unconverted_count` salvo tasas insertadas a mano en `exchange_rates`.
 - **Sin auditoría de seguridad externa** (Fase 7). La BD admite un `income` negativo por SQL directo (`ARCHITECTURE.md` §10.12). Límite de login detrás de proxy (§10.10). `501 google_login_not_available` fuera del contrato (§10.11).
 - **Zona horaria en la UI:** la presentación asume America/Lima (UTC−5 fijo) aunque `CurrentUser.timezone` admite cualquier zona IANA. Generalizarlo es una tarea aparte (decidido en T-513, 2026-10-10).
-- **Disco:** ≈ 2,3 GB libres en `/` (20 GB) al cerrar el 2026-10-12 (se liberan al borrar los 3 worktrees ya fusionados). Playwright + Chromium para capturas ocupa ≈ 600 MB (se instaló en el scratchpad de la sesión y se borró al cerrar). Flutter + Docker lo consumen rápido: borrar artefactos (`build/`, `.dart_tool/`, `.venv/`) de worktrees ya fusionados.
+- **Disco:** ≈ 2,1 GB libres en `/` (20 GB) al cerrar el 2026-10-12 (se liberan al borrar los 4 worktrees ya fusionados). Playwright + Chromium para capturas ocupa ≈ 600 MB (se instaló en el scratchpad de la sesión y se borró al cerrar). Flutter + Docker lo consumen rápido: borrar artefactos (`build/`, `.dart_tool/`, `.venv/`) de worktrees ya fusionados.
 - **Repositorio público:** todo push se audita antes; los datos reales solo viven en `reference/backups/` (ignorado).
 - **Ajustes del menú ⋮** (pestaña Transferir, adjunto) solo en memoria: se pierden al recargar la página.
 - **Clon de Cashew anterior** a las capturas 20–25: varios controles nuevos (menú ⋮ (d), ✕/↓/ⓘ de «Transferir saldo») siguen las capturas, no el código.
