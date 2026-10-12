@@ -58,6 +58,8 @@ Backend: **58 de 89 rutas** aprox., 11 migraciones (cabeza **`0011`**), **1164 p
 
 | Fecha | Decisión |
 |---|---|
+| 2026-10-12 | **VPS1-C**: contratará un VPS Contabo (6 vCPU, 12 GB RAM, 200 GB SSD o 100 GB NVMe) con **AlmaLinux 10**; primero para **desarrollo** (Orca por SSH, usuario sin root) y después también para **producción** en el mismo VPS (alternativas que evaluará: datos reales aislados solo para root, o PaaS tipo Supabase). Exposición con **Cloudflare Tunnel + Cloudflare Access** (Adrian gestiona sus subdominios en Cloudflare; el coordinador le dará los pasos). La pila de revisión local pasa al puerto **8090** (el 8080 queda para Tomcat/Lupuna). |
+| 2026-10-12 | Reanudación: STATUS coincide con git; pila de revisión levantada (8080, luego 8090) y login verificado. Adrian preguntó por el guardado del formulario (sí, `POST /transactions`), tipo de cambio (solo manual; proveedor en la Fase 6) y transferencias (API sí; pestaña web «Transferir» solo diseño). Sus pautas de diseño de T-515 siguen pendientes. |
 | 2026-10-11 (noche) | **Cierre** («Continuaremos en otro momento»). Adrian **terminará de verificar T-515** y dará su opinión del diseño y si hay que modificar algo más del formulario. Pide que **al reanudar se levante la interfaz en el 8080** para terminar de verificarla. M1 (fusionar) y T-518 (goldens por fecha) quedan sin respuesta. |
 | 2026-10-11 | Reanudación: STATUS coincide con git; Adrian reactivó Docker y dio permiso SSH a Orca (O1 resuelto: `run-use`/`worker-list` funcionan). «**Apruebo todo A con el OK**»: **O1-A** (orquestación normal), **aviso A** (nota bajo la fila de tipos para los tipos solo de diseño, en la pieza 6) y el plan T-515 piezas 2–6 con Codex `gpt-6.1-sol` high, una por lanzamiento. |
 | 2026-10-10 (noche, 2.ª) | **Cierre** («Continuaremos en otro momento») tras rechazar el lanzamiento de `codex exec`. |
@@ -94,7 +96,9 @@ Backend: **58 de 89 rutas** aprox., 11 migraciones (cabeza **`0011`**), **1164 p
 
 Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
-**R3 · Revisión de T-515 por Adrian** (lo primero al volver). Levantar la pila en el 8080 **sin recompilar** (el `build/web` de `master-dev` ya contiene T-515 `ff412ca`) y que Adrian recorra el formulario a 400×642 con `revision-g7@example.test`. Sus ajustes → una tarea Codex (`claude/T-515-form-transaccion`, misma mecánica pieza a pieza).
+**R3 · Revisión de T-515 por Adrian** (en curso desde el 2026-10-12). Levantar la pila en el **8090** **sin recompilar** (el `build/web` de `master-dev` ya contiene T-515 `ff412ca`) y que Adrian recorra el formulario a 400×642 con `revision-g7@example.test`. Sus ajustes → una tarea Codex (`claude/T-515-form-transaccion`, misma mecánica pieza a pieza).
+
+**VPS1 · (decidido 2026-10-12: C) Entorno en un VPS.** Pendiente de que Adrian contrate el VPS. Plan: endurecer (usuario sin root con clave SSH, sin contraseña ni root por SSH, cortafuegos solo SSH, actualizaciones automáticas) → instalar Docker, git, `gh`, uv, Flutter, CLIs de Codex/Claude (verificar en AlmaLinux 10, que exige x86-64-v3) → permiso SSH de Orca para el nuevo host → llevar `master-dev` y la rama T-515 (`git bundle` o push auditado) + `reference/cashew-inicio-ui/` (**nunca** `reference/backups/`) → Cloudflare Tunnel + Access para el subdominio de revisión → pruebas completas allá → corregir IP tras proxy (`ARCHITECTURE.md` §10.10, tarea Codex). **Riesgo a resolver antes de cargar datos reales:** un usuario en el grupo `docker` equivale a root; recomendación del coordinador: Docker **rootless** para el usuario de desarrollo desde el primer día, de modo que la producción (Docker de root u otro usuario) quede fuera del alcance de los agentes.
 
 **M1 · Fusionar T-515 en `master-dev`.**
 - **A (recomendada): sí, tras R3 y sus ajustes**; actualizar la skill `cashew-form-transaccion` si cambia algo. A `main` solo con G7.
@@ -131,7 +135,7 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
 ## 6. Siguiente paso concreto
 
-**Al reanudar (pedido explícito de Adrian):** levantar la pila de revisión en `localhost:8080` **sin recompilar** (el `build/web` servido es T-515 `ff412ca`), comprobar login por nginx y dar a Adrian usuario/contraseña para que termine de verificar T-515 (R3). Luego, según su respuesta: tarea Codex de ajustes de T-515 → M1 (fusionar) → T-518 (goldens por fecha) → R2/G7/F1/D12.
+**Al reanudar (pedido explícito de Adrian):** levantar la pila de revisión en `localhost:8090` **sin recompilar** (el `build/web` servido es T-515 `ff412ca`), comprobar login por nginx y dar a Adrian usuario/contraseña para que termine de verificar T-515 (R3). Luego, según su respuesta: tarea Codex de ajustes de T-515 → M1 (fusionar) → T-518 (goldens por fecha) → R2/G7/F1/D12.
 
 0. **(Hecho 2026-10-11)** ~~T-515 piezas 2–6 con Codex~~ (`gpt-6.1-sol`, high), **una pieza por lanzamiento** en el worktree `../Monetae-claude-T-515-form-transaccion` (rama `claude/T-515-form-transaccion`), spec `docs/tasks/T-515-ui-transaction-form.md`, tras resolver **O1**. Por cada pieza el coordinador: lee el diff, corre `dart analyze` + `flutter test`, revisa goldens, compila (`flutter build web --release`), copia `apps/web/build/web` al de `master-dev` (lo sirve nginx) y captura con Playwright a 400×642 en oscuro comparando con la captura 11–19. Al terminar la pieza 6: informe de TODO/diferencias a Adrian, actualizar la skill si hace falta y fusionar la rama en `master-dev`.
 1. **Relanzar la pila de revisión** (§7) y que **Adrian revise Inicio (R2)**; responder **F1**, **D12** y, tras la revisión, **G7**.
@@ -153,7 +157,7 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 export PATH="$HOME/flutter/bin:$HOME/.local/bin:$PATH"
 (cd apps/web && flutter build web --release)          # build/web ya existe de la última integración; recompilar si hay cambios
 cp .env.example .env && sed -i 's/^MONETAE_COOKIE_SECURE=true$/MONETAE_COOKIE_SECURE=false/' .env
-COMPOSE_PROJECT_NAME=monetae-review docker compose -f infra/docker-compose.yml up -d --build db api web
+MONETAE_WEB_PORT=8090 COMPOSE_PROJECT_NAME=monetae-review docker compose -f infra/docker-compose.yml up -d --build db api web   # el puerto se pasa como variable: compose no lee el .env de la raíz
 COMPOSE_PROJECT_NAME=monetae-review docker compose -f infra/docker-compose.yml exec -T api alembic upgrade head
 # bajar: COMPOSE_PROJECT_NAME=monetae-review docker compose -f infra/docker-compose.yml down && rm -f .env
 ```
