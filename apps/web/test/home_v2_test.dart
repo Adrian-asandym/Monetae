@@ -20,6 +20,7 @@ import 'package:monetae_web/widgets/brand_logo.dart';
 import 'package:monetae_web/pages/home_page.dart';
 import 'package:monetae_web/l10n/app_localizations_en.dart';
 import 'package:monetae_web/widgets/budget_card.dart';
+import 'package:monetae_web/presentation/clock.dart';
 
 import 'components_test.dart' as harness;
 import 'home_assembly_test.dart' as home;
@@ -34,17 +35,20 @@ Future<void> mountMobile(
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(
-    MaterialApp(
-      theme: monetaeTheme(brightness: brightness),
-      locale: const Locale('es'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: RepaintBoundary(
-        key: const Key('capture'),
-        child: Builder(
-          builder: (context) => MediaQuery(
-            data: MediaQuery.of(context).copyWith(disableAnimations: true),
-            child: builder(context, AppLocalizations.of(context)),
+    PresentationClock(
+      now: () => home.today,
+      child: MaterialApp(
+        theme: monetaeTheme(brightness: brightness),
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: RepaintBoundary(
+          key: const Key('capture'),
+          child: Builder(
+            builder: (context) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(disableAnimations: true),
+              child: builder(context, AppLocalizations.of(context)),
+            ),
           ),
         ),
       ),

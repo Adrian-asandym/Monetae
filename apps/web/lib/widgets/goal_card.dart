@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 
 import '../data/api_dtos.dart';
 import '../l10n/app_localizations.dart';
+import '../presentation/clock.dart';
 import '../presentation/budget_calculations.dart';
 import '../presentation/category_icon_source.dart';
 import '../presentation/currency_format.dart';
@@ -46,7 +47,7 @@ class GoalCard extends StatelessWidget {
     );
     String money(String value) =>
         formatCurrency(value, goal.currency, l.localeName);
-        
+
     return Material(
       color: colors.card,
       borderRadius: BorderRadius.circular(20),
@@ -75,11 +76,18 @@ class GoalCard extends StatelessWidget {
                         ),
                         Builder(
                           builder: (context) {
-                            final perDay = goalPerDayLabel(l, goal, DateTime.now());
+                            final perDay = goalPerDayLabel(
+                              l,
+                              goal,
+                              PresentationClock.of(context),
+                            );
                             if (perDay == null) return const SizedBox.shrink();
                             return Text(
                               perDay,
-                              style: TextStyle(fontSize: 14, color: colors.muted),
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: colors.muted,
+                              ),
                             );
                           },
                         ),
@@ -131,7 +139,8 @@ class GoalCard extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    DateFormat.MMMd(l.localeName).format(DateTime.parse(goal.createdAt)),
+                    DateFormat.MMMd(l.localeName)
+                        .format(DateTime.parse(goal.createdAt)),
                     style: TextStyle(fontSize: 13, color: colors.muted),
                   ),
                   const SizedBox(width: 8),
@@ -141,7 +150,8 @@ class GoalCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   if (goal.dueOn != null)
                     Text(
-                      DateFormat.MMMd(l.localeName).format(DateTime.parse(goal.dueOn!)),
+                      DateFormat.MMMd(l.localeName)
+                          .format(DateTime.parse(goal.dueOn!)),
                       style: TextStyle(fontSize: 13, color: colors.muted),
                     ),
                 ],

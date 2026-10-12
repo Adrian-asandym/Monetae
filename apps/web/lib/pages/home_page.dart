@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../api/home_controller.dart';
 import '../l10n/app_localizations.dart';
+import '../presentation/clock.dart';
 import '../presentation/transaction_presenter.dart';
 import '../session/session_controller.dart';
 import '../widgets/home_edit_button.dart';
@@ -59,7 +60,9 @@ class _HomePageState extends State<HomePage> {
     _transactionRevision = widget.session.transactionRevision;
     _today =
         widget.today ??
-        DateTime.now().toUtc().subtract(const Duration(hours: 5));
+        PresentationClock.read(context)
+            .toUtc()
+            .subtract(const Duration(hours: 5));
     _home = HomeController(
       widget.session.api,
       month: DateTime(_today.year, _today.month),

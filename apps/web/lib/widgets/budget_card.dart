@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 
 import '../data/api_dtos.dart';
 import '../l10n/app_localizations.dart';
+import '../presentation/clock.dart';
 import '../presentation/budget_calculations.dart';
 import '../presentation/currency_format.dart';
 import '../presentation/decimal_progress.dart';
@@ -24,6 +25,7 @@ class BudgetCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final currentDate = today ?? PresentationClock.of(context);
     final theme = Theme.of(context);
     final color = presentationColor(
       budget.color,
@@ -43,7 +45,7 @@ class BudgetCard extends StatelessWidget {
       absolute: absolute,
     );
     final dateFormat = DateFormat.MMMd(l.localeName);
-    
+
     // Header is color, footer is color * darker
     return Material(
       color: pastel(
@@ -146,7 +148,7 @@ class BudgetCard extends StatelessWidget {
                           today: todayFraction(
                             budget.startOn,
                             budget.endOn,
-                            today ?? DateTime.now(),
+                            currentDate,
                           ),
                         ),
                       ),
@@ -166,7 +168,7 @@ class BudgetCard extends StatelessWidget {
                         l,
                         budget,
                         Decimal.parse(budget.spentAmount),
-                        today ?? DateTime.now(),
+                        currentDate,
                       );
                       if (perDay == null) return const SizedBox.shrink();
                       return Text(
