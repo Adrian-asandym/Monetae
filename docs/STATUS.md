@@ -48,6 +48,7 @@ Backend: **58 de 89 rutas** aprox., 11 migraciones (cabeza **`0011`**), **1164 p
 
 | Fecha | Decisión |
 |---|---|
+| 2026-10-11 | Reanudación: STATUS coincide con git; Adrian reactivó Docker y dio permiso SSH a Orca (O1 resuelto: `run-use`/`worker-list` funcionan). «**Apruebo todo A con el OK**»: **O1-A** (orquestación normal), **aviso A** (nota bajo la fila de tipos para los tipos solo de diseño, en la pieza 6) y el plan T-515 piezas 2–6 con Codex `gpt-6.1-sol` high, una por lanzamiento. |
 | 2026-10-10 (noche, 2.ª) | **Cierre** («Continuaremos en otro momento») tras rechazar el lanzamiento de `codex exec`. |
 | 2026-10-10 (noche, 2.ª) | Adrian recuerda: **el código lo escribe un agente (Codex de preferencia); el coordinador solo planifica y monitorea**, aunque la petición diga «implementa» (guardado en memoria). |
 | 2026-10-10 (noche, 2.ª) | **Plan T-515 aprobado**: solo presentación; una pieza a la vez (base 12/13 → título 11 → categorías 15 → importe 16 → Más opciones 14 → modal de tipos 17–19), verificar cada una en `localhost:8080` a 400×642 y un commit por pieza; Suscripción, Repetitivo, Prestar, Deuda, Transferir, adjunto, calculadora, «Incluir importe» y «Excluir del presupuesto» quedan como diseño con TODO; selección de presupuesto/objetivo solo visual; Predeterminado/Próximamente = estado `posted`/`scheduled` (vía fecha). |
