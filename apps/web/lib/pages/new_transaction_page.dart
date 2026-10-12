@@ -8,6 +8,7 @@
 // Modified 2026-10-11 (T-515 piece 3): category sheet followed by amount sheet.
 // Modified 2026-10-11 (T-515 piece 4): amount sheet, account chips and keyboard.
 // Modified 2026-10-11 (T-515 piece 5): collapsible options with local state.
+// Modified 2026-10-11 (T-515 piece 6): type sheet and design-only notice.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -28,19 +29,12 @@ import '../widgets/decimal_number_pad.dart';
 import '../widgets/transaction_category_grid.dart';
 import '../widgets/transaction_form/form_controls.dart';
 import '../widgets/transaction_form/form_sheet.dart';
+import '../widgets/transaction_form/transaction_type_sheet.dart';
+
+export '../widgets/transaction_form/transaction_type_sheet.dart'
+    show FormTransactionType;
 
 typedef _T = TransactionFormTokens;
-
-/// Cashew transaction types. Only [standard] and [upcoming] exist in the
-/// model (status posted / scheduled); the rest are design only (T-515).
-enum FormTransactionType {
-  standard,
-  upcoming,
-  subscription,
-  repetitive,
-  lend,
-  borrow,
-}
 
 class NewTransactionPage extends StatefulWidget {
   const NewTransactionPage({
@@ -484,6 +478,27 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
     }
   }
 
+  Future<void> _openTypeSheet() async {
+    if (_form.busy) return;
+    await showFormSheet<void>(
+      context,
+      key: const Key('type-sheet'),
+      title: AppLocalizations.of(context).formTypeSheetTitle,
+      expand: true,
+      scrollHeading: true,
+      horizontalPadding: _T.typeSheetInset,
+      heightFraction: _T.typeSheetHeightFraction,
+      headingTop: _T.typeSheetHeadingTop,
+      builder: (sheet) => TransactionTypeSheet(
+        selected: _shownType,
+        onSelected: (type) {
+          _selectType(type);
+          Navigator.pop(sheet);
+        },
+      ),
+    );
+  }
+
   Future<void> _showAllAccounts() async {
     final l = AppLocalizations.of(context);
     await showFormSheet<void>(
@@ -736,8 +751,7 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
             height: _T.chipHeight,
           ),
           icon: const Icon(Icons.info_outline_rounded, size: 26),
-          // TODO(T-515 piece 6): transaction type sheet (captures 17–19).
-          onPressed: () {},
+          onPressed: _openTypeSheet,
         ),
         chips: [
           typeChip(FormTransactionType.standard, l.formTypeDefault),
@@ -750,6 +764,21 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
           typeChip(FormTransactionType.borrow, l.formTypeBorrow),
         ],
       ),
+      if (shownType != FormTransactionType.standard &&
+          shownType != FormTransactionType.upcoming)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            _T.sidePadding,
+            _T.typeNoticeTop,
+            _T.sidePadding,
+            0,
+          ),
+          child: Text(
+            l.formTypeNotice,
+            key: const Key('form-type-notice'),
+            style: TextStyle(fontSize: _T.captionSize, color: colors.muted),
+          ),
+        ),
       _error(_fieldError('status')),
       const SizedBox(height: _T.rowGap),
       _accountRow(),

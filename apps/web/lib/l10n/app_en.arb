@@ -313,5 +313,17 @@
   "formSelectCategory": "Select a category",
   "formCategorySheetTitle": "Select A Category",
   "formMenu": "More actions",
-  "formEditTitle": "Edit transaction"
+  "formEditTitle": "Edit transaction",
+  "formTypeSheetTitle": "Select The Transaction Type",
+  "formTypeUnpaid": "A transaction that is not paid",
+  "formTypeNotInTotal": "Does not count towards your total unless marked as 'Paid' or 'Deposited'",
+  "formTypeSubscriptionDescription": "Recurring transaction displayed on the subscriptions page",
+  "formTypeNextGenerated": "Next transaction generated when the current one is marked as \"Paid\" or \"Deposited\"",
+  "formTypeRepetitiveDescription": "Recurring transaction",
+  "formTypeLendDescription": "A transaction you lent",
+  "formTypeLendCashFlow": "Negative cash flow until marked as 'Collected'",
+  "formTypeBorrowDescription": "A transaction borrowed from someone",
+  "formTypeBorrowCashFlow": "Positive cash flow until marked as 'Settled'",
+  "formTypeHelp": "Mark a special transaction by tapping the action button on the transaction entry",
+  "formTypeNotice": "Not yet available: it will be saved as a normal transaction"
 }

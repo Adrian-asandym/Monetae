@@ -1,6 +1,7 @@
 // Derived from Cashew widgets/openBottomSheet.dart (PopupFramework).
 // Copyright James Kokoska, GPL-3.0. Modified 2026-10-10: Material modal sheet
 // with Monetae tokens; Title Case heading and optional trailing action.
+// Modified 2026-10-11: optional scrolling heading for the type tutorial sheet.
 import 'package:flutter/material.dart';
 
 import '../../theme/monetae_theme.dart';
@@ -15,6 +16,10 @@ Future<T?> showFormSheet<T>(
   Widget? trailing,
   Key? key,
   bool expand = false,
+  bool scrollHeading = false,
+  double horizontalPadding = _T.sheetPadding,
+  double heightFraction = _T.expandedSheetHeightFraction,
+  double? headingTop,
   double bottomPadding = _T.sheetPadding + 8,
 }) {
   final form = TransactionFormColors.of(context);
@@ -23,6 +28,7 @@ Future<T?> showFormSheet<T>(
     isScrollControlled: true,
     useSafeArea: true,
     backgroundColor: form.sheet,
+    clipBehavior: scrollHeading ? Clip.antiAlias : Clip.none,
     barrierColor: Colors.black.withValues(alpha: .5),
     constraints: const BoxConstraints(maxWidth: _T.maxWidth),
     shape: const RoundedRectangleBorder(
@@ -33,6 +39,9 @@ Future<T?> showFormSheet<T>(
         title: title,
         trailing: trailing,
         expand: expand,
+        scrollHeading: scrollHeading,
+        horizontalPadding: horizontalPadding,
+        headingTop: headingTop,
         bottomPadding: bottomPadding,
         child: builder(context),
       );
@@ -42,10 +51,7 @@ Future<T?> showFormSheet<T>(
           bottom: MediaQuery.viewInsetsOf(context).bottom,
         ),
         child: expand
-            ? FractionallySizedBox(
-                heightFactor: _T.expandedSheetHeightFraction,
-                child: body,
-              )
+            ? FractionallySizedBox(heightFactor: heightFraction, child: body)
             : body,
       );
     },
@@ -57,6 +63,9 @@ class _SheetBody extends StatelessWidget {
     required this.title,
     required this.child,
     required this.expand,
+    required this.scrollHeading,
+    required this.horizontalPadding,
+    required this.headingTop,
     required this.bottomPadding,
     this.trailing,
   });
@@ -64,6 +73,9 @@ class _SheetBody extends StatelessWidget {
   final Widget child;
   final Widget? trailing;
   final bool expand;
+  final bool scrollHeading;
+  final double horizontalPadding;
+  final double? headingTop;
   final double bottomPadding;
 
   @override
@@ -71,7 +83,8 @@ class _SheetBody extends StatelessWidget {
     final heading = Padding(
       padding: EdgeInsets.fromLTRB(
         _T.sheetPadding + 4,
-        expand ? _T.expandedSheetHeadingTop : _T.sheetPadding + 8,
+        headingTop ??
+            (expand ? _T.expandedSheetHeadingTop : _T.sheetPadding + 8),
         _T.sheetPadding,
         expand ? _T.expandedSheetHeadingGap : _T.sheetPadding,
       ),
@@ -94,13 +107,22 @@ class _SheetBody extends StatelessWidget {
     );
     final body = Padding(
       padding: EdgeInsets.fromLTRB(
-        _T.sheetPadding,
+        horizontalPadding,
         0,
-        _T.sheetPadding,
+        horizontalPadding,
         expand ? 0 : bottomPadding,
       ),
       child: child,
     );
+    if (scrollHeading) {
+      return SingleChildScrollView(
+        key: const Key('form-sheet-scroll'),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [heading, body],
+        ),
+      );
+    }
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -209,6 +209,7 @@ class TransactionFormColors {
     required this.neutralCategory,
     required this.switchTrack,
     required this.switchThumb,
+    required this.typeText,
   });
 
   final Color header;
@@ -232,6 +233,7 @@ class TransactionFormColors {
   final Color neutralCategory;
   final Color switchTrack;
   final Color switchThumb;
+  final Color typeText;
 
   static const _dark = TransactionFormColors._(
     header: Color(0xFF33383A),
@@ -255,6 +257,7 @@ class TransactionFormColors {
     neutralCategory: Color(0xFF424242),
     switchTrack: Color(0xFF707C81),
     switchThumb: Color(0xFFBAC8CF),
+    typeText: Color(0xFFFFFFFF),
   );
 
   static const _light = TransactionFormColors._(
@@ -279,6 +282,7 @@ class TransactionFormColors {
     neutralCategory: Color(0xFF757575),
     switchTrack: Color(0xFF78909C),
     switchThumb: Color(0xFFFFFFFF),
+    typeText: Color(0xFF121212),
   );
 
   static TransactionFormColors of(BuildContext context) =>
@@ -368,4 +372,34 @@ abstract final class TransactionFormTokens {
   static const optionsBottomPadding = 56.0;
   static const optionCardHeight = 62.0;
   static const optionCardRadius = 16.0;
+  static const typeSheetInset = 12.0;
+  static const typeCardRadius = 16.0;
+  static const typeCardBorder = 1.5;
+  static const typeCardPadding = 20.0;
+  static const typeCardGap = 14.0;
+  static const typeCardIconSize = 26.0;
+  static const typeCardTitleSize = 22.0;
+  static const typeCardTitleHeight = 1.2;
+  static const typeCardIconGap = 12.0;
+  static const typeBulletSize = 15.0;
+  static const typeBulletHeight = 1.25;
+  static const typeBulletGap = 2.0;
+  static const typeBulletIndent = 14.0;
+  static const typeDescriptionGap = 14.0;
+  static const typeMenuSize = 26.0;
+  static const typeHelpFontSize = 16.0;
+  static const typeHelpGap = 18.0;
+  static const typeHelpActionSize = 35.0;
+  static const typeHelpActionIconSize = 23.0;
+  static const typeHelpActionGap = 10.0;
+  static const typeExamplePadding = 12.0;
+  static const typeExampleAvatarSize = 48.0;
+  static const typeExampleHighlightBorder = 2.0;
+  static const typeExampleAmountSize = 20.0;
+  static const typeExampleNoteSize = 20.0;
+  static const typeExampleAccountRadius = 4.0;
+  static const typeExampleAccountInset = 4.0;
+  static const typeNoticeTop = 6.0;
+  static const typeSheetHeightFraction = .985;
+  static const typeSheetHeadingTop = 0.0;
 }

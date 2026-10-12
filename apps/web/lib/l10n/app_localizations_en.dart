@@ -631,4 +631,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get formEditTitle => 'Edit transaction';
+
+  @override
+  String get formTypeSheetTitle => 'Select The Transaction Type';
+
+  @override
+  String get formTypeUnpaid => 'A transaction that is not paid';
+
+  @override
+  String get formTypeNotInTotal =>
+      'Does not count towards your total unless marked as \'Paid\' or \'Deposited\'';
+
+  @override
+  String get formTypeSubscriptionDescription =>
+      'Recurring transaction displayed on the subscriptions page';
+
+  @override
+  String get formTypeNextGenerated =>
+      'Next transaction generated when the current one is marked as \"Paid\" or \"Deposited\"';
+
+  @override
+  String get formTypeRepetitiveDescription => 'Recurring transaction';
+
+  @override
+  String get formTypeLendDescription => 'A transaction you lent';
+
+  @override
+  String get formTypeLendCashFlow =>
+      'Negative cash flow until marked as \'Collected\'';
+
+  @override
+  String get formTypeBorrowDescription => 'A transaction borrowed from someone';
+
+  @override
+  String get formTypeBorrowCashFlow =>
+      'Positive cash flow until marked as \'Settled\'';
+
+  @override
+  String get formTypeHelp =>
+      'Mark a special transaction by tapping the action button on the transaction entry';
+
+  @override
+  String get formTypeNotice =>
+      'Not yet available: it will be saved as a normal transaction';
 }

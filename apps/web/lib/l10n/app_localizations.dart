@@ -1231,6 +1231,78 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Editar transacción'**
   String get formEditTitle;
+
+  /// No description provided for @formTypeSheetTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Seleccionar El Tipo De Transacción'**
+  String get formTypeSheetTitle;
+
+  /// No description provided for @formTypeUnpaid.
+  ///
+  /// In es, this message translates to:
+  /// **'Una transacción que no está pagada'**
+  String get formTypeUnpaid;
+
+  /// No description provided for @formTypeNotInTotal.
+  ///
+  /// In es, this message translates to:
+  /// **'No cuenta para su total a menos que sea marcado como \'Pagado\' o \'Depositado\''**
+  String get formTypeNotInTotal;
+
+  /// No description provided for @formTypeSubscriptionDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Transacción recurrente que se mostrará en la página de suscripciones'**
+  String get formTypeSubscriptionDescription;
+
+  /// No description provided for @formTypeNextGenerated.
+  ///
+  /// In es, this message translates to:
+  /// **'Próxima transacción generada cuando la actual está marcada como \"Pagada\" o \"Depositada\"'**
+  String get formTypeNextGenerated;
+
+  /// No description provided for @formTypeRepetitiveDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Transacción recurrente'**
+  String get formTypeRepetitiveDescription;
+
+  /// No description provided for @formTypeLendDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Transacción que prestaste'**
+  String get formTypeLendDescription;
+
+  /// No description provided for @formTypeLendCashFlow.
+  ///
+  /// In es, this message translates to:
+  /// **'Flujo de caja negativo hasta que se marque como \'Recolectado\''**
+  String get formTypeLendCashFlow;
+
+  /// No description provided for @formTypeBorrowDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Transacción prestada de alguien'**
+  String get formTypeBorrowDescription;
+
+  /// No description provided for @formTypeBorrowCashFlow.
+  ///
+  /// In es, this message translates to:
+  /// **'Flujo de caja positivo hasta que se marque como \'Liquidado\''**
+  String get formTypeBorrowCashFlow;
+
+  /// No description provided for @formTypeHelp.
+  ///
+  /// In es, this message translates to:
+  /// **'Marque una transacción especial tocando el botón de acción en la entrada de la transacción'**
+  String get formTypeHelp;
+
+  /// No description provided for @formTypeNotice.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no disponible: se guardará como transacción normal'**
+  String get formTypeNotice;
 }
 
 class _AppLocalizationsDelegate

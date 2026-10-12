@@ -308,6 +308,33 @@ Future<void> tapMoreOptions(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+Future<void> openTypeSheet(WidgetTester tester) async {
+  final info = find.byKey(const Key('form-type-info'));
+  await tester.ensureVisible(info);
+  await tester.pumpAndSettle();
+  await tester.tap(info);
+  await tester.pumpAndSettle();
+  expect(find.byKey(const Key('type-sheet')), findsOneWidget);
+}
+
+Future<void> selectTypeCard(
+  WidgetTester tester,
+  FormTransactionType type,
+) async {
+  final card = find.byKey(Key('type-card-${type.name}'));
+  await tester.ensureVisible(card);
+  await tester.pumpAndSettle();
+  await tester.tap(card);
+  await tester.pumpAndSettle();
+  expect(find.byKey(const Key('type-sheet')), findsNothing);
+}
+
+Key? selectedTypeKey(WidgetTester tester) => tester
+    .widget<FormChipRow>(find.byKey(const Key('form-type-row')))
+    .chips
+    .singleWhere((chip) => chip.selected)
+    .key;
+
 Future<void> toggleExcludedBudget(WidgetTester tester, String id) async {
   final chip = find.byKey(Key('form-exclude-budget-$id'));
   await tester.ensureVisible(chip);
@@ -1298,6 +1325,248 @@ void main() {
           );
         },
       );
+    }
+  }
+
+  for (final type in FormTransactionType.values) {
+    testWidgets('type card ${type.name} shares state with chips and notice', (
+      tester,
+    ) async {
+      final f = FormFixture();
+      addTearDown(f.close);
+      await mountForm(tester, f);
+      expect(find.byKey(const Key('form-type-notice')), findsNothing);
+      await openTypeSheet(tester);
+      expect(find.text(l.formTypeSheetTitle), findsOneWidget);
+      for (final value in FormTransactionType.values) {
+        expect(find.byKey(Key('type-card-${value.name}')), findsOneWidget);
+      }
+      await selectTypeCard(tester, type);
+      expect(selectedTypeKey(tester), Key('form-type-${type.name}'));
+      final designOnly =
+          type != FormTransactionType.standard &&
+          type != FormTransactionType.upcoming;
+      expect(
+        find.byKey(const Key('form-type-notice')),
+        designOnly ? findsOneWidget : findsNothing,
+      );
+      if (designOnly) expect(find.text(l.formTypeNotice), findsOneWidget);
+      expect(f.form.scheduled, type == FormTransactionType.upcoming);
+      await openTypeSheet(tester);
+      final context = tester.element(find.byKey(const Key('type-sheet')));
+      final selectedColor = TransactionFormColors.of(context).chipSelected;
+      expect(
+        tester
+            .widget<Material>(find.byKey(Key('type-card-${type.name}')))
+            .color,
+        selectedColor,
+      );
+      await selectTypeCard(tester, FormTransactionType.standard);
+      expect(f.form.scheduled, isFalse);
+      expect(find.byKey(const Key('form-type-notice')), findsNothing);
+      // Selection through the row must be reflected when the sheet reopens.
+      final chip = find.byKey(Key('form-type-${type.name}'));
+      await tester.ensureVisible(chip);
+      await tester.pumpAndSettle();
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+      await openTypeSheet(tester);
+      expect(
+        tester
+            .widget<Material>(find.byKey(Key('type-card-${type.name}')))
+            .color,
+        selectedColor,
+      );
+      expect(f.posts, isEmpty);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets(
+    'type menus and five tutorial actions leave selection unchanged',
+    (tester) async {
+      final f = FormFixture();
+      addTearDown(f.close);
+      await mountForm(tester, f);
+      await openTypeSheet(tester);
+      final requestCount = f.requests.length;
+      for (final type in [
+        FormTransactionType.upcoming,
+        FormTransactionType.subscription,
+        FormTransactionType.repetitive,
+      ]) {
+        final menu = find.byKey(Key('type-menu-${type.name}'));
+        await tester.ensureVisible(menu);
+        await tester.pumpAndSettle();
+        await tester.tap(menu);
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('type-sheet')), findsOneWidget);
+      }
+      expect(find.byKey(const Key('type-menu-standard')), findsNothing);
+      expect(find.byKey(const Key('type-menu-lend')), findsNothing);
+      expect(find.byKey(const Key('type-menu-borrow')), findsNothing);
+      final help = find.byKey(const Key('type-sheet-help'));
+      await tester.ensureVisible(help);
+      await tester.pumpAndSettle();
+      expect(find.text(l.formTypeHelp), findsOneWidget);
+      for (final type in FormTransactionType.values.skip(1)) {
+        await tester.tap(find.byKey(Key('type-example-action-${type.name}')));
+        await tester.pump();
+      }
+      expect(find.byKey(const Key('type-example-entry')), findsOneWidget);
+      expect(f.requests, hasLength(requestCount));
+      expect(selectedTypeKey(tester), const Key('form-type-standard'));
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('design types preserve the normal request and retry key', (
+    tester,
+  ) async {
+    final f = FormFixture()..status = 500;
+    addTearDown(f.close);
+    await mountForm(tester, f);
+    await fillAmount(tester, '12.50');
+    await chooseCategory(tester);
+    await tester.tap(find.byKey(const Key('save-transaction')));
+    await tester.pumpAndSettle();
+    final first = f.posts.single;
+    for (final type in FormTransactionType.values.skip(2)) {
+      await openTypeSheet(tester);
+      await selectTypeCard(tester, type);
+      expect(find.byKey(const Key('form-type-notice')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('save-transaction')));
+      await tester.pumpAndSettle();
+      expect(f.posts.last.body, first.body);
+      expect(
+        f.posts.last.headers['Idempotency-Key'],
+        first.headers['Idempotency-Key'],
+      );
+    }
+    expect(jsonDecode(first.body), {
+      'account_id': mockAccountId,
+      'kind': 'expense',
+      'amount': '-12.50',
+      'currency': 'PEN',
+      'occurred_at': '2026-10-10T03:30:00.000Z',
+      'status': 'posted',
+      'title': '',
+      'fx_rate_to_base': '1.000000',
+      'fx_rate_source': 'manual',
+    });
+    expect(
+      f.requests
+          .where((r) => r.method == 'POST')
+          .every((r) => r.url.path == '/api/v1/transactions'),
+      isTrue,
+    );
+  });
+
+  testWidgets('type descriptions match the Spanish reference exactly', (
+    tester,
+  ) async {
+    final f = FormFixture();
+    addTearDown(f.close);
+    await mountForm(tester, f);
+    await openTypeSheet(tester);
+    for (final text in [
+      'Una transacción que no está pagada',
+      'Transacción recurrente que se mostrará en la página de suscripciones',
+      'Transacción recurrente',
+      'Transacción que prestaste',
+      "Flujo de caja negativo hasta que se marque como 'Recolectado'",
+      'Transacción prestada de alguien',
+      "Flujo de caja positivo hasta que se marque como 'Liquidado'",
+      'Marque una transacción especial tocando el botón de acción en la entrada de la transacción',
+    ]) {
+      expect(find.text(text), findsOneWidget);
+    }
+    expect(
+      find.text(
+        "No cuenta para su total a menos que sea marcado como 'Pagado' o 'Depositado'",
+      ),
+      findsNWidgets(3),
+    );
+    expect(
+      find.text(
+        'Próxima transacción generada cuando la actual está marcada como "Pagada" o "Depositada"',
+      ),
+      findsNWidgets(2),
+    );
+  });
+
+  testWidgets('English type sheet and design notice fit a narrow viewport', (
+    tester,
+  ) async {
+    final f = FormFixture();
+    addTearDown(f.close);
+    tester.view.physicalSize = const Size(320, 642);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: monetaeTheme(brightness: Brightness.light),
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: NewTransactionPage(session: f.session, controller: f.form),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await dismissTitleSheet(tester);
+    await openTypeSheet(tester);
+    expect(find.text('Select The Transaction Type'), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('type-sheet-help')));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await selectTypeCard(tester, FormTransactionType.subscription);
+    expect(
+      find.text('Not yet available: it will be saved as a normal transaction'),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final brightness in Brightness.values) {
+    for (final section in ['top', 'middle', 'bottom', 'notice']) {
+      testWidgets('golden type sheet $section ${brightness.name} at 400x642', (
+        tester,
+      ) async {
+        final f = FormFixture();
+        addTearDown(f.close);
+        await mountCategoryForm(tester, f, brightness: brightness);
+        await tester.tapAt(const Offset(10, 10));
+        await tester.pumpAndSettle();
+        await openTypeSheet(tester);
+        if (section == 'middle') {
+          await tester.ensureVisible(
+            find.byKey(const Key('type-card-repetitive')),
+          );
+        } else if (section == 'bottom') {
+          await tester.drag(
+            find.byKey(const Key('form-sheet-scroll')),
+            const Offset(0, -2000),
+          );
+        } else if (section == 'notice') {
+          await selectTypeCard(tester, FormTransactionType.subscription);
+          await tester.ensureVisible(
+            find.byKey(const Key('form-type-subscription')),
+          );
+          await tester.drag(
+            find.byKey(const Key('transaction-form-scroll')),
+            const Offset(0, 2000),
+          );
+        }
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        await expectLater(
+          find.byKey(const Key('category-sheet-capture')),
+          matchesGoldenFile(
+            'goldens/new_transaction_type_sheet_${section}_${brightness.name}.png',
+          ),
+        );
+      });
     }
   }
 
