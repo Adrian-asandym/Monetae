@@ -8,10 +8,10 @@
 
 | | |
 |---|---|
-| **Última actualización** | **2026-10-12, noche (America/Lima)** — cierre de sesión («Continuaremos en otro momento»), tras terminar T-519 |
+| **Última actualización** | **2026-10-13, noche (America/Lima)** — cierre de sesión («Continuaremos en otro momento»), tras preparar el VPS (sin cambios de código) |
 | **`origin`** | `origin/main` = `origin/master-dev` = **`8b8688e`** (hasta T-508, SPEC v0.5; G6). |
 | **`main`** | `8b8688e`. |
-| **`master-dev`** | **`0e1508e` + el commit de este cierre (`git log -1`)**: incluye T-515 (formulario piezas 1–9), T-518, T-604 (contrato **0.7.0**, migración **`0012`**), la corrección de DTO, **T-519** (pantalla «Transferir saldo» + hoja «Tipo De Cambio») y la skill `cashew-form-transaccion` actualizada. **Sin publicar.** |
+| **`master-dev`** | **`9275d3a` + el commit de este cierre (`git log -1`)**: incluye T-515 (formulario piezas 1–9), T-518, T-604 (contrato **0.7.0**, migración **`0012`**), la corrección de DTO, **T-519** (pantalla «Transferir saldo» + hoja «Tipo De Cambio») y la skill `cashew-form-transaccion` actualizada. **Sin publicar.** |
 | **Rama de tarea** | Ninguna abierta: `codex/T-519-transfer-balance` = `21bfc63` ya fusionada (`1b559c8`). |
 | **Gate abierto** | **G7 `gate_ecde8d19a53a`** (publicar en `main`): sin resolver; al resolverlo se publica **todo `master-dev`** tras la auditoría. |
 | **SPEC / ARCHITECTURE / contrato** | SPEC **v0.7** · `docs/ARCHITECTURE.md` v0.3 · `docs/api/openapi.json` **0.7.0** (90 paths, 133 operaciones). |
@@ -21,12 +21,21 @@
 | Estado | Contenido |
 |---|---|
 | ✅ **Completo** | Fases 0–4. **Fase 5:** T-501…T-515 (formulario de transacción fiel a Cashew, piezas 1–9 incluidos los ajustes v2 1–3 de Adrian), T-518 (goldens sin fecha). **Adelantado de la Fase 6:** T-601/T-602/T-603 y **T-604** («Corrección de saldo»: categorías de sistema, `POST/GET /balance-corrections`, exclusión de totales, importador). |
-| 🔄 **En curso** | Nada. Ningún worker vivo. |
-| ⏳ **Pendiente** | **R4** revisión de T-519 por Adrian · **TAM** (medidas de ajustes 1–2) · R2/G7 · F1 · D12 · VPS1-C (cuando Adrian contrate el VPS) · resto de la Fase 5 · Fase 6 · Fase 7 · importación real (D9-A). |
+| 🔄 **En curso** | **VPS1-C:** VPS contratado y preparado por Adrian (Docker del sistema + Docker rootless del usuario `dev`, ambos verificados). Faltan los agentes y el repositorio en el VPS. Ningún worker vivo. |
+| ⏳ **Pendiente** | **R4** revisión de T-519 por Adrian · **TAM** (medidas de ajustes 1–2) · R2/G7 · F1 · D12 · VPS1-C (agentes + repo en el VPS, luego Cloudflare) · resto de la Fase 5 · Fase 6 · Fase 7 · importación real (D9-A). |
 
 Backend: **1190 pruebas**, migraciones hasta **`0012`**. UI `apps/web`: **343 pruebas** en `master-dev`, todas verdes.
 
-## 3. Trabajo hecho en esta sesión (2026-10-12)
+## 3. Trabajo hecho en esta sesión (2026-10-13)
+
+- **Sin cambios de código.** Guía de preparación del VPS (AlmaLinux 10) para Adrian:
+  - Como root: Docker CE del repositorio oficial (`docker-ce.repo` de RHEL) con `docker-ce-rootless-extras fuse-overlayfs shadow-utils iptables`; `systemctl enable --now docker` (= Docker de **producción**); `xz zip which file jq tmux nodejs npm gh`.
+  - Usuario **`dev`** (desarrollo, agentes, Orca): **sin `sudo` y fuera del grupo `docker`** (ese grupo equivale a root), con `/etc/subuid`/`subgid` y `loginctl enable-linger dev`.
+  - Como `dev` (entrando por SSH, no con `su`): **Docker rootless** (`dockerd-rootless-setuptool.sh install`, `DOCKER_HOST=unix:///run/user/$(id -u)/docker.sock`, `systemctl --user enable --now docker`), uv, Flutter **3.47.6** en `~/flutter`, Codex CLI (prefijo npm `~/.local`), Claude Code (instalador nativo), `gh`.
+  - Separación comprobada: `dev` recibe «permission denied» en `/var/run/docker.sock`.
+- **Adrian confirmó (2026-10-13):** todo configurado y ambos Docker verificados. Su usuario administrador (sudo) se llama **`adriansm`**; el de desarrollo, **`dev`**. Borró los 4 worktrees ya fusionados.
+
+## 3b. Sesión anterior (2026-10-12)
 
 - **Reanudación:** STATUS coincidía con git. Pila de revisión levantada; **pasada al puerto 8090** (el 8080 es de Tomcat/Lupuna de Adrian).
 - **Respuestas a Adrian:** el formulario guarda en la BD (`POST /transactions`); tipo de cambio solo manual (proveedor en la Fase 6); transferencias: API sí, UI no (resuelto con T-519). Plan VPS (VPS1-C).
@@ -66,6 +75,7 @@ Backend: **1190 pruebas**, migraciones hasta **`0012`**. UI `apps/web`: **343 pr
 
 | Fecha | Decisión |
 |---|---|
+| 2026-10-13 | **VPS preparado** por Adrian con la separación propuesta: producción = Docker del sistema, solo `root`/`adriansm` (sudo); desarrollo = usuario `dev` sin sudo con Docker rootless. SELinux en `enforcing`. Datos de producción, cuando lleguen, en `/srv/monetae-prod` (root, `chmod 700`). Todos los puertos de compose siguen en `127.0.0.1` (el Docker del sistema puede saltarse firewalld). |
 | 2026-10-12 (tarde) | **Cierre** («Continuaremos en otro momento») con la pieza 11 de T-519 cerrándose en su rama. Antes, Adrian autorizó: «**si te quedas sin cuota con Codex, completa su trabajo solo por esta vez**» (excepción puntual; la regla sigue siendo que el código lo escribe Codex). Reportó el error «no se pudo conectar con el servidor» en Inicio y al crear transacción (corregido, `eeb622a`). TAM sigue sin respuesta. |
 | 2026-10-12 | «**OK todo A**» al plan T1-B: **Z1-A** (correcciones excluidas de ingresos/gastos, presupuestos e Inicio), **Z2-A** (el importador trae las «Correcciones de saldo» de Cashew como tales), **Z3**: por defecto ambas piernas con la misma fecha y hora, pero **la de llegada debe poder editarse** (transferencias diferidas). Por eso el par se enlaza con el `transfer_group_id` existente (pauta de Adrian: usar el campo de enlace si existe) en vez de emparejar por fecha. SPEC v0.7. T-604 lanzada. |
 | 2026-10-12 | Pautas de diseño v2 del formulario (capturas 20–25; 5 ajustes) delegadas a Codex: piezas 7–9 de T-515 (`docs/tasks/T-515-ui-transaction-form.md`, sección «Ajustes v2»). **M1 = sí** (fusionar T-515 al terminar los ajustes). **T-518 = A** (lanzada, Codex `gpt-6.1-sol` medium, rama `codex/T-518-date-goldens`). **T1 = B**: transferencia «a lo Cashew» = dos transacciones independientes gasto/ingreso con la categoría **«Corrección de saldo»** (no `/transfers`). Como la categoría no existe, el coordinador presenta el plan para añadirla y **espera confirmación** antes de implementarla; no se cambian los totales hasta su OK. |
@@ -123,14 +133,19 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
 **D12 · Historial de presupuestos y metas** = lista de transacciones filtrada. **A (recomendada):** filtros `budget_id`/`goal_id` en `GET /transactions` (contrato 0.8.0). B: etiquetas.
 
-**VPS1 · (decidido C)** pendiente de que Adrian contrate el VPS (6 vCPU, 12 GB; recomendado 100 GB NVMe; AlmaLinux 10). Plan en el punto VPS1 de la sesión 2026-10-12 (§4) y recomendación de **Docker rootless** para el usuario de desarrollo.
+**VPS1 · (decidido C; VPS ya preparado, §3)** falta:
+1. **Agentes en el VPS:** como `dev`, `gh auth login`, `codex login` y el inicio de sesión de Claude Code (si no los hizo Adrian); en Orca, añadir el host SSH con el usuario `dev` y activar «Allow this host's orca CLI to control Orca».
+2. **Repositorio en el VPS:** **A (recomendada): `git bundle`** de `master-dev` copiado por `scp` y clonado en `/home/dev/Monetae` (+ `reference/cashew-inicio-ui/` y el clon de Cashew `reference/Cashew/`, **nunca `reference/backups/`**). *Razón:* no obliga a publicar en GitHub antes de G7. B: resolver G7 y clonar desde GitHub (exige la auditoría y publicar todo `master-dev`).
+3. Verificar en el VPS: pruebas del backend (1190) y de la UI (343), `flutter build web` y la pila de revisión con Docker rootless (puertos ≥ 1024).
+4. **Cloudflare Tunnel + Access** (`cloudflared`; el token solo en el VPS) y corregir la IP real detrás del proxy (`ARCHITECTURE.md` §10.10) antes de exponer nada.
 
 **D7 · Para más adelante:** ADR-005 · orden de categorías · OAuth Google y proveedor de tipo de cambio (Fase 6; habilita el paso 4 «mercado» de la sugerencia y «Ver todos los tipos de cambio») · proxy del VPS (`ARCHITECTURE.md` §10.10) · zona horaria de la UI · radio de tarjetas 20 vs 15 dp · persistir los ajustes del menú ⋮ (hoy en memoria).
 
 ## 6. Siguiente paso concreto
 
 **Al reanudar:**
-1. Comprobar que la pila del 8090 sigue en marcha (`docker ps`); si no, relanzarla (§7). Dar a Adrian usuario y contraseña para **R4** (T-519) y el resto del formulario.
+0. **VPS (VPS1, §5):** pedir a Adrian la IP/host SSH y confirmar los inicios de sesión de los agentes como `dev`; llevar el repo (bundle, opción A) y verificarlo allá. Desde entonces, los workers pueden trabajar en el VPS (más disco y CPU que el WSL).
+1. Comprobar la pila del 8090 (`docker ps`; **al cerrar el 2026-10-13 estaba apagada**: Docker Desktop no está integrado con WSL, ver §8) y relanzarla (§7). Dar a Adrian usuario y contraseña para **R4** (T-519) y el resto del formulario.
 2. Con sus respuestas:
    - **TAM = A:** tarea Codex `gpt-6.1-sol` medium en `apps/web` (rama `codex/T-520-form-measures` desde `master-dev`): nombre de categoría 18 dp hasta 2 líneas (Cashew `addTransactionPage.dart` ~1973), filas de «Seleccionar Cuenta» nombre 18 dp y radio 15 (`radioItems.dart`); goldens regenerados; verificar con `dart analyze`, `flutter test`, build y captura.
    - **F2 = A:** tarea Codex high: abrir una transacción guardada en el formulario en modo editar (incluida la llegada de una «Corrección de saldo», sin cambiar su tipo ni categoría) y filtro por categoría en la lista de transacciones (conecta el botón «Corrección De Saldo» del diálogo ⓘ). Revisar el contrato antes de escribir la spec.
@@ -142,9 +157,9 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
 **Run de la Fase 5: `run_c2cebe1745b9`.** Completadas hoy: T-515 piezas 7–9 (`task_918cdbe06dbc`, `task_881bf03f5c44`, `task_2f7a58d49d4d`), T-518 `task_6e7d560172a3`, T-604 `task_1e5ea0e539ae`, T-519 piezas 10 `task_10487b71ff18` y 11 `task_0d6fceaff333` (el dispatch `ctx_b9b2114b4dbc` se detuvo con `worker-stop`; la terminó el coordinador). **Ningún worker vivo.** T-602 `task_752b79134036` sigue `blocked` por G7 (normal). El CLI no cierra Runs; no usar `orchestration reset`.
 
-**Worktrees:** `Monetae` → `main`; `Monetae-master-dev` → `master-dev`. **Ya fusionados (Adrian puede borrarlos, con sus ramas):** `Monetae-claude-T-515-form-transaccion`, `Monetae-codex-T-518-date-goldens`, `Monetae-codex-T-604-balance-correction`, `Monetae-codex-T-519-transfer-balance`.
+**Worktrees:** solo `Monetae` → `main` y `Monetae-master-dev` → `master-dev` (Adrian borró los 4 ya fusionados el 2026-10-13).
 
-**Pila de revisión `monetae-review`: queda EN MARCHA** en `http://localhost:8090` (API `8000`, BD `5433`, migración **`0012`**), sirviendo la compilación de **`master-dev` `1b559c8`** (Inicio + formulario completo + «Transferir saldo» + «Tipo De Cambio»). Usuario `revision-g7@example.test` (contraseña solo en el chat). Si se apaga WSL/Docker, relanzar desde `Monetae-master-dev`:
+**Pila de revisión `monetae-review`: APAGADA al cerrar el 2026-10-13** (Docker Desktop no accesible desde WSL; `/usr/bin/docker` apunta a `/mnt/wsl/docker-desktop`, que no existe). Cuando esté en marcha, en `http://localhost:8090` (API `8000`, BD `5433`, migración **`0012`**), sirviendo la compilación de **`master-dev` `1b559c8`** (Inicio + formulario completo + «Transferir saldo» + «Tipo De Cambio»). Usuario `revision-g7@example.test` (contraseña solo en el chat). Si se apaga WSL/Docker, relanzar desde `Monetae-master-dev`:
 ```bash
 export PATH="$HOME/flutter/bin:$HOME/.local/bin:$PATH"
 cp .env.example .env && sed -i 's/^MONETAE_COOKIE_SECURE=true$/MONETAE_COOKIE_SECURE=false/' .env
@@ -159,6 +174,7 @@ rm -f .env
 
 ## 8. Limitaciones y riesgos conocidos
 
+- **VPS:** el usuario `dev` no tiene sudo: los paquetes del sistema los instala Adrian (`adriansm`). Docker rootless no publica puertos < 1024. No mezclar nunca el Docker de producción (sistema) con el de desarrollo.
 - **Docker Desktop depende de la integración con WSL** (distro `AlmaLinux-9`): si `/usr/bin/docker` apunta a un destino inexistente, reactivar *Settings → Resources → WSL integration* y `wsl --shutdown`.
 - **Importación real:** el `apply` nunca se ha ejecutado (solo `--dry-run` sobre copias, cuadre exacto); espera a D9-A. El importador es **solo inserción**. Préstamos con principal supuesto (L1-A) aparecen `settled` hasta corregirlos con `adjustment` (el `PUT` del desembolso crea efectivo).
 - **UI:** Inicio sigue la skill `cashew-inicio-ui`; sus botones «añadir» y «Editar» y el detalle de categorías son TODO (F1). Formato de montos de Cashew («1.234,50 S/.») fijado a mano en `currency_format.dart`. El favicon sigue el modo del **sistema/navegador**, no el tema de la app. Las transacciones en moneda extranjera muestran solo el original (el contrato no trae el convertido).
@@ -168,7 +184,7 @@ rm -f .env
 - **Reportes:** sin proveedor de tipo de cambio (Fase 6), con moneda de reporte ≠ base todo cae en `unconverted_count` salvo tasas insertadas a mano en `exchange_rates`.
 - **Sin auditoría de seguridad externa** (Fase 7). La BD admite un `income` negativo por SQL directo (`ARCHITECTURE.md` §10.12). Límite de login detrás de proxy (§10.10). `501 google_login_not_available` fuera del contrato (§10.11).
 - **Zona horaria en la UI:** la presentación asume America/Lima (UTC−5 fijo) aunque `CurrentUser.timezone` admite cualquier zona IANA. Generalizarlo es una tarea aparte (decidido en T-513, 2026-10-10).
-- **Disco:** ≈ 2,1 GB libres en `/` (20 GB) al cerrar el 2026-10-12 (se liberan al borrar los 4 worktrees ya fusionados). Playwright + Chromium para capturas ocupa ≈ 600 MB (se instaló en el scratchpad de la sesión y se borró al cerrar). Flutter + Docker lo consumen rápido: borrar artefactos (`build/`, `.dart_tool/`, `.venv/`) de worktrees ya fusionados.
+- **Disco:** ≈ 2,6 GB libres en `/` (20 GB) al cerrar el 2026-10-13, ya sin los worktrees fusionados. El VPS (100 GB) aliviará esto. Playwright + Chromium para capturas ocupa ≈ 600 MB (se instaló en el scratchpad de la sesión y se borró al cerrar). Flutter + Docker lo consumen rápido: borrar artefactos (`build/`, `.dart_tool/`, `.venv/`) de worktrees ya fusionados.
 - **Repositorio público:** todo push se audita antes; los datos reales solo viven en `reference/backups/` (ignorado).
 - **Ajustes del menú ⋮** (pestaña Transferir, adjunto) solo en memoria: se pierden al recargar la página.
 - **Clon de Cashew anterior** a las capturas 20–25: varios controles nuevos (menú ⋮ (d), ✕/↓/ⓘ de «Transferir saldo») siguen las capturas, no el código.
@@ -177,7 +193,7 @@ rm -f .env
 ## 9. Cómo retomar (comandos exactos)
 
 ```bash
-# 0) Leer: este archivo, AGENTS.md, CLAUDE.md (§10), docs/SPEC.md v0.5, docs/ui/home-layout.md, ADRs y tareas. Luego:
+# 0) Leer: este archivo, AGENTS.md, CLAUDE.md (§10), docs/SPEC.md v0.7, docs/ui/home-layout.md, ADRs y tareas. Luego:
 cd /home/artur/propio2/Monetae-master-dev            # worktree de master-dev (main está en ../Monetae)
 git status -sb && git log --oneline -5 && git worktree list
 git -C ../Monetae log --oneline -1 && GIT_TERMINAL_PROMPT=0 git -c credential.helper= -c credential.helper='!gh auth git-credential' ls-remote origin refs/heads/main refs/heads/master-dev
@@ -200,7 +216,7 @@ cd ../.. && python3 -I scripts/check_openapi.py         # 90 paths, 133 operacio
 COMPOSE_PROJECT_NAME=monetae-check docker compose -f infra/docker-compose.yml down -v && rm -f .env
 
 # 3) UI
-cd apps/web && flutter pub get && dart analyze && flutter test && flutter build web --release   # esperado: 301 pruebas (master-dev)
+cd apps/web && flutter pub get && dart analyze && flutter test && flutter build web --release   # esperado: 343 pruebas (master-dev)
 grep -rE "drift|firebase|appStateSettings|package:budget/" lib || echo limpio
 
 # 4) Recorrido real web+API por nginx (sin navegador): apps/web/tool/e2e_session.sh (proyecto monetae-t503, puertos 5444/8001/8081)
