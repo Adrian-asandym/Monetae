@@ -8,12 +8,12 @@
 
 | | |
 |---|---|
-| **Última actualización** | **2026-10-13, noche (America/Lima)** — cierre de sesión («Continuaremos en otro momento»), tras preparar el VPS (sin cambios de código) |
-| **`origin`** | `origin/main` = `origin/master-dev` = **`8b8688e`** (hasta T-508, SPEC v0.5; G6). |
-| **`main`** | `8b8688e`. |
+| **Última actualización** | **2026-10-16 (America/Lima)** — G7 aprobado por Adrian: `master-dev` publicado en `main` y en `origin` |
+| **`origin`** | `origin/main` = `origin/master-dev` = **el commit de esta publicación (`git log -1`)**: todo hasta T-519 + T-604 (SPEC v0.7, contrato 0.7.0). |
+| **`main`** | = `master-dev` (fast-forward desde `8b8688e`). |
 | **`master-dev`** | **`9275d3a` + el commit de este cierre (`git log -1`)**: incluye T-515 (formulario piezas 1–9), T-518, T-604 (contrato **0.7.0**, migración **`0012`**), la corrección de DTO, **T-519** (pantalla «Transferir saldo» + hoja «Tipo De Cambio») y la skill `cashew-form-transaccion` actualizada. **Sin publicar.** |
 | **Rama de tarea** | Ninguna abierta: `codex/T-519-transfer-balance` = `21bfc63` ya fusionada (`1b559c8`). |
-| **Gate abierto** | **G7 `gate_ecde8d19a53a`** (publicar en `main`): sin resolver; al resolverlo se publica **todo `master-dev`** tras la auditoría. |
+| **Gate** | **G7 `gate_ecde8d19a53a` resuelto (aprobado 2026-10-16)** tras la auditoría. Ningún gate abierto. |
 | **SPEC / ARCHITECTURE / contrato** | SPEC **v0.7** · `docs/ARCHITECTURE.md` v0.3 · `docs/api/openapi.json` **0.7.0** (90 paths, 133 operaciones). |
 
 ## 2. Fase actual
@@ -75,6 +75,7 @@ Backend: **1190 pruebas**, migraciones hasta **`0012`**. UI `apps/web`: **343 pr
 
 | Fecha | Decisión |
 |---|---|
+| 2026-10-16 | **G7 = A** (publicar): «pases de master a main y luego hagas push al repo público», tras levantar otra vez la pila del 8090 para revisar la UI. **Repo al VPS = B**: Adrian clonará Monetae desde GitHub y Cashew (`github.com/jameskokoska/Cashew`) en `reference/Cashew` (ignorado por git), como `dev`; iniciará sesión con los agentes y conectará Orca por SSH desde su laptop. **`reference/` sigue haciendo falta**: el clon de Cashew para toda tarea de UI (TAM, F1, F2) y las capturas `reference/cashew-inicio-ui/` para comparar (no están en git: contienen datos reales; se copian por `scp`). `reference/backups/` nunca sale de su máquina. |
 | 2026-10-13 | **VPS preparado** por Adrian con la separación propuesta: producción = Docker del sistema, solo `root`/`adriansm` (sudo); desarrollo = usuario `dev` sin sudo con Docker rootless. SELinux en `enforcing`. Datos de producción, cuando lleguen, en `/srv/monetae-prod` (root, `chmod 700`). Todos los puertos de compose siguen en `127.0.0.1` (el Docker del sistema puede saltarse firewalld). |
 | 2026-10-12 (tarde) | **Cierre** («Continuaremos en otro momento») con la pieza 11 de T-519 cerrándose en su rama. Antes, Adrian autorizó: «**si te quedas sin cuota con Codex, completa su trabajo solo por esta vez**» (excepción puntual; la regla sigue siendo que el código lo escribe Codex). Reportó el error «no se pudo conectar con el servidor» en Inicio y al crear transacción (corregido, `eeb622a`). TAM sigue sin respuesta. |
 | 2026-10-12 | «**OK todo A**» al plan T1-B: **Z1-A** (correcciones excluidas de ingresos/gastos, presupuestos e Inicio), **Z2-A** (el importador trae las «Correcciones de saldo» de Cashew como tales), **Z3**: por defecto ambas piernas con la misma fecha y hora, pero **la de llegada debe poder editarse** (transferencias diferidas). Por eso el par se enlaza con el `transfer_group_id` existente (pauta de Adrian: usar el campo de enlace si existe) en vez de emparejar por fecha. SPEC v0.7. T-604 lanzada. |
@@ -123,9 +124,7 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
 **R4 · Revisión de T-519 por Adrian** (pantalla «Transferir saldo» + hoja «Tipo De Cambio») en `localhost:8090` (ya publicada). La primera transferencia entre monedas pide la tasa a mano; desde la segunda aparece sugerida.
 
-**R2 · Revisión visual de Inicio por Adrian** y **G7 · Publicar en `main`** (`gate_ecde8d19a53a`).
-- **A (recomendada tras R2/R4): aprobar merge y push** sin `--force` tras la auditoría. *Razón:* hay mucho trabajo verificado solo en local (T-509…T-604, 4 migraciones).
-- B: seguir esperando. *Contra:* sin copia remota.
+**R2 · Revisión visual de Inicio por Adrian:** pila del 8090 levantada el 2026-10-16 para ello. **G7 publicado** el mismo día.
 
 **F1 · Pantallas que faltan para conectar Inicio:** crear objetivo, crear presupuesto, detalle de categorías, reordenar Inicio. **A (recomendada):** una tarea Codex por pantalla. B: esperar.
 
@@ -135,7 +134,7 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
 **VPS1 · (decidido C; VPS ya preparado, §3)** falta:
 1. **Agentes en el VPS:** como `dev`, `gh auth login`, `codex login` y el inicio de sesión de Claude Code (si no los hizo Adrian); en Orca, añadir el host SSH con el usuario `dev` y activar «Allow this host's orca CLI to control Orca».
-2. **Repositorio en el VPS:** **A (recomendada): `git bundle`** de `master-dev` copiado por `scp` y clonado en `/home/dev/Monetae` (+ `reference/cashew-inicio-ui/` y el clon de Cashew `reference/Cashew/`, **nunca `reference/backups/`**). *Razón:* no obliga a publicar en GitHub antes de G7. B: resolver G7 y clonar desde GitHub (exige la auditoría y publicar todo `master-dev`).
+2. **Repositorio en el VPS: decidido B (2026-10-16)**, clon desde GitHub tras G7 (la opción A era `git bundle` de `master-dev` copiado por `scp` y clonado en `/home/dev/Monetae` (+ `reference/cashew-inicio-ui/` y el clon de Cashew `reference/Cashew/`, **nunca `reference/backups/`**)). Las capturas `reference/cashew-inicio-ui/` se copian por `scp` (no están en git).
 3. Verificar en el VPS: pruebas del backend (1190) y de la UI (343), `flutter build web` y la pila de revisión con Docker rootless (puertos ≥ 1024).
 4. **Cloudflare Tunnel + Access** (`cloudflared`; el token solo en el VPS) y corregir la IP real detrás del proxy (`ARCHITECTURE.md` §10.10) antes de exponer nada.
 
@@ -159,7 +158,7 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
 **Worktrees:** solo `Monetae` → `main` y `Monetae-master-dev` → `master-dev` (Adrian borró los 4 ya fusionados el 2026-10-13).
 
-**Pila de revisión `monetae-review`: APAGADA al cerrar el 2026-10-13** (Docker Desktop no accesible desde WSL; `/usr/bin/docker` apunta a `/mnt/wsl/docker-desktop`, que no existe). Cuando esté en marcha, en `http://localhost:8090` (API `8000`, BD `5433`, migración **`0012`**), sirviendo la compilación de **`master-dev` `1b559c8`** (Inicio + formulario completo + «Transferir saldo» + «Tipo De Cambio»). Usuario `revision-g7@example.test` (contraseña solo en el chat). Si se apaga WSL/Docker, relanzar desde `Monetae-master-dev`:
+**Pila de revisión `monetae-review`: EN MARCHA desde el 2026-10-16** en `http://localhost:8090` (API `8000`, BD `5433`, migración **`0012`**), sirviendo la compilación de **`master-dev` `1b559c8`** (Inicio + formulario completo + «Transferir saldo» + «Tipo De Cambio»). Usuario `revision-g7@example.test` (contraseña solo en el chat). Si se apaga WSL/Docker, relanzar desde `Monetae-master-dev`:
 ```bash
 export PATH="$HOME/flutter/bin:$HOME/.local/bin:$PATH"
 cp .env.example .env && sed -i 's/^MONETAE_COOKIE_SECURE=true$/MONETAE_COOKIE_SECURE=false/' .env
