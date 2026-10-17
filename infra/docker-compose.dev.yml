@@ -1,0 +1,10 @@
+# Development only: publishes the database and the API on the host loopback for tests and probes.
+# Use together with the base file, never in alfa/production:
+#   docker compose -f infra/docker-compose.yml -f infra/docker-compose.dev.yml up -d db
+services:
+  db:
+    ports:
+      - "127.0.0.1:${MONETAE_DB_PORT:-5433}:5432"
+  api:
+    ports:
+      - "127.0.0.1:${MONETAE_API_PORT:-8000}:8000"

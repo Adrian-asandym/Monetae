@@ -1,10 +1,12 @@
 name: monetae
+# Only the nginx entry point is published, and only on the host loopback (Caddy -> 127.0.0.1:8090).
+# db and api are reachable only through the internal Compose network. Development ports for the
+# test database and the API live in docker-compose.dev.yml.
 services:
   db:
     image: postgres:16
+    restart: unless-stopped
     env_file: ../.env
-    ports:
-      - "127.0.0.1:${MONETAE_DB_PORT:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -16,20 +18,41 @@ services:
     build:
       context: ../services/api
       dockerfile: Dockerfile
+    restart: unless-stopped
     env_file: ../.env
+    environment:
+      # Uvicorn honours X-Forwarded-Proto/For only from these peers (nginx on the Compose network).
+      # Never "*": with "*" Uvicorn takes the leftmost, client-controlled X-Forwarded-For entry.
+      FORWARDED_ALLOW_IPS: "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
     depends_on:
       db:
         condition: service_healthy
-    ports:
-      - "127.0.0.1:${MONETAE_API_PORT:-8000}:8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=3)"
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
   web:
     image: nginx:1.28.0-alpine
+    restart: unless-stopped
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     ports:
-      - "127.0.0.1:${MONETAE_WEB_PORT:-8080}:80"
+      - "127.0.0.1:${MONETAE_WEB_PORT:-8090}:80"
     volumes:
-      - ../apps/web/build/web:/usr/share/nginx/html:ro
-      - ./web/default.conf:/etc/nginx/conf.d/default.conf:ro
+      # :z lets SELinux (enforcing on the VPS) allow these host bind mounts.
+      - ../apps/web/build/web:/usr/share/nginx/html:ro,z
+      - ./web/default.conf:/etc/nginx/conf.d/default.conf:ro,z
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
 volumes:
   postgres_data:

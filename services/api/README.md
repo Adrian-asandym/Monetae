@@ -41,7 +41,8 @@ Desde la raíz del repositorio:
 ```bash
 cp .env.example .env
 # Los valores change-me son ejemplos falsos: reemplazarlos para un uso real.
-docker compose -f infra/docker-compose.yml up -d --build
+# docker-compose.dev.yml publica la BD y la API en 127.0.0.1 (solo desarrollo).
+docker compose -f infra/docker-compose.yml -f infra/docker-compose.dev.yml up -d --build
 docker compose -f infra/docker-compose.yml ps
 curl -i http://127.0.0.1:8000/api/v1/health
 curl -i http://127.0.0.1:8000/api/v1/no-existe
@@ -49,8 +50,9 @@ curl -i http://127.0.0.1:8000/api/v1/no-existe
 docker compose -f infra/docker-compose.yml down
 ```
 
-PostgreSQL 16 espera a estar saludable antes de arrancar la API. Los puertos 5433 (PostgreSQL) y
-8000 se publican solo en `127.0.0.1`. El contenedor API usa Python 3.12 slim, instala
+PostgreSQL 16 espera a estar saludable antes de arrancar la API. Con el override de desarrollo, los
+puertos 5433 (PostgreSQL) y 8000 se publican solo en `127.0.0.1`; sin él (alfa/producción) solo
+nginx publica `127.0.0.1:8090`. El contenedor API usa Python 3.12 slim, instala
 el lock congelado con `uv` y ejecuta Uvicorn como usuario no root. No se ejecutan
 migraciones hasta T-203. Para eliminar **los datos locales de prueba** al terminar:
 

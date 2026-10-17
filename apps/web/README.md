@@ -39,7 +39,7 @@ docker compose -f infra/docker-compose.yml up -d --build db api web
 docker compose -f infra/docker-compose.yml exec api python -m monetae.cli create-user --email sample@example.test
 ```
 
-Abrir `http://localhost:8080`. nginx oficial `1.28.0-alpine` sirve la compilación
+Abrir `http://localhost:8090` (`MONETAE_WEB_PORT`, por defecto 8090). nginx oficial `1.28.0-alpine` sirve la compilación
 del host mediante montaje de solo lectura y reenvía `/api/` a `api:8000`.
 `Host $http_host` conserva el puerto público para la comprobación de Origin;
 se incluyen `X-Forwarded-Host/Proto/Port/For` y `X-Real-IP`. CORS continúa vacío.
@@ -47,7 +47,9 @@ Solo se publican puertos en `127.0.0.1`. Por ejemplo, otro worker puede usar
 `COMPOSE_PROJECT_NAME=otro MONETAE_DB_PORT=5445 MONETAE_API_PORT=8002
 MONETAE_WEB_PORT=8082 docker compose -f infra/docker-compose.yml up -d`.
 Las cookies Secure siguen siendo el valor predeterminado; `false` es únicamente
-para el entorno HTTP local. HTTPS y proxy de producción quedan para el hito VPS.
+para el entorno HTTP local. Alfa (`https://alfa-monetae.asandym.dev`): TLS en Caddy del host,
+nginx solo HTTP, plantilla `.env.alfa.example` (ver `docs/ARCHITECTURE.md` §10.10). La BD y la
+API solo se publican con `-f infra/docker-compose.dev.yml`.
 
 `http://localhost:8080/#/demo` conserva la demostración con datos sintéticos y
 sus controles de tema/idioma/acento, sin iniciar el cliente HTTP. Desde la app
