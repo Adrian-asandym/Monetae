@@ -10,9 +10,8 @@
 - Solo `web` publica puerto en el host, y solo en loopback (`127.0.0.1:8090`). `db` y `api` no publican nada.
 - Los tres servicios están `healthy` con `restart: unless-stopped`.
 - Código desplegado: `main` (incluye T-701).
-- **Por confirmar:**
-  - el modo SSL/TLS efectivo de Cloudflare (la zona está en «Automático»; ver ADR-009 c);
-  - la IP real del cliente: ver la nota del paso 9.
+- Modo SSL/TLS de Cloudflare: **Full (strict)** (fijado por Adrian el 2026-10-16; ajuste de toda la zona `<DOMINIO_RAIZ>`).
+- **Por confirmar:** la IP real del cliente (ver la nota del paso 9).
 
 ## Entorno
 
@@ -174,6 +173,7 @@ Caddy conserva `Host` y manda `X-Forwarded-Proto: https`: nginx lo reenvía a la
 
 - **Login desde el navegador** en `https://<DOMINIO_ALFA>`: valida a la vez las cookies `Secure`, el CSRF y las cabeceras en toda la cadena.
 - `curl -I https://<DOMINIO_ALFA>` debe mostrar `server: cloudflare`.
+- En Cloudflare, el modo SSL/TLS debe estar en **Full (strict)** (nunca «Flexible»).
 
 ## Cómo desplegar una actualización
 

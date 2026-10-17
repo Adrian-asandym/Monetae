@@ -1,6 +1,6 @@
 # ADR-009 — Despliegue de la versión alfa en el VPS
 
-- **Estado:** **ACEPTADO** (a–d, f y g aplicados en el despliegue alfa; e es un **plan sin ejecutar** para beta). Decidido por Adrian el 2026-10-16.
+- **Estado:** **ACEPTADO** (a–d, f y g aplicados en el despliegue alfa; c confirmado en Full (strict); en d falta la corrección de la IP real; e es un **plan sin ejecutar** para beta). Decidido por Adrian el 2026-10-16.
 - **Fecha:** 2026-10-16 · **Autor:** Claude
 - **Relacionado:** `docs/deploy-alfa.md` (runbook), `docs/ARCHITECTURE.md` §9 y §10.10, tarea T-701 (preparación de Docker), `.env.alfa.example`, SPEC §3 (hito de despliegue).
 
@@ -32,7 +32,7 @@ En vez de exponer el 8090 directamente.
 ### c) Evitar el modo SSL «Flexible» de Cloudflare
 
 **Por qué:** «Flexible» manda HTTP sin cifrar al origen y provoca bucles de redirección con Caddy, que redirige HTTP a HTTPS.
-**Estado:** la zona está en «Automático» (Cloudflare elige el modo tras analizar el origen). **El modo efectivo está por confirmar.** Recomendación pendiente: fijarlo a mano en **Full (strict)**, porque el origen ya tiene un certificado válido de Let's Encrypt y así el comportamiento no depende del análisis automático. Es un ajuste de **toda la zona `<DOMINIO_RAIZ>`**, no solo de alfa.
+**Estado:** **fijado en Full (strict)** por Adrian el 2026-10-16 (antes la zona estaba en «Automático»). El origen tiene un certificado válido de Let's Encrypt. Es un ajuste de **toda la zona `<DOMINIO_RAIZ>`**, no solo de alfa.
 
 ### d) Caddy con `trusted_proxies` = rangos de IP de Cloudflare
 
@@ -62,4 +62,4 @@ Los datos están en el volumen con nombre `postgres_data`, no en `<RUTA_PRODUCCI
 
 - Solo el servicio `web` publica puerto, y solo `127.0.0.1:8090`. `db` y `api` no publican nada; en desarrollo se publican con `infra/docker-compose.dev.yml`.
 - Desplegar otra instancia exige otra carpeta, otro `.env`, otro puerto en loopback, otro proyecto de Compose (y con él otro volumen) y otro bloque en el Caddyfile.
-- Pendientes: confirmar el modo SSL (c), confirmar la IP real (d), estrategia de beta (e) y respaldos (g). Están listados en `docs/STATUS.md` §5.
+- Pendientes: confirmar la IP real (d), estrategia de beta (e) y respaldos (g). Están listados en `docs/STATUS.md` §5.

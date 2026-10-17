@@ -9,12 +9,12 @@
 
 | | |
 |---|---|
-| **Última actualización** | **2026-10-16, noche (America/Lima)** — trabajo ya en el **VPS**; **alfa desplegada** por Adrian; documentación del despliegue (T-702) |
+| **Última actualización** | **2026-10-16, cierre de la noche (America/Lima)** — «Continuaremos en otro momento». Trabajo en el **VPS**; **alfa desplegada**; SSL de Cloudflare en **Full (strict)**; T-702 (documentación) fusionada en `master-dev`, **sin publicar** |
 | **`origin`** | `origin/main` = `origin/master-dev` = **`9e1b6f4`** (Merge T-701), publicado con OK de Adrian el 2026-10-16. |
 | **`main`** | = `9e1b6f4`. Es lo que corre alfa. |
-| **`master-dev`** | `9e1b6f4` + **T-702** (solo documentación) cuando se fusione; ver `git log -1`. **T-702 sin publicar** (espera OK de Adrian). |
-| **Rama de tarea** | `claude/T-702-docs-alfa-deploy` (esta documentación). `claude/T-701-alfa-reverse-proxy` ya fusionada. |
-| **Gate** | Ninguno abierto. G7 resuelto. (El Orca del VPS es un runtime nuevo: los gates y Runs del WSL no existen aquí.) |
+| **`master-dev`** | `9e1b6f4` + merge de **T-702** + commit de este cierre (`git log -1`). Solo documentación. **Sin publicar en `main` ni en `origin`** (propuesta de gate, §7). |
+| **Rama de tarea** | `claude/T-702-docs-alfa-deploy` (`3d8c9a4`, + ajuste de cierre) **fusionada** en `master-dev`. `claude/T-701-alfa-reverse-proxy` fusionada. |
+| **Gate** | **G8** (publicar T-702 en `main`): propuesta **sin resolver** (§7). El Orca del VPS es un runtime nuevo: los Runs y gates del WSL no existen aquí. |
 | **SPEC / ARCHITECTURE / contrato** | SPEC **v0.7** · `docs/ARCHITECTURE.md` v0.3 (§9 y §10.10 actualizados) · `docs/api/openapi.json` **0.7.0** (90 paths, 133 operaciones). ADR-009 nuevo. |
 
 ## 2. Fase actual
@@ -22,7 +22,7 @@
 | Estado | Contenido |
 |---|---|
 | ✅ **Completo** | Fases 0–4. **Fase 5:** T-501…T-515, T-518, T-519. **Adelantado de la Fase 6:** T-601…T-604. **Hito alfa:** T-701 (Docker listo detrás de Caddy) y **alfa desplegada** en `https://<DOMINIO_ALFA>` con login verificado de extremo a extremo (Adrian, 2026-10-16). Desarrollo trasladado al VPS (VPS1-C). |
-| 🔄 **En curso** | T-702 (esta documentación) · cierre de pendientes del despliegue alfa (§5: modo SSL, IP real, respaldos). Ningún worker vivo. |
+| 🔄 **En curso** | Pendientes del despliegue alfa (§5: IP real del cliente, respaldos). Ningún worker vivo. |
 | ⏳ **Pendiente** | **R4** · **TAM** · **F2** · **D12** (plan de reanudación sin OK de Adrian) · R2 · F1 · beta (plan) · resto de la Fase 5 · Fase 6 · Fase 7 · importación real (D9-A; antes, respaldos). |
 
 Backend: **1190 pruebas**, migraciones hasta **`0012`**. UI `apps/web`: **343 pruebas**. Ambas **verificadas en el VPS** el 2026-10-16 (Docker rootless).
@@ -31,7 +31,7 @@ Backend: **1190 pruebas**, migraciones hasta **`0012`**. UI `apps/web`: **343 pr
 
 - **Reanudación en el VPS** (Comando 2), verificado por el coordinador: `main` = `master-dev` = `origin` = `c8c8e42`; backend (ruff, mypy, **1190**, alembic `0012`, `check_openapi`) y UI (`dart analyze`, **343**, `flutter build web`) en verde con Docker rootless; Codex con sesión y los mismos modelos; `gh` autenticado; Orca responde. Diferencias con el STATUS anterior:
   - el Run `run_c2cebe1745b9` **no existe** en el Orca del VPS (runtime nuevo; solo `run_legacy_local`, de solo lectura) → crear un Run nuevo al orquestar;
-  - Orca creó un worktree propio (`…/orca/workspaces/Monetae/cuskeel`, rama `Adrian-asandym/cuskeel`, sin cambios);
+  - Orca había creado un worktree propio (`…/orca/workspaces/Monetae/cuskeel`, sin cambios); al cierre ya no aparece en `git worktree list`;
   - **faltan las capturas `reference/cashew-inicio-ui/`** (se copian por `scp`); el clon de Cashew sí está y es **reciente** (puede traer los controles ✕/↓/ⓘ que el clon viejo no tenía).
 - **T-701** (Adrian pidió dejar Docker listo para Cloudflare → Caddy → `127.0.0.1:8090`; lo hizo el coordinador con su autorización, «si no está compleja solo hazla tú»): ver `docs/deploy-alfa.md` §«Cambios…». Hallazgos corregidos:
   - el login daba **403 de CSRF detrás de Caddy**: nginx informaba `http` y la API comparaba el Origin `https` con `http`;
@@ -90,6 +90,7 @@ Backend: **1190 pruebas**, migraciones hasta **`0012`**. UI `apps/web`: **343 pr
 
 | Fecha | Decisión |
 |---|---|
+| 2026-10-16 (cierre) | **SSL/TLS de Cloudflare = Full (strict)** (ALFA-SSL resuelto; ADR-009 c). **Cierre** («Continuaremos en otro momento») sin responder a: OK de T-702 para `main` (G8), ALFA-IP, plan de reanudación (R4, TAM, F2, D12). |
 | 2026-10-16 (noche) | **Documentar el despliegue alfa (T-702)** sin datos reales (solo marcadores), en rama de tarea, sin push a `main` sin su OK. Registra las decisiones de **ADR-009**: (a) subdominio de un nivel; (b) Caddy en el host; (c) evitar «Flexible» (zona hoy en «Automático», modo efectivo por confirmar; recomendado Full (strict)); (d) `trusted_proxies` de Cloudflare en Caddy; (e) un solo repo, alfa desde `main`, beta como instancia aparte fijada a un tag (**plan**); (f) producción separada de desarrollo, 8090 = alfa, revisión en 8091; (g) datos en el volumen `postgres_data`, respaldos pendientes. |
 | 2026-10-16 (noche) | «**OK: revisa el historial, pasa master-dev a main y haz push a GitHub**» → `main` = `origin` = `9e1b6f4` (T-701). |
 | 2026-10-16 (noche) | Pide dejar la app Docker lista para Cloudflare → Caddy (host) → `127.0.0.1:8090`, sin tocar Caddy, DNS ni firewall; autoriza al coordinador a hacerlo él si no es complejo (T-701). Él despliega producción. |
@@ -150,10 +151,6 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
 **D12 · Historial de presupuestos y metas** = lista de transacciones filtrada. **A (recomendada):** filtros `budget_id`/`goal_id` en `GET /transactions` (contrato 0.8.0). B: etiquetas.
 
-**ALFA-SSL · Modo SSL/TLS de Cloudflare** (ADR-009 c). La zona está en «Automático»; **el modo efectivo está por confirmar**.
-- **A (recomendada): fijarlo a mano en Full (strict).** *Razón:* el origen ya tiene un certificado válido de Let's Encrypt y así no depende del análisis automático. Afecta a **toda la zona `<DOMINIO_RAIZ>`**.
-- B: dejar «Automático» tras confirmar en el panel qué modo eligió (nunca «Flexible»).
-
 **ALFA-IP · IP real del cliente** (ADR-009 d). Con solo `trusted_proxies`, la IP registrada sería la del borde de Cloudflare (probado en local).
 - **A (recomendada):** añadir `client_ip_headers CF-Connecting-IP` y `header_up X-Forwarded-For {client_ip}` en el Caddyfile (`docs/deploy-alfa.md` paso 9) y confirmar con `login_attempts.ip`. *Razón:* sin cambios de código y no falseable (solo se acepta de los rangos de Cloudflare).
 - B: cambiar nginx para confiar en los rangos de Cloudflare (lista que cambia; peor).
@@ -170,7 +167,7 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
 ## 6. Siguiente paso concreto
 
-1. **Adrian:** OK a T-702 para fusionarla y publicarla (solo documentación); aplicar **ALFA-IP** y **ALFA-SSL** en Caddy/Cloudflare (§5) y confirmarlo.
+1. **Adrian:** resolver **G8** (publicar T-702 en `main`, solo documentación) y aplicar **ALFA-IP** en el Caddyfile (§5), confirmándolo con `login_attempts.ip`.
 2. **Con su OK al plan de reanudación** (§5), en el VPS:
    - crear un **Run nuevo** (`orca orchestration run-create --objective …`) y comprobar que `worker-start` funciona desde el Orca del VPS (primera vez; si falla, Plan B de `CLAUDE.md` §3.4);
    - **T-520 TAM = A:** Codex `gpt-6.1-sol` medium, rama `codex/T-520-form-measures` desde `master-dev`: nombre de categoría 18 dp hasta 2 líneas (Cashew `addTransactionPage.dart` ~1973), filas de «Seleccionar Cuenta» nombre 18 dp y radio 15 (`radioItems.dart`); goldens regenerados;
@@ -181,13 +178,12 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
 ## 7. Estado del Run, de los worktrees y de los agentes abiertos
 
-**Orca (VPS):** runtime nuevo y sin ventana (`orca status` ok, capacidad `orchestration.contract.v1`). **Sin Run activo**: el de la Fase 5 (`run_c2cebe1745b9`) vivía en el Orca del WSL y aquí no existe; hay que crear uno nuevo. Ningún worker vivo.
+**Orca (VPS):** runtime nuevo y sin ventana (`orca status` ok, capacidad `orchestration.contract.v1`). El Run de la Fase 5 (`run_c2cebe1745b9`) vivía en el Orca del WSL y aquí no existe. **Run nuevo: `run_05f27056ac71`** («VPS: alfa desplegada; Fase 5 (TAM, D12, F2) y pendientes de alfa»), creado al cerrar solo para la propuesta de gate: tarea `task_ce3e95ad4fd1` (marcador, no es trabajo de worker) con **G8 `gate_4e96028542c0` abierto** (publicar T-702 en `main`). Al abrir sesión: `orca orchestration run-use --id run_05f27056ac71`. Ningún worker lanzado ni vivo; `worker-start` aún no se ha probado desde el VPS.
 
 **Worktrees en el VPS** (en el home de `<USUARIO_DEV>`, carpeta `propio2/`):
 - `Monetae` → `main` · `Monetae-master-dev` → `master-dev`;
 - `Monetae-T-701` → `claude/T-701-alfa-reverse-proxy` (**fusionada**: Adrian puede borrarla);
-- `Monetae-T-702` → `claude/T-702-docs-alfa-deploy` (esta tarea);
-- `…/orca/workspaces/Monetae/cuskeel` → `Adrian-asandym/cuskeel` (creado por Orca, sin cambios).
+- `Monetae-T-702` → `claude/T-702-docs-alfa-deploy` (**fusionada**: Adrian puede borrarla).
 
 **Producción alfa:** en `<RUTA_PRODUCCION>`, Docker del sistema, controlada por `<USUARIO_ADMIN>`; `main` `9e1b6f4`; `127.0.0.1:8090`. Los agentes **no** tienen acceso.
 
@@ -232,7 +228,8 @@ git -C ../Monetae log --oneline -1 && GIT_TERMINAL_PROMPT=0 git -c credential.he
 # 1) Herramientas (en el VPS el Python del sistema es 3.12; el proyecto usa el de uv)
 export PATH="$HOME/.local/bin:$HOME/flutter/bin:$PATH"
 uv --version && docker compose version && flutter --version | head -1
-orca status --json | head -5 && orca orchestration run-list --json   # crear un Run nuevo si no hay ninguno activo
+orca status --json | head -5 && orca orchestration run-use --id run_05f27056ac71
+orca orchestration gate-list --json | grep -A3 gate_4e96028542c0     # G8 pendiente
 
 
 # 2) Backend (≈ 8 min; BD propia)
