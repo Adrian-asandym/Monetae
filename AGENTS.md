@@ -105,7 +105,9 @@ uv run uvicorn monetae.api.main:app --reload   # (*Fase 2)
 
 **Stack local** (*Fase 2)
 ```bash
-docker compose -f infra/docker-compose.yml up -d
+docker compose -f infra/docker-compose.yml up -d            # solo publica web en 127.0.0.1:8090
+# Pruebas/desarrollo (BD en 127.0.0.1:5433 y API en 127.0.0.1:8000):
+docker compose -f infra/docker-compose.yml -f infra/docker-compose.dev.yml up -d db
 ```
 
 **UI (`apps/web`)** (*Fase 5)

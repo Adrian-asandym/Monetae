@@ -162,7 +162,7 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 ```bash
 export PATH="$HOME/flutter/bin:$HOME/.local/bin:$PATH"
 cp .env.example .env && sed -i 's/^MONETAE_COOKIE_SECURE=true$/MONETAE_COOKIE_SECURE=false/' .env
-MONETAE_WEB_PORT=8090 COMPOSE_PROJECT_NAME=monetae-review docker compose -f infra/docker-compose.yml up -d --build db api web   # el puerto va como variable: compose no lee el .env de la raíz
+MONETAE_WEB_PORT=8091 COMPOSE_PROJECT_NAME=monetae-review docker compose -f infra/docker-compose.yml up -d --build db api web   # en el VPS el 8090 es de alfa (T-701): revisión en 8091; compose no lee el .env de la raíz
 MONETAE_WEB_PORT=8090 COMPOSE_PROJECT_NAME=monetae-review docker compose -f infra/docker-compose.yml exec -T api alembic upgrade head
 rm -f .env
 # bajar: MONETAE_WEB_PORT=8090 COMPOSE_PROJECT_NAME=monetae-review docker compose -f infra/docker-compose.yml down
@@ -204,7 +204,7 @@ orca status --json | head -5 && orca orchestration run-use --id run_c2cebe1745b9
 orca orchestration gate-list --json | grep -A3 gate_ecde8d19a53a     # G7 pendiente
 
 # 2) Backend (≈ 8 min; BD propia)
-cp .env.example .env && MONETAE_DB_PORT=5433 COMPOSE_PROJECT_NAME=monetae-check docker compose -f infra/docker-compose.yml up -d db
+cp .env.example .env && MONETAE_DB_PORT=5433 COMPOSE_PROJECT_NAME=monetae-check docker compose -f infra/docker-compose.yml -f infra/docker-compose.dev.yml up -d db   # el override publica la BD (T-701)
 cd services/api
 export MONETAE_TEST_DATABASE_URL=postgresql+psycopg://monetae:change-me@127.0.0.1:5433/postgres MONETAE_REQUIRE_DB=1
 export MONETAE_DATABASE_URL=$MONETAE_TEST_DATABASE_URL
