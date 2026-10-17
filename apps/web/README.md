@@ -47,8 +47,8 @@ Solo se publican puertos en `127.0.0.1`. Por ejemplo, otro worker puede usar
 `COMPOSE_PROJECT_NAME=otro MONETAE_DB_PORT=5445 MONETAE_API_PORT=8002
 MONETAE_WEB_PORT=8082 docker compose -f infra/docker-compose.yml up -d`.
 Las cookies Secure siguen siendo el valor predeterminado; `false` es únicamente
-para el entorno HTTP local. Alfa (`https://alfa-monetae.asandym.dev`): TLS en Caddy del host,
-nginx solo HTTP, plantilla `.env.alfa.example` (ver `docs/ARCHITECTURE.md` §10.10). La BD y la
+para el entorno HTTP local. Alfa (`https://<DOMINIO_ALFA>`, valor real en `.env.alfa.example`): TLS en Caddy del host,
+nginx solo HTTP, plantilla `.env.alfa.example` (ver `docs/deploy-alfa.md` y `docs/ARCHITECTURE.md` §10.10). La BD y la
 API solo se publican con `-f infra/docker-compose.dev.yml`.
 
 `http://localhost:8080/#/demo` conserva la demostración con datos sintéticos y
