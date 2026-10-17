@@ -1,39 +1,54 @@
 # STATUS — Monetae (documento de traspaso)
 
-> **Lo primero que debe leer cualquier agente.** Coordinador: Claude (Sonnet 5.5) · Dueño del producto: Adrian.
+> **Lo primero que debe leer cualquier agente.** Coordinador: Claude (Opus 5.5) · Dueño del producto: Adrian.
 > Después de este archivo: `AGENTS.md` (contrato común), `CLAUDE.md` (rol del coordinador y **§10 Protocolo de sesión**) y `docs/SPEC.md` (qué se construye).
 > Para reanudar: Adrian dice «Continuemos con el trabajo» y se aplica el Comando 2 de `CLAUDE.md` §10.
+> **Repositorio público:** en los documentos solo marcadores (`<DOMINIO_ALFA>`, `<DOMINIO_RAIZ>`, `<RUTA_PRODUCCION>`, `<USUARIO_ADMIN>`, `<USUARIO_DEV>`, `<IP_VPS>`); nunca dominios, IPs, usuarios del servidor, correos ni secretos reales.
 
 ## 1. Fecha, hora y hashes
 
 | | |
 |---|---|
-| **Última actualización** | **2026-10-16 (America/Lima)** — G7 aprobado por Adrian: `master-dev` publicado en `main` y en `origin` |
-| **`origin`** | `origin/main` = `origin/master-dev` = **el commit de esta publicación (`git log -1`)**: todo hasta T-519 + T-604 (SPEC v0.7, contrato 0.7.0). |
-| **`main`** | = `master-dev` (fast-forward desde `8b8688e`). |
-| **`master-dev`** | **`9275d3a` + el commit de este cierre (`git log -1`)**: incluye T-515 (formulario piezas 1–9), T-518, T-604 (contrato **0.7.0**, migración **`0012`**), la corrección de DTO, **T-519** (pantalla «Transferir saldo» + hoja «Tipo De Cambio») y la skill `cashew-form-transaccion` actualizada. **Sin publicar.** |
-| **Rama de tarea** | Ninguna abierta: `codex/T-519-transfer-balance` = `21bfc63` ya fusionada (`1b559c8`). |
-| **Gate** | **G7 `gate_ecde8d19a53a` resuelto (aprobado 2026-10-16)** tras la auditoría. Ningún gate abierto. |
-| **SPEC / ARCHITECTURE / contrato** | SPEC **v0.7** · `docs/ARCHITECTURE.md` v0.3 · `docs/api/openapi.json` **0.7.0** (90 paths, 133 operaciones). |
+| **Última actualización** | **2026-10-16, cierre de la noche (America/Lima)** — «Continuaremos en otro momento». Trabajo en el **VPS**; **alfa desplegada**; SSL de Cloudflare en **Full (strict)**; T-702 (documentación) fusionada en `master-dev`, **sin publicar** |
+| **`origin`** | `origin/main` = `origin/master-dev` = **`9e1b6f4`** (Merge T-701), publicado con OK de Adrian el 2026-10-16. |
+| **`main`** | = `9e1b6f4`. Es lo que corre alfa. |
+| **`master-dev`** | `9e1b6f4` + merge de **T-702** + commit de este cierre (`git log -1`). Solo documentación. **Sin publicar en `main` ni en `origin`** (propuesta de gate, §7). |
+| **Rama de tarea** | `claude/T-702-docs-alfa-deploy` (`3d8c9a4`, + ajuste de cierre) **fusionada** en `master-dev`. `claude/T-701-alfa-reverse-proxy` fusionada. |
+| **Gate** | **G8** (publicar T-702 en `main`): propuesta **sin resolver** (§7). El Orca del VPS es un runtime nuevo: los Runs y gates del WSL no existen aquí. |
+| **SPEC / ARCHITECTURE / contrato** | SPEC **v0.7** · `docs/ARCHITECTURE.md` v0.3 (§9 y §10.10 actualizados) · `docs/api/openapi.json` **0.7.0** (90 paths, 133 operaciones). ADR-009 nuevo. |
 
 ## 2. Fase actual
 
 | Estado | Contenido |
 |---|---|
-| ✅ **Completo** | Fases 0–4. **Fase 5:** T-501…T-515 (formulario de transacción fiel a Cashew, piezas 1–9 incluidos los ajustes v2 1–3 de Adrian), T-518 (goldens sin fecha). **Adelantado de la Fase 6:** T-601/T-602/T-603 y **T-604** («Corrección de saldo»: categorías de sistema, `POST/GET /balance-corrections`, exclusión de totales, importador). |
-| 🔄 **En curso** | **VPS1-C:** VPS contratado y preparado por Adrian (Docker del sistema + Docker rootless del usuario `dev`, ambos verificados). Faltan los agentes y el repositorio en el VPS. Ningún worker vivo. |
-| ⏳ **Pendiente** | **R4** revisión de T-519 por Adrian · **TAM** (medidas de ajustes 1–2) · R2/G7 · F1 · D12 · VPS1-C (agentes + repo en el VPS, luego Cloudflare) · resto de la Fase 5 · Fase 6 · Fase 7 · importación real (D9-A). |
+| ✅ **Completo** | Fases 0–4. **Fase 5:** T-501…T-515, T-518, T-519. **Adelantado de la Fase 6:** T-601…T-604. **Hito alfa:** T-701 (Docker listo detrás de Caddy) y **alfa desplegada** en `https://<DOMINIO_ALFA>` con login verificado de extremo a extremo (Adrian, 2026-10-16). Desarrollo trasladado al VPS (VPS1-C). |
+| 🔄 **En curso** | Pendientes del despliegue alfa (§5: IP real del cliente, respaldos). Ningún worker vivo. |
+| ⏳ **Pendiente** | **R4** · **TAM** · **F2** · **D12** (plan de reanudación sin OK de Adrian) · R2 · F1 · beta (plan) · resto de la Fase 5 · Fase 6 · Fase 7 · importación real (D9-A; antes, respaldos). |
 
-Backend: **1190 pruebas**, migraciones hasta **`0012`**. UI `apps/web`: **343 pruebas** en `master-dev`, todas verdes.
+Backend: **1190 pruebas**, migraciones hasta **`0012`**. UI `apps/web`: **343 pruebas**. Ambas **verificadas en el VPS** el 2026-10-16 (Docker rootless).
 
-## 3. Trabajo hecho en esta sesión (2026-10-13)
+## 3. Trabajo hecho en esta sesión (2026-10-16, en el VPS)
+
+- **Reanudación en el VPS** (Comando 2), verificado por el coordinador: `main` = `master-dev` = `origin` = `c8c8e42`; backend (ruff, mypy, **1190**, alembic `0012`, `check_openapi`) y UI (`dart analyze`, **343**, `flutter build web`) en verde con Docker rootless; Codex con sesión y los mismos modelos; `gh` autenticado; Orca responde. Diferencias con el STATUS anterior:
+  - el Run `run_c2cebe1745b9` **no existe** en el Orca del VPS (runtime nuevo; solo `run_legacy_local`, de solo lectura) → crear un Run nuevo al orquestar;
+  - Orca había creado un worktree propio (`…/orca/workspaces/Monetae/cuskeel`, sin cambios); al cierre ya no aparece en `git worktree list`;
+  - **faltan las capturas `reference/cashew-inicio-ui/`** (se copian por `scp`); el clon de Cashew sí está y es **reciente** (puede traer los controles ✕/↓/ⓘ que el clon viejo no tenía).
+- **T-701** (Adrian pidió dejar Docker listo para Cloudflare → Caddy → `127.0.0.1:8090`; lo hizo el coordinador con su autorización, «si no está compleja solo hazla tú»): ver `docs/deploy-alfa.md` §«Cambios…». Hallazgos corregidos:
+  - el login daba **403 de CSRF detrás de Caddy**: nginx informaba `http` y la API comparaba el Origin `https` con `http`;
+  - la imagen de la API no arrancaba con un clon hecho con umask 077 (`Permission denied: pyproject.toml`).
+  Verificado: los 3 servicios `healthy`, `127.0.0.1:8090` (nunca `0.0.0.0`), login con cabeceras de Caddy simuladas 200, Origin ajeno 403, sonda e2e existente en verde. Fusionada (`9e1b6f4`) y **publicada en `main`** con OK de Adrian.
+- **Alfa desplegada por Adrian** en producción (`<RUTA_PRODUCCION>`, Docker del sistema) siguiendo lo que ahora es `docs/deploy-alfa.md`; login verificado de extremo a extremo.
+- **T-702 (esta documentación):** ADR-009, `docs/deploy-alfa.md`, ARCHITECTURE §9/§10.10, AGENTS §4, tabla de ADR en CLAUDE.md, README de la web; usuarios del servidor de este archivo cambiados por marcadores.
+- **Hallazgo (probado en local con Caddy v2.11.7):** `trusted_proxies` solo **no basta** para la IP real: Caddy añade al final la IP del borde de Cloudflare y nginx toma esa. Corrección propuesta en `docs/deploy-alfa.md` paso 9 (pendiente de aplicar; §5).
+
+## 3b. Sesión anterior (2026-10-13)
 
 - **Sin cambios de código.** Guía de preparación del VPS (AlmaLinux 10) para Adrian:
   - Como root: Docker CE del repositorio oficial (`docker-ce.repo` de RHEL) con `docker-ce-rootless-extras fuse-overlayfs shadow-utils iptables`; `systemctl enable --now docker` (= Docker de **producción**); `xz zip which file jq tmux nodejs npm gh`.
-  - Usuario **`dev`** (desarrollo, agentes, Orca): **sin `sudo` y fuera del grupo `docker`** (ese grupo equivale a root), con `/etc/subuid`/`subgid` y `loginctl enable-linger dev`.
-  - Como `dev` (entrando por SSH, no con `su`): **Docker rootless** (`dockerd-rootless-setuptool.sh install`, `DOCKER_HOST=unix:///run/user/$(id -u)/docker.sock`, `systemctl --user enable --now docker`), uv, Flutter **3.47.6** en `~/flutter`, Codex CLI (prefijo npm `~/.local`), Claude Code (instalador nativo), `gh`.
-  - Separación comprobada: `dev` recibe «permission denied» en `/var/run/docker.sock`.
-- **Adrian confirmó (2026-10-13):** todo configurado y ambos Docker verificados. Su usuario administrador (sudo) se llama **`adriansm`**; el de desarrollo, **`dev`**. Borró los 4 worktrees ya fusionados.
+  - Usuario **`<USUARIO_DEV>`** (desarrollo, agentes, Orca): **sin `sudo` y fuera del grupo `docker`** (ese grupo equivale a root), con `/etc/subuid`/`subgid` y `loginctl enable-linger <USUARIO_DEV>`.
+  - Como `<USUARIO_DEV>` (entrando por SSH, no con `su`): **Docker rootless** (`dockerd-rootless-setuptool.sh install`, `DOCKER_HOST=unix:///run/user/$(id -u)/docker.sock`, `systemctl --user enable --now docker`), uv, Flutter **3.47.6** en `~/flutter`, Codex CLI (prefijo npm `~/.local`), Claude Code (instalador nativo), `gh`.
+  - Separación comprobada: `<USUARIO_DEV>` recibe «permission denied» en `/var/run/docker.sock`.
+- **Adrian confirmó (2026-10-13):** todo configurado y ambos Docker verificados (usuario administrador con sudo = `<USUARIO_ADMIN>`; desarrollo = `<USUARIO_DEV>`). Borró los 4 worktrees ya fusionados.
 
 ## 3b. Sesión anterior (2026-10-12)
 
@@ -75,8 +90,12 @@ Backend: **1190 pruebas**, migraciones hasta **`0012`**. UI `apps/web`: **343 pr
 
 | Fecha | Decisión |
 |---|---|
-| 2026-10-16 | **G7 = A** (publicar): «pases de master a main y luego hagas push al repo público», tras levantar otra vez la pila del 8090 para revisar la UI. **Repo al VPS = B**: Adrian clonará Monetae desde GitHub y Cashew (`github.com/jameskokoska/Cashew`) en `reference/Cashew` (ignorado por git), como `dev`; iniciará sesión con los agentes y conectará Orca por SSH desde su laptop. **`reference/` sigue haciendo falta**: el clon de Cashew para toda tarea de UI (TAM, F1, F2) y las capturas `reference/cashew-inicio-ui/` para comparar (no están en git: contienen datos reales; se copian por `scp`). `reference/backups/` nunca sale de su máquina. |
-| 2026-10-13 | **VPS preparado** por Adrian con la separación propuesta: producción = Docker del sistema, solo `root`/`adriansm` (sudo); desarrollo = usuario `dev` sin sudo con Docker rootless. SELinux en `enforcing`. Datos de producción, cuando lleguen, en `/srv/monetae-prod` (root, `chmod 700`). Todos los puertos de compose siguen en `127.0.0.1` (el Docker del sistema puede saltarse firewalld). |
+| 2026-10-16 (cierre) | **SSL/TLS de Cloudflare = Full (strict)** (ALFA-SSL resuelto; ADR-009 c). **Cierre** («Continuaremos en otro momento») sin responder a: OK de T-702 para `main` (G8), ALFA-IP, plan de reanudación (R4, TAM, F2, D12). |
+| 2026-10-16 (noche) | **Documentar el despliegue alfa (T-702)** sin datos reales (solo marcadores), en rama de tarea, sin push a `main` sin su OK. Registra las decisiones de **ADR-009**: (a) subdominio de un nivel; (b) Caddy en el host; (c) evitar «Flexible» (zona hoy en «Automático», modo efectivo por confirmar; recomendado Full (strict)); (d) `trusted_proxies` de Cloudflare en Caddy; (e) un solo repo, alfa desde `main`, beta como instancia aparte fijada a un tag (**plan**); (f) producción separada de desarrollo, 8090 = alfa, revisión en 8091; (g) datos en el volumen `postgres_data`, respaldos pendientes. |
+| 2026-10-16 (noche) | «**OK: revisa el historial, pasa master-dev a main y haz push a GitHub**» → `main` = `origin` = `9e1b6f4` (T-701). |
+| 2026-10-16 (noche) | Pide dejar la app Docker lista para Cloudflare → Caddy (host) → `127.0.0.1:8090`, sin tocar Caddy, DNS ni firewall; autoriza al coordinador a hacerlo él si no es complejo (T-701). Él despliega producción. |
+| 2026-10-16 | **G7 = A** (publicar): «pases de master a main y luego hagas push al repo público», tras levantar otra vez la pila del 8090 para revisar la UI. **Repo al VPS = B**: Adrian clonará Monetae desde GitHub y Cashew (`github.com/jameskokoska/Cashew`) en `reference/Cashew` (ignorado por git), como `<USUARIO_DEV>`; iniciará sesión con los agentes y conectará Orca por SSH desde su laptop. **`reference/` sigue haciendo falta**: el clon de Cashew para toda tarea de UI (TAM, F1, F2) y las capturas `reference/cashew-inicio-ui/` para comparar (no están en git: contienen datos reales; se copian por `scp`). `reference/backups/` nunca sale de su máquina. |
+| 2026-10-13 | **VPS preparado** por Adrian con la separación propuesta: producción = Docker del sistema, solo `root`/`<USUARIO_ADMIN>` (sudo); desarrollo = usuario `<USUARIO_DEV>` sin sudo con Docker rootless. SELinux en `enforcing`. Datos de producción, cuando lleguen, en `<RUTA_PRODUCCION>` (root, `chmod 700`; ver ADR-009 g: los de PostgreSQL quedaron en el volumen `postgres_data`). Todos los puertos de compose siguen en `127.0.0.1` (el Docker del sistema puede saltarse firewalld). |
 | 2026-10-12 (tarde) | **Cierre** («Continuaremos en otro momento») con la pieza 11 de T-519 cerrándose en su rama. Antes, Adrian autorizó: «**si te quedas sin cuota con Codex, completa su trabajo solo por esta vez**» (excepción puntual; la regla sigue siendo que el código lo escribe Codex). Reportó el error «no se pudo conectar con el servidor» en Inicio y al crear transacción (corregido, `eeb622a`). TAM sigue sin respuesta. |
 | 2026-10-12 | «**OK todo A**» al plan T1-B: **Z1-A** (correcciones excluidas de ingresos/gastos, presupuestos e Inicio), **Z2-A** (el importador trae las «Correcciones de saldo» de Cashew como tales), **Z3**: por defecto ambas piernas con la misma fecha y hora, pero **la de llegada debe poder editarse** (transferencias diferidas). Por eso el par se enlaza con el `transfer_group_id` existente (pauta de Adrian: usar el campo de enlace si existe) en vez de emparejar por fecha. SPEC v0.7. T-604 lanzada. |
 | 2026-10-12 | Pautas de diseño v2 del formulario (capturas 20–25; 5 ajustes) delegadas a Codex: piezas 7–9 de T-515 (`docs/tasks/T-515-ui-transaction-form.md`, sección «Ajustes v2»). **M1 = sí** (fusionar T-515 al terminar los ajustes). **T-518 = A** (lanzada, Codex `gpt-6.1-sol` medium, rama `codex/T-518-date-goldens`). **T1 = B**: transferencia «a lo Cashew» = dos transacciones independientes gasto/ingreso con la categoría **«Corrección de saldo»** (no `/transfers`). Como la categoría no existe, el coordinador presenta el plan para añadirla y **espera confirmación** antes de implementarla; no se cambian los totales hasta su OK. |
@@ -122,9 +141,9 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 - **A (recomendada): igualarlos al código de Cashew** en una tarea pequeña de Codex (medium). *Razón:* misma regla para todo el formulario.
 - B: dejarlos como están.
 
-**R4 · Revisión de T-519 por Adrian** (pantalla «Transferir saldo» + hoja «Tipo De Cambio») en `localhost:8090` (ya publicada). La primera transferencia entre monedas pide la tasa a mano; desde la segunda aparece sugerida.
+**R4 · Revisión de T-519 por Adrian** (pantalla «Transferir saldo» + hoja «Tipo De Cambio»). En el VPS la pila de revisión de desarrollo va en el **8091** (el 8090 es de alfa); se ve por túnel SSH. La primera transferencia entre monedas pide la tasa a mano; desde la segunda aparece sugerida.
 
-**R2 · Revisión visual de Inicio por Adrian:** pila del 8090 levantada el 2026-10-16 para ello. **G7 publicado** el mismo día.
+**R2 · Revisión visual de Inicio por Adrian** (pila de revisión en el 8091, o en alfa).
 
 **F1 · Pantallas que faltan para conectar Inicio:** crear objetivo, crear presupuesto, detalle de categorías, reordenar Inicio. **A (recomendada):** una tarea Codex por pantalla. B: esperar.
 
@@ -132,49 +151,58 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
 **D12 · Historial de presupuestos y metas** = lista de transacciones filtrada. **A (recomendada):** filtros `budget_id`/`goal_id` en `GET /transactions` (contrato 0.8.0). B: etiquetas.
 
-**VPS1 · (decidido C; VPS ya preparado, §3)** falta:
-1. **Agentes en el VPS:** como `dev`, `gh auth login`, `codex login` y el inicio de sesión de Claude Code (si no los hizo Adrian); en Orca, añadir el host SSH con el usuario `dev` y activar «Allow this host's orca CLI to control Orca».
-2. **Repositorio en el VPS: decidido B (2026-10-16)**, clon desde GitHub tras G7 (la opción A era `git bundle` de `master-dev` copiado por `scp` y clonado en `/home/dev/Monetae` (+ `reference/cashew-inicio-ui/` y el clon de Cashew `reference/Cashew/`, **nunca `reference/backups/`**)). Las capturas `reference/cashew-inicio-ui/` se copian por `scp` (no están en git).
-3. Verificar en el VPS: pruebas del backend (1190) y de la UI (343), `flutter build web` y la pila de revisión con Docker rootless (puertos ≥ 1024).
-4. **Cloudflare Tunnel + Access** (`cloudflared`; el token solo en el VPS) y corregir la IP real detrás del proxy (`ARCHITECTURE.md` §10.10) antes de exponer nada.
+**ALFA-IP · IP real del cliente** (ADR-009 d). Con solo `trusted_proxies`, la IP registrada sería la del borde de Cloudflare (probado en local).
+- **A (recomendada):** añadir `client_ip_headers CF-Connecting-IP` y `header_up X-Forwarded-For {client_ip}` en el Caddyfile (`docs/deploy-alfa.md` paso 9) y confirmar con `login_attempts.ip`. *Razón:* sin cambios de código y no falseable (solo se acepta de los rangos de Cloudflare).
+- B: cambiar nginx para confiar en los rangos de Cloudflare (lista que cambia; peor).
 
-**D7 · Para más adelante:** ADR-005 · orden de categorías · OAuth Google y proveedor de tipo de cambio (Fase 6; habilita el paso 4 «mercado» de la sugerencia y «Ver todos los tipos de cambio») · proxy del VPS (`ARCHITECTURE.md` §10.10) · zona horaria de la UI · radio de tarjetas 20 vs 15 dp · persistir los ajustes del menú ⋮ (hoy en memoria).
+**ALFA-BACKUP · Respaldos de la BD alfa** (ADR-009 g): `pg_dump` programado con rotación (RF-42; aún no implementado). **Bloquea la importación real de Cashew.** Opciones por definir con Adrian (dónde se guardan, frecuencia, retención).
+
+**BETA · Despliegue de beta** (ADR-009 e, *plan sin ejecutar*): instancia aparte con carpeta, `.env`, puerto en loopback, proyecto de Compose/volumen y subdominio propios, **fijada a un tag** (p. ej. `v0.1.0`) promovido desde alfa.
+
+**Cloudflare Access** (decisión VPS1-C del 2026-10-12, «Tunnel + Access»): el despliegue usó **proxy de Cloudflare + Caddy**, no Tunnel. Si alfa debe quedar además detrás de Cloudflare Access: **por confirmar** con Adrian.
+
+**OK del plan de reanudación** (presentado el 2026-10-16, sin respuesta): R4, **TAM = A**, **F2 = A**, **D12 = A**, crear un Run nuevo en el Orca del VPS, pila de revisión en el 8091 por túnel SSH. Además, copiar las capturas `reference/cashew-inicio-ui/` al VPS por `scp`.
+
+**D7 · Para más adelante:** ADR-005 · orden de categorías · OAuth Google y proveedor de tipo de cambio (Fase 6; habilita el paso 4 «mercado» de la sugerencia y «Ver todos los tipos de cambio») · zona horaria de la UI · radio de tarjetas 20 vs 15 dp · persistir los ajustes del menú ⋮ (hoy en memoria).
 
 ## 6. Siguiente paso concreto
 
-**Al reanudar:**
-0. **VPS (VPS1, §5):** pedir a Adrian la IP/host SSH y confirmar los inicios de sesión de los agentes como `dev`; llevar el repo (bundle, opción A) y verificarlo allá. Desde entonces, los workers pueden trabajar en el VPS (más disco y CPU que el WSL).
-1. Comprobar la pila del 8090 (`docker ps`; **al cerrar el 2026-10-13 estaba apagada**: Docker Desktop no está integrado con WSL, ver §8) y relanzarla (§7). Dar a Adrian usuario y contraseña para **R4** (T-519) y el resto del formulario.
-2. Con sus respuestas:
-   - **TAM = A:** tarea Codex `gpt-6.1-sol` medium en `apps/web` (rama `codex/T-520-form-measures` desde `master-dev`): nombre de categoría 18 dp hasta 2 líneas (Cashew `addTransactionPage.dart` ~1973), filas de «Seleccionar Cuenta» nombre 18 dp y radio 15 (`radioItems.dart`); goldens regenerados; verificar con `dart analyze`, `flutter test`, build y captura.
-   - **F2 = A:** tarea Codex high: abrir una transacción guardada en el formulario en modo editar (incluida la llegada de una «Corrección de saldo», sin cambiar su tipo ni categoría) y filtro por categoría en la lista de transacciones (conecta el botón «Corrección De Saldo» del diálogo ⓘ). Revisar el contrato antes de escribir la spec.
-   - Ajustes de R4, si Adrian pide cambios.
-3. Luego **R2/G7** (publicar `master-dev` en `main` tras la auditoría) y **F1/D12**.
-4. **Regla nueva:** todo cambio de contrato se integra junto con la regeneración de los DTO de la UI y una prueba de la UI contra la API real (Anexo C).
+1. **Adrian:** resolver **G8** (publicar T-702 en `main`, solo documentación) y aplicar **ALFA-IP** en el Caddyfile (§5), confirmándolo con `login_attempts.ip`.
+2. **Con su OK al plan de reanudación** (§5), en el VPS:
+   - crear un **Run nuevo** (`orca orchestration run-create --objective …`) y comprobar que `worker-start` funciona desde el Orca del VPS (primera vez; si falla, Plan B de `CLAUDE.md` §3.4);
+   - **T-520 TAM = A:** Codex `gpt-6.1-sol` medium, rama `codex/T-520-form-measures` desde `master-dev`: nombre de categoría 18 dp hasta 2 líneas (Cashew `addTransactionPage.dart` ~1973), filas de «Seleccionar Cuenta» nombre 18 dp y radio 15 (`radioItems.dart`); goldens regenerados;
+   - **en paralelo, T-521 D12 = A** (backend, no se solapa): Codex `gpt-6.1-sol` high, filtros `budget_id`/`goal_id` en `GET /transactions`, contrato 0.8.0, DTO de la UI regenerados y prueba contra la API real (Anexo C);
+   - **después, T-522 F2 = A** (toca el formulario, como TAM): Codex high, abrir una transacción guardada en modo editar y filtro por categoría en la lista;
+   - verificación del coordinador en cada una: ruff/mypy/pytest o `dart analyze`/`flutter test`, build, diff y captura; gate antes de `main`.
+3. **ALFA-BACKUP** antes de cualquier importación real.
 
 ## 7. Estado del Run, de los worktrees y de los agentes abiertos
 
-**Run de la Fase 5: `run_c2cebe1745b9`.** Completadas hoy: T-515 piezas 7–9 (`task_918cdbe06dbc`, `task_881bf03f5c44`, `task_2f7a58d49d4d`), T-518 `task_6e7d560172a3`, T-604 `task_1e5ea0e539ae`, T-519 piezas 10 `task_10487b71ff18` y 11 `task_0d6fceaff333` (el dispatch `ctx_b9b2114b4dbc` se detuvo con `worker-stop`; la terminó el coordinador). **Ningún worker vivo.** T-602 `task_752b79134036` sigue `blocked` por G7 (normal). El CLI no cierra Runs; no usar `orchestration reset`.
+**Orca (VPS):** runtime nuevo y sin ventana (`orca status` ok, capacidad `orchestration.contract.v1`). El Run de la Fase 5 (`run_c2cebe1745b9`) vivía en el Orca del WSL y aquí no existe. **Run nuevo: `run_05f27056ac71`** («VPS: alfa desplegada; Fase 5 (TAM, D12, F2) y pendientes de alfa»), creado al cerrar solo para la propuesta de gate: tarea `task_ce3e95ad4fd1` (marcador, no es trabajo de worker) con **G8 `gate_4e96028542c0` abierto** (publicar T-702 en `main`). Al abrir sesión: `orca orchestration run-use --id run_05f27056ac71`. Ningún worker lanzado ni vivo; `worker-start` aún no se ha probado desde el VPS.
 
-**Worktrees:** solo `Monetae` → `main` y `Monetae-master-dev` → `master-dev` (Adrian borró los 4 ya fusionados el 2026-10-13).
+**Worktrees en el VPS** (en el home de `<USUARIO_DEV>`, carpeta `propio2/`):
+- `Monetae` → `main` · `Monetae-master-dev` → `master-dev`;
+- `Monetae-T-701` → `claude/T-701-alfa-reverse-proxy` (**fusionada**: Adrian puede borrarla);
+- `Monetae-T-702` → `claude/T-702-docs-alfa-deploy` (**fusionada**: Adrian puede borrarla).
 
-**Pila de revisión `monetae-review`: EN MARCHA desde el 2026-10-16** en `http://localhost:8090` (API `8000`, BD `5433`, migración **`0012`**), sirviendo la compilación de **`master-dev` `1b559c8`** (Inicio + formulario completo + «Transferir saldo» + «Tipo De Cambio»). Usuario `revision-g7@example.test` (contraseña solo en el chat). Si se apaga WSL/Docker, relanzar desde `Monetae-master-dev`:
+**Producción alfa:** en `<RUTA_PRODUCCION>`, Docker del sistema, controlada por `<USUARIO_ADMIN>`; `main` `9e1b6f4`; `127.0.0.1:8090`. Los agentes **no** tienen acceso.
+
+**Pila de revisión de desarrollo `monetae-review`:** **apagada**; en el VPS va en el **8091** (Adrian la ve por túnel SSH: `ssh -L 8091:127.0.0.1:8091 …`). Desde `Monetae-master-dev`:
 ```bash
 export PATH="$HOME/flutter/bin:$HOME/.local/bin:$PATH"
+(cd apps/web && flutter build web --release)
 cp .env.example .env && sed -i 's/^MONETAE_COOKIE_SECURE=true$/MONETAE_COOKIE_SECURE=false/' .env
-MONETAE_WEB_PORT=8091 COMPOSE_PROJECT_NAME=monetae-review docker compose -f infra/docker-compose.yml up -d --build db api web   # en el VPS el 8090 es de alfa (T-701): revisión en 8091; compose no lee el .env de la raíz
-MONETAE_WEB_PORT=8090 COMPOSE_PROJECT_NAME=monetae-review docker compose -f infra/docker-compose.yml exec -T api alembic upgrade head
+export MONETAE_WEB_PORT=8091 COMPOSE_PROJECT_NAME=monetae-review   # compose no lee el .env de la raíz para interpolar
+docker compose -f infra/docker-compose.yml up -d --build db api web
 rm -f .env
-# bajar: MONETAE_WEB_PORT=8090 COMPOSE_PROJECT_NAME=monetae-review docker compose -f infra/docker-compose.yml down
+# bajar: MONETAE_WEB_PORT=8091 COMPOSE_PROJECT_NAME=monetae-review docker compose -f infra/docker-compose.yml down
 ```
-`apps/web/build/web` de `master-dev` (ignorado) es lo que monta nginx: recompilar ahí tras cada integración.
-
-**Paneles de Orca abiertos:** coordinador y `lupuna` (otro proyecto, no tocar). Los de Codex (T-515 `term_dd064818…`, T-518 `term_a28d5186…`, T-604 `term_6956b6c7…`, T-519 `term_69891d59…`) están terminados: Adrian puede cerrarlos.
+Si los archivos tienen permisos restrictivos (umask 077), nginx no puede leer la compilación: `chmod -R a+rX apps/web/build infra/web`.
 
 ## 8. Limitaciones y riesgos conocidos
 
-- **VPS:** el usuario `dev` no tiene sudo: los paquetes del sistema los instala Adrian (`adriansm`). Docker rootless no publica puertos < 1024. No mezclar nunca el Docker de producción (sistema) con el de desarrollo.
-- **Docker Desktop depende de la integración con WSL** (distro `AlmaLinux-9`): si `/usr/bin/docker` apunta a un destino inexistente, reactivar *Settings → Resources → WSL integration* y `wsl --shutdown`.
+- **VPS:** `<USUARIO_DEV>` no tiene sudo: los paquetes del sistema los instala Adrian (`<USUARIO_ADMIN>`). Docker rootless no publica puertos < 1024. No mezclar nunca el Docker de producción (sistema) con el de desarrollo: comparten el loopback (el **8090 es de alfa**). El shell de los agentes puede tener **umask 077**: los archivos nuevos quedan ilegibles para los contenedores (ver §7).
+- **Docker Desktop / WSL:** ya no aplica en el VPS (Docker rootless con `systemctl --user`, linger activo). Solo si se vuelve a trabajar en la laptop: reactivar *Settings → Resources → WSL integration* y `wsl --shutdown`.
 - **Importación real:** el `apply` nunca se ha ejecutado (solo `--dry-run` sobre copias, cuadre exacto); espera a D9-A. El importador es **solo inserción**. Préstamos con principal supuesto (L1-A) aparecen `settled` hasta corregirlos con `adjustment` (el `PUT` del desembolso crea efectivo).
 - **UI:** Inicio sigue la skill `cashew-inicio-ui`; sus botones «añadir» y «Editar» y el detalle de categorías son TODO (F1). Formato de montos de Cashew («1.234,50 S/.») fijado a mano en `currency_format.dart`. El favicon sigue el modo del **sistema/navegador**, no el tema de la app. Las transacciones en moneda extranjera muestran solo el original (el contrato no trae el convertido).
 - **Agentes:** Antigravity resultó poco fiable (afirmó pruebas verdes con 12 fallos; ignora mensajes que no son respuestas a su `ask`). Verificar siempre por cuenta propia; preferir Codex.
@@ -183,7 +211,7 @@ rm -f .env
 - **Reportes:** sin proveedor de tipo de cambio (Fase 6), con moneda de reporte ≠ base todo cae en `unconverted_count` salvo tasas insertadas a mano en `exchange_rates`.
 - **Sin auditoría de seguridad externa** (Fase 7). La BD admite un `income` negativo por SQL directo (`ARCHITECTURE.md` §10.12). Límite de login detrás de proxy (§10.10). `501 google_login_not_available` fuera del contrato (§10.11).
 - **Zona horaria en la UI:** la presentación asume America/Lima (UTC−5 fijo) aunque `CurrentUser.timezone` admite cualquier zona IANA. Generalizarlo es una tarea aparte (decidido en T-513, 2026-10-10).
-- **Disco:** ≈ 2,6 GB libres en `/` (20 GB) al cerrar el 2026-10-13, ya sin los worktrees fusionados. El VPS (100 GB) aliviará esto. Playwright + Chromium para capturas ocupa ≈ 600 MB (se instaló en el scratchpad de la sesión y se borró al cerrar). Flutter + Docker lo consumen rápido: borrar artefactos (`build/`, `.dart_tool/`, `.venv/`) de worktrees ya fusionados.
+- **Disco:** en el VPS ≈ 92 GB libres de 99 GB (2026-10-16). Aun así, borrar artefactos ignorados (`build/`, `.dart_tool/`, `.venv/`) de worktrees ya fusionados. Playwright + Chromium para capturas ocupa ≈ 600 MB (instalarlo en el scratchpad de la sesión).
 - **Repositorio público:** todo push se audita antes; los datos reales solo viven en `reference/backups/` (ignorado).
 - **Ajustes del menú ⋮** (pestaña Transferir, adjunto) solo en memoria: se pierden al recargar la página.
 - **Clon de Cashew anterior** a las capturas 20–25: varios controles nuevos (menú ⋮ (d), ✕/↓/ⓘ de «Transferir saldo») siguen las capturas, no el código.
@@ -193,15 +221,16 @@ rm -f .env
 
 ```bash
 # 0) Leer: este archivo, AGENTS.md, CLAUDE.md (§10), docs/SPEC.md v0.7, docs/ui/home-layout.md, ADRs y tareas. Luego:
-cd /home/artur/propio2/Monetae-master-dev            # worktree de master-dev (main está en ../Monetae)
+cd ~/propio2/Monetae-master-dev                      # como <USUARIO_DEV>; main está en ../Monetae
 git status -sb && git log --oneline -5 && git worktree list
 git -C ../Monetae log --oneline -1 && GIT_TERMINAL_PROMPT=0 git -c credential.helper= -c credential.helper='!gh auth git-credential' ls-remote origin refs/heads/main refs/heads/master-dev
 
-# 1) Herramientas (el Python del sistema es 3.9: NO usarlo para el proyecto)
+# 1) Herramientas (en el VPS el Python del sistema es 3.12; el proyecto usa el de uv)
 export PATH="$HOME/.local/bin:$HOME/flutter/bin:$PATH"
 uv --version && docker compose version && flutter --version | head -1
-orca status --json | head -5 && orca orchestration run-use --id run_c2cebe1745b9
-orca orchestration gate-list --json | grep -A3 gate_ecde8d19a53a     # G7 pendiente
+orca status --json | head -5 && orca orchestration run-use --id run_05f27056ac71
+orca orchestration gate-list --json | grep -A3 gate_4e96028542c0     # G8 pendiente
+
 
 # 2) Backend (≈ 8 min; BD propia)
 cp .env.example .env && MONETAE_DB_PORT=5433 COMPOSE_PROJECT_NAME=monetae-check docker compose -f infra/docker-compose.yml -f infra/docker-compose.dev.yml up -d db   # el override publica la BD (T-701)
@@ -256,7 +285,7 @@ FastAPI síncrono (ADR-007) en `services/api`: **46 de 89 rutas = 73 de 131 oper
 
 ## Anexo B · GitHub
 
-`origin` = `https://github.com/Adrian-asandym/Monetae.git` (público). Antes de cada push se verifica el historial (sin `.env`, claves, `reference/`, respaldos; únicos `.sqlite`/`.csv` versionados: los 3 fixtures sintéticos de `services/api/tests/fixtures/cashew_v48/`; sin correos reales). `origin/main` está en `1736d7a` (G5). Comando: `GIT_TERMINAL_PROMPT=0 git -c credential.helper= -c credential.helper='!gh auth git-credential' push origin main master-dev` (sin `--force`; `gh` autenticado como `Adrian-asandym`).
+`origin` = `https://github.com/Adrian-asandym/Monetae.git` (público). Antes de cada push se verifica el historial (sin `.env`, claves, `reference/`, respaldos; únicos `.sqlite`/`.csv` versionados: los 3 fixtures sintéticos de `services/api/tests/fixtures/cashew_v48/`; sin correos reales). `origin/main` está en `9e1b6f4` (T-701, 2026-10-16). Comando: `GIT_TERMINAL_PROMPT=0 git -c credential.helper= -c credential.helper='!gh auth git-credential' push origin main master-dev` (sin `--force`; `gh` autenticado como `Adrian-asandym`).
 
 ## Anexo C · Lecciones operativas (no repetir errores)
 
@@ -273,7 +302,7 @@ FastAPI síncrono (ADR-007) en `services/api`: **46 de 89 rutas = 73 de 131 oper
 - **Shell:** en `--body "..."` no usar acentos graves (el shell los ejecuta); usar comillas simples.
 - **Bases de datos en paralelo:** nunca compartir proyecto/puerto de Compose entre workers; asignar `MONETAE_DB_PORT` y `COMPOSE_PROJECT_NAME` propios.
 - **Orca, entregas:** `check --wait` vuelve a entregar la misma *Delivery* hasta confirmarla con `check --ack <delivery_id>`; tras responder (`reply --id <msg> --run <run>`) o procesar un `worker_done`, confirmar en la siguiente llamada.
-- **`reference/` no existe en los worktrees** (está ignorado): dar a los workers la ruta absoluta `/home/artur/propio2/Monetae/reference/Cashew/budget/` y **prohibir** `reference/backups/` en cada spec de UI.
+- **`reference/` no existe en los worktrees** (está ignorado): dar a los workers la ruta absoluta del clon principal (en el VPS, `~/propio2/Monetae/reference/Cashew/budget/` del home de `<USUARIO_DEV>`, escrita como ruta absoluta en la spec) y **prohibir** `reference/backups/` en cada spec de UI.
 - **Revisar las capturas (goldens) yo mismo:** así apareció la regresión del formato de importes («170,00 S/»). `intl` no trae el formato peruano ni con `es_PE`.
 - **Contrato por delante del backend:** al cambiar un esquema ya implementado, `test_contract_subset` falla a propósito hasta integrar la tarea del backend; decirlo en `STATUS` y en la spec.
 - **Adrian deja a veces archivos sin commit en ambas carpetas** (p. ej. imágenes en `img/`): versionarlos en `master-dev` y, antes del ff de `main`, quitar las copias **idénticas** (comprobar hash) de la carpeta de `main`.
@@ -287,3 +316,5 @@ FastAPI síncrono (ADR-007) en `services/api`: **46 de 89 rutas = 73 de 131 oper
 - **Contrato cambiado ⇒ regenerar DTO de la UI en la misma integración** (`python3 -I apps/web/tool/generate_dtos.py`, sin `dart format`) y probar la UI contra la **API real** antes de publicar en la pila: un `enum` nuevo (`system_key`) hizo fallar toda la lista de categorías y la UI lo mostró como «no se pudo conectar» (2026-10-12). Las pruebas con `ApiClient` falso no lo detectan.
 - **Medidas de Adrian en dp:** suelen ser px de la captura (escala 1,25); manda el código de Cashew + la captura (pieza 9).
 - **`rm -rf "$VAR"/*`** está bloqueado por seguridad: usar rutas literales.
+
+- **Detrás de un proxy, probar la cadena real de cabeceras:** `trusted_proxies` en Caddy no basta para la IP del cliente (añade la IP de Cloudflare al final de `X-Forwarded-For`). Simular con `caddy run` en un puerto alto y un servidor que imprima cabeceras antes de dar por buena una configuración (2026-10-16).

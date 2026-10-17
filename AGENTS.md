@@ -61,6 +61,7 @@ monetae/
 ├── docs/
 │   ├── SPEC.md            # especificación funcional (fuente de verdad)
 │   ├── ARCHITECTURE.md    # arquitectura (Fase 1)
+│   ├── deploy-alfa.md     # runbook del despliegue alfa en el VPS (ADR-009)
 │   ├── cashew-analysis.md # análisis del código de Cashew (Fase 0)
 │   ├── decisions/         # ADRs: NNN-titulo.md
 │   ├── tasks/             # T-XXX.md (Plan B sin orquestación)

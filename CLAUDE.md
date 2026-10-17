@@ -111,6 +111,8 @@ Después: hito de despliegue en VPS Contabo → V2 → V3 → V4 (ver SPEC §3 y
 | 005 | Modelo de sincronización (Android, V4) | Antes de V4 |
 | 006 | Bloqueo "biométrico" en web (PIN + WebAuthn) | **Aceptado 2026-10-07: opción A** |
 | 007 | SQLAlchemy síncrono vs. asíncrono | **Aceptado 2026-10-07: opción A (síncrono)** |
+| 008 | Conversión de préstamos de Cashew al importar | **Aceptado 2026-10-08: J1-A, J2-C, J3-A** |
+| 009 | Despliegue alfa en el VPS (Cloudflare → Caddy → Docker) | **Aceptado 2026-10-16** (beta: plan sin ejecutar) |
 
 Para cada ADR: contexto, opciones (la recomendada primero), consecuencias, decisión de Adrian. Guarda en `docs/decisions/NNN-titulo.md`.
 
