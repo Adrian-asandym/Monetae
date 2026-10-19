@@ -16,9 +16,11 @@ class HomeCategoryCarousel extends StatefulWidget {
     super.key,
     required this.data,
     this.animate = true,
+    this.onOpen,
   });
   final HomeCategoryData data;
   final bool animate;
+  final ValueChanged<CategoryReportRowKind>? onOpen;
   @override
   State<HomeCategoryCarousel> createState() => _HomeCategoryCarouselState();
 }
@@ -40,7 +42,18 @@ class _HomeCategoryCarouselState extends State<HomeCategoryCarousel> {
   );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => GestureDetector(
+    onTap: widget.onOpen == null
+        ? null
+        : () => widget.onOpen!(
+            _page == 0
+                ? CategoryReportRowKind.expense
+                : CategoryReportRowKind.income,
+          ),
+    child: _card(context),
+  );
+
+  Widget _card(BuildContext context) {
     final theme = Theme.of(context);
     return Material(
       color: MonetaeColors.of(context).card,
@@ -69,6 +82,7 @@ class _HomeCategoryCarouselState extends State<HomeCategoryCarousel> {
                         kind: kind,
                         animate: widget.animate,
                         onSwitch: () => _switchTo(1 - index),
+                        selectable: widget.onOpen == null,
                       ),
                   ],
                 ),
@@ -112,11 +126,13 @@ class HomeCategoryPiePage extends StatefulWidget {
     required this.kind,
     required this.onSwitch,
     this.animate = true,
+    this.selectable = true,
   });
   final HomeCategoryData data;
   final CategoryReportRowKind kind;
   final VoidCallback onSwitch;
   final bool animate;
+  final bool selectable;
   @override
   State<HomeCategoryPiePage> createState() => _HomeCategoryPiePageState();
 }
@@ -156,13 +172,16 @@ class _HomeCategoryPiePageState extends State<HomeCategoryPiePage> {
               right: HomeTokens.categoryPadding,
               width: pieSize,
               height: pieSize,
-              child: FittedBox(
-                child: CategoryPieChart(
-                  slices: slices,
-                  emptyLabel: l.emptyChart,
-                  animate: widget.animate,
-                  selectedId: _selectedId,
-                  onSelected: (id) => setState(() => _selectedId = id),
+              child: IgnorePointer(
+                ignoring: !widget.selectable,
+                child: FittedBox(
+                  child: CategoryPieChart(
+                    slices: slices,
+                    emptyLabel: l.emptyChart,
+                    animate: widget.animate,
+                    selectedId: _selectedId,
+                    onSelected: (id) => setState(() => _selectedId = id),
+                  ),
                 ),
               ),
             ),

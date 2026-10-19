@@ -269,6 +269,8 @@ final class ApiClient {
   );
   Future<TransactionPageDto> transactions({
     List<String> categoryIds = const [],
+    String? dateFrom,
+    String? dateTo,
     String? cursor,
     int limit = 50,
   }) async => TransactionPageDto.fromJson(
@@ -279,6 +281,8 @@ final class ApiClient {
         ..._pageQuery(cursor),
         'limit': '$limit',
         if (categoryIds.isNotEmpty) 'category_id': categoryIds,
+        'date_from': ?dateFrom,
+        'date_to': ?dateTo,
       },
     ),
   );

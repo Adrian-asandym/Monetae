@@ -1,5 +1,4 @@
-// Preserved from the former second page of Home; intentionally unconnected.
-// TODO(T-514): use in a category detail screen when that screen exists.
+// Category ranking and month picker shared with the category detail screen.
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -13,10 +12,16 @@ class HomeCategoryDetails extends StatelessWidget {
     required this.ranked,
     required this.month,
     required this.onMoveMonth,
+    this.summary,
+    this.onCategorySelected,
+    this.originalAmounts = const {},
   });
   final List<CategorySlice> ranked;
   final DateTime month;
   final ValueChanged<int> onMoveMonth;
+  final Widget? summary;
+  final ValueChanged<String>? onCategorySelected;
+  final Map<String, String> originalAmounts;
 
   @override
   Widget build(BuildContext context) {
@@ -46,13 +51,26 @@ class HomeCategoryDetails extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             children: [
+              ?summary,
               for (final slice in ranked)
                 ListTile(
+                  key: Key('category-detail-${slice.id}'),
+                  // TODO(F1): filtering uncategorized transactions needs an API contract extension.
+                  onTap:
+                      slice.id == 'uncategorized' || onCategorySelected == null
+                      ? null
+                      : () => onCategorySelected!(slice.id),
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                   leading: CategoryIcon(source: slice.icon, color: slice.color),
                   title: Text(slice.label),
-                  subtitle: Text(slice.percentLabel),
+                  subtitle: Text(
+                    [
+                      slice.percentLabel,
+                      if (originalAmounts[slice.id] case final String original)
+                        original,
+                    ].join(' · '),
+                  ),
                   trailing: Text(slice.amountLabel),
                 ),
             ],

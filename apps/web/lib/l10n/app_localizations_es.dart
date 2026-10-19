@@ -253,6 +253,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get categoryDistribution => 'Categorías';
 
   @override
+  String get categoryDetailTitle => 'Detalle de categorías';
+
+  @override
   String get uncategorized => 'Sin categoría';
 
   @override
