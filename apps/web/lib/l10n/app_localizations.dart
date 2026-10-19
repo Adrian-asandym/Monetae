@@ -1064,6 +1064,66 @@ abstract class AppLocalizations {
   /// **'Objetivo'**
   String get addGoalLabel;
 
+  /// No description provided for @addGoal.
+  ///
+  /// In es, this message translates to:
+  /// **'Añadir objetivo'**
+  String get addGoal;
+
+  /// No description provided for @goalName.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre del objetivo'**
+  String get goalName;
+
+  /// No description provided for @goalNameRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Escribe un nombre para el objetivo.'**
+  String get goalNameRequired;
+
+  /// No description provided for @goalSaving.
+  ///
+  /// In es, this message translates to:
+  /// **'Ahorro'**
+  String get goalSaving;
+
+  /// No description provided for @goalSpending.
+  ///
+  /// In es, this message translates to:
+  /// **'Gasto'**
+  String get goalSpending;
+
+  /// No description provided for @goalTargetAmount.
+  ///
+  /// In es, this message translates to:
+  /// **'Importe objetivo'**
+  String get goalTargetAmount;
+
+  /// No description provided for @goalAmountRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Introduce un importe mayor que cero.'**
+  String get goalAmountRequired;
+
+  /// No description provided for @goalDueDate.
+  ///
+  /// In es, this message translates to:
+  /// **'Fecha límite'**
+  String get goalDueDate;
+
+  /// No description provided for @goalNoDueDate.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin fecha límite'**
+  String get goalNoDueDate;
+
+  /// No description provided for @goalClearDueDate.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar fecha límite'**
+  String get goalClearDueDate;
+
   /// No description provided for @addBudgetLabel.
   ///
   /// In es, this message translates to:

@@ -12,55 +12,12 @@ import '../presentation/currency_format.dart';
 import '../presentation/exact_decimal.dart';
 import '../theme/monetae_theme.dart';
 import '../widgets/color_picker.dart';
+import '../widgets/currency_picker.dart';
 import '../widgets/account_balance_sheet.dart';
 import '../widgets/transaction_form/form_sheet.dart';
 
 typedef _T = TransactionFormTokens;
 typedef _A = AccountFormTokens;
-
-// Explicit symbols in currency_format.dart, with the user's base currency first.
-const accountCurrencies = [
-  'PEN',
-  'USD',
-  'CAD',
-  'AUD',
-  'NZD',
-  'HKD',
-  'SGD',
-  'MXN',
-  'ARS',
-  'CLP',
-  'COP',
-  'BSD',
-  'FJD',
-  'GYD',
-  'KYD',
-  'LRD',
-  'SBD',
-  'SRD',
-  'BBD',
-  'BMD',
-  'BND',
-  'BZD',
-  'JMD',
-  'NAD',
-  'TTD',
-  'XCD',
-  'CVE',
-  'SEK',
-  'NOK',
-  'DKK',
-  'ISK',
-  'GBP',
-  'EGP',
-  'FKP',
-  'GIP',
-  'SHP',
-  'SSP',
-  'CHF',
-  'JPY',
-  'CNY',
-];
 
 class AddAccountPage extends StatefulWidget {
   const AddAccountPage({
@@ -134,7 +91,6 @@ class _AddAccountPageState extends State<AddAccountPage> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final colors = TransactionFormColors.of(context);
     final currencies = {widget.baseCurrency, ...accountCurrencies};
     final error = _error;
     return PopScope(
@@ -220,33 +176,14 @@ class _AddAccountPageState extends State<AddAccountPage> {
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: _A.sectionGap),
-                  for (final currency in currencies)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: _A.colorGap),
-                      child: Material(
-                        color: currency == _currency
-                            ? colors.chipSelected
-                            : colors.field,
-                        borderRadius: BorderRadius.circular(_A.rowRadius),
-                        child: ListTile(
-                          key: Key('account-currency-$currency'),
-                          selected: currency == _currency,
-                          textColor: Theme.of(context).colorScheme.onSurface,
-                          selectedColor: Theme.of(context)
-                              .colorScheme
-                              .onSurface,
-                          title: Text(currency),
-                          trailing: Text(
-                            currencySymbol(currency, l.localeName),
-                          ),
-                          onTap: () => setState(() {
-                            _currency = currency;
-                            _balance = ExactDecimal.parse(_balance)
-                                .fixed(_decimals);
-                          }),
-                        ),
-                      ),
-                    ),
+                  CurrencyPicker(
+                    currencies: currencies,
+                    selected: _currency,
+                    onSelected: (currency) => setState(() {
+                      _currency = currency;
+                      _balance = ExactDecimal.parse(_balance).fixed(_decimals);
+                    }),
+                  ),
                 ],
               ),
             ),

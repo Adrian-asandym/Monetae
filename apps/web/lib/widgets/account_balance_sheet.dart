@@ -20,10 +20,12 @@ class AccountBalanceSheet extends StatefulWidget {
     required this.initialBalance,
     required this.currency,
     required this.decimals,
+    this.positiveOnly = false,
   });
   final String initialBalance;
   final String currency;
   final int decimals;
+  final bool positiveOnly;
   @override
   State<AccountBalanceSheet> createState() => _AccountBalanceSheetState();
 }
@@ -35,7 +37,9 @@ class _AccountBalanceSheetState extends State<AccountBalanceSheet> {
   late bool _negative = widget.initialBalance.startsWith('-');
   bool get _valid =>
       RegExp('^[0-9]{1,16}(\\.[0-9]{0,${widget.decimals}})?\$')
-          .hasMatch(_amount.text);
+          .hasMatch(_amount.text) &&
+      (!widget.positiveOnly ||
+          ExactDecimal.parse(_amount.text).numerator > BigInt.zero);
   @override
   void dispose() {
     _amount.dispose();
@@ -90,21 +94,28 @@ class _AccountBalanceSheetState extends State<AccountBalanceSheet> {
             LengthLimitingTextInputFormatter(19),
           ],
           decoration: InputDecoration(
-            labelText: l.accountStartingAt,
-            errorText: _valid ? null : l.accountBalanceInvalid,
+            labelText: widget.positiveOnly
+                ? l.goalTargetAmount
+                : l.accountStartingAt,
+            errorText: _valid
+                ? null
+                : widget.positiveOnly
+                ? l.goalAmountRequired
+                : l.accountBalanceInvalid,
           ),
           onChanged: (_) => setState(() {}),
           onSubmitted: (_) {
             if (_valid) _done();
           },
         ),
-        SwitchListTile.adaptive(
-          key: const Key('account-negative-balance'),
-          contentPadding: EdgeInsets.zero,
-          title: Text(l.accountNegativeBalance),
-          value: _negative,
-          onChanged: (value) => setState(() => _negative = value),
-        ),
+        if (!widget.positiveOnly)
+          SwitchListTile.adaptive(
+            key: const Key('account-negative-balance'),
+            contentPadding: EdgeInsets.zero,
+            title: Text(l.accountNegativeBalance),
+            value: _negative,
+            onChanged: (value) => setState(() => _negative = value),
+          ),
         const SizedBox(height: _T.amountSheetGap),
         DecimalNumberPad(
           onKey: _key,

@@ -18,6 +18,7 @@ import '../widgets/home_category_carousel.dart';
 import '../widgets/home_greeting.dart';
 import '../widgets/transaction_card_list.dart';
 import 'add_account_page.dart';
+import 'add_goal_page.dart';
 
 const defaultHomeWidgets = [
   'accounts',
@@ -127,8 +128,16 @@ class _HomePageState extends State<HomePage> {
         title: l.goals,
         builder: (goals) => GoalCardList(
           goals: goals,
-          onCreate: () {
-            // TODO(T-514): connect when the goal creation form exists.
+          onCreate: () async {
+            final created = await Navigator.of(context).push<bool>(
+              MaterialPageRoute(
+                builder: (_) => AddGoalPage(
+                  api: session.api,
+                  baseCurrency: profile.baseCurrency,
+                ),
+              ),
+            );
+            if (mounted && created == true) await _home.goals.load();
           },
         ),
       ),
