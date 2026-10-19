@@ -21,11 +21,13 @@ class AccountBalanceSheet extends StatefulWidget {
     required this.currency,
     required this.decimals,
     this.positiveOnly = false,
+    this.amountLabel,
   });
   final String initialBalance;
   final String currency;
   final int decimals;
   final bool positiveOnly;
+  final String? amountLabel;
   @override
   State<AccountBalanceSheet> createState() => _AccountBalanceSheetState();
 }
@@ -94,9 +96,11 @@ class _AccountBalanceSheetState extends State<AccountBalanceSheet> {
             LengthLimitingTextInputFormatter(19),
           ],
           decoration: InputDecoration(
-            labelText: widget.positiveOnly
-                ? l.goalTargetAmount
-                : l.accountStartingAt,
+            labelText:
+                widget.amountLabel ??
+                (widget.positiveOnly
+                    ? l.goalTargetAmount
+                    : l.accountStartingAt),
             errorText: _valid
                 ? null
                 : widget.positiveOnly
