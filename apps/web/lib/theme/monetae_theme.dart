@@ -381,7 +381,7 @@ abstract final class TransactionFormTokens {
   static const categoryRadius = 15.0;
   static const categoryIconSize = 44.0;
   static const amountFontSize = 36.0;
-  static const headerCategoryNameSize = 20.0;
+  static const headerCategoryNameSize = 18.0;
   static const headerCategoryNameHeight = 1.0;
   static const dateHeight = 53.0;
   static const dateRadius = 15.0;
@@ -442,10 +442,13 @@ abstract final class TransactionFormTokens {
   static const amountSheetButtonHeight = 48.0;
   static const accountSheetHeightFraction = .65;
   static const accountRowHeight = 48.0;
-  static const accountRowRadius = 12.0;
+  static const accountRowRadius = 15.0;
   static const accountRowPadding = 16.0;
-  static const accountRowGap = 12.0;
-  static const accountNameSize = 20.0;
+  static const accountRowEndPadding = 7.0;
+  static const accountRowTitleOffset = 12.0;
+  static const accountBalanceGap = 3.0;
+  static const accountRadioTapSize = 40.0;
+  static const accountNameSize = 18.0;
   static const accountBalanceSize = 18.0;
   static const accountRadioSize = 20.0;
   static const accountRadioBorder = 2.0;
