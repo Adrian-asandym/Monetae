@@ -566,6 +566,12 @@ abstract class AppLocalizations {
   /// **'Categorías'**
   String get categoryDistribution;
 
+  /// No description provided for @categoryDetailTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Detalle de categorías'**
+  String get categoryDetailTitle;
+
   /// No description provided for @uncategorized.
   ///
   /// In es, this message translates to:

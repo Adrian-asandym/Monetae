@@ -19,8 +19,12 @@ class TransactionsPage extends StatefulWidget {
     required this.onDemo,
     this.onHome,
     this.categoryIds = const [],
+    this.dateFrom,
+    this.dateTo,
   });
   final List<String> categoryIds;
+  final String? dateFrom;
+  final String? dateTo;
   final SessionController session;
   final VoidCallback onDemo;
   final VoidCallback? onHome;
@@ -41,7 +45,12 @@ class _TransactionsPageState extends State<TransactionsPage> {
     _transactionRevision = widget.session.transactionRevision;
     widget.session.addListener(_sessionChanged);
     _categoryIds = List.of(widget.categoryIds);
-    _feed = TransactionFeed(widget.session.api, categoryIds: _categoryIds);
+    _feed = TransactionFeed(
+      widget.session.api,
+      categoryIds: _categoryIds,
+      dateFrom: widget.dateFrom,
+      dateTo: widget.dateTo,
+    );
     _load(refresh: true);
   }
 
@@ -70,6 +79,8 @@ class _TransactionsPageState extends State<TransactionsPage> {
         final feed = TransactionFeed(
           widget.session.api,
           categoryIds: List.of(_categoryIds),
+          dateFrom: widget.dateFrom,
+          dateTo: widget.dateTo,
         );
         await feed.load();
         if (mounted && revision == _loadRevision) _feed = feed;

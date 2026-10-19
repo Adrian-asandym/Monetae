@@ -251,6 +251,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get categoryDistribution => 'Categories';
 
   @override
+  String get categoryDetailTitle => 'Category details';
+
+  @override
   String get uncategorized => 'Uncategorized';
 
   @override

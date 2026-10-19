@@ -102,6 +102,7 @@
   "home": "Home",
   "cashFlow": "Income and expenses",
   "categoryDistribution": "Categories",
+  "categoryDetailTitle": "Category details",
   "uncategorized": "Uncategorized",
   "emptyReports": "There are no reports for this period yet.",
   "unconvertedNotice": "Some movements have no historical exchange rate and are excluded from converted totals.",

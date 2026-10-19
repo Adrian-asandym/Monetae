@@ -102,6 +102,7 @@
   "home": "Inicio",
   "cashFlow": "Ingresos y gastos",
   "categoryDistribution": "Categorías",
+  "categoryDetailTitle": "Detalle de categorías",
   "uncategorized": "Sin categoría",
   "emptyReports": "Todavía no hay reportes para este periodo.",
   "unconvertedNotice": "Algunos movimientos no tienen tasa histórica y quedan fuera de los totales convertidos.",

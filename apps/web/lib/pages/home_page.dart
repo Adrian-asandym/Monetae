@@ -20,6 +20,7 @@ import '../widgets/transaction_card_list.dart';
 import 'add_account_page.dart';
 import 'add_goal_page.dart';
 import 'add_budget_page.dart';
+import 'category_detail_page.dart';
 import 'edit_home_page.dart';
 import 'new_transaction_page.dart';
 
@@ -166,8 +167,20 @@ class _HomePageState extends State<HomePage> {
       'categories': HomeBlockView(
         block: _home.categories,
         title: l.categoryDistribution,
-        builder: (data) =>
-            HomeCategoryCarousel(data: data, animate: widget.animate),
+        builder: (data) => HomeCategoryCarousel(
+          data: data,
+          animate: widget.animate,
+          onOpen: (kind) => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => CategoryDetailPage(
+                session: session,
+                month: _home.month,
+                initialKind: kind,
+                animate: widget.animate,
+              ),
+            ),
+          ),
+        ),
       ),
       'cash_flow': HomeBlockView(
         block: _home.flow,
