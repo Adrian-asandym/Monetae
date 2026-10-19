@@ -241,3 +241,28 @@ def test_openapi_references_resolve() -> None:
                 walk(item)
 
     walk(actual)
+
+
+def test_transaction_filter_parameters_mirror_contract() -> None:
+    contract = json.loads(CONTRACT.read_text())
+    assert contract["info"]["version"] == "0.8.0"
+    expected = {
+        p["name"]: p
+        for p in contract["paths"]["/api/v1/transactions"]["get"]["parameters"]
+        if "name" in p
+    }
+    actual = {
+        p["name"]: p
+        for p in create_app(Settings(environment="test")).openapi()["paths"][
+            "/api/v1/transactions"
+        ]["get"]["parameters"]
+    }
+    for name in ("budget_id", "goal_id", "category_id"):
+        assert expected[name]["in"] == actual[name]["in"] == "query"
+        assert not expected[name].get("required", False) and not actual[name]["required"]
+        schema = actual[name]["schema"]["anyOf"][0]
+        if name == "category_id":
+            assert expected[name]["style"] == "form" and expected[name]["explode"]
+            assert schema["type"] == expected[name]["schema"]["type"] == "array"
+            schema = schema["items"]
+        assert schema["format"] == "uuid"

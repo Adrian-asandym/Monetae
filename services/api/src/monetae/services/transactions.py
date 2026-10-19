@@ -15,7 +15,9 @@ from monetae.api.pagination import decode_cursor, encode_cursor
 from monetae.api.schemas.transactions import TransactionBatch, TransactionCreate, TransactionUpdate
 from monetae.db.models import (
     Account,
+    Budget,
     Category,
+    Goal,
     Loan,
     LoanMovement,
     RecurringRule,
@@ -30,6 +32,8 @@ from monetae.db.repository import UserScopedRepository
 from monetae.domain.currency import Currency
 from monetae.domain.errors import CurrencyMismatchError, InvalidExchangeRateError
 from monetae.domain.transactions import InvalidTransactionError, normalize_transaction
+from monetae.reports.budgets import BUDGET_TRANSACTION_IDS_SQL
+from monetae.reports.goals import GOAL_TRANSACTION_IDS_SQL
 from monetae.services.auth import AuthError, SystemClock
 
 
@@ -38,7 +42,7 @@ class TransactionFilters:
     date_from: datetime | None = None
     date_to: datetime | None = None
     account_id: UUID | None = None
-    category_id: UUID | None = None
+    category_ids: tuple[UUID, ...] = ()
     currency: str | None = None
     kind: str | None = None
     status: str | None = None
@@ -47,6 +51,8 @@ class TransactionFilters:
     include_deleted: bool = False
     loan_id: UUID | None = None
     person_id: UUID | None = None
+    budget_id: UUID | None = None
+    goal_id: UUID | None = None
 
     def fingerprint(self, user_id: UUID) -> str:
         return json.dumps(
@@ -55,7 +61,7 @@ class TransactionFilters:
                 self.date_from.astimezone(UTC).isoformat() if self.date_from else None,
                 self.date_to.astimezone(UTC).isoformat() if self.date_to else None,
                 str(self.account_id),
-                str(self.category_id),
+                sorted({str(category) for category in self.category_ids}),
                 self.currency,
                 self.kind,
                 self.status,
@@ -64,6 +70,8 @@ class TransactionFilters:
                 self.include_deleted,
                 str(self.loan_id),
                 str(self.person_id),
+                str(self.budget_id),
+                str(self.goal_id),
             ],
             separators=(",", ":"),
         )
@@ -465,6 +473,14 @@ class TransactionService:
     def list(
         self, user_id: UUID, filters: TransactionFilters, limit: int, cursor: str | None
     ) -> tuple[list[Transaction], str | None]:
+        if filters.budget_id is not None:
+            budget = UserScopedRepository(self.db, Budget, user_id).get(filters.budget_id)
+            if budget is None:
+                raise AuthError(404, "not_found", "The requested budget was not found.")
+        if filters.goal_id is not None:
+            goal = UserScopedRepository(self.db, Goal, user_id).get(filters.goal_id)
+            if goal is None:
+                raise AuthError(404, "not_found", "The requested goal was not found.")
         fingerprint = filters.fingerprint(user_id)
         after = decode_cursor(cursor, "transactions", fingerprint, self.cursor_secret)
         criteria: list[ColumnElement[bool]] = []
@@ -481,10 +497,28 @@ class TransactionService:
             criteria.append(
                 tuple_(Transaction.occurred_at, Transaction.id) < tuple_(occurred_at, entity_id)
             )
-        for name in ("account_id", "category_id", "currency", "kind", "status"):
+        for name in ("account_id", "currency", "kind", "status"):
             value = getattr(filters, name)
             if value is not None:
                 criteria.append(getattr(Transaction, name) == value)
+        if filters.budget_id is not None:
+            budget_entries = BUDGET_TRANSACTION_IDS_SQL.bindparams(
+                user_id=user_id,
+                budget_id=filters.budget_id,
+                categories=True,
+                start_at=None,
+                end_at=None,
+                account_id=None,
+                person_id=None,
+            ).subquery()
+            criteria.append(Transaction.id.in_(select(budget_entries.c.transaction_id)))
+        if filters.goal_id is not None:
+            goal_entries = GOAL_TRANSACTION_IDS_SQL.bindparams(
+                user_id=user_id, goal_id=filters.goal_id
+            ).subquery()
+            criteria.append(Transaction.id.in_(select(goal_entries.c.transaction_id)))
+        if filters.category_ids:
+            criteria.append(Transaction.category_id.in_(filters.category_ids))
         if filters.date_from is not None:
             criteria.append(Transaction.occurred_at >= filters.date_from)
         if filters.date_to is not None:

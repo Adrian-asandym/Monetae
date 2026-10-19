@@ -15,6 +15,7 @@ from monetae.db.models import User
 
 # All dynamic values (including date_trunc's unit) are bound parameters.
 # Daily preaggregation avoids repeating the historical rate lookup per transaction.
+# Null bounds allow transaction membership queries without an implicit report period.
 ENTRY_SQL = """
     SELECT t.id AS transaction_id, t.occurred_at, t.currency, t.kind,
            CASE WHEN :categories THEN t.category_id ELSE NULL::uuid END AS category_id,
@@ -27,7 +28,8 @@ ENTRY_SQL = """
           WHERE correction.id = t.category_id AND correction.user_id = :user_id
             AND correction.system_key IN ('balance_correction_income', 'balance_correction_expense')
       )
-      AND t.occurred_at >= :start_at AND t.occurred_at < :end_at
+      AND t.occurred_at >= coalesce(CAST(:start_at AS timestamptz), '-infinity'::timestamptz)
+      AND t.occurred_at < coalesce(CAST(:end_at AS timestamptz), 'infinity'::timestamptz)
       AND (CAST(:account_id AS uuid) IS NULL OR t.account_id = :account_id)
     UNION ALL
     SELECT t.id AS transaction_id, m.occurred_at, t.currency,
@@ -43,7 +45,8 @@ ENTRY_SQL = """
                               ELSE 'interest_expense' END
     WHERE m.user_id = :user_id AND m.deleted_at IS NULL AND m.kind = 'payment'
       AND m.interest_part > 0
-      AND m.occurred_at >= :start_at AND m.occurred_at < :end_at
+      AND m.occurred_at >= coalesce(CAST(:start_at AS timestamptz), '-infinity'::timestamptz)
+      AND m.occurred_at < coalesce(CAST(:end_at AS timestamptz), 'infinity'::timestamptz)
       AND (CAST(:account_id AS uuid) IS NULL OR t.account_id = :account_id)
       AND (CAST(:person_id AS uuid) IS NULL OR l.person_id = :person_id)
 

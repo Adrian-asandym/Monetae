@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Monetae API",
-    "version": "0.7.0",
+    "version": "0.8.0",
     "description": "Contrato inicial V1 basado en SPEC v0.7, ARCHITECTURE v0.2 y ADR aceptadas 002/003/004/006. Dinero como cadenas decimales; aislamiento por sesión y borrado lógico. Documentación y observaciones en README.md.",
     "license": {
       "name": "GPL-3.0-only",
@@ -1391,9 +1391,14 @@
             "name": "category_id",
             "in": "query",
             "schema": {
-              "$ref": "#/components/schemas/Uuid"
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Uuid"
+              }
             },
-            "description": "Filtro category_id."
+            "description": "Una o varias categorías; OR entre los valores repetidos. Una categoría ajena o inexistente no aporta coincidencias.",
+            "style": "form",
+            "explode": true
           },
           {
             "name": "currency",
@@ -1466,6 +1471,22 @@
               "default": false
             },
             "description": "Filtro include_deleted."
+          },
+          {
+            "name": "budget_id",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Uuid"
+            },
+            "description": "Transacciones que aportan gasto al presupuesto según la clasificación de reportes, su selección y sus categorías. Sin periodo implícito; admite date_from y date_to. Presupuesto ajeno, borrado o inexistente: 404."
+          },
+          {
+            "name": "goal_id",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Uuid"
+            },
+            "description": "Transacciones enlazadas, publicadas y no borradas que aportan al progreso de la meta (ingresos, gastos y transferencias, incluidas correcciones de saldo). Meta ajena, borrada o inexistente: 404."
           }
         ],
         "x-paginated": true

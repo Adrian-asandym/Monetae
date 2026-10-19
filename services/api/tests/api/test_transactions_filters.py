@@ -139,6 +139,9 @@ def test_keyset_pages_equal_timestamps_and_cursor_filter_binding(client: TestCli
         {"kind": "invalid"},
         {"status": "invalid"},
         {"tag_ids": "not-a-uuid"},
+        {"category_id": "not-a-uuid"},
+        {"budget_id": "not-a-uuid"},
+        {"goal_id": "not-a-uuid"},
     ],
 )
 def test_filter_validation(client: TestClient, filters: dict[str, str]) -> None:
@@ -161,3 +164,44 @@ def test_loan_and_person_filters_link_each_cash_transaction(client: TestClient) 
     assert ids(client, person_id=person) == {row["id"] for row in linked}
     assert not ids(client, loan_id=loan, person_id=other)
     assert len(ids(client, loan_id=second)) == 1
+
+
+def test_multiple_categories_or_pagination_and_ownership(client: TestClient) -> None:
+    login(client)
+    account = create_account(client)
+    first, second = create_category(client, "A"), create_category(client, "B")
+    expected = {
+        create_transaction(client, account, category_id=category)
+        for category in (first, second, first, second)
+    }
+    create_transaction(client, account)
+    login(client, "second@example.test")
+    foreign = create_category(client, "Foreign")
+    create_transaction(client, create_account(client), category_id=foreign)
+    login(client)
+    assert ids(client, category_id=foreign) == set()
+    params = [("category_id", first), ("category_id", second), ("category_id", foreign)]
+    response = client.get("/api/v1/transactions", params=params)
+    assert response.status_code == 200, response.text
+    assert {row["id"] for row in response.json()["items"]} == expected
+    # Duplicate/reordered categories describe the same OR filter and cursor scope.
+    page = client.get("/api/v1/transactions", params=[*params, ("limit", "1")]).json()
+    collected = [row["id"] for row in page["items"]]
+    cursor = page["next_cursor"]
+    while cursor:
+        page = client.get(
+            "/api/v1/transactions",
+            params=[*reversed(params), ("category_id", first), ("limit", "1"), ("cursor", cursor)],
+        ).json()
+        collected.extend(row["id"] for row in page["items"])
+        cursor = page["next_cursor"]
+    assert len(collected) == len(expected) and set(collected) == expected
+    cursor = client.get("/api/v1/transactions", params=[*params, ("limit", "1")]).json()[
+        "next_cursor"
+    ]
+    assert (
+        client.get(
+            "/api/v1/transactions", params={"category_id": first, "cursor": cursor}
+        ).status_code
+        == 400
+    )
