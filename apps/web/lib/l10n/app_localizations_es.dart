@@ -584,6 +584,62 @@ class AppLocalizationsEs extends AppLocalizations {
   String get addBudgetLabel => 'Presupuesto';
 
   @override
+  String get budgetAmount => 'Importe';
+
+  @override
+  String get budgetCategories => 'Categorías incluidas';
+
+  @override
+  String get budgetAllCategories => 'Todas las categorías de gasto';
+
+  @override
+  String get budgetCategoriesDone => 'Fijar categorías';
+
+  @override
+  String get addBudget => 'Añadir presupuesto';
+
+  @override
+  String get budgetName => 'Nombre del presupuesto';
+
+  @override
+  String get budgetNameRequired => 'Escribe un nombre para el presupuesto.';
+
+  @override
+  String get budgetPeriod => 'Periodo';
+
+  @override
+  String get budgetDaily => 'Diario';
+
+  @override
+  String get budgetWeekly => 'Semanal';
+
+  @override
+  String get budgetMonthly => 'Mensual';
+
+  @override
+  String get budgetCustom => 'Personalizado';
+
+  @override
+  String get budgetStartDate => 'Fecha de inicio';
+
+  @override
+  String get budgetEndDate => 'Fecha de fin';
+
+  @override
+  String get budgetChooseEndDate => 'Seleccionar fecha de fin';
+
+  @override
+  String get budgetDatesInvalid =>
+      'La fecha de fin debe ser igual o posterior a la de inicio.';
+
+  @override
+  String get budgetSelectedOnly => 'Solo transacciones añadidas';
+
+  @override
+  String get budgetSelectedOnlyHint =>
+      'Incluye solo las transacciones asignadas a este presupuesto.';
+
+  @override
   String get editHome => 'Editar';
 
   @override

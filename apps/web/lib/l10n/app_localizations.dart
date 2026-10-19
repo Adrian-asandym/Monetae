@@ -1130,6 +1130,114 @@ abstract class AppLocalizations {
   /// **'Presupuesto'**
   String get addBudgetLabel;
 
+  /// No description provided for @budgetAmount.
+  ///
+  /// In es, this message translates to:
+  /// **'Importe'**
+  String get budgetAmount;
+
+  /// No description provided for @budgetCategories.
+  ///
+  /// In es, this message translates to:
+  /// **'Categorías incluidas'**
+  String get budgetCategories;
+
+  /// No description provided for @budgetAllCategories.
+  ///
+  /// In es, this message translates to:
+  /// **'Todas las categorías de gasto'**
+  String get budgetAllCategories;
+
+  /// No description provided for @budgetCategoriesDone.
+  ///
+  /// In es, this message translates to:
+  /// **'Fijar categorías'**
+  String get budgetCategoriesDone;
+
+  /// No description provided for @addBudget.
+  ///
+  /// In es, this message translates to:
+  /// **'Añadir presupuesto'**
+  String get addBudget;
+
+  /// No description provided for @budgetName.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre del presupuesto'**
+  String get budgetName;
+
+  /// No description provided for @budgetNameRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Escribe un nombre para el presupuesto.'**
+  String get budgetNameRequired;
+
+  /// No description provided for @budgetPeriod.
+  ///
+  /// In es, this message translates to:
+  /// **'Periodo'**
+  String get budgetPeriod;
+
+  /// No description provided for @budgetDaily.
+  ///
+  /// In es, this message translates to:
+  /// **'Diario'**
+  String get budgetDaily;
+
+  /// No description provided for @budgetWeekly.
+  ///
+  /// In es, this message translates to:
+  /// **'Semanal'**
+  String get budgetWeekly;
+
+  /// No description provided for @budgetMonthly.
+  ///
+  /// In es, this message translates to:
+  /// **'Mensual'**
+  String get budgetMonthly;
+
+  /// No description provided for @budgetCustom.
+  ///
+  /// In es, this message translates to:
+  /// **'Personalizado'**
+  String get budgetCustom;
+
+  /// No description provided for @budgetStartDate.
+  ///
+  /// In es, this message translates to:
+  /// **'Fecha de inicio'**
+  String get budgetStartDate;
+
+  /// No description provided for @budgetEndDate.
+  ///
+  /// In es, this message translates to:
+  /// **'Fecha de fin'**
+  String get budgetEndDate;
+
+  /// No description provided for @budgetChooseEndDate.
+  ///
+  /// In es, this message translates to:
+  /// **'Seleccionar fecha de fin'**
+  String get budgetChooseEndDate;
+
+  /// No description provided for @budgetDatesInvalid.
+  ///
+  /// In es, this message translates to:
+  /// **'La fecha de fin debe ser igual o posterior a la de inicio.'**
+  String get budgetDatesInvalid;
+
+  /// No description provided for @budgetSelectedOnly.
+  ///
+  /// In es, this message translates to:
+  /// **'Solo transacciones añadidas'**
+  String get budgetSelectedOnly;
+
+  /// No description provided for @budgetSelectedOnlyHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Incluye solo las transacciones asignadas a este presupuesto.'**
+  String get budgetSelectedOnlyHint;
+
   /// No description provided for @editHome.
   ///
   /// In es, this message translates to:

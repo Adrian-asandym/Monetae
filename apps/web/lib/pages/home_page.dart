@@ -19,6 +19,7 @@ import '../widgets/home_greeting.dart';
 import '../widgets/transaction_card_list.dart';
 import 'add_account_page.dart';
 import 'add_goal_page.dart';
+import 'add_budget_page.dart';
 
 const defaultHomeWidgets = [
   'accounts',
@@ -147,8 +148,16 @@ class _HomePageState extends State<HomePage> {
         builder: (budgets) => BudgetCardList(
           budgets: budgets,
           today: _today,
-          onCreate: () {
-            // TODO(T-514): connect when the budget creation form exists.
+          onCreate: () async {
+            final created = await Navigator.of(context).push<bool>(
+              MaterialPageRoute(
+                builder: (_) => AddBudgetPage(
+                  api: session.api,
+                  baseCurrency: profile.baseCurrency,
+                ),
+              ),
+            );
+            if (mounted && created == true) await _home.budgets.load();
           },
         ),
       ),

@@ -9,6 +9,7 @@ import '../l10n/app_localizations.dart';
 import '../presentation/clock.dart';
 import '../widgets/budget_goal_lists.dart';
 import '../widgets/home_block_view.dart';
+import 'add_budget_page.dart';
 
 class BudgetsPage extends StatefulWidget {
   const BudgetsPage({super.key, required this.api, this.today});
@@ -62,6 +63,14 @@ class _BudgetsPageState extends State<BudgetsPage> {
               builder: (budgets) => BudgetCardList(
                 budgets: budgets,
                 axis: Axis.vertical,
+                onCreate: () async {
+                  final created = await Navigator.of(context).push<bool>(
+                    MaterialPageRoute(
+                      builder: (_) => AddBudgetPage(api: widget.api),
+                    ),
+                  );
+                  if (mounted && created == true) await _block.load();
+                },
                 today:
                     widget.today ??
                     PresentationClock.of(context)

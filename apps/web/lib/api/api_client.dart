@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import '../data/api_dtos.dart';
 import '../data/account_create_dto.dart';
 import '../data/goal_create_dto.dart';
+import '../data/budget_create_dto.dart';
 import '../data/balance_correction_dtos.dart';
 import '../l10n/app_localizations.dart';
 import 'browser_environment.dart';
@@ -300,4 +301,9 @@ final class ApiClient {
 
   Future<GoalDto> createGoal(GoalCreateDto goal) async =>
       GoalDto.fromJson(await _request('POST', 'goals', body: goal.toJson()));
+
+  Future<BudgetDto> createBudget(BudgetCreateDto body) async =>
+      BudgetDto.fromJson(
+        await _request('POST', 'budgets', body: body.toJson()),
+      );
 }
