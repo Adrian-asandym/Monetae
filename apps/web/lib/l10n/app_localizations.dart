@@ -1244,6 +1244,24 @@ abstract class AppLocalizations {
   /// **'Editar'**
   String get editHome;
 
+  /// No description provided for @editHomeTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar Inicio'**
+  String get editHomeTitle;
+
+  /// No description provided for @editHomeMinimum.
+  ///
+  /// In es, this message translates to:
+  /// **'Mantén al menos un componente visible.'**
+  String get editHomeMinimum;
+
+  /// No description provided for @editHomeReorder.
+  ///
+  /// In es, this message translates to:
+  /// **'Reordenar {component}'**
+  String editHomeReorder(String component);
+
   /// No description provided for @formAddMenuTitle.
   ///
   /// In es, this message translates to:

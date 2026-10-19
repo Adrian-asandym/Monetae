@@ -125,6 +125,14 @@ final class SessionController extends ChangeNotifier {
     );
   }
 
+  Future<void> updateHomeWidgets(List<String> widgets) async {
+    final profile = user;
+    if (profile == null || saving || busy) return;
+    await _updatePreferences(
+      profile.preferences.copyWith(homeWidgets: widgets),
+    );
+  }
+
   Future<void> _updatePreferences(UserPreferencesDto preferences) async {
     final revision = _revision;
     saving = true;

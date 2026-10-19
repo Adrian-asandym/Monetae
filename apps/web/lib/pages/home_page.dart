@@ -20,6 +20,7 @@ import '../widgets/transaction_card_list.dart';
 import 'add_account_page.dart';
 import 'add_goal_page.dart';
 import 'add_budget_page.dart';
+import 'edit_home_page.dart';
 import 'new_transaction_page.dart';
 
 const defaultHomeWidgets = [
@@ -220,7 +221,11 @@ class _HomePageState extends State<HomePage> {
                     ),
                     HomeEditButton(
                       onPressed: () {
-                        // TODO(T-514): connect Home component reordering UI.
+                        Navigator.of(context).push<void>(
+                          MaterialPageRoute(
+                            builder: (_) => EditHomePage(session: session),
+                          ),
+                        );
                       },
                     ),
                   ],

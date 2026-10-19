@@ -643,6 +643,17 @@ class AppLocalizationsEs extends AppLocalizations {
   String get editHome => 'Editar';
 
   @override
+  String get editHomeTitle => 'Editar Inicio';
+
+  @override
+  String get editHomeMinimum => 'Mantén al menos un componente visible.';
+
+  @override
+  String editHomeReorder(String component) {
+    return 'Reordenar $component';
+  }
+
+  @override
   String get formAddMenuTitle => 'Agregar Transacción';
 
   @override
