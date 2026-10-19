@@ -807,6 +807,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transferCorrectionCategory => 'Balance Correction';
 
   @override
+  String get transactionResourceReadOnly =>
+      'Read only: edit this transaction from its transfer or loan.';
+
+  @override
+  String get transactionCorrectionLocked =>
+      'The kind and category of a balance correction cannot be changed.';
+
+  @override
+  String get filterTransactionCategory => 'Filter by category';
+
+  @override
   String get transferConfirm => 'Transfer amount';
 
   @override

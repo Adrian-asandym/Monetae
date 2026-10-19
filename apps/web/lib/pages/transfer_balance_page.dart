@@ -10,6 +10,9 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 import '../api/transfer_balance_controller.dart';
+import '../api/home_controller.dart';
+import '../data/api_dtos.dart';
+import 'transactions_page.dart';
 import '../l10n/app_localizations.dart';
 import '../presentation/account_color.dart';
 import '../presentation/currency_format.dart';
@@ -315,9 +318,50 @@ class _TransferBalancePageState extends State<TransferBalancePage> {
                 label: l.transferCorrectionCategory,
                 height: _T.transferDialogButtonHeight,
                 color: c.action,
-                // TODO(T-519): TransactionsPage has no category filter yet.
-                // Local Cashew predates this button; follows captures + clarification.
-                onPressed: () {},
+                onPressed: () async {
+                  try {
+                    final categories = await loadPages<CategoryDto>((
+                      cursor,
+                    ) async {
+                      final page = await widget.session.api.categories(
+                        cursor: cursor,
+                      );
+                      return (page.items, page.nextCursor);
+                    });
+                    final ids = categories
+                        .where(
+                          (category) =>
+                              category.systemKey ==
+                                  CategorySystemKey.balanceCorrectionExpense ||
+                              category.systemKey ==
+                                  CategorySystemKey.balanceCorrectionIncome,
+                        )
+                        .map((category) => category.id)
+                        .toList();
+                    if (!dialog.mounted || !mounted) return;
+                    // Never open unfiltered history with an incomplete catalog.
+                    if (ids.length != 2) {
+                      throw StateError('Missing correction categories');
+                    }
+                    Navigator.pop(dialog);
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => TransactionsPage(
+                          session: widget.session,
+                          categoryIds: ids,
+                          onDemo: () =>
+                              Navigator.of(context).pushNamed('/demo/home'),
+                        ),
+                      ),
+                    );
+                  } on Object {
+                    if (dialog.mounted) {
+                      ScaffoldMessenger.of(dialog).showSnackBar(
+                        SnackBar(content: Text(l.connectionError)),
+                      );
+                    }
+                  }
+                },
               ),
             ],
           ),

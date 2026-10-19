@@ -47,12 +47,15 @@ class NewTransactionPage extends StatefulWidget {
     required this.session,
     this.controller,
     this.editing = false,
+    this.transactionId,
     this.settings,
   });
   final SessionController session;
   final NewTransactionController? controller;
 
-  /// Only switches the title; there is no edit route yet (TODO T-515).
+  final String? transactionId;
+
+  /// Also retained for isolated previews of the form.
   final bool editing;
   final TransactionFormSettings? settings;
   @override
@@ -64,6 +67,7 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
   late final TextEditingController _rate;
   late final TextEditingController _title;
   late final TransactionFormSettings _settings;
+  bool get _editing => widget.editing || _form.editing;
   bool _initialTitleOpened = false;
   bool _uncategorizedChosen = false;
   FormTransactionType _designType = FormTransactionType.standard;
@@ -80,7 +84,11 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
     super.initState();
     _form =
         widget.controller ??
-        NewTransactionController(widget.session.api, widget.session.user!);
+        NewTransactionController(
+          widget.session.api,
+          widget.session.user!,
+          transactionId: widget.transactionId,
+        );
     _rate = TextEditingController(text: _form.rate);
     _title = TextEditingController(text: _form.title);
     _form.addListener(_changed);
@@ -116,6 +124,7 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
 
   void _changed() {
     if (!mounted) return;
+    if (_rate.text != _form.rate) _rate.text = _form.rate;
     if (_title.text != _form.title) _title.text = _form.title;
     setState(() {});
     _scheduleTitleSheet();
@@ -126,7 +135,7 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
   }
 
   void _scheduleTitleSheet() {
-    if (widget.editing || _form.loading || _initialTitleOpened) return;
+    if (_editing || _form.loading || _initialTitleOpened) return;
     _initialTitleOpened = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -199,7 +208,8 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
     super.dispose();
   }
 
-  bool get _categoryChosen => _form.categoryId != null || _uncategorizedChosen;
+  bool get _categoryChosen =>
+      _editing || _form.categoryId != null || _uncategorizedChosen;
 
   String? _fieldError(String name) {
     if (_form.fieldErrors[name] case final String message) return message;
@@ -236,7 +246,12 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
   }
 
   void _selectIncome(bool income) {
-    if (_form.busy || income == _form.income) return;
+    if (_form.busy ||
+        _form.correction ||
+        _form.readOnly ||
+        income == _form.income) {
+      return;
+    }
     setState(() => _uncategorizedChosen = false);
     _form.selectIncome(income);
   }
@@ -275,6 +290,7 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
   }
 
   Future<void> _openCategorySheet() async {
+    if (_form.correction || _form.readOnly) return;
     if (_form.busy) return;
     final l = AppLocalizations.of(context);
     final chosen = await showFormSheet<bool>(
@@ -451,7 +467,11 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
     if (!mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     final message = AppLocalizations.of(context).transactionSaved;
-    Navigator.of(context).popUntil((route) => route.isFirst);
+    if (_editing) {
+      Navigator.of(context).pop();
+    } else {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    }
     messenger.showSnackBar(SnackBar(content: Text(message)));
   }
 
@@ -548,7 +568,7 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
 
   void _selectAccount(AccountDto account) {
     if (account.id == _form.account?.id) return;
-    _rate.clear();
+    if (!_editing) _rate.clear();
     _form.selectAccount(account);
   }
 
@@ -610,7 +630,7 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
         surfaceTintColor: Colors.transparent,
         scrolledUnderElevation: 0,
         title: Text(
-          widget.editing ? l.formEditTitle : l.addTransaction,
+          _editing ? l.formEditTitle : l.addTransaction,
           style: const TextStyle(
             fontSize: _T.titleSize,
             fontWeight: FontWeight.bold,
@@ -626,22 +646,29 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
                 : () => showFormSettingsSheet(
                     context,
                     settings: _settings,
-                    editing: widget.editing,
+                    editing: _editing,
                   ),
           ),
         ],
       ),
-      bottomNavigationBar: FormBottomAction(
-        label: _categoryChosen
-            ? (busy
-                  ? l.savingTransaction
-                  : widget.editing
-                  ? l.saveTransaction
-                  : l.addTransaction)
-            : l.formSelectCategory,
-        busy: busy,
-        onPressed: busy || _form.loading ? null : _onAction,
-      ),
+      bottomNavigationBar: _form.readOnly
+          ? null
+          : FormBottomAction(
+              label: _categoryChosen
+                  ? (busy
+                        ? l.savingTransaction
+                        : _editing
+                        ? l.saveTransaction
+                        : l.addTransaction)
+                  : l.formSelectCategory,
+              busy: busy,
+              onPressed:
+                  busy ||
+                      _form.loading ||
+                      (_form.editing && _form.original == null)
+                  ? null
+                  : _onAction,
+            ),
       body: _form.loading
           ? const Center(child: CircularProgressIndicator())
           : Align(
@@ -656,7 +683,7 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
                         : _T.formBottomPadding,
                   ),
                   child: AbsorbPointer(
-                    absorbing: busy,
+                    absorbing: busy || _form.readOnly,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: _formChildren(l, colors),
@@ -685,6 +712,23 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
           onTap: () => _selectType(type),
         );
     return [
+      if (_form.readOnly)
+        Padding(
+          padding: pad,
+          // TODO(F2): edit transfers and loan movements via their own resource.
+          child: Text(
+            l.transactionResourceReadOnly,
+            key: const Key('transaction-read-only'),
+          ),
+        ),
+      if (_form.correction)
+        Padding(
+          padding: pad,
+          child: Text(
+            l.transactionCorrectionLocked,
+            key: const Key('transaction-correction-locked'),
+          ),
+        ),
       if (_form.error case final error?)
         Padding(
           padding: const EdgeInsets.fromLTRB(
@@ -706,7 +750,8 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
                 key: const Key('retry-transaction'),
                 onPressed: _form.busy
                     ? null
-                    : _form.accounts.isEmpty
+                    : _form.accounts.isEmpty ||
+                          (_form.editing && _form.original == null)
                     ? _form.load
                     : _save,
                 child: Text(l.retry),
@@ -714,12 +759,30 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
             ],
           ),
         ),
-      FormKindTabs(
-        income: _form.income,
-        onChanged: _selectIncome,
-        showTransfer: _settings.showTransfer,
-        onTransfer: _openTransfer,
-      ),
+      if (_form.readOnly)
+        Padding(
+          padding: pad,
+          child: Chip(
+            label: Text(
+              _form.original?.kind == TransactionKind.transfer
+                  ? l.transfer
+                  : l.loanMovement,
+            ),
+          ),
+        ),
+      if (!_form.readOnly)
+        AbsorbPointer(
+          absorbing: _form.correction,
+          child: Opacity(
+            opacity: _form.correction ? 0.6 : 1,
+            child: FormKindTabs(
+              income: _form.income,
+              onChanged: _selectIncome,
+              showTransfer: !_editing && _settings.showTransfer,
+              onTransfer: _openTransfer,
+            ),
+          ),
+        ),
       _error(_fieldError('kind')),
       FormAmountHeader(
         category: _headerCategory(),
@@ -763,7 +826,7 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
             controller: _rate,
             hint: l.exchangeRate,
             icon: Icons.currency_exchange_rounded,
-            readOnly: _form.busy,
+            readOnly: _form.busy || _form.readOnly,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: const [DecimalTextFormatter(6)],
             errorText: _fieldError('fx_rate_to_base'),
@@ -888,6 +951,16 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
           ),
         ],
       ),
+      if (_form.tags.isNotEmpty)
+        Padding(
+          padding: pad,
+          child: Wrap(
+            spacing: 8,
+            children: [
+              for (final tag in _form.tags) Chip(label: Text(tag.name)),
+            ],
+          ),
+        ),
       const SizedBox(height: _T.rowGap + 4),
       Padding(
         padding: pad,
@@ -896,7 +969,7 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
           hint: l.formTitleHint,
           icon: Icons.title_rounded,
           controller: _title,
-          readOnly: _form.busy,
+          readOnly: _form.busy || _form.readOnly,
           errorText: _fieldError('title'),
           onChanged: (text) => _form.edit(() => _form.title = text),
         ),
@@ -908,7 +981,7 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
           showAttachment: _settings.showAttachment,
           fieldKey: const Key('transaction-note'),
           initialValue: _form.note,
-          readOnly: _form.busy,
+          readOnly: _form.busy || _form.readOnly,
           errorText: _fieldError('note'),
           onChanged: (text) => _form.edit(() => _form.note = text),
         ),

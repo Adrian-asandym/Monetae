@@ -21,11 +21,13 @@ class TransactionCategoryGrid extends StatelessWidget {
     required this.selectedId,
     required this.onSelected,
     this.uncategorizedSelected = false,
+    this.showUncategorized = true,
   });
   final List<CategoryDto> categories;
   final String? selectedId;
   final ValueChanged<String?> onSelected;
   final bool uncategorizedSelected;
+  final bool showUncategorized;
 
   @override
   Widget build(BuildContext context) {
@@ -44,9 +46,11 @@ class TransactionCategoryGrid extends StatelessWidget {
         mainAxisSpacing: _T.categoryGridGap,
         crossAxisSpacing: _T.categoryGridGap,
       ),
-      itemCount: categories.length + 1,
+      itemCount: categories.length + (showUncategorized ? 1 : 0),
       itemBuilder: (context, index) {
-        final category = index == 0 ? null : categories[index - 1];
+        final category = showUncategorized && index == 0
+            ? null
+            : categories[index - (showUncategorized ? 1 : 0)];
         return _tile(context, category?.name ?? l.uncategorized, category);
       },
     );

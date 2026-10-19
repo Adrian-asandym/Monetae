@@ -811,6 +811,17 @@ class AppLocalizationsEs extends AppLocalizations {
   String get transferCorrectionCategory => 'Corrección De Saldo';
 
   @override
+  String get transactionResourceReadOnly =>
+      'Solo lectura: esta transacción se edita desde su transferencia o préstamo.';
+
+  @override
+  String get transactionCorrectionLocked =>
+      'El tipo y la categoría de una corrección de saldo no se pueden cambiar.';
+
+  @override
+  String get filterTransactionCategory => 'Filtrar por categoría';
+
+  @override
   String get transferConfirm => 'Transferir cantidad';
 
   @override

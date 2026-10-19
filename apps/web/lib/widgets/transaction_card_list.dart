@@ -20,6 +20,7 @@ class TransactionCardList extends StatelessWidget {
     this.dailyFlow,
     this.isHome = false,
     this.onViewTransactions,
+    this.onTap,
     this.onEdit,
     this.onDuplicate,
     this.onDelete,
@@ -31,6 +32,7 @@ class TransactionCardList extends StatelessWidget {
   final List<CashFlowRowDto>? dailyFlow;
   final bool isHome;
   final VoidCallback? onViewTransactions;
+  final ValueChanged<TransactionCardModel>? onTap;
   final ValueChanged<TransactionCardModel>? onEdit;
   final ValueChanged<TransactionCardModel>? onDuplicate;
   final ValueChanged<TransactionCardModel>? onDelete;
@@ -77,12 +79,16 @@ class TransactionCardList extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: isHome
-              ? HomeTransactionRow(
-                  model: models[i],
-                  tintCategoryIcon: tintCategoryIcons,
+              ? InkWell(
+                  onTap: onTap == null ? null : () => onTap!(models[i]),
+                  child: HomeTransactionRow(
+                    model: models[i],
+                    tintCategoryIcon: tintCategoryIcons,
+                  ),
                 )
               : TransactionCard(
                   model: models[i],
+                  onTap: onTap == null ? null : () => onTap!(models[i]),
                   preferences: preferences,
                   compact: compact,
                   tintCategoryIcon: tintCategoryIcons,

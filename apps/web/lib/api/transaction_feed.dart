@@ -3,7 +3,8 @@ import 'api_client.dart';
 
 /// Joins display catalogs only; balances, amounts and states come from the API.
 final class TransactionFeed {
-  TransactionFeed(this.api);
+  TransactionFeed(this.api, {this.categoryIds = const []});
+  final List<String> categoryIds;
   final ApiClient api;
   final accounts = <String, AccountDto>{};
   final categories = <String, CategoryDto>{};
@@ -77,7 +78,11 @@ final class TransactionFeed {
   }
 
   Future<void> loadMore({int limit = 50}) async {
-    final page = await api.transactions(cursor: nextCursor, limit: limit);
+    final page = await api.transactions(
+      cursor: nextCursor,
+      limit: limit,
+      categoryIds: categoryIds,
+    );
     for (final item in page.items) {
       await _resolve(item.accountId, accounts, api.account);
       final categoryId = item.categoryId;

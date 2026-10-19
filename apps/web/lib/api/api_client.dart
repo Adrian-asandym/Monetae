@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../data/api_dtos.dart';
+import '../data/transaction_update_request.dart';
 import '../data/account_create_dto.dart';
 import '../data/goal_create_dto.dart';
 import '../data/budget_create_dto.dart';
@@ -62,7 +63,7 @@ final class ApiClient {
   Future<Map<String, Object?>> _request(
     String method,
     String path, {
-    Map<String, String>? query,
+    Map<String, Object>? query,
     Map<String, Object?>? body,
     String? idempotencyKey,
   }) async {
@@ -171,6 +172,16 @@ final class ApiClient {
     ),
   );
 
+  Future<TransactionDto> transaction(String id) async =>
+      TransactionDto.fromJson(await _request('GET', 'transactions/$id'));
+
+  Future<TransactionDto> updateTransaction(
+    String id,
+    TransactionUpdateRequest transaction,
+  ) async => TransactionDto.fromJson(
+    await _request('PATCH', 'transactions/$id', body: transaction.toJson()),
+  );
+
   Future<AuthenticatedSessionDto> login(String email, String password) async {
     final result = AuthenticatedSessionDto.fromJson(
       await _request(
@@ -257,13 +268,18 @@ final class ApiClient {
     ),
   );
   Future<TransactionPageDto> transactions({
+    List<String> categoryIds = const [],
     String? cursor,
     int limit = 50,
   }) async => TransactionPageDto.fromJson(
     await _request(
       'GET',
       'transactions',
-      query: {..._pageQuery(cursor), 'limit': '$limit'},
+      query: {
+        ..._pageQuery(cursor),
+        'limit': '$limit',
+        if (categoryIds.isNotEmpty) 'category_id': categoryIds,
+      },
     ),
   );
   Future<AccountDto> account(String id) async =>
