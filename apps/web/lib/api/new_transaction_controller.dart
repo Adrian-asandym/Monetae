@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 
 import '../data/api_dtos.dart';
+import '../data/transaction_update_request.dart';
 import '../presentation/decimal_input.dart';
 import 'api_client.dart';
 import 'home_controller.dart';
@@ -20,10 +21,29 @@ String newIdempotencyKey() {
 
 /// Form state only. Financial validation and persistence belong to the API.
 final class NewTransactionController extends ChangeNotifier {
-  NewTransactionController(this.api, this.user, {DateTime Function()? now})
-    : now = now ?? DateTime.now {
+  NewTransactionController(
+    this.api,
+    this.user, {
+    DateTime Function()? now,
+    this.transactionId,
+  }) : now = now ?? DateTime.now {
     occurredAt = this.now().toUtc();
   }
+  final String? transactionId;
+  TransactionDto? original;
+  List<TagDto> tags = [];
+  bool get editing => transactionId != null;
+  bool get readOnly =>
+      original != null &&
+      (original!.kind == TransactionKind.transfer ||
+          original!.kind == TransactionKind.loan ||
+          original!.loanId != null);
+  bool get correction => categories.any(
+    (c) =>
+        c.id == categoryId &&
+        (c.systemKey == CategorySystemKey.balanceCorrectionExpense ||
+            c.systemKey == CategorySystemKey.balanceCorrectionIncome),
+  );
   final ApiClient api;
   final CurrentUserDto user;
   final DateTime Function() now;
@@ -48,9 +68,18 @@ final class NewTransactionController extends ChangeNotifier {
 
   bool get needsRate =>
       account != null && account!.currency != user.baseCurrency;
-  bool get scheduled => _attempt == null
-      ? occurredAt.isAfter(now().toUtc())
-      : _attempt!.status == TransactionCreateStatus.scheduled;
+  bool get scheduled {
+    if (_attempt case final attempt?) {
+      return attempt.status == TransactionCreateStatus.scheduled;
+    }
+    if (original case final item?) {
+      if (occurredAt.isAtSameMomentAs(DateTime.parse(item.occurredAt))) {
+        return item.status == TransactionStatus.scheduled;
+      }
+    }
+    return occurredAt.isAfter(now().toUtc());
+  }
+
   // America/Lima has no DST. Use UTC arithmetic, independent of browser timezone.
   DateTime get limaTime =>
       occurredAt.toUtc().subtract(const Duration(hours: 5));
@@ -69,6 +98,7 @@ final class NewTransactionController extends ChangeNotifier {
   Future<void> load() async {
     loading = true;
     error = null;
+    if (editing) original = null;
     _notify();
     try {
       final result = await Future.wait([
@@ -90,10 +120,43 @@ final class NewTransactionController extends ChangeNotifier {
           .where((a) => a.deletedAt == null && a.archivedAt == null)
           .toList();
       categories = result[1].cast<CategoryDto>();
-      final preferred = user.preferences.defaultAccountId;
-      account =
-          accounts.where((a) => a.id == preferred).firstOrNull ??
-          accounts.firstOrNull;
+      if (transactionId case final id?) {
+        final item = await api.transaction(id);
+        if (_disposed) return;
+        var savedAccount = accounts
+            .where((a) => a.id == item.accountId)
+            .firstOrNull;
+        if (savedAccount == null) {
+          savedAccount = await api.account(item.accountId);
+          accounts.add(savedAccount);
+        }
+        // Moving a saved transaction is restricted to the same currency.
+        accounts = accounts.where((a) => a.currency == item.currency).toList();
+        final savedCategoryId = item.categoryId;
+        if (savedCategoryId != null &&
+            !categories.any((c) => c.id == savedCategoryId)) {
+          categories.add(await api.category(savedCategoryId));
+        }
+        final savedTags = await Future.wait(item.tagIds.map(api.tag));
+        if (_disposed) return;
+        original = item;
+        account = savedAccount;
+        categoryId = savedCategoryId;
+        tags = savedTags;
+        income =
+            item.kind == TransactionKind.income ||
+            !item.amount.startsWith('-') && readOnly;
+        amount = item.amount.replaceFirst(RegExp(r'^-'), '');
+        rate = item.fxRateToBase;
+        title = item.title;
+        note = item.note ?? '';
+        occurredAt = DateTime.parse(item.occurredAt).toUtc();
+      } else {
+        final preferred = user.preferences.defaultAccountId;
+        account =
+            accounts.where((a) => a.id == preferred).firstOrNull ??
+            accounts.firstOrNull;
+      }
     } on ApiException catch (e) {
       if (!_disposed) error = e;
     } on Object {
@@ -106,7 +169,7 @@ final class NewTransactionController extends ChangeNotifier {
   /// Every user edit begins a new logical submission, including an edit reverted
   /// to its old value. A retry without edits keeps its exact body and UUID.
   void edit(VoidCallback change) {
-    if (busy || _disposed) return;
+    if (busy || readOnly || _disposed) return;
     change();
     _key = null;
     _attempt = null;
@@ -116,14 +179,17 @@ final class NewTransactionController extends ChangeNotifier {
     _notify();
   }
 
-  void selectIncome(bool value) => edit(() {
-    income = value;
-    categoryId = null;
-  });
+  void selectIncome(bool value) {
+    if (correction) return;
+    edit(() {
+      income = value;
+      categoryId = null;
+    });
+  }
 
   void selectAccount(AccountDto value) => edit(() {
     account = value;
-    rate = '';
+    if (!editing) rate = '';
   });
 
   void selectLimaTime(DateTime value) => edit(() {
@@ -137,7 +203,13 @@ final class NewTransactionController extends ChangeNotifier {
   });
 
   Future<bool> save() async {
-    if (busy || loading || _disposed) return false;
+    if (busy ||
+        loading ||
+        readOnly ||
+        (editing && original == null) ||
+        _disposed) {
+      return false;
+    }
     invalidFields.clear();
     if (!positiveDecimal(amount, 2)) invalidFields.add('amount');
     if (account == null) invalidFields.add('account_id');
@@ -164,7 +236,14 @@ final class NewTransactionController extends ChangeNotifier {
       title: title,
       note: note.isEmpty ? null : note,
       fxRateToBase: needsRate ? decimalWireText(rate, 6) : '1.000000',
-      fxRateSource: TransactionCreateFxRateSource.manual,
+      fxRateSource:
+          editing &&
+              decimalWireText(rate, 6) ==
+                  decimalWireText(original!.fxRateToBase, 6)
+          ? TransactionCreateFxRateSource.values.byName(
+              original!.fxRateSource.name,
+            )
+          : TransactionCreateFxRateSource.manual,
     );
     _key ??= newIdempotencyKey();
     busy = true;
@@ -173,7 +252,12 @@ final class NewTransactionController extends ChangeNotifier {
     _notify();
     var success = false;
     try {
-      await api.createTransaction(_attempt!, idempotencyKey: _key!);
+      if (original case final item?) {
+        final patch = TransactionUpdateRequest.between(item, _attempt!);
+        if (!patch.isEmpty) await api.updateTransaction(item.id, patch);
+      } else {
+        await api.createTransaction(_attempt!, idempotencyKey: _key!);
+      }
       success = true;
     } on ApiException catch (e) {
       if (!_disposed) {

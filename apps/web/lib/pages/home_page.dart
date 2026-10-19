@@ -19,6 +19,7 @@ import '../widgets/home_greeting.dart';
 import '../widgets/transaction_card_list.dart';
 import 'add_account_page.dart';
 import 'add_goal_page.dart';
+import 'new_transaction_page.dart';
 
 const defaultHomeWidgets = [
   'accounts',
@@ -178,6 +179,14 @@ class _HomePageState extends State<HomePage> {
                     : _home.dailyFlow.data,
                 onViewTransactions: widget.onViewTransactions,
                 isHome: true,
+                onTap: (model) => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => NewTransactionPage(
+                      session: widget.session,
+                      transactionId: model.transaction.id,
+                    ),
+                  ),
+                ),
               ),
       ),
     };

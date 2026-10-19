@@ -392,11 +392,11 @@ void main() {
       (_, _) => NewTransactionPage(
         session: f.session,
         controller: f.form,
-        editing: true,
         settings: settings,
       ),
     );
     await tester.pumpAndSettle();
+    await transaction.dismissTitleSheet(tester);
     f.form.edit(() => f.form.title = 'Título intacto');
     await tester.tap(find.byKey(const Key('select-transfer')));
     await tester.pumpAndSettle();

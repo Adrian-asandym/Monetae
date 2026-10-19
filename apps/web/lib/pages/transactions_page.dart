@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../api/api_client.dart';
 import '../api/transaction_feed.dart';
+import '../widgets/transaction_category_grid.dart';
+import '../widgets/transaction_form/form_sheet.dart';
+import 'new_transaction_page.dart';
 import '../l10n/app_localizations.dart';
 import '../presentation/transaction_presenter.dart';
 import '../session/session_controller.dart';
@@ -15,7 +18,9 @@ class TransactionsPage extends StatefulWidget {
     required this.session,
     required this.onDemo,
     this.onHome,
+    this.categoryIds = const [],
   });
+  final List<String> categoryIds;
   final SessionController session;
   final VoidCallback onDemo;
   final VoidCallback? onHome;
@@ -25,6 +30,8 @@ class TransactionsPage extends StatefulWidget {
 
 class _TransactionsPageState extends State<TransactionsPage> {
   late TransactionFeed _feed;
+  late List<String> _categoryIds;
+  int _loadRevision = 0;
   bool _loading = true;
   ApiException? _error;
   late int _transactionRevision;
@@ -33,7 +40,8 @@ class _TransactionsPageState extends State<TransactionsPage> {
     super.initState();
     _transactionRevision = widget.session.transactionRevision;
     widget.session.addListener(_sessionChanged);
-    _feed = TransactionFeed(widget.session.api);
+    _categoryIds = List.of(widget.categoryIds);
+    _feed = TransactionFeed(widget.session.api, categoryIds: _categoryIds);
     _load(refresh: true);
   }
 
@@ -52,24 +60,51 @@ class _TransactionsPageState extends State<TransactionsPage> {
   }
 
   Future<void> _load({bool refresh = false}) async {
+    final revision = ++_loadRevision;
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
       if (refresh) {
-        final feed = TransactionFeed(widget.session.api);
+        final feed = TransactionFeed(
+          widget.session.api,
+          categoryIds: List.of(_categoryIds),
+        );
         await feed.load();
-        if (mounted) _feed = feed;
+        if (mounted && revision == _loadRevision) _feed = feed;
       } else {
         await _feed.loadMore();
       }
     } on ApiException catch (e) {
-      if (mounted) _error = e;
+      if (mounted && revision == _loadRevision) _error = e;
     } on Object {
-      if (mounted) _error = const ApiException(ApiErrorKind.unavailable);
+      if (mounted && revision == _loadRevision) {
+        _error = const ApiException(ApiErrorKind.unavailable);
+      }
     }
-    if (mounted) setState(() => _loading = false);
+    if (mounted && revision == _loadRevision) setState(() => _loading = false);
+  }
+
+  Future<void> _filter() async {
+    final selected = await showFormSheet<String>(
+      context,
+      key: const Key('transaction-filter-sheet'),
+      title: AppLocalizations.of(context).formCategorySheetTitle,
+      expand: true,
+      builder: (sheet) => TransactionCategoryGrid(
+        showUncategorized: false,
+        categories: _feed.categories.values
+            .where((c) => c.deletedAt == null)
+            .toList(),
+        selectedId: _categoryIds.length == 1 ? _categoryIds.single : null,
+        uncategorizedSelected: _categoryIds.isEmpty,
+        onSelected: (id) => Navigator.pop(sheet, id ?? ''),
+      ),
+    );
+    if (!mounted || selected == null) return;
+    _categoryIds = selected.isEmpty ? [] : [selected];
+    await _load(refresh: true);
   }
 
   @override
@@ -88,12 +123,20 @@ class _TransactionsPageState extends State<TransactionsPage> {
         child: const Icon(Icons.add_rounded, size: 32),
       ),
       appBar: AppBar(
-        leading: const Padding(
-          padding: EdgeInsets.all(8),
-          child: BrandLogo(size: 40),
-        ),
+        leading: Navigator.of(context).canPop()
+            ? const BackButton()
+            : const Padding(
+                padding: EdgeInsets.all(8),
+                child: BrandLogo(size: 40),
+              ),
         title: Text(l.transactions),
         actions: [
+          IconButton(
+            key: const Key('transaction-category-filter'),
+            tooltip: l.filterTransactionCategory,
+            onPressed: _loading ? null : _filter,
+            icon: const Icon(Icons.filter_alt_outlined),
+          ),
           IconButton(
             tooltip: l.home,
             icon: const Icon(Icons.home_outlined),
@@ -124,6 +167,26 @@ class _TransactionsPageState extends State<TransactionsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (_categoryIds.isNotEmpty)
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      for (final id in _categoryIds)
+                        InputChip(
+                          key: Key('category-filter-$id'),
+                          label: Text(
+                            _feed.categories[id]?.name ??
+                                l.filterTransactionCategory,
+                          ),
+                          onDeleted: () {
+                            _categoryIds = _categoryIds
+                                .where((value) => value != id)
+                                .toList();
+                            _load(refresh: true);
+                          },
+                        ),
+                    ],
+                  ),
                 AbsorbPointer(
                   absorbing: widget.session.saving || widget.session.busy,
                   child: TransactionCardSettings(
@@ -151,6 +214,22 @@ class _TransactionsPageState extends State<TransactionsPage> {
                   Text(l.emptyTransactions),
                 TransactionCardList(
                   models: presentTransactions(_feed, l),
+                  onTap: (model) => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => NewTransactionPage(
+                        session: widget.session,
+                        transactionId: model.transaction.id,
+                      ),
+                    ),
+                  ),
+                  onEdit: (model) => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => NewTransactionPage(
+                        session: widget.session,
+                        transactionId: model.transaction.id,
+                      ),
+                    ),
+                  ),
                   preferences: profile.preferences.transactionCard,
                 ),
                 if (_loading) const Center(child: CircularProgressIndicator()),

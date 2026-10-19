@@ -1448,6 +1448,24 @@ abstract class AppLocalizations {
   /// **'Corrección De Saldo'**
   String get transferCorrectionCategory;
 
+  /// No description provided for @transactionResourceReadOnly.
+  ///
+  /// In es, this message translates to:
+  /// **'Solo lectura: esta transacción se edita desde su transferencia o préstamo.'**
+  String get transactionResourceReadOnly;
+
+  /// No description provided for @transactionCorrectionLocked.
+  ///
+  /// In es, this message translates to:
+  /// **'El tipo y la categoría de una corrección de saldo no se pueden cambiar.'**
+  String get transactionCorrectionLocked;
+
+  /// No description provided for @filterTransactionCategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Filtrar por categoría'**
+  String get filterTransactionCategory;
+
   /// No description provided for @transferConfirm.
   ///
   /// In es, this message translates to:
