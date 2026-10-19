@@ -19,6 +19,7 @@ import '../widgets/home_greeting.dart';
 import '../widgets/transaction_card_list.dart';
 import 'add_account_page.dart';
 import 'add_goal_page.dart';
+import 'edit_home_page.dart';
 
 const defaultHomeWidgets = [
   'accounts',
@@ -202,7 +203,11 @@ class _HomePageState extends State<HomePage> {
                     ),
                     HomeEditButton(
                       onPressed: () {
-                        // TODO(T-514): connect Home component reordering UI.
+                        Navigator.of(context).push<void>(
+                          MaterialPageRoute(
+                            builder: (_) => EditHomePage(session: session),
+                          ),
+                        );
                       },
                     ),
                   ],
