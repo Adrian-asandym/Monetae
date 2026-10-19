@@ -9,25 +9,43 @@
 
 | | |
 |---|---|
-| **Última actualización** | **2026-10-16, cierre de la noche (America/Lima)** — «Continuaremos en otro momento». Trabajo en el **VPS**; **alfa desplegada**; SSL de Cloudflare en **Full (strict)**; T-702 (documentación) fusionada en `master-dev`, **sin publicar** |
-| **`origin`** | `origin/main` = `origin/master-dev` = **`9e1b6f4`** (Merge T-701), publicado con OK de Adrian el 2026-10-16. |
-| **`main`** | = `9e1b6f4`. Es lo que corre alfa. |
-| **`master-dev`** | `9e1b6f4` + merge de **T-702** + commit de este cierre (`git log -1`). Solo documentación. **Sin publicar en `main` ni en `origin`** (propuesta de gate, §7). |
+| **Última actualización** | **2026-10-18 (America/Lima)** — sesión en el VPS: G8 publicado; **T-520…T-527 integradas** en `master-dev` (verificadas), **sin publicar** (G9 propuesto) |
+| **`origin`** | `origin/main` = `origin/master-dev` = **`44cdd26`** (G8: T-702 + decisiones del 2026-10-18), publicado con OK de Adrian el 2026-10-18. |
+| **`main`** | = `44cdd26` (local y `origin`). Alfa sigue corriendo `9e1b6f4` (solo cambió documentación). |
+| **`master-dev`** | `44cdd26` + specs + merges de **T-520, T-523, T-521, T-524, T-525, T-522, T-527, T-526** + commit de este estado (`git log -1`). **Sin publicar** (gate **G9** `gate_98fd6e809cfa`, §7). |
 | **Rama de tarea** | `claude/T-702-docs-alfa-deploy` (`3d8c9a4`, + ajuste de cierre) **fusionada** en `master-dev`. `claude/T-701-alfa-reverse-proxy` fusionada. |
 | **Gate** | **G8** (publicar T-702 en `main`): propuesta **sin resolver** (§7). El Orca del VPS es un runtime nuevo: los Runs y gates del WSL no existen aquí. |
-| **SPEC / ARCHITECTURE / contrato** | SPEC **v0.7** · `docs/ARCHITECTURE.md` v0.3 (§9 y §10.10 actualizados) · `docs/api/openapi.json` **0.7.0** (90 paths, 133 operaciones). ADR-009 nuevo. |
+| **SPEC / ARCHITECTURE / contrato** | SPEC **v0.7** · `docs/ARCHITECTURE.md` v0.3 · `docs/api/openapi.json` **0.8.0** (T-521: filtros `budget_id`, `goal_id` y `category_id` múltiple en `GET /transactions`; 90 paths, 133 operaciones). ADR-009. |
 
 ## 2. Fase actual
 
 | Estado | Contenido |
 |---|---|
-| ✅ **Completo** | Fases 0–4. **Fase 5:** T-501…T-515, T-518, T-519. **Adelantado de la Fase 6:** T-601…T-604. **Hito alfa:** T-701 (Docker listo detrás de Caddy) y **alfa desplegada** en `https://<DOMINIO_ALFA>` con login verificado de extremo a extremo (Adrian, 2026-10-16). Desarrollo trasladado al VPS (VPS1-C). |
-| 🔄 **En curso** | Pendientes del despliegue alfa (§5: IP real del cliente, respaldos). Ningún worker vivo. |
-| ⏳ **Pendiente** | **R4** · **TAM** · **F2** · **D12** (plan de reanudación sin OK de Adrian) · R2 · F1 · beta (plan) · resto de la Fase 5 · Fase 6 · Fase 7 · importación real (D9-A; antes, respaldos). |
+| ✅ **Completo** | Fases 0–4. **Fase 5:** T-501…T-515, T-518, T-519, **T-520** (TAM), **T-522** (F2), **F1 completo: T-523** (crear cuenta), **T-524** (crear objetivo), **T-525** (crear presupuesto), **T-526** (detalle de categorías), **T-527** (editar Inicio). **Adelantado de la Fase 6:** T-601…T-604, **T-521** (D12, contrato 0.8.0). **Hito alfa:** T-701 y alfa desplegada (2026-10-16). |
+| 🔄 **En curso** | Revisión visual de Adrian en la pila del 8091 (R2, R4 y lo nuevo) antes de G9. Ningún worker vivo. |
+| ⏳ **Pendiente** | **G9** · R2/R4 · ALFA-IP · ALFA-BACKUP · Cloudflare Access · capturas por `scp` · beta (pospuesta) · UI del historial de presupuestos/metas (usa D12) · resto de la Fase 5 · Fase 6 · Fase 7 · importación real (D9-A; antes, respaldos). |
 
-Backend: **1190 pruebas**, migraciones hasta **`0012`**. UI `apps/web`: **343 pruebas**. Ambas **verificadas en el VPS** el 2026-10-16 (Docker rootless).
+Backend: **1211 pruebas**, migraciones hasta **`0012`**. UI `apps/web`: **437 pruebas**. Verificadas por el coordinador en el VPS el 2026-10-18.
 
-## 3. Trabajo hecho en esta sesión (2026-10-16, en el VPS)
+## 3. Trabajo hecho en esta sesión (2026-10-18, en el VPS)
+
+- **Reanudación** (Comando 2): STATUS de `master-dev` coincidía con git y Orca (Run `run_05f27056ac71`, G8 pendiente, sin workers, pila apagada, sin capturas en `reference/cashew-inicio-ui/`).
+- **G8 publicado** tras auditar el historial (solo marcadores): `main` = `origin` = `44cdd26`.
+- **`worker-start` funciona desde el Orca del VPS** (`--worktree new-child --base-branch master-dev`): crea `~/orca/workspaces/Monetae/<nombre>` con rama `Adrian-asandym/<nombre>`; los workers la renombran a `codex/T-XXX-…`.
+- **7 tareas con Codex `gpt-6.1-sol`**, cada una verificada por el coordinador (diff, `dart analyze`, `flutter test`, goldens mirados; backend con BD propia) e integrada con `--no-ff`:
+  - **T-520** (medium) TAM: categoría 18 dp/2 líneas; filas de cuenta 18 dp, radio 15, padding 16/7 (citas de Cashew comprobadas).
+  - **T-521** (high) D12: `budget_id`/`goal_id` con el **mismo predicado** que los reportes (extraído a `BUDGET_ENTRY_PREDICATE_SQL`/`GOAL_TRANSACTION_PREDICATE_SQL`), `category_id` múltiple (OR, ampliación del coordinador para el botón «Corrección De Saldo»), contrato **0.8.0**, DTO regenerados. Coordinador: ruff, mypy, **1211 pruebas**, alembic check, check_openapi.
+  - **T-523** (high) **crear cuenta** (pedido de Adrian): tarjeta «añadir» al final del carrusel de cuentas (también con 0 cuentas), página «Añadir cuenta» fiel a `addWalletPage.dart`: nombre, color, «Empieza en» (por defecto **0.00**, negativo permitido, precisión por moneda) y moneda (base primero). Envía `type: "other"` (el contrato lo exige; Cashew no lo pide).
+  - **T-524** (high) crear objetivo (ahorro/gasto, importe, fecha límite, moneda, color; ícono TODO).
+  - **T-525** (high) crear presupuesto desde Inicio y Presupuestos (periodo diario/semanal/mensual/personalizado, inicio/fin, moneda, color, «solo transacciones añadidas», categorías incluidas: cada una con `limit_amount` = importe total = «sin límite propio»).
+  - **T-522** (high) F2: editar transacciones guardadas (PATCH solo con cambios; piernas de corrección con tipo/categoría bloqueados; transferencias/préstamos en solo lectura) y filtro por categoría (botón del diálogo ⓘ conectado).
+  - **T-527** (medium) «Editar Inicio»: reordenar por arrastre y ocultar componentes, guardado inmediato en `home_widgets`.
+  - **T-526** (high) detalle de categorías: mes, circular, ranking; tocar categoría abre Transacciones por categoría y mes (Lima explícita, TODO timezone; «Sin categoría» sin navegación).
+- **Sondas HTTP reales** contra la pila del 8091 (los mismos JSON de la UI): crear cuenta 201 con `0.00`, duplicado 409 `duplicate_name`, crear meta 201, filtros 200, presupuesto ajeno 404; datos de prueba borrados.
+- **No se pudo** probar en navegador: el navegador de Orca da `browser_unavailable` en el VPS y Chromium (Playwright) necesita `libnspr4`/`nss`, que `<USUARIO_DEV>` no puede instalar.
+- Conflictos de integración: solo líneas de `import` en `home_page.dart` (resueltos conservando ambas; `flutter gen-l10n` sin diferencias).
+
+## 3b. Sesión anterior (2026-10-16, en el VPS)
 
 - **Reanudación en el VPS** (Comando 2), verificado por el coordinador: `main` = `master-dev` = `origin` = `c8c8e42`; backend (ruff, mypy, **1190**, alembic `0012`, `check_openapi`) y UI (`dart analyze`, **343**, `flutter build web`) en verde con Docker rootless; Codex con sesión y los mismos modelos; `gh` autenticado; Orca responde. Diferencias con el STATUS anterior:
   - el Run `run_c2cebe1745b9` **no existe** en el Orca del VPS (runtime nuevo; solo `run_legacy_local`, de solo lectura) → crear un Run nuevo al orquestar;
@@ -138,19 +156,11 @@ Backend: **1190 pruebas**, migraciones hasta **`0012`**. UI `apps/web`: **343 pr
 
 Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
-**TAM · Medidas de los ajustes 1 y 2.** En la pieza 9 se vio que las medidas en dp de las pautas parecen px de la captura (escala 1,25): con 20/16 dp la hoja salía mucho más alta que en Cashew, y se calibró a 16/14 dp del código de Cashew. Los ajustes 1 (nombre de categoría, 20 dp, una línea) y 2 (hoja de cuentas, nombre 20 dp, radio de fila 12) usan los números literales; Cashew usa 18 dp (categoría hasta 2 líneas) y radio 15.
-- **A (recomendada): igualarlos al código de Cashew** en una tarea pequeña de Codex (medium). *Razón:* misma regla para todo el formulario.
-- B: dejarlos como están.
+**G9 · Publicar T-520…T-527 en `main`** (`gate_98fd6e809cfa`). **A (recomendada):** publicar tras tu revisión visual en el 8091 y la auditoría del historial. B: esperar cambios de diseño. *Impacto:* alfa no cambia hasta que despliegues `main`.
 
 **R4 · Revisión de T-519 por Adrian** (pantalla «Transferir saldo» + hoja «Tipo De Cambio»). En el VPS la pila de revisión de desarrollo va en el **8091** (el 8090 es de alfa); se ve por túnel SSH. La primera transferencia entre monedas pide la tasa a mano; desde la segunda aparece sugerida.
 
 **R2 · Revisión visual de Inicio por Adrian** (pila de revisión en el 8091, o en alfa).
-
-**F1 · Pantallas que faltan para conectar Inicio:** crear objetivo, crear presupuesto, detalle de categorías, reordenar Inicio. **A (recomendada):** una tarea Codex por pantalla. B: esperar.
-
-**F2 · Edición de transacciones existentes y filtro por categoría** (nuevo): la UI no abre transacciones guardadas para editarlas (la llegada diferida hoy solo se fija al crear) y la lista no filtra por categoría (botón «Corrección De Saldo» del diálogo ⓘ). **A (recomendada):** tarea Codex tras T-519. B: esperar a la pestaña Transacciones completa.
-
-**D12 · Historial de presupuestos y metas** = lista de transacciones filtrada. **A (recomendada):** filtros `budget_id`/`goal_id` en `GET /transactions` (contrato 0.8.0). B: etiquetas.
 
 **ALFA-IP · IP real del cliente** (ADR-009 d). Con solo `trusted_proxies`, la IP registrada sería la del borde de Cloudflare (probado en local).
 - **A (recomendada):** añadir `client_ip_headers CF-Connecting-IP` y `header_up X-Forwarded-For {client_ip}` en el Caddyfile (`docs/deploy-alfa.md` paso 9) y confirmar con `login_attempts.ip`. *Razón:* sin cambios de código y no falseable (solo se acepta de los rangos de Cloudflare).
@@ -158,37 +168,33 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
 **ALFA-BACKUP · Respaldos de la BD alfa** (ADR-009 g): `pg_dump` programado con rotación (RF-42; aún no implementado). **Bloquea la importación real de Cashew.** Opciones por definir con Adrian (dónde se guardan, frecuencia, retención).
 
-**BETA · Despliegue de beta** (ADR-009 e, *plan sin ejecutar*): instancia aparte con carpeta, `.env`, puerto en loopback, proyecto de Compose/volumen y subdominio propios, **fijada a un tag** (p. ej. `v0.1.0`) promovido desde alfa.
+**BETA · Despliegue de beta** (ADR-009 e; **pospuesta** por Adrian el 2026-10-18 hasta tener respaldos y F1/F2): instancia aparte con carpeta, `.env`, puerto en loopback, proyecto de Compose/volumen y subdominio propios, **fijada a un tag** (p. ej. `v0.1.0`) promovido desde alfa.
 
 **Cloudflare Access** (decisión VPS1-C del 2026-10-12, «Tunnel + Access»): el despliegue usó **proxy de Cloudflare + Caddy**, no Tunnel. Si alfa debe quedar además detrás de Cloudflare Access: **por confirmar** con Adrian.
 
-**OK del plan de reanudación** (presentado el 2026-10-16, sin respuesta): R4, **TAM = A**, **F2 = A**, **D12 = A**, crear un Run nuevo en el Orca del VPS, pila de revisión en el 8091 por túnel SSH. Además, copiar las capturas `reference/cashew-inicio-ui/` al VPS por `scp`.
+**Nuevos TODO de esta sesión (delegables más adelante):** ícono del objetivo; «cada N» periodos y límites por categoría editables (`editBudgetLimitsPage`); filtro «Sin categoría» (requiere contrato); crear presupuesto/objetivo desde las filas del formulario de transacción (`new_transaction_page.dart`, TODO(F1)); UI del historial de presupuesto/meta con D12; borrar transacción desde el modo editar; editar transferencias/préstamos desde su recurso.
 
 **D7 · Para más adelante:** ADR-005 · orden de categorías · OAuth Google y proveedor de tipo de cambio (Fase 6; habilita el paso 4 «mercado» de la sugerencia y «Ver todos los tipos de cambio») · zona horaria de la UI · radio de tarjetas 20 vs 15 dp · persistir los ajustes del menú ⋮ (hoy en memoria).
 
 ## 6. Siguiente paso concreto
 
-1. **Adrian:** resolver **G8** (publicar T-702 en `main`, solo documentación) y aplicar **ALFA-IP** en el Caddyfile (§5), confirmándolo con `login_attempts.ip`.
-2. **Con su OK al plan de reanudación** (§5), en el VPS:
-   - crear un **Run nuevo** (`orca orchestration run-create --objective …`) y comprobar que `worker-start` funciona desde el Orca del VPS (primera vez; si falla, Plan B de `CLAUDE.md` §3.4);
-   - **T-520 TAM = A:** Codex `gpt-6.1-sol` medium, rama `codex/T-520-form-measures` desde `master-dev`: nombre de categoría 18 dp hasta 2 líneas (Cashew `addTransactionPage.dart` ~1973), filas de «Seleccionar Cuenta» nombre 18 dp y radio 15 (`radioItems.dart`); goldens regenerados;
-   - **en paralelo, T-521 D12 = A** (backend, no se solapa): Codex `gpt-6.1-sol` high, filtros `budget_id`/`goal_id` en `GET /transactions`, contrato 0.8.0, DTO de la UI regenerados y prueba contra la API real (Anexo C);
-   - **después, T-522 F2 = A** (toca el formulario, como TAM): Codex high, abrir una transacción guardada en modo editar y filtro por categoría en la lista;
-   - verificación del coordinador en cada una: ruff/mypy/pytest o `dart analyze`/`flutter test`, build, diff y captura; gate antes de `main`.
-3. **ALFA-BACKUP** antes de cualquier importación real.
+1. **Adrian:** revisar el diseño en el 8091 (túnel SSH, §7) y decidir **G9**; aplicar **ALFA-IP**; copiar las capturas por `scp`; borrar los worktrees ya fusionados (§7).
+2. **Coordinador, con G9 = A:** auditar el historial `44cdd26..master-dev`, fast-forward de `main` y push; avisar a Adrian para desplegar alfa (`docs/deploy-alfa.md`).
+3. Ajustes de diseño que pida Adrian: una tarea Codex `gpt-6.1-sol` (medium o high según el tamaño) por pantalla, desde `master-dev`.
+4. Siguiente ronda sugerida: UI del historial de presupuesto/meta (detalle con lista filtrada por D12), los TODO de §5 y **ALFA-BACKUP** (script + timer + guía; Codex medium) antes de cualquier importación real.
+5. Regla: si un worker se queda sin crédito, el coordinador termina lo que no puede quedar a medias; lo no urgente se vuelve a delegar (Adrian, 2026-10-18).
 
 ## 7. Estado del Run, de los worktrees y de los agentes abiertos
 
-**Orca (VPS):** runtime nuevo y sin ventana (`orca status` ok, capacidad `orchestration.contract.v1`). El Run de la Fase 5 (`run_c2cebe1745b9`) vivía en el Orca del WSL y aquí no existe. **Run nuevo: `run_05f27056ac71`** («VPS: alfa desplegada; Fase 5 (TAM, D12, F2) y pendientes de alfa»), creado al cerrar solo para la propuesta de gate: tarea `task_ce3e95ad4fd1` (marcador, no es trabajo de worker) con **G8 `gate_4e96028542c0` abierto** (publicar T-702 en `main`). Al abrir sesión: `orca orchestration run-use --id run_05f27056ac71`. Ningún worker lanzado ni vivo; `worker-start` aún no se ha probado desde el VPS.
+**Orca (VPS):** Run **`run_05f27056ac71`** (`orca orchestration run-use --id run_05f27056ac71`). Tareas completadas: T-520 `task_2c532dff224c`, T-521 `task_adb8ff05874c`, T-523 `task_070bb243bc03`, T-524 `task_da503deb1ec0`, T-525 `task_0098f26eb49f`, T-522 `task_82318e9f6e26`, T-527 `task_9dccafc45c90`, T-526 `task_92e436973ab3`; G8 resuelto (A). **G9 `gate_98fd6e809cfa` abierto** (tarea marcador `task_edd69c03c1db`). Todos los workers liberados (`worker-release`); ninguno vivo.
 
-**Worktrees en el VPS** (en el home de `<USUARIO_DEV>`, carpeta `propio2/`):
-- `Monetae` → `main` · `Monetae-master-dev` → `master-dev`;
-- `Monetae-T-701` → `claude/T-701-alfa-reverse-proxy` (**fusionada**: Adrian puede borrarla);
-- `Monetae-T-702` → `claude/T-702-docs-alfa-deploy` (**fusionada**: Adrian puede borrarla).
+**Worktrees en el VPS:**
+- `~/propio2/Monetae` → `main` · `~/propio2/Monetae-master-dev` → `master-dev`;
+- fusionados (Adrian puede borrarlos): `~/propio2/Monetae-T-701`, `~/propio2/Monetae-T-702` y los de Orca en `~/orca/workspaces/Monetae/codex-T-520-form-measures`, `codex-T-521-tx-filters`, `codex-T-522-edit-transaction`, `codex-T-523-create-account`, `codex-T-524-create-goal`, `codex-T-525-create-budget`, `codex-T-526-category-detail`, `codex-T-527-edit-home`.
 
 **Producción alfa:** en `<RUTA_PRODUCCION>`, Docker del sistema, controlada por `<USUARIO_ADMIN>`; `main` `9e1b6f4`; `127.0.0.1:8090`. Los agentes **no** tienen acceso.
 
-**Pila de revisión de desarrollo `monetae-review`:** **apagada**; en el VPS va en el **8091** (Adrian la ve por túnel SSH: `ssh -L 8091:127.0.0.1:8091 …`). Desde `Monetae-master-dev`:
+**Pila de revisión de desarrollo `monetae-review`:** **EN MARCHA** desde el 2026-10-18 en el **8091** (API con contrato 0.8.0; web = `master-dev` con T-520…T-527; usuario `revision@example.test`, contraseña solo en el chat; datos sintéticos). En el VPS va en el **8091** (Adrian la ve por túnel SSH: `ssh -L 8091:127.0.0.1:8091 …`). Desde `Monetae-master-dev`:
 ```bash
 export PATH="$HOME/flutter/bin:$HOME/.local/bin:$PATH"
 (cd apps/web && flutter build web --release)
