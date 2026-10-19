@@ -551,6 +551,36 @@ class AppLocalizationsEs extends AppLocalizations {
   String get addGoalLabel => 'Objetivo';
 
   @override
+  String get addGoal => 'Añadir objetivo';
+
+  @override
+  String get goalName => 'Nombre del objetivo';
+
+  @override
+  String get goalNameRequired => 'Escribe un nombre para el objetivo.';
+
+  @override
+  String get goalSaving => 'Ahorro';
+
+  @override
+  String get goalSpending => 'Gasto';
+
+  @override
+  String get goalTargetAmount => 'Importe objetivo';
+
+  @override
+  String get goalAmountRequired => 'Introduce un importe mayor que cero.';
+
+  @override
+  String get goalDueDate => 'Fecha límite';
+
+  @override
+  String get goalNoDueDate => 'Sin fecha límite';
+
+  @override
+  String get goalClearDueDate => 'Quitar fecha límite';
+
+  @override
   String get addBudgetLabel => 'Presupuesto';
 
   @override
