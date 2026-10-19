@@ -97,62 +97,77 @@ class AccountSelectionList extends StatelessWidget {
                     ? form.typeText.withValues(alpha: _T.accountHoverOpacity)
                     : Colors.transparent,
               ),
-              child: SizedBox(
-                height: _T.accountRowHeight,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: _T.accountRowPadding,
+              child: ListTile(
+                dense: true,
+                minTileHeight: _T.accountRowHeight,
+                contentPadding: const EdgeInsetsDirectional.only(
+                  start: _T.accountRowPadding,
+                  end: _T.accountRowEndPadding,
+                ),
+                leading: SizedBox.square(
+                  dimension: _T.accountRadioTapSize,
+                  child: Center(
+                    child: Container(
+                      key: Key('account-sheet-radio-${account.id}'),
+                      width: _T.accountRadioSize,
+                      height: _T.accountRadioSize,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: color,
+                          width: _T.accountRadioBorder,
+                        ),
+                      ),
+                      child: selected
+                          ? Center(
+                              child: Container(
+                                width: _T.accountRadioFillSize,
+                                height: _T.accountRadioFillSize,
+                                decoration: BoxDecoration(
+                                  color: color,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            )
+                          : null,
+                    ),
+                  ),
+                ),
+                title: Transform.translate(
+                  offset: Offset(
+                    Directionality.of(context) == TextDirection.rtl
+                        ? _T.accountRowTitleOffset
+                        : -_T.accountRowTitleOffset,
+                    0,
                   ),
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Container(
-                        key: Key('account-sheet-radio-${account.id}'),
-                        width: _T.accountRadioSize,
-                        height: _T.accountRadioSize,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: color,
-                            width: _T.accountRadioBorder,
-                          ),
-                        ),
-                        child: selected
-                            ? Center(
-                                child: Container(
-                                  width: _T.accountRadioFillSize,
-                                  height: _T.accountRadioFillSize,
-                                  decoration: BoxDecoration(
-                                    color: color,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                              )
-                            : null,
-                      ),
-                      const SizedBox(width: _T.accountRowGap),
                       Expanded(
                         child: Text(
                           account.name,
-                          maxLines: 1,
+                          maxLines: 3,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: _T.accountNameSize,
+                            fontWeight: FontWeight.normal,
                             color: form.typeText,
                           ),
                         ),
                       ),
-                      const SizedBox(width: _T.accountRowGap),
-                      Expanded(
+                      const SizedBox(width: _T.accountBalanceGap),
+                      Flexible(
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerRight,
+                          alignment: AlignmentDirectional.centerEnd,
                           child: Text(
                             balance,
                             key: Key('account-sheet-balance-${account.id}'),
-                            maxLines: 1,
+                            maxLines: 3,
                             textAlign: TextAlign.end,
                             style: TextStyle(
                               fontSize: _T.accountBalanceSize,
+                              fontWeight: FontWeight.normal,
                               color: form.typeText,
                             ),
                           ),

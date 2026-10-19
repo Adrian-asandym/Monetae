@@ -973,6 +973,35 @@ void main() {
     }
   }
 
+  testWidgets('long header category wraps to two lines with ellipsis', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: monetaeTheme(brightness: Brightness.dark),
+        home: Scaffold(
+          body: SizedBox(
+            width: 320,
+            child: FormAmountHeader(
+              category: null,
+              categoryName: 'Categoría sintética con un nombre muy largo para comprobar el truncado en dos líneas',
+              amount: '40 S/.',
+              onCategoryTap: () {},
+              onAmountTap: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+    final name = find.byKey(const Key('form-category-name'));
+    final text = tester.widget<Text>(name);
+    expect(text.style!.fontSize, 18);
+    expect(text.maxLines, 2);
+    expect(text.overflow, TextOverflow.ellipsis);
+    expect(tester.getSize(name).height, 36);
+    expect(tester.takeException(), isNull);
+  });
+
   for (final brightness in Brightness.values) {
     testWidgets(
       'category name follows selection without reserving space ${brightness.name}',
@@ -1031,7 +1060,8 @@ void main() {
         find.byKey(const Key('form-category-name')),
       );
       expect(name.data, f.categories[7].name);
-      expect(name.maxLines, 1);
+      expect(name.maxLines, 2);
+      expect(name.style!.fontSize, 18);
       expect(name.overflow, TextOverflow.ellipsis);
       expect(tester.takeException(), isNull);
       await expectLater(
@@ -1523,6 +1553,44 @@ void main() {
           find.byKey(Key('account-sheet-row-$usdId')),
         );
         expect(other.color, Colors.transparent);
+        expect(selected.borderRadius, BorderRadius.circular(15));
+        expect(other.borderRadius, BorderRadius.circular(15));
+        final accountName = tester.widget<Text>(
+          find.descendant(
+            of: find.byKey(Key('account-sheet-row-$mockAccountId')),
+            matching: find.text(f.accounts.first.name),
+          ),
+        );
+        expect(accountName.style!.fontSize, 18);
+        expect(accountName.style!.fontWeight, FontWeight.normal);
+        expect(
+          tester
+              .getTopRight(
+                find.byKey(Key('account-sheet-balance-$mockAccountId')),
+              )
+              .dx,
+          closeTo(
+            tester
+                .getTopRight(find.byKey(Key('account-sheet-balance-$usdId')))
+                .dx,
+            .01,
+          ),
+        );
+        expect(accountName.maxLines, 3);
+        expect(accountName.overflow, TextOverflow.ellipsis);
+        final tile = tester.widget<ListTile>(
+          find.descendant(
+            of: find.byKey(Key('account-sheet-row-$mockAccountId')),
+            matching: find.byType(ListTile),
+          ),
+        );
+        expect(
+          tile.contentPadding,
+          const EdgeInsetsDirectional.only(start: 16, end: 7),
+        );
+        expect(tile.dense, isTrue);
+        final title = tile.title! as Transform;
+        expect(title.transform.storage[12], -12);
         expect(find.text('120,50 S/. PEN'), findsOneWidget);
         expect(find.text(r'35 $ USD'), findsOneWidget);
         expect(find.text('0 S/. PEN'), findsOneWidget);

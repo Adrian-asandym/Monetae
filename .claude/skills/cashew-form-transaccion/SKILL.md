@@ -50,7 +50,7 @@ Pantalla única con AppBar "Añadir transacción" de color distinto, selector Ga
 - AppBar sin color propio (mismo fondo de página): flecha atrás a la izquierda, título centrado en negrita ("Agregar transacción"), menú ⋮ a la derecha.
 - Pestañas en tres partes iguales: "Gasto" (▼ rojo), "Ingreso" (▲ verde) y "Transferir" (icono ⇄). La seleccionada tiene fondo más claro, las demás más oscuro; alto ≈ 50 dp. "Transferir" se añade como diseño; si Monetae no tiene transferencias, queda visual con TODO y se reporta.
 - Bloque de importe (≈ 136 dp de alto), fondo gris azulado oscuro (color de acento del tema atenuado): a la izquierda un cuadrado redondeado de ≈ 80 dp (oscuro y vacío sin categoría; con la categoría elegida muestra su icono sobre su color); a la derecha el importe en negrita ≈ 36 dp alineado a la derecha ("0 S/.", mismo formato de montos de cashew-ui). Tocarlo abre la hoja 16.
-- **Nombre de la categoría bajo el monto (imagen 20):** alineado a la derecha, ≈ 20 dp (Cashew: 18 dp y hasta 2 líneas; pendiente de igualar, decisión TAM), blanco ~70 %, una línea con "…"; sin categoría no se muestra. El bloque del monto sube ≈ 10 dp.
+- **Nombre de la categoría bajo el monto (imagen 20):** alineado a la derecha, 18 dp, blanco ~70 %, hasta 2 líneas con "…" (`addTransactionPage.dart:1974–1977`; TAM = A, T-520); sin categoría no se muestra. El bloque del monto sube ≈ 10 dp.
 - La pestaña "Transferir" abre la **pantalla aparte "Transferir saldo"** (imagen 24) y puede ocultarse desde el menú ⋮.
 
 ## Fecha (imagen 12)
@@ -122,8 +122,9 @@ Se abre con el ⓘ de la primera fila. Hoja a casi pantalla completa con título
 ## Hoja "Seleccionar Cuenta" (imágenes 21 y 22)
 
 - Título "Seleccionar Cuenta" (negrita) con ⋮ a la derecha (solo diseño, TODO), esquinas superiores ≈ 28 dp, ≈ 65 % de la pantalla con scroll interno.
-- Filas ≈ 48 dp a todo el ancho: radio vacío con borde del color de la cuenta + nombre (≈ 20 dp; Cashew `radioItems.dart` usa 18, pendiente TAM) + saldo actual a la derecha con **símbolo y código ISO** ("120,50 S/. PEN", "35 $ USD", "0 S/. PEN": formato de montos de Cashew, sin decimales cero).
-- Seleccionada: radio relleno y fila con fondo del color de la cuenta a ~30–35 %, radio ≈ 12 dp (Cashew 15). El fondo tenue de la imagen 21 es hover/pressed, no un estado fijo.
+- Filas ≈ 48 dp a todo el ancho: radio vacío con borde del color de la cuenta + nombre (18 dp, hasta 3 líneas con elipsis; `radioItems.dart:107–111`) + saldo actual a la derecha con **símbolo y código ISO** ("120,50 S/. PEN", "35 $ USD", "0 S/. PEN": formato de montos de Cashew, sin decimales cero).
+- Seleccionada: radio relleno y fila con fondo del color de la cuenta a ~30–35 %, radio 15 dp (`radioItems.dart:69`; web, TAM = A, T-520). El fondo tenue de la imagen 21 es hover/pressed, no un estado fijo.
+- Padding de fila: inicio 16 dp y final 7 dp al mostrar saldo; contenido del título desplazado 12 dp hacia el inicio y separación antes del saldo 3 dp (`radioItems.dart:80–83,127`). `ListTile` denso, mínimo 48 dp; crece para nombres largos. Se conserva el escalado del saldo exacto para cuentas con importes largos.
 - Se abre desde el ▼ del formulario y desde el ▼ de la hoja de importe (apilada encima); al elegir se cierra solo esta hoja y la selección es un único estado compartido. Es reutilizable (la usa "Transferir saldo" para origen y destino). Código: `apps/web/lib/widgets/transaction_form/account_selection_sheet.dart`.
 
 ## Menú ⋮ del formulario (imagen 23)

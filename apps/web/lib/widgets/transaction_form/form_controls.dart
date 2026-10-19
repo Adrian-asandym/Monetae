@@ -175,7 +175,7 @@ class FormAmountHeader extends StatelessWidget {
                         categoryName!,
                         key: const Key('form-category-name'),
                         textAlign: TextAlign.end,
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: _T.headerCategoryNameSize,
