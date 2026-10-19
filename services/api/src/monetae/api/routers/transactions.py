@@ -72,7 +72,7 @@ def list_transactions(
     date_from: Timestamp | None = None,
     date_to: Timestamp | None = None,
     account_id: UUID | None = None,
-    category_id: UUID | None = None,
+    category_id: Annotated[list[UUID] | None, Query()] = None,
     currency: Currency | None = None,
     kind: TransactionKind | None = None,
     status: TransactionStatus | None = None,
@@ -81,12 +81,14 @@ def list_transactions(
     include_deleted: bool = False,
     loan_id: UUID | None = None,
     person_id: UUID | None = None,
+    budget_id: UUID | None = None,
+    goal_id: UUID | None = None,
 ) -> TransactionPage:
     filters = TransactionFilters(
         date_from=date_from,
         date_to=date_to,
         account_id=account_id,
-        category_id=category_id,
+        category_ids=tuple(category_id or []),
         currency=currency,
         kind=kind,
         status=status,
@@ -95,6 +97,8 @@ def list_transactions(
         include_deleted=include_deleted,
         loan_id=loan_id,
         person_id=person_id,
+        budget_id=budget_id,
+        goal_id=goal_id,
     )
     rows, cursor = service.list(identity.user.id, filters, limit, cursor)
     tags = service.tag_ids(identity.user.id, rows)

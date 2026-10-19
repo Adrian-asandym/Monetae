@@ -7,12 +7,37 @@ from typing import cast
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import text
+from sqlalchemy import Uuid, text
 from sqlalchemy.orm import Session
 
 from monetae.db.models import User
 from monetae.domain.budgets import BudgetCycle
 from monetae.reports.queries import ENTRY_SQL, Aggregate
+
+# Aliases e (report entry) and b (budget) are shared by aggregation and history.
+BUDGET_ENTRY_PREDICATE_SQL = """
+    e.kind = 'expense'
+      AND (b.scope = 'all' OR EXISTS (
+          SELECT 1 FROM budget_transactions bt WHERE bt.user_id = :user_id
+          AND bt.budget_id = b.id AND bt.transaction_id = e.transaction_id
+          AND bt.deleted_at IS NULL))
+      AND (NOT EXISTS (SELECT 1 FROM budget_categories bc
+          WHERE bc.user_id = :user_id AND bc.budget_id = b.id AND bc.deleted_at IS NULL)
+          OR EXISTS (SELECT 1 FROM budget_categories bc
+          WHERE bc.user_id = :user_id AND bc.budget_id = b.id AND bc.deleted_at IS NULL
+          AND bc.category_id = e.category_id))
+"""
+
+BUDGET_TRANSACTION_IDS_SQL = text(
+    "WITH entries AS ("
+    + ENTRY_SQL
+    + """
+)
+SELECT e.transaction_id FROM entries e
+JOIN budgets b ON b.user_id = :user_id AND b.id = :budget_id AND b.deleted_at IS NULL
+WHERE """
+    + BUDGET_ENTRY_PREDICATE_SQL
+).columns(transaction_id=Uuid())
 
 BUDGET_SQL = text(
     "WITH entries AS ("
@@ -30,16 +55,9 @@ BUDGET_SQL = text(
     JOIN periods p ON (e.occurred_at AT TIME ZONE :timezone)::date
         BETWEEN p.start_on AND p.end_on
     JOIN budgets b ON b.id = p.id AND b.user_id = :user_id AND b.deleted_at IS NULL
-    WHERE e.kind = 'expense'
-      AND (b.scope = 'all' OR EXISTS (
-          SELECT 1 FROM budget_transactions bt WHERE bt.user_id = :user_id
-          AND bt.budget_id = b.id AND bt.transaction_id = e.transaction_id
-          AND bt.deleted_at IS NULL))
-      AND (NOT EXISTS (SELECT 1 FROM budget_categories bc
-          WHERE bc.user_id = :user_id AND bc.budget_id = b.id AND bc.deleted_at IS NULL)
-          OR EXISTS (SELECT 1 FROM budget_categories bc
-          WHERE bc.user_id = :user_id AND bc.budget_id = b.id AND bc.deleted_at IS NULL
-          AND bc.category_id = e.category_id))
+    WHERE """
+    + BUDGET_ENTRY_PREDICATE_SQL
+    + """
     GROUP BY b.id, b.currency, day, e.currency
 )
 SELECT daily.budget_id, daily.currency, sum(daily.amount) AS amount,

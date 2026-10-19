@@ -6,6 +6,8 @@ Permite generar un cliente tipado de Flutter y servir mocks antes del backend.
 No implica que los endpoints ya estén implementados. Presupuestos, metas,
 notificaciones y bloqueo PIN/WebAuthn tienen un contrato inicial para la Fase 6.
 
+Versión actual del contrato: **0.8.0** (T-521).
+
 ## Lectura y validación
 
 Todas las rutas incluyen `/api/v1`; `servers` contiene solo el origen. Los esquemas,
@@ -825,3 +827,52 @@ altas las reciben junto a Intereses. Al revertir a `0011`, conserva importes,
 transacciones, etiquetas y referencias de categorías: elimina los enlaces
 de correcciones y convierte sus categorías en ordinarias. Una subida posterior
 vuelve a sembrar las categorías de sistema; no reclasifica el libro antiguo.
+
+## Filtros de historial · contrato 0.8.0 (T-521)
+
+`GET /api/v1/transactions` acepta `budget_id` y `goal_id` opcionales (UUID).
+El historial de un presupuesto o una meta es esta misma lista filtrada, con su
+orden habitual y paginación por cursor. Ambos filtros se combinan entre sí y
+con los existentes: fechas, cuenta, categorías, moneda, tipo, estado, etiquetas,
+búsqueda, préstamo y persona. Un presupuesto o una meta inexistente, ajeno o
+borrado lógicamente responde **404**, incluso con `include_deleted=true`.
+El usuario siempre procede de la sesión.
+
+`budget_id` incluye las transacciones que aportan gasto según el mismo libro
+de reportes y el mismo predicado de selección y categorías que usa el cálculo
+del presupuesto: gastos publicados y activos más interés pagado de préstamos
+recibidos; capital, ingresos, transferencias y correcciones de saldo quedan
+fuera. `scope=selected` exige un vínculo activo; `scope=all` no lo exige.
+Las categorías limitan el conjunto solo cuando existen vínculos activos en
+`budget_categories`. No se aplica un ciclo implícito: para consultar uno,
+envía sus límites UTC mediante `date_from` inclusivo y `date_to` exclusivo,
+teniendo en cuenta la zona horaria del usuario.
+
+La respuesta conserva cada **transacción íntegra**, con su importe y signo del
+libro mayor. Por eso un pago de préstamo incluye capital e interés en la lista,
+aunque solo su interés aporta al gasto del presupuesto. La conversión de moneda
+también puede hacer que la suma de los importes originales difiera de
+`spent_amount`. Para gastos ordinarios de una moneda y sin diferencia de
+conversión, `abs(sum(amount))` coincide con el gasto del mismo ciclo.
+
+`goal_id` incluye exclusivamente vínculos activos a transacciones publicadas y
+no borradas de tipo `income`, `expense` o `transfer`, incluidas las correcciones
+de saldo; coincide con el conjunto que aporta al progreso de la meta.
+Las metas de gasto invierten el signo para calcular su progreso, pero el
+historial conserva el signo original. No hay rango de fechas implícito y
+`include_deleted` no incorpora transacciones que dejaron de aportar al progreso
+ni al gasto de presupuestos.
+
+`category_id` acepta **uno o varios UUID**, repetidos como
+`?category_id=<UUID_A>&category_id=<UUID_B>` (`style=form`, `explode=true`).
+Se aplica OR entre ellos; el uso anterior `?category_id=<UUID_A>` se conserva.
+Una categoría ajena o inexistente no aporta coincidencias y no cambia el
+aislamiento del resto del filtro. Para consultar ambas categorías de
+«Corrección de saldo», envía los dos UUID; con `budget_id` el resultado sigue
+vacío porque las correcciones no aportan gasto.
+
+Los cursores están ligados también a `budget_id`, `goal_id` y al conjunto de
+categorías; cambiar esos filtros devuelve **400 `invalid_cursor`**. Reordenar
+o repetir las mismas categorías conserva el conjunto y permite continuar.
+Regenerar los DTO desde 0.8.0 con
+`python3 -I apps/web/tool/generate_dtos.py`, sin reformatear el archivo generado.
