@@ -778,4 +778,40 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get transferRateViewAll => 'Ver todos los tipos de cambio';
+
+  @override
+  String get addAccountLabel => 'Cuenta';
+
+  @override
+  String get addAccount => 'Añadir cuenta';
+
+  @override
+  String get accountName => 'Nombre';
+
+  @override
+  String get accountNameRequired => 'Escribe un nombre para la cuenta.';
+
+  @override
+  String get accountColor => 'Color';
+
+  @override
+  String get accountCurrency => 'Moneda';
+
+  @override
+  String get accountStartingAt => 'Empieza en';
+
+  @override
+  String get accountDuplicateName =>
+      'Ya existe una cuenta con ese nombre. Elige otro nombre.';
+
+  @override
+  String get accountNegativeBalance => 'Saldo negativo';
+
+  @override
+  String get accountBalanceInvalid => 'Introduce un saldo válido.';
+
+  @override
+  String accountColorOption(int number) {
+    return 'Color $number';
+  }
 }

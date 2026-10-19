@@ -17,6 +17,7 @@ import '../widgets/home_block_view.dart';
 import '../widgets/home_category_carousel.dart';
 import '../widgets/home_greeting.dart';
 import '../widgets/transaction_card_list.dart';
+import 'add_account_page.dart';
 
 const defaultHomeWidgets = [
   'accounts',
@@ -83,6 +84,18 @@ class _HomePageState extends State<HomePage> {
     if (mounted) setState(() {});
   }
 
+  Future<void> _createAccount() async {
+    final created = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => AddAccountPage(
+          api: widget.session.api,
+          baseCurrency: widget.session.user!.baseCurrency,
+        ),
+      ),
+    );
+    if (mounted && created == true) await _home.accounts.load();
+  }
+
   @override
   void dispose() {
     widget.session.removeListener(_changed);
@@ -103,6 +116,7 @@ class _HomePageState extends State<HomePage> {
         builder: (accounts) => HomeAccounts(
           accounts: accounts,
           selectedId: session.selectedAccountId,
+          onCreate: _createAccount,
           onSelected: session.saving || session.busy
               ? null
               : session.updateDefaultAccount,

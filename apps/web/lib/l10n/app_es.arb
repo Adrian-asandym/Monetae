@@ -370,5 +370,23 @@
         "type": "String"
       }
     }
+  },
+  "addAccountLabel": "Cuenta",
+  "addAccount": "Añadir cuenta",
+  "accountName": "Nombre",
+  "accountNameRequired": "Escribe un nombre para la cuenta.",
+  "accountColor": "Color",
+  "accountCurrency": "Moneda",
+  "accountStartingAt": "Empieza en",
+  "accountDuplicateName": "Ya existe una cuenta con ese nombre. Elige otro nombre.",
+  "accountNegativeBalance": "Saldo negativo",
+  "accountBalanceInvalid": "Introduce un saldo válido.",
+  "accountColorOption": "Color {number}",
+  "@accountColorOption": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
   }
 }

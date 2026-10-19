@@ -370,5 +370,23 @@
         "type": "String"
       }
     }
+  },
+  "addAccountLabel": "Account",
+  "addAccount": "Add account",
+  "accountName": "Name",
+  "accountNameRequired": "Enter an account name.",
+  "accountColor": "Color",
+  "accountCurrency": "Currency",
+  "accountStartingAt": "Starting at",
+  "accountDuplicateName": "An account with this name already exists. Choose another name.",
+  "accountNegativeBalance": "Negative balance",
+  "accountBalanceInvalid": "Enter a valid balance.",
+  "accountColorOption": "Color {number}",
+  "@accountColorOption": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
   }
 }

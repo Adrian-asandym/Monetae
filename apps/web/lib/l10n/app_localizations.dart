@@ -1489,6 +1489,72 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Ver todos los tipos de cambio'**
   String get transferRateViewAll;
+
+  /// No description provided for @addAccountLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuenta'**
+  String get addAccountLabel;
+
+  /// No description provided for @addAccount.
+  ///
+  /// In es, this message translates to:
+  /// **'Añadir cuenta'**
+  String get addAccount;
+
+  /// No description provided for @accountName.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre'**
+  String get accountName;
+
+  /// No description provided for @accountNameRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Escribe un nombre para la cuenta.'**
+  String get accountNameRequired;
+
+  /// No description provided for @accountColor.
+  ///
+  /// In es, this message translates to:
+  /// **'Color'**
+  String get accountColor;
+
+  /// No description provided for @accountCurrency.
+  ///
+  /// In es, this message translates to:
+  /// **'Moneda'**
+  String get accountCurrency;
+
+  /// No description provided for @accountStartingAt.
+  ///
+  /// In es, this message translates to:
+  /// **'Empieza en'**
+  String get accountStartingAt;
+
+  /// No description provided for @accountDuplicateName.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya existe una cuenta con ese nombre. Elige otro nombre.'**
+  String get accountDuplicateName;
+
+  /// No description provided for @accountNegativeBalance.
+  ///
+  /// In es, this message translates to:
+  /// **'Saldo negativo'**
+  String get accountNegativeBalance;
+
+  /// No description provided for @accountBalanceInvalid.
+  ///
+  /// In es, this message translates to:
+  /// **'Introduce un saldo válido.'**
+  String get accountBalanceInvalid;
+
+  /// No description provided for @accountColorOption.
+  ///
+  /// In es, this message translates to:
+  /// **'Color {number}'**
+  String accountColorOption(int number);
 }
 
 class _AppLocalizationsDelegate

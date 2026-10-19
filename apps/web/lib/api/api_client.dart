@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../data/api_dtos.dart';
+import '../data/account_create_dto.dart';
 import '../data/balance_correction_dtos.dart';
 import '../l10n/app_localizations.dart';
 import 'browser_environment.dart';
@@ -116,6 +117,11 @@ final class ApiClient {
 
   Future<CurrentUserDto> currentUser() async =>
       CurrentUserDto.fromJson(await _request('GET', 'users/me'));
+
+  Future<AccountDto> createAccount(AccountCreateDto account) async =>
+      AccountDto.fromJson(
+        await _request('POST', 'accounts', body: account.toJson()),
+      );
 
   Future<BalanceCorrectionPageDto> balanceCorrections({
     String? fromAccountId,
