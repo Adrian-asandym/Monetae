@@ -39,3 +39,6 @@ COMPOSE_PROJECT_NAME=monetae-t521 docker compose -f infra/docker-compose.yml dow
 
 ## Entorno
 `export PATH="$HOME/.local/bin:$HOME/flutter/bin:$PATH"`. Docker rootless (`DOCKER_HOST=unix:///run/user/$(id -u)/docker.sock`). Si el shell tiene umask 077 y la imagen de la API no lee archivos, `chmod -R a+rX` sobre el worktree (ver `docs/deploy-alfa.md`).
+
+## Ampliación (2026-10-18, enviada al worker por mensaje)
+En el mismo contrato 0.8.0, `category_id` de `GET /api/v1/transactions` acepta **uno o varios** uuid (`array`, `style: form`, `explode: true`, OR), igual que `tag_ids`, y sigue aceptando un solo valor. Motivo: T-522 filtra por las dos categorías de sistema «Corrección de saldo» a la vez. Pruebas: un valor, dos valores, combinado con `budget_id`/`goal_id` y paginación, aislamiento.
