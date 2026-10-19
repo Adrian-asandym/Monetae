@@ -9,10 +9,10 @@
 
 | | |
 |---|---|
-| **Última actualización** | **2026-10-18 (America/Lima)** — sesión en el VPS: G8 publicado; **T-520…T-527 integradas** en `master-dev` (verificadas), **sin publicar** (G9 propuesto) |
-| **`origin`** | `origin/main` = `origin/master-dev` = **`44cdd26`** (G8: T-702 + decisiones del 2026-10-18), publicado con OK de Adrian el 2026-10-18. |
-| **`main`** | = `44cdd26` (local y `origin`). Alfa sigue corriendo `9e1b6f4` (solo cambió documentación). |
-| **`master-dev`** | `44cdd26` + specs + merges de **T-520, T-523, T-521, T-524, T-525, T-522, T-527, T-526** + commit de este estado (`git log -1`). **Sin publicar** (gate **G9** `gate_98fd6e809cfa`, §7). |
+| **Última actualización** | **2026-10-18 21:12 (America/Lima)** — cierre («Continuaremos en otro momento»). **G9 aprobado:** T-520…T-527 publicadas en `main` y `origin` |
+| **`origin`** | `origin/main` = `origin/master-dev` = **el commit de este cierre (`git log -1`)**, publicado con OK de Adrian (G9, 2026-10-18). |
+| **`main`** | = `master-dev` (fast-forward desde `44cdd26`). **Alfa sigue en `9e1b6f4`** hasta que Adrian la despliegue (`docs/deploy-alfa.md`). |
+| **`master-dev`** | = `main` = `origin`: incluye T-520, T-521 (contrato 0.8.0), T-522, T-523, T-524, T-525, T-526 y T-527. |
 | **Rama de tarea** | `claude/T-702-docs-alfa-deploy` (`3d8c9a4`, + ajuste de cierre) **fusionada** en `master-dev`. `claude/T-701-alfa-reverse-proxy` fusionada. |
 | **Gate** | **G8** (publicar T-702 en `main`): propuesta **sin resolver** (§7). El Orca del VPS es un runtime nuevo: los Runs y gates del WSL no existen aquí. |
 | **SPEC / ARCHITECTURE / contrato** | SPEC **v0.7** · `docs/ARCHITECTURE.md` v0.3 · `docs/api/openapi.json` **0.8.0** (T-521: filtros `budget_id`, `goal_id` y `category_id` múltiple en `GET /transactions`; 90 paths, 133 operaciones). ADR-009. |
@@ -22,8 +22,8 @@
 | Estado | Contenido |
 |---|---|
 | ✅ **Completo** | Fases 0–4. **Fase 5:** T-501…T-515, T-518, T-519, **T-520** (TAM), **T-522** (F2), **F1 completo: T-523** (crear cuenta), **T-524** (crear objetivo), **T-525** (crear presupuesto), **T-526** (detalle de categorías), **T-527** (editar Inicio). **Adelantado de la Fase 6:** T-601…T-604, **T-521** (D12, contrato 0.8.0). **Hito alfa:** T-701 y alfa desplegada (2026-10-16). |
-| 🔄 **En curso** | Revisión visual de Adrian en la pila del 8091 (R2, R4 y lo nuevo) antes de G9. Ningún worker vivo. |
-| ⏳ **Pendiente** | **G9** · R2/R4 · ALFA-IP · ALFA-BACKUP · Cloudflare Access · capturas por `scp` · beta (pospuesta) · UI del historial de presupuestos/metas (usa D12) · resto de la Fase 5 · Fase 6 · Fase 7 · importación real (D9-A; antes, respaldos). |
+| 🔄 **En curso** | Nada en marcha. Ningún worker vivo. Pila de revisión del 8091 encendida para la revisión visual de Adrian. |
+| ⏳ **Pendiente** | Desplegar `main` en alfa (Adrian) · revisión visual R2/R4 y de las pantallas nuevas · ALFA-IP · ALFA-BACKUP · Cloudflare Access · capturas por `scp` · beta (pospuesta) · UI del historial de presupuestos/metas (usa D12) · TODO nuevos (§5) · resto de la Fase 5 · Fase 6 · Fase 7 · importación real (D9-A; antes, respaldos). |
 
 Backend: **1211 pruebas**, migraciones hasta **`0012`**. UI `apps/web`: **437 pruebas**. Verificadas por el coordinador en el VPS el 2026-10-18.
 
@@ -108,6 +108,7 @@ Backend: **1211 pruebas**, migraciones hasta **`0012`**. UI `apps/web`: **437 pr
 
 | Fecha | Decisión |
 |---|---|
+| 2026-10-18 (cierre) | **G9 = A:** «Súbelo a main y haz el push. Continuaremos el resto en otro momento» → auditoría del historial, fast-forward de `main` y push. Antes, mientras trabajaban los workers: «**si el agente se queda sin crédito, completa tú las tareas que no pueden quedar a medio hacer**; las no urgentes ni complejas se delegarán de nuevo en otro momento» (no hizo falta en esta sesión). |
 | 2026-10-18 | «**OK todo A** de las tareas que no dependen de tareas manuales suyas»: **G8 = A** (publicar T-702), **TAM = A**, **D12 = A**, **F2 = A**, **F1 = A** (una tarea Codex por pantalla), **BETA = A** (posponer). Quedan pendientes porque dependen de él: **ALFA-IP**, **ALFA-BACKUP**, **Cloudflare Access**, capturas por `scp`, borrar worktrees T-701/T-702. **Pedido nuevo (F1):** botón para **crear cuentas** en el carrusel de cuentas de Inicio (como la tarjeta «añadir» de objetivos y presupuestos) con formulario: nombre, color, moneda y saldo inicial (por defecto 0). Autoriza lanzar los workers necesarios eligiendo modelo y esfuerzo; el coordinador supervisa y verifica. Túnel para revisar el diseño: hacerlo sin pasos manuales suyos si se puede; si no, explicarle qué hacer. |
 | 2026-10-16 (cierre) | **SSL/TLS de Cloudflare = Full (strict)** (ALFA-SSL resuelto; ADR-009 c). **Cierre** («Continuaremos en otro momento») sin responder a: OK de T-702 para `main` (G8), ALFA-IP, plan de reanudación (R4, TAM, F2, D12). |
 | 2026-10-16 (noche) | **Documentar el despliegue alfa (T-702)** sin datos reales (solo marcadores), en rama de tarea, sin push a `main` sin su OK. Registra las decisiones de **ADR-009**: (a) subdominio de un nivel; (b) Caddy en el host; (c) evitar «Flexible» (zona hoy en «Automático», modo efectivo por confirmar; recomendado Full (strict)); (d) `trusted_proxies` de Cloudflare en Caddy; (e) un solo repo, alfa desde `main`, beta como instancia aparte fijada a un tag (**plan**); (f) producción separada de desarrollo, 8090 = alfa, revisión en 8091; (g) datos en el volumen `postgres_data`, respaldos pendientes. |
@@ -156,8 +157,6 @@ Backend: **1211 pruebas**, migraciones hasta **`0012`**. UI `apps/web`: **437 pr
 
 Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
-**G9 · Publicar T-520…T-527 en `main`** (`gate_98fd6e809cfa`). **A (recomendada):** publicar tras tu revisión visual en el 8091 y la auditoría del historial. B: esperar cambios de diseño. *Impacto:* alfa no cambia hasta que despliegues `main`.
-
 **R4 · Revisión de T-519 por Adrian** (pantalla «Transferir saldo» + hoja «Tipo De Cambio»). En el VPS la pila de revisión de desarrollo va en el **8091** (el 8090 es de alfa); se ve por túnel SSH. La primera transferencia entre monedas pide la tasa a mano; desde la segunda aparece sugerida.
 
 **R2 · Revisión visual de Inicio por Adrian** (pila de revisión en el 8091, o en alfa).
@@ -178,15 +177,15 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
 ## 6. Siguiente paso concreto
 
-1. **Adrian:** revisar el diseño en el 8091 (túnel SSH, §7) y decidir **G9**; aplicar **ALFA-IP**; copiar las capturas por `scp`; borrar los worktrees ya fusionados (§7).
-2. **Coordinador, con G9 = A:** auditar el historial `44cdd26..master-dev`, fast-forward de `main` y push; avisar a Adrian para desplegar alfa (`docs/deploy-alfa.md`).
+1. **Adrian:** revisar el diseño en el 8091 (túnel SSH, §7) y anotar cambios por pantalla; desplegar `main` en alfa cuando quiera (`docs/deploy-alfa.md`); aplicar **ALFA-IP**; copiar las capturas por `scp`; borrar los worktrees ya fusionados (§7).
+2. **Al reanudar (Comando 2):** crear tareas Codex con los cambios de diseño que pida Adrian (una por pantalla, desde `master-dev`).
 3. Ajustes de diseño que pida Adrian: una tarea Codex `gpt-6.1-sol` (medium o high según el tamaño) por pantalla, desde `master-dev`.
 4. Siguiente ronda sugerida: UI del historial de presupuesto/meta (detalle con lista filtrada por D12), los TODO de §5 y **ALFA-BACKUP** (script + timer + guía; Codex medium) antes de cualquier importación real.
 5. Regla: si un worker se queda sin crédito, el coordinador termina lo que no puede quedar a medias; lo no urgente se vuelve a delegar (Adrian, 2026-10-18).
 
 ## 7. Estado del Run, de los worktrees y de los agentes abiertos
 
-**Orca (VPS):** Run **`run_05f27056ac71`** (`orca orchestration run-use --id run_05f27056ac71`). Tareas completadas: T-520 `task_2c532dff224c`, T-521 `task_adb8ff05874c`, T-523 `task_070bb243bc03`, T-524 `task_da503deb1ec0`, T-525 `task_0098f26eb49f`, T-522 `task_82318e9f6e26`, T-527 `task_9dccafc45c90`, T-526 `task_92e436973ab3`; G8 resuelto (A). **G9 `gate_98fd6e809cfa` abierto** (tarea marcador `task_edd69c03c1db`). Todos los workers liberados (`worker-release`); ninguno vivo.
+**Orca (VPS):** Run **`run_05f27056ac71`** (`orca orchestration run-use --id run_05f27056ac71`). Tareas completadas: T-520 `task_2c532dff224c`, T-521 `task_adb8ff05874c`, T-523 `task_070bb243bc03`, T-524 `task_da503deb1ec0`, T-525 `task_0098f26eb49f`, T-522 `task_82318e9f6e26`, T-527 `task_9dccafc45c90`, T-526 `task_92e436973ab3`; G8 resuelto (A). **G9 `gate_98fd6e809cfa` resuelto (A, 2026-10-18)** (tarea marcador `task_edd69c03c1db` completada). Ningún gate abierto. Los 8 workers liberados (`worker-release`; liveness `exited`); ninguno vivo.
 
 **Worktrees en el VPS:**
 - `~/propio2/Monetae` → `main` · `~/propio2/Monetae-master-dev` → `master-dev`;
@@ -194,7 +193,7 @@ Cada una: contexto → opciones (la más recomendable primero) → impacto.
 
 **Producción alfa:** en `<RUTA_PRODUCCION>`, Docker del sistema, controlada por `<USUARIO_ADMIN>`; `main` `9e1b6f4`; `127.0.0.1:8090`. Los agentes **no** tienen acceso.
 
-**Pila de revisión de desarrollo `monetae-review`:** **EN MARCHA** desde el 2026-10-18 en el **8091** (API con contrato 0.8.0; web = `master-dev` con T-520…T-527; usuario `revision@example.test`, contraseña solo en el chat; datos sintéticos). En el VPS va en el **8091** (Adrian la ve por túnel SSH: `ssh -L 8091:127.0.0.1:8091 …`). Desde `Monetae-master-dev`:
+**Pila de revisión de desarrollo `monetae-review`:** **EN MARCHA** (se deja encendida al cerrar para la revisión de Adrian) desde el 2026-10-18 en el **8091** (API con contrato 0.8.0; web = `master-dev` con T-520…T-527; usuario `revision@example.test`, contraseña solo en el chat; datos sintéticos). En el VPS va en el **8091** (Adrian la ve por túnel SSH: `ssh -L 8091:127.0.0.1:8091 …`). Desde `Monetae-master-dev`:
 ```bash
 export PATH="$HOME/flutter/bin:$HOME/.local/bin:$PATH"
 (cd apps/web && flutter build web --release)
