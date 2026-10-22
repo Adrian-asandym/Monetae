@@ -270,10 +270,10 @@ class _HomePageState extends State<HomePage> {
         key: const Key('add-transaction'),
         heroTag: 'home-add-transaction',
         tooltip: l.addTransaction,
-        backgroundColor: Theme.of(context).brightness == Brightness.light
+        backgroundColor: Colors.white,
+        foregroundColor: Theme.of(context).brightness == Brightness.light
             ? Colors.grey.shade300
             : Colors.grey.shade700,
-        foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         onPressed: () => Navigator.of(context).pushNamed('/transactions/new'),
         child: const Icon(Icons.add_rounded, size: 32),
